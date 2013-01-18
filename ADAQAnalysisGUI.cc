@@ -178,7 +178,7 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
   // well as the location of the ROOT TFile that will contain the
   // values necessary for parallel processing
   ADAQHOME = getenv("ADAQHOME");
-  ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysisGUI/bin/ADAQAnalysisGUI_MPI";
+  ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysisGUI/trunk/bin/ADAQAnalysisGUI_MPI";
   ParallelProcessingFName = "/tmp/ParallelProcessing.root";
   ParallelProgressFName = "/tmp/ParallelProgress.txt";
   
@@ -5478,12 +5478,12 @@ void ADAQAnalysisGUI::UpdateProcessingProgress(int Waveform)
     ProcessingProgress_PB->Increment(UpdateFreq);
 #else
   if(Waveform == 0)
-    cout << "\n\n";
+    cout << "\n\n"; 
   else
     cout << "\rADAQAnalysisGUI_MPI Node[0] : Estimated progress = " 
 	 << setprecision(2)
 	 << (Waveform*100./WaveformEnd) << "%"
-	 << "\t\t\t"
+	 << "       "
 	 << flush;
 #endif
 }
