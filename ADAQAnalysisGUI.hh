@@ -266,6 +266,7 @@ private:
 
   TGCheckButton *SetStatsOff_CB;
   TGCheckButton *PlotLogYAxis_CB;
+  TGCheckButton *PlotWaveformWithMarkers_CB;
   
   TGTextButton *ReplotWaveform_TB;
   TGTextButton *ReplotSpectrum_TB;

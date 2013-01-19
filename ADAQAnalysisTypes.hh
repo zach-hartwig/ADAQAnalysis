@@ -227,7 +227,8 @@ enum{
   ProcessingPar_RB_ID,
 
   PSDPlotType_CBL_ID,
-  
+
+  PlotWaveformWithMarkers_CB_ID,
 
   Quit_TB_ID
 };

@@ -883,8 +883,8 @@ void ADAQAnalysisGUI::CreateMainFrame()
 			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMaxTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDMaxTotalBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDMaxTotalBin_NEL->GetEntry()->SetNumber(10000);
- 
+  PSDMaxTotalBin_NEL->GetEntry()->SetNumber(50000);
+
   PSDAnalysis_GF->AddFrame(PSDNumTailBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. tail bins (Y axis)", -1),
 			  new TGLayoutHints(kLHintsNormal, 0,5,5,0));
   PSDNumTailBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
@@ -904,7 +904,12 @@ void ADAQAnalysisGUI::CreateMainFrame()
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMaxTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDMaxTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDMaxTailBin_NEL->GetEntry()->SetNumber(10000);
+  PSDMaxTailBin_NEL->GetEntry()->SetNumber(25000);
+
+
+
+ 
+
 
   PSDAnalysis_GF->AddFrame(PSDThreshold_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Threshold (ADC)", -1),
                            new TGLayoutHints(kLHintsNormal, 0,5,5,0));
@@ -1061,6 +1066,10 @@ void ADAQAnalysisGUI::CreateMainFrame()
   
   GraphicsOptions_CF->AddFrame(PlotLogYAxis_CB = new TGCheckButton(GraphicsOptions_CF, "Log. Y-axis", -1),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+  
+  GraphicsOptions_CF->AddFrame(PlotWaveformWithMarkers_CB = new TGCheckButton(GraphicsOptions_CF, "Plot waveform with markers", PlotWaveformWithMarkers_CB_ID),
+			       new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+  PlotWaveformWithMarkers_CB->Connect("Clicked()","ADAQAnalysisGUI",this,"HandleCheckButtons()");
   
   GraphicsOptions_CF->AddFrame(AutoYAxisRange_CB = new TGCheckButton(GraphicsOptions_CF, "Auto. Y Axis Range", -1),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
@@ -1783,8 +1792,6 @@ void ADAQAnalysisGUI::HandleTextButtons()
     // Actions to replot the spectrum
 
   case ReplotWaveform_TB_ID:
-    PlotLogYAxis_CB->SetState(kButtonUp);
-    gPad->SetLogy(false);
     PlotWaveform();
     break;
 
@@ -1960,7 +1967,7 @@ void ADAQAnalysisGUI::HandleCheckButtons()
   case PlotPeakIntegratingRegion_CB_ID:
   case UsePileupRejection_CB_ID:
   case PlotPearsonIntegration_CB_ID:
-  case PSDPlotTailIntegration_CB_ID:
+  case PlotWaveformWithMarkers_CB_ID:
     PlotWaveform();
     break;
     
@@ -2100,16 +2107,26 @@ void ADAQAnalysisGUI::HandleCheckButtons()
       ButtonState = kButtonUp;
       WidgetState = true;
     }
-    
+
+    PSDPlotTailIntegration_CB->SetState(ButtonState);
     PSDChannel_CBL->GetComboBox()->SetEnabled(WidgetState);
     PSDWaveforms_NEL->GetEntry()->SetState(WidgetState);
     PSDThreshold_NEL->GetEntry()->SetState(WidgetState);
     PSDPeakOffset_NEL->GetEntry()->SetState(WidgetState);
     PSDTailOffset_NEL->GetEntry()->SetState(WidgetState);
-    PSDPlotTailIntegration_CB->SetState(ButtonState);
+
+
+
     break;
   }
     
+  case PSDPlotTailIntegration_CB_ID:{
+    if(!FindPeaks_CB->IsDown())
+      FindPeaks_CB->SetState(kButtonDown);
+    PlotWaveform();
+    break;
+  }
+  
   default:
     break;
   }
@@ -2971,13 +2988,23 @@ void ADAQAnalysisGUI::PlotWaveform()
   // has opted to allow the Y-axis range to be automatically
   // determined by the size of the waveform or fix the Y-Axis range
   // with the vertical double slider positions) and min/max values
-  if(AutoYAxisRange_CB->IsDown()){
+
+  YAxisLimits_DVS->GetPosition(Min, Max);
+
+  if(PlotLogYAxis_CB->IsDown()){
+    YAxisMin = V1720MaximumBit * (1 - Max);
+    YAxisMax = V1720MaximumBit * (1 - Min);
+    
+    if(YAxisMin == 0)
+      YAxisMin = 0.05;
+  }
+  else if(AutoYAxisRange_CB->IsDown()){
     YAxisMin = Waveform_H[Channel]->GetBinContent(Waveform_H[Channel]->GetMinimumBin()) - 10;
     YAxisMax = Waveform_H[Channel]->GetBinContent(Waveform_H[Channel]->GetMaximumBin()) + 10;
   }
   else{
     YAxisLimits_DVS->GetPosition(Min, Max);
-    YAxisMin = V1720MaximumBit * (1 - Max);
+    YAxisMin = (V1720MaximumBit * (1 - Max))-30;
     YAxisMax = V1720MaximumBit * (1 - Min);
   }
   YAxisSize = YAxisMax - YAxisMin;
@@ -2991,10 +3018,15 @@ void ADAQAnalysisGUI::PlotWaveform()
     Waveform_H[Channel]->GetXaxis()->SetTitle("Time [4 ns samples]");
     Waveform_H[Channel]->GetYaxis()->SetTitle("Voltage [ADC]");
   }
-
+  
   Canvas_EC->GetCanvas()->SetLeftMargin(0.13);
   Canvas_EC->GetCanvas()->SetBottomMargin(0.12);
   Canvas_EC->GetCanvas()->SetRightMargin(0.05);
+  
+  if(PlotLogYAxis_CB->IsDown())
+    gPad->SetLogy(true);
+  else
+    gPad->SetLogy(false);
 
   Waveform_H[Channel]->SetTitle(Title.c_str());
 
@@ -3010,12 +3042,21 @@ void ADAQAnalysisGUI::PlotWaveform()
   Waveform_H[Channel]->GetYaxis()->SetLabelSize(YAxisSize_NEL->GetEntry()->GetNumber());
   Waveform_H[Channel]->GetYaxis()->SetTitleOffset(YAxisOffset_NEL->GetEntry()->GetNumber());
   Waveform_H[Channel]->GetYaxis()->CenterTitle();
-  Waveform_H[Channel]->SetMinimum(YAxisMin-25);
+  Waveform_H[Channel]->SetMinimum(YAxisMin);
   Waveform_H[Channel]->SetMaximum(YAxisMax);
   
   Waveform_H[Channel]->SetLineColor(4);
   Waveform_H[Channel]->SetStats(false);  
-  Waveform_H[Channel]->Draw("C");
+
+  Waveform_H[Channel]->SetMarkerStyle(24);
+  Waveform_H[Channel]->SetMarkerSize(1);
+  Waveform_H[Channel]->SetMarkerColor(4);
+  
+  if(PlotWaveformWithMarkers_CB->IsDown())
+    Waveform_H[Channel]->Draw("CP");
+  else
+    Waveform_H[Channel]->Draw("C");
+    
 
   // The user may choose to plot a number of graphical objects
   // representing various waveform parameters (zero suppression
@@ -3092,6 +3133,7 @@ void ADAQAnalysisGUI::PlotWaveform()
   // important for influencing the behavior of the vertical and
   // horizontal double sliders used to "zoom" on the canvas contents
   CanvasContainsSpectrum = false;
+  CanvasContainsPSDHistogram = false;
   
   if(PlotPearsonIntegration_CB->IsDown())
     IntegratePearsonWaveform(true);
@@ -3543,11 +3585,12 @@ void ADAQAnalysisGUI::PlotSpectrum()
   // Update the canvas
   Canvas_EC->GetCanvas()->Update();
 
-  // Set the class member bool that tells the code what is currently
-  // plotted on the embedded canvas, waveform or spectrum. This is
-  // important for influencing the behavior of the vertical and
-  // horizontal double sliders used to "zoom" on the canvas contents
+  // Set the class member bools that tells the code what is currently
+  // plotted on the embedded canvas. This is important for influencing
+  // the behavior of the vertical and horizontal double sliders used
+  // to "zoom" on the canvas contents
   CanvasContainsSpectrum = true;
+  CanvasContainsPSDHistogram = false;
 }
 
 // Method to extract the digitized data on the specified data channel
@@ -3586,7 +3629,7 @@ void ADAQAnalysisGUI::PlotPSDHistogram()
     XAxisTitle = "Waveform total integral [ADC]";
     YAxisTitle = "Waveform tail integral [ADC]";
   }
-
+  
   if(SetStatsOff_CB->IsDown())
     PSDHistogram_H->SetStats(false);
 
@@ -3596,6 +3639,8 @@ void ADAQAnalysisGUI::PlotPSDHistogram()
 
   ////////////////////////////////
   // Axis and graphical attributes
+
+  gPad->SetLogy(false);
 
   PSDHistogram_H->SetTitle(Title.c_str());
   
@@ -3629,10 +3674,9 @@ void ADAQAnalysisGUI::PlotPSDHistogram()
     PSDHistogram_H->Draw("CONTZ");
     break;
   }
-  
 
-  //  PSDHistogram_H->Draw(PlotType.c_str());
   CanvasContainsPSDHistogram = true;
+  CanvasContainsSpectrum = false;
   
   Canvas_EC->GetCanvas()->Update();
 }
@@ -4351,8 +4395,9 @@ void ADAQAnalysisGUI::CreatePSDHistogram()
     // Create the master PSDHistogram_H object, i.e. the sum of all
     // the PSDHistogram_H object values from the nodes
     MasterPSDHistogram_H = new TH2F("MasterPSDHistogram_H","MasterPSDHistogram_H",
-				    PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin,
-				    PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin);
+				    PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin,
+				    PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin);
+    
     
     // Assign the content from the aggregated 2-D array to the new
     // master histogram
@@ -4385,15 +4430,17 @@ void ADAQAnalysisGUI::CalculatePSDIntegrals()
   // Iterate over each peak stored in the vector of PeakInfoStructs...
   vector<PeakInfoStruct>::iterator it;
   for(it=PeakInfoVec.begin(); it!=PeakInfoVec.end(); it++){
+
+    double LowerLimit = (*it).PeakLimit_Lower;
+    double Peak = (*it).PeakPosX + PSDPeakOffset;
+    double UpperLimit = (*it).PeakLimit_Upper + PSDTailOffset;
     
     // Compute the total integral (lower to upper limit)
-    double TotalIntegral = Waveform_H[PSDChannel]->Integral((*it).PeakLimit_Lower,
-							    (*it).PeakLimit_Upper);
-    
+    double TotalIntegral = Waveform_H[PSDChannel]->Integral(LowerLimit, UpperLimit);
     
     // Compute the tail integral (peak to upper limit)
-    double TailIntegral = Waveform_H[PSDChannel]->Integral((*it).PeakPosX,
-							   (*it).PeakLimit_Upper);
+    double TailIntegral = Waveform_H[PSDChannel]->Integral(Peak, LowerLimit);
+    
     if(Verbose)
       cout << "Int(tail) = " << TailIntegral << "\n"
 	   << "Int(total) = " << TotalIntegral << "\n"
