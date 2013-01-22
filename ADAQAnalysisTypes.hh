@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 // name: ADAQAnalysisTypes.hh
-// date: 17 Jan 13 (Last updated)
+// date: 22 Jan 13 (Last updated)
 // auth: Zach Hartwig
 // 
 // desc: This header file contains several structures and classes that
@@ -23,7 +23,8 @@ struct PeakInfoStruct{
   double PeakLimit_Upper; // Position along X-axis where a high-2-low floor crossing occurs
   bool AnalyzeFlag; // Flag to indicate whether the current peak should be analyzed into a spectrum
   bool PileupFlag; // Flag to indicate whether current peak is part of a pileup events
-
+  bool PSDFilterFlag; // Flag to indicate whether current peak should be filtered out due to pulse shape
+  
   // Initialization for the variables
   PeakInfoStruct() : PeakID(-1),
 		     PeakPosX(-1),
@@ -31,7 +32,8 @@ struct PeakInfoStruct{
 		     PeakLimit_Lower(-1),
 		     PeakLimit_Upper(-1),
 		     AnalyzeFlag(true),
-		     PileupFlag(false)
+		     PileupFlag(false), // Convention : true == pileup; false == no pile up
+		     PSDFilterFlag(false) // Convention : true == filter out; false == do not filter out
   {}
 };
 
@@ -76,7 +78,8 @@ public:
   int PSDThreshold, PSDTailOffset, PSDPeakOffset;
   int PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin;
   int PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin;
-  
+  int PSDFilterPolarity;
+    
   int PearsonChannel;
   bool PlotPearsonIntegration, IntegratePearson, IntegrateRawPearson, IntegrateFitToPearson;
   int PearsonLowerLimit, PearsonMiddleLimit, PearsonUpperLimit;
@@ -85,8 +88,8 @@ public:
   
   int WaveformsToDesplice, DesplicedWaveformBuffer, DesplicedWaveformLength;
   
-  vector<TGraph *> CalibrationManager;
-  vector<bool> UseCalibrationManager;
+  vector<TGraph *> CalibrationManager, PSDFilterManager;
+  vector<bool> UseCalibrationManager, UsePSDFilterManager;
   
   ClassDef(ADAQAnalysisParallelParameters,1);
 };

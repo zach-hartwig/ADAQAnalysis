@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 // name: ADAQAnalysisGUI.cc
-// date: 17 Jan 13 (Last updated)
+// date: 22 Jan 13 (Last updated)
 // auth: Zach Hartwig
 //
 // desc: ADAQAnalysisGUI.cc is the main implementation file for the
@@ -70,28 +70,27 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
     PrintCanvasDirectory(getenv("HOME")), DesplicedDirectory(getenv("HOME")),
     Time(0), RawVoltage(0), RecordLength(0),
     GraphicFileName(""), GraphicFileExtension(""),
-    Trigger_L(new TLine), Floor_L(new TLine), Calibration_L(new TLine), ZSCeiling_L(new TLine), NCeiling_L(new TLine),
-    LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine),
-    PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
-    PSDPeakOffset_L(new TLine), PSDTailOffset_L(new TLine), 
-    LowerLimit_L(new TLine), UpperLimit_L(new TLine), Baseline_B(new TBox), PSDTailIntegral_B(new TBox),
-    Spectrum_H(new TH1F), SpectrumBackground_H(new TH1F), SpectrumDeconvolved_H(new TH1F), 
-    PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
-    MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelArchitecture(PA), SequentialArchitecture(!PA),
-    Verbose(false), ParallelVerbose(true),
-    XAxisMin(0), XAxisMax(1.0), YAxisMin(0), YAxisMax(4095), 
-    Title(""), XAxisTitle(""), YAxisTitle(""),
-    WaveformPolarity(-1.0), PearsonPolarity(1.0), 
-    Baseline(0.), V1720MaximumBit(4095), NumDataChannels(8),
-    CanvasContainsSpectrum(false), SpectrumExists(false), 
-    CanvasContainsPSDHistogram(false), PSDHistogramExists(false),
-    SpectrumMaxPeaks(0), TotalPeaks(0), TotalDeuterons(0),
-    GaussianBinWidth(1.), CountsBinWidth(1.),
-    ColorManager(new TColor), RNG(new TRandom(424242)), PSDFilter_G(new TGraph), 
-    PSDFilterPolarity(1.)
+  Trigger_L(new TLine), Floor_L(new TLine), Calibration_L(new TLine), ZSCeiling_L(new TLine), NCeiling_L(new TLine),
+  LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine),
+  PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
+  PSDPeakOffset_L(new TLine), PSDTailOffset_L(new TLine), 
+  LowerLimit_L(new TLine), UpperLimit_L(new TLine), Baseline_B(new TBox), PSDTailIntegral_B(new TBox),
+  Spectrum_H(new TH1F), SpectrumBackground_H(new TH1F), SpectrumDeconvolved_H(new TH1F), 
+  PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
+  MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelArchitecture(PA), SequentialArchitecture(!PA),
+  Verbose(false), ParallelVerbose(true),
+  XAxisMin(0), XAxisMax(1.0), YAxisMin(0), YAxisMax(4095), 
+  Title(""), XAxisTitle(""), YAxisTitle(""),
+  WaveformPolarity(-1.0), PearsonPolarity(1.0), Baseline(0.), PSDFilterPolarity(1.),
+  V1720MaximumBit(4095), NumDataChannels(8),
+  CanvasContainsSpectrum(false), SpectrumExists(false), 
+  CanvasContainsPSDHistogram(false), PSDHistogramExists(false),
+  SpectrumMaxPeaks(0), TotalPeaks(0), TotalDeuterons(0),
+  GaussianBinWidth(1.), CountsBinWidth(1.),
+  ColorManager(new TColor), RNG(new TRandom(424242))
 {
   SetCleanup(kDeepCleanup);
-
+  
   // Assign attributes to the class member objects that are used to
   // represent graphical objects. The purpose in making them class
   // member objects is to allocate memory only once via the "new"
@@ -159,21 +158,27 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
   UpperLimit_L->SetLineColor(2);
   UpperLimit_L->SetLineWidth(2);
 
+  /*
   PSDFilter_G->SetLineColor(2);
   PSDFilter_G->SetLineWidth(2);
   PSDFilter_G->SetMarkerStyle(24);
   PSDFilter_G->SetMarkerColor(2);
+  */
 
-  // Initialize the objects used in the calibration scheme. The main
-  // purpose in doing so is to assign a size of 8 (corresponding to
-  // the 8 V1720 digitizer channels) to the vector objects
+  // Initialize the objects used in the calibration and pulse shape
+  // discrimination (PSD) scheme. A set of 8 calibration and 8 PSD
+  // filter "managers" -- really, TGraph *'s used for interpolating --
+  // along with the corresponding booleans that determine whether or
+  // not that channel's "manager" should be used is initialized. 
   for(int ch=0; ch<NumDataChannels; ch++){
-    // All 8 channel's calibration managers are set "off" by default
+    // All 8 channel's managers are set "off" by default
     UseCalibrationManager.push_back(false);
+    UsePSDFilterManager.push_back(false);
     
-    // Store an empty TGraph object to hold space and prevent
-    // seg. faults later when we test and delete unused objects
+    // Store empty TGraph pointers in std::vectors to hold space and
+    // prevent seg. faults later when we test/delete unused objects
     CalibrationManager.push_back(new TGraph);
+    PSDFilterManager.push_back(new TGraph);
     
     // Assign a blank initial structure for channel calibration data
     ADAQChannelCalibrationData Init;
@@ -186,7 +191,7 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
   ADAQHOME = getenv("ADAQHOME");
   ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysisGUI/trunk/bin/ADAQAnalysisGUI_MPI";
   ParallelProcessingFName = "/tmp/ParallelProcessing.root";
-  ParallelProgressFName = "/tmp/ParallelProgress.txt";
+  //ParallelProgressFName = "/tmp/ParallelProgress.txt";
   
   // Set ROOT to print only break messages and above (to suppress the
   // annoying warning from TSpectrum that the peak buffer is full)
@@ -290,8 +295,6 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
     LoadADAQRootFile();
 
     // Initiate the desired parallel waveform processing algorithm
-
-    cout << "[" << MPI_Rank << "] Successfully loaded file!" << endl;
 
     // Histogram waveforms into a spectrum
     if(CmdLineArg == "histogramming")
@@ -955,6 +958,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
   
   PSDAnalysis_GF->AddFrame(PSDEnableFilter_CB = new TGCheckButton(PSDAnalysis_GF, "Enable filter use", PSDEnableFilter_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  PSDEnableFilter_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
 
   TGHorizontalFrame *PSDFilterPolarity_HF = new TGHorizontalFrame(PSDAnalysis_GF);
   PSDAnalysis_GF->AddFrame(PSDFilterPolarity_HF);
@@ -1964,6 +1968,11 @@ void ADAQAnalysisGUI::HandleTextButtons()
     PSDFilterXPoints.clear();
     PSDFilterYPoints.clear();
 
+    if(PSDFilterManager[PSDChannel]) delete PSDFilterManager[PSDChannel];
+    PSDFilterManager[Channel] = new TGraph();
+    
+    PSDEnableFilter_CB->SetState(kButtonUp);
+    
     if(CanvasContainsSpectrum)
       PlotSpectrum();
     else if(CanvasContainsPSDHistogram)
@@ -2159,8 +2168,14 @@ void ADAQAnalysisGUI::HandleCheckButtons()
     PSDPeakOffset_NEL->GetEntry()->SetState(WidgetState);
     PSDTailOffset_NEL->GetEntry()->SetState(WidgetState);
 
+    break;
+  }
 
-
+  case PSDEnableFilter_CB_ID:{
+    if(PSDEnableFilter_CB->IsDown())
+      UsePSDFilterManager[PSDChannel] = true;
+    else
+      UsePSDFilterManager[PSDChannel] = false;
     break;
   }
     
@@ -2725,7 +2740,6 @@ void ADAQAnalysisGUI::ReadoutWidgetValues()
   IntegrationTypePeakFinder = IntegrationTypePeakFinder_RB->IsDown();
 
 
-
   //////////////////////////////////////////
   // Values from the "Analysis" tabbed frame
 
@@ -2742,12 +2756,11 @@ void ADAQAnalysisGUI::ReadoutWidgetValues()
   PSDNumTotalBins = PSDNumTotalBins_NEL->GetEntry()->GetIntNumber();
   PSDMinTotalBin = PSDMinTotalBin_NEL->GetEntry()->GetIntNumber();
   PSDMaxTotalBin = PSDMaxTotalBin_NEL->GetEntry()->GetIntNumber();
-
+  
   WaveformsToDesplice = DesplicedWaveformNumber_NEL->GetEntry()->GetIntNumber();
   DesplicedWaveformBuffer = DesplicedWaveformBuffer_NEL->GetEntry()->GetIntNumber();
   DesplicedWaveformLength = DesplicedWaveformLength_NEL->GetEntry()->GetIntNumber();
   DesplicedFileName = DesplicedFileName_TE->GetText();
-
 
 
   ////////////////////////////////////////
@@ -2834,6 +2847,7 @@ void ADAQAnalysisGUI::SaveParallelProcessingData()
   
   //////////////////////////////////////////
   // Values from the "Analysis" tabbed frame 
+
   ADAQParParams->PSDChannel = PSDChannel;
   ADAQParParams->PSDWaveformsToDiscriminate = PSDWaveformsToDiscriminate;
   ADAQParParams->PSDThreshold = PSDThreshold;
@@ -2847,6 +2861,8 @@ void ADAQAnalysisGUI::SaveParallelProcessingData()
   ADAQParParams->PSDNumTotalBins = PSDNumTotalBins;
   ADAQParParams->PSDMinTotalBin = PSDMinTotalBin;
   ADAQParParams->PSDMaxTotalBin = PSDMaxTotalBin;
+
+  ADAQParParams->PSDFilterPolarity = PSDFilterPolarity;
 
   ADAQParParams->WaveformsToDesplice = WaveformsToDesplice;
   ADAQParParams->DesplicedWaveformBuffer = DesplicedWaveformBuffer;
@@ -2884,6 +2900,10 @@ void ADAQAnalysisGUI::SaveParallelProcessingData()
   ADAQParParams->UseCalibrationManager = UseCalibrationManager;
   ADAQParParams->CalibrationManager = CalibrationManager;
   
+  // The PSD filter
+  ADAQParParams->UsePSDFilterManager = UsePSDFilterManager;
+  ADAQParParams->PSDFilterManager = PSDFilterManager;
+  
   
   //////////////////////////////////////////////////
   // Write the transient parallel value storage file
@@ -2904,16 +2924,16 @@ void ADAQAnalysisGUI::LoadParallelProcessingData()
 {
   // Load the ROOT file
   ParallelProcessingFile = new TFile(ParallelProcessingFName.c_str(), "read");
-  
+
   // Alert the user if the ROOT file cannont be opened
   if(!ParallelProcessingFile->IsOpen()){
-    string Message = "Error opening the parallel parameters ROOT file:\n" + ParallelProcessingFName;
-    CreateMessageBox(Message,"Stop");
+    cout << "\nADAQAnalysisGUI_MPI Node[" << MPI_Rank << " : Error! Could not load the parallel processing file! Abort!\n"
+	 << endl;
+    exit(-42);
   }
-
+  
   // Load the necessary processing variables
   else{
-    
     // Get the custom storage class object from the ROOT file
     ADAQAnalysisParallelParameters *ADAQParParams = (ADAQAnalysisParallelParameters *)ParallelProcessingFile->Get("ADAQParParams");
     
@@ -2978,11 +2998,12 @@ void ADAQAnalysisGUI::LoadParallelProcessingData()
     PSDMinTotalBin = ADAQParParams->PSDMinTotalBin; 
     PSDMaxTotalBin = ADAQParParams->PSDMaxTotalBin; 
 
+    PSDFilterPolarity = ADAQParParams->PSDFilterPolarity;
+
     WaveformsToDesplice = ADAQParParams->WaveformsToDesplice;
     DesplicedWaveformBuffer = ADAQParParams->DesplicedWaveformBuffer;
     DesplicedWaveformLength = ADAQParParams->DesplicedWaveformLength;
     DesplicedFileName = ADAQParParams->DesplicedFileName;
-
 
 
     ////////////////////////////////////////////
@@ -3012,6 +3033,10 @@ void ADAQAnalysisGUI::LoadParallelProcessingData()
 
     UseCalibrationManager = ADAQParParams->UseCalibrationManager;
     CalibrationManager = ADAQParParams->CalibrationManager;
+    
+    UsePSDFilterManager = ADAQParParams->UsePSDFilterManager;
+    PSDFilterManager = ADAQParParams->PSDFilterManager;
+
     
     // Close the ROOT File
     ParallelProcessingFile->Close();
@@ -3396,6 +3421,8 @@ void ADAQAnalysisGUI::CreateSpectrum()
       if(!PeaksFound)
       	continue;
       
+      CalculatePSDIntegrals();
+      
       // If a PAS is to be created ...
       if(SpectrumTypePAS)
 	IntegratePeaks();
@@ -3743,8 +3770,8 @@ void ADAQAnalysisGUI::PlotPSDHistogram()
     PSDHistogram_H->Draw("CONTZ");
     break;
   }
-
-  if(PSDEnableFilter_CB->IsDown())
+  
+  if(UsePSDFilterManager[PSDChannel])
     PlotPSDFilter();
 
   CanvasContainsPSDHistogram = true;
@@ -3869,7 +3896,7 @@ bool ADAQAnalysisGUI::FindPeaks(TH1F *Histogram_H, bool PlotPeaksAndGraphics)
   //
   // sigma = distance between allowable peak finds
   // resolution = fraction of max peak above which peaks are valid
-
+  
   int NumPotentialPeaks = PeakFinder->Search(Histogram_H,				    
 					     Sigma,
 					     "goff", 
@@ -4127,6 +4154,7 @@ void ADAQAnalysisGUI::FindPeakLimits(TH1F *Histogram_H, bool PlotPeaksAndGraphic
   // the peak to any later analysis methods
   if(UsePileupRejection)
     RejectPileup(Histogram_H);
+
   
   // Set the Y-axis limits for drawing TLines and a TBox
   // representing the integration region
@@ -4172,7 +4200,7 @@ void ADAQAnalysisGUI::FindPeakLimits(TH1F *Histogram_H, bool PlotPeaksAndGraphic
     // lines representing the peak location and the tail location
     // (including potential offsets) as well as a lightly shaded box
     // representing the tail integration region
-    if(PSDPlotTailIntegration_CB->IsDown() and PSDEnable_CB->IsDown() and PlotPeaksAndGraphics){
+    if(PSDPlotTailIntegration_CB->IsDown() and UsePSDFilterManager[PSDChannel] and PlotPeaksAndGraphics){
       
       if(PSDChannel_CBL->GetComboBox()->GetSelected() ==
 	 ChannelSelector_CBL->GetComboBox()->GetSelected()){
@@ -4237,6 +4265,12 @@ void ADAQAnalysisGUI::IntegratePeaks()
     if(UsePileupRejection and (*it).PileupFlag==true)
       continue;
 
+    // If the PSD filter is desired, examine the PSD filter flag
+    // stored in each PeakInfoStruct to determine whether or not this
+    // peak should be filtered out of the spectrum.
+    if(UsePSDFilterManager[PSDChannel] and (*it).PSDFilterFlag==true)
+      continue;
+
     // ...and use the lower and upper peak limits to calculate the
     // integral under each waveform peak that has passed all criterion
     double PeakIntegral = Waveform_H[Channel]->Integral((*it).PeakLimit_Lower,
@@ -4264,6 +4298,12 @@ void ADAQAnalysisGUI::FindPeakHeights()
     // stored in each PeakInfoStruct to determine whether or not this
     // peak is part of a pileup events. If so, skip it...
     if(UsePileupRejection and (*it).PileupFlag==true)
+      continue;
+
+    // If the PSD filter is desired, examine the PSD filter flag
+    // stored in each PeakInfoStruct to determine whether or not this
+    // peak should be filtered out of the spectrum.
+    if(UsePSDFilterManager[PSDChannel] and (*it).PSDFilterFlag==true)
       continue;
     
     // Initialize the peak height for each peak region
@@ -4294,7 +4334,7 @@ void ADAQAnalysisGUI::CreatePSDHistogram()
     delete PSDHistogram_H;
     PSDHistogramExists = false;
   }
-
+  
   if(SequentialArchitecture){
     // Reset the waveform procesing progress bar
     ProcessingProgress_PB->Reset();
@@ -4517,31 +4557,62 @@ void ADAQAnalysisGUI::CalculatePSDIntegrals()
 	   << "Int(total) = " << TotalIntegral << "\n"
 	   << endl;
 
+    // If the user has enabled a PSD filter ...
+    if(UsePSDFilterManager[PSDChannel])
+
+      // ... then apply the PSD filter to the waveform. If the
+      // waveform does not pass the filter, mark the flag indicating
+      // that it should be filtered out due to its pulse shap
+      if(ApplyPSDFilter(TailIntegral, TotalIntegral))
+	(*it).PSDFilterFlag = true;
+
     // The total integral of the waveform must exceed the PSDThreshold
     // in order to be histogrammed. This allows the user flexibility
     // in eliminating the large numbers of small waveform events.
     if(TotalIntegral > PSDThreshold){
-      
-      // The PSDFilter uses a TGraph created by the user in order to
-      // filter events out of the PSDHistogram_H. The events to be
-      // filtered must fall either above ("positive filter") or below
-      // ("negative filter) the line defined by the TGraph object. The
-      // tail integral of the pulse is compared to an interpolated
-      // value (using the total integral) to decide whether to filter.
-      if(PSDEnableFilter_CB->IsDown()){
-	if(PSDFilterPolarity > 0 and TailIntegral >= PSDFilter_G->Eval(TotalIntegral))
-	  PSDHistogram_H->Fill(TotalIntegral, TailIntegral);
-	else if(PSDFilterPolarity < 0 and TailIntegral <= PSDFilter_G->Eval(TotalIntegral))
-	  PSDHistogram_H->Fill(TotalIntegral, TailIntegral);
-      }
-      
-      // If no PSDFilter is used then simply histogram the integrals
-      else{
+
+      if((*it).PSDFilterFlag == false)
 	PSDHistogram_H->Fill(TotalIntegral, TailIntegral);
-	
-      }
     }
   }
+}
+
+
+// Analyze the tail and total PSD integrals to determine whether the
+// waveform should be filtered out depending on its pulse shape. The
+// comparison is made by determining if the value of tail integral
+// falls above/below the interpolated value of the total integral via
+// a TGraph created by the user (depending on "positive" or "negative"
+// filter polarity as selected by the user.). The following convention
+// - uniform throughout the code - is used for the return value:true =
+// waveform should be filtered; false = waveform should not be
+// filtered
+bool ADAQAnalysisGUI::ApplyPSDFilter(double TailIntegral, double TotalIntegral)
+{
+  // The PSDFilter uses a TGraph created by the user in order to
+  // filter events out of the PSDHistogram_H. The events to be
+  // filtered must fall either above ("positive filter") or below
+  // ("negative filter) the line defined by the TGraph object. The
+  // tail integral of the pulse is compared to an interpolated
+  // value (using the total integral) to decide whether to filter.
+
+
+  // Waveform passed the criterion for a positive PSD filter (point in
+  // tail/total PSD integral space fell "above" the TGraph; therefore,
+  // it should not be filtered so return false
+  if(PSDFilterPolarity > 0 and TailIntegral >= PSDFilterManager[PSDChannel]->Eval(TotalIntegral))
+    return false;
+
+  // Waveform passed the criterion for a negative PSD filter (point in
+  // tail/total PSD integral space fell "below" the TGraph; therefore,
+  // it should not be filtered so return false
+  else if(PSDFilterPolarity < 0 and TailIntegral <= PSDFilterManager[PSDChannel]->Eval(TotalIntegral))
+    return false;
+
+  // Waveform did not pass the PSD filter tests; therefore it should
+  // be filtered so return true
+  else
+    return true;
 }
 
 
@@ -5207,7 +5278,7 @@ void ADAQAnalysisGUI::ProcessWaveformsInParallel(string ProcessingType)
       PSDHistogram_H = (TH2F *)ParallelProcessingFile->Get("MasterPSDHistogram");
       PSDHistogramExists = true;
       PlotPSDHistogram();
-
+      
       TVectorD *AggregatedDeuterons = (TVectorD *)ParallelProcessingFile->Get("AggregatedDeuterons");
       TotalDeuterons = (*AggregatedDeuterons)[0];
       DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
@@ -5653,21 +5724,21 @@ void ADAQAnalysisGUI::CreatePSDFilter(int XPixel, int YPixel)
   // be used with the TGraph
   PSDFilterXPoints.push_back(XPos);
   PSDFilterYPoints.push_back(YPos);
-
-  if(PSDFilter_G) delete PSDFilter_G;
-  PSDFilter_G = new TGraph(PSDNumFilterPoints, &PSDFilterXPoints[0], &PSDFilterYPoints[0]);
-
+  
+  if(PSDFilterManager[PSDChannel]) delete PSDFilterManager[PSDChannel];
+  PSDFilterManager[PSDChannel] = new TGraph(PSDNumFilterPoints, &PSDFilterXPoints[0], &PSDFilterYPoints[0]);
+  
   PlotPSDFilter();
 }
 
 
 void ADAQAnalysisGUI::PlotPSDFilter()
 {
-  PSDFilter_G->SetLineColor(2);
-  PSDFilter_G->SetLineWidth(2);
-  PSDFilter_G->SetMarkerStyle(24);
-  PSDFilter_G->SetMarkerColor(2);
-  PSDFilter_G->Draw("LP SAME");
+  PSDFilterManager[PSDChannel]->SetLineColor(2);
+  PSDFilterManager[PSDChannel]->SetLineWidth(2);
+  PSDFilterManager[PSDChannel]->SetMarkerStyle(24);
+  PSDFilterManager[PSDChannel]->SetMarkerColor(2);
+  PSDFilterManager[PSDChannel]->Draw("LP SAME");
   
   Canvas_EC->GetCanvas()->Update();
 }

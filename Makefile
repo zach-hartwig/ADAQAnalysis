@@ -73,15 +73,13 @@ ifeq ($(ARCH),mpi)
 # then set the macros requires for the sequential build
 else	
    SEQ_TARGET = $(BINDIR)/ADAQAnalysisGUI
-   #CXX := g++ -I.
 
-   # Use clang++ to compile on TheBlackArrow. It's the superior
-   # compiler, but it's extremely slow on sws/cmodws cluster
    ifeq ($(HOSTNAME),TheBlackArrow)
       CXX := clang++
-   else	
+   else
       CXX := g++
    endif
+
 endif
 
 #**** RULES ****#
@@ -139,7 +137,7 @@ par:
 
 .PHONY:
 both:
-	@echo -e "\nBuilding sequential and parallel version of ADAQAnalysisGUI ...\n"
+	@echo -e "\nBuilding sequential and parallel versions of ADAQAnalysisGUI ...\n"
 	@make -j3
 	@make ARCH=mpi -j3
 	@echo -e ""

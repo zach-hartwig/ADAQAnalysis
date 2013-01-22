@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 // name: ADAQAnalysisGUI.hh
-// date: 17 Jan 13 (Last updated)
+// date: 22 Jan 13 (Last updated)
 // auth: Zach Hartwig
 //
 // desc: ADAQAnalysisGUI.cc is the main implementation file for the
@@ -107,6 +107,7 @@ public:
   // Methods for general waveform analysis
   void CalculateCountRate();
   void CalculatePSDIntegrals();
+  bool ApplyPSDFilter(double,double);
   void IntegratePearsonWaveform(bool PlotPearsonIntegration=true);
   
   // Method to readout ROOT widget values to class member data
@@ -424,7 +425,6 @@ private:
   int PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin;
   int PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin;
 
-
   // Strings for specifying binaries and ROOT files
   string ADAQHOME;
   string ParallelBinaryName;
@@ -446,6 +446,14 @@ private:
 
   // Variables to hold waveform processing values
   double WaveformPolarity, PearsonPolarity, Baseline;
+
+  // Variables for PSD histograms and filter
+  TH2F *PSDHistogram_H, *MasterPSDHistogram_H;
+  double PSDFilterPolarity;
+  vector<TGraph *> PSDFilterManager;
+  vector<bool> UsePSDFilterManager;
+  int PSDNumFilterPoints;
+  vector<int> PSDFilterXPoints, PSDFilterYPoints;
 
   // Maximum bit value of CAEN X720 digitizer family (4095)
   int V1720MaximumBit;
@@ -474,14 +482,6 @@ private:
 
   // A ROOT random number generator (RNG)
   TRandom *RNG;
-
-  TH2F *PSDHistogram_H, *MasterPSDHistogram_H;
-  TGraph *PSDFilter_G;
-  
-  int PSDNumFilterPoints;
-  vector<int> PSDFilterXPoints, PSDFilterYPoints;
-  double PSDFilterPolarity;
-
   
   // Define the ADAQAnalysisGUI to ROOT
   ClassDef(ADAQAnalysisGUI, 1);
