@@ -49,10 +49,11 @@ OBJS = $(BUILDDIR)/ADAQAnalysisGUI.o $(BUILDDIR)/ADAQAnalysisGUIDict.o
 
 # Specify the includes for the ROOT dictionary build
 INCLUDES=$(ADAQHOME)/source/root/GUI/trunk/include
-CXXFLAGS += -I$(INCLUDES)
+CXXFLAGS += -I$(INCLUDES) -I.
 
 # Specify the required Boost libraries
-CXXFLAGS += -lboost_thread-mt
+#CXXFLAGS += -lboost_thread-mt
+BOOSTLIBS = -lboost_thread-mt
 
 # If the user desires to build a parallel version of the binary then
 # set a number of key macros for the build. Note that the Open MPI C++
@@ -72,8 +73,15 @@ ifeq ($(ARCH),mpi)
 # then set the macros requires for the sequential build
 else	
    SEQ_TARGET = $(BINDIR)/ADAQAnalysisGUI
-   CXX := g++ -I.
+   #CXX := g++ -I.
 
+   # Use clang++ to compile on TheBlackArrow. It's the superior
+   # compiler, but it's extremely slow on sws/cmodws cluster
+   ifeq ($(HOSTNAME),TheBlackArrow)
+      CXX := clang++
+   else	
+      CXX := g++
+   endif
 endif
 
 #**** RULES ****#
@@ -83,12 +91,12 @@ endif
 
 $(SEQ_TARGET) : $(OBJS)
 	@echo -e "\nBuilding $@ ..."
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTGLIBS) $(ROOTLIB)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTGLIBS) $(ROOTLIB) $(BOOSTLIBS)
 	@echo -e "\n$@ build is complete!\n"
 
 $(PAR_TARGET) : $(OBJS)
 	@echo -e "\nBuilding $@ ..."
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTGLIBS) $(ROOTLIB)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTGLIBS) $(ROOTLIB) $(BOOSTLIBS)
 	@echo -e "\n$@ build is complete!\n"
 
 # Rules to build the sequential object files

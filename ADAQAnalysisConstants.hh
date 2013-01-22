@@ -4,7 +4,8 @@
 namespace{
   double DynamicRange_V1720 = 2.; // [V]
   int BitDepth_1720 = 12; 
-  int Bits_V1720 = 4096; // [ADC]
+  //int Bits_V1720 = 4096; // [ADC]
+  int Bits_V1720 = pow(2,BitDepth_1720);
   int SampleRate_V1720 = 250e6; // [samples / s]
 
   double adc2volts_V1720 = DynamicRange_V1720 / Bits_V1720; // [V / ADC]

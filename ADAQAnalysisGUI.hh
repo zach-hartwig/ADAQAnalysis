@@ -114,8 +114,10 @@ public:
 
   // Method to alert the user via a ROOT message box
   void CreateMessageBox(string, string);
-  
+
   void UpdateProcessingProgress(int);
+  void CreatePSDFilter(int, int);
+  void PlotPSDFilter();
 
   // Methods to recieve and act upon ROOT widget signals
   void HandleMenu(int);
@@ -127,6 +129,7 @@ public:
   void HandleNumberEntries();
   void HandleRadioButtons();
   void HandleComboBox(int, int);
+  void HandleCanvas(int, int, int, TObject *);
   void HandleTerminate();
 
 private:
@@ -239,10 +242,14 @@ private:
   ADAQNumberEntryWithLabel *PSDNumTotalBins_NEL, *PSDMinTotalBin_NEL, *PSDMaxTotalBin_NEL;
 
   ADAQComboBoxWithLabel *PSDPlotType_CBL;
-  
 
   TGTextButton *PSDPlot_TB, *PSDCalculate_TB;
-  TGHProgressBar *PSD_PB;
+  
+  TGCheckButton *PSDEnableFilterCreation_CB;
+  TGCheckButton *PSDEnableFilter_CB;
+  TGRadioButton *PSDPositiveFilter_RB, *PSDNegativeFilter_RB;
+  TGTextButton *PSDClearFilter_TB;
+  
 
   ADAQNumberEntryWithLabel *RFQPulseWidth_NEL;
   ADAQNumberEntryWithLabel *RFQRepRate_NEL;
@@ -469,11 +476,11 @@ private:
   TRandom *RNG;
 
   TH2F *PSDHistogram_H, *MasterPSDHistogram_H;
-
+  TGraph *PSDFilter_G;
   
-  
-
-
+  int PSDNumFilterPoints;
+  vector<int> PSDFilterXPoints, PSDFilterYPoints;
+  double PSDFilterPolarity;
 
   
   // Define the ADAQAnalysisGUI to ROOT

@@ -230,6 +230,15 @@ enum{
 
   PlotWaveformWithMarkers_CB_ID,
 
+  PSDEnableFilterCreation_CB_ID,
+
+  PSDEnableFilter_CB_ID,
+
+  PSDClearFilter_TB_ID,
+
+  PSDPositiveFilter_RB_ID,
+  PSDNegativeFilter_RB_ID,
+
   Quit_TB_ID
 };
 
