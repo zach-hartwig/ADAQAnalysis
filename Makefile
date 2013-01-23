@@ -1,6 +1,6 @@
 #********************************************************************
 #  name: Makefile                  
-#  date: 18 Jan 13
+#  date: 22 Jan 13
 #  auth: Zach Hartwig              
 #
 #  desc: GNUmakefile for building ADAQAnalysisGUI code in seqential
@@ -41,15 +41,19 @@ include $(ROOTMAKE)
 # Specify the locatino of the build directory
 BUILDDIR = build
 
-# Specifiy the locatino of the binary directory
+# Specify the locatino of the binary directory
 BINDIR = bin
+
+# Specify the location of the source and header files
+SRCDIR = src
+INCLDIR = include
 
 # Specify all object files (to be built in the build/ directory)
 OBJS = $(BUILDDIR)/ADAQAnalysisGUI.o $(BUILDDIR)/ADAQAnalysisGUIDict.o 
 
 # Specify the includes for the ROOT dictionary build
 INCLUDES=$(ADAQHOME)/source/root/GUI/trunk/include
-CXXFLAGS += -I$(INCLUDES) -I.
+CXXFLAGS += -I$(INCLUDES) -I$(INCLDIR) #-I.
 
 # Specify the required Boost libraries
 #CXXFLAGS += -lboost_thread-mt
@@ -99,7 +103,7 @@ $(PAR_TARGET) : $(OBJS)
 
 # Rules to build the sequential object files
 
-$(BUILDDIR)/ADAQAnalysisGUI.o : ADAQAnalysisGUI.cc 
+$(BUILDDIR)/ADAQAnalysisGUI.o : $(SRCDIR)/ADAQAnalysisGUI.cc 
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
@@ -109,7 +113,7 @@ $(BUILDDIR)/ADAQAnalysisGUIDict.o : $(BUILDDIR)/ADAQAnalysisGUIDict.cc
 
 # Rules to build the parallel object files
 
-$(BUILDDIR)/ADAQAnalysisGUI_MPI.o : ADAQAnalysisGUI.cc
+$(BUILDDIR)/ADAQAnalysisGUI_MPI.o : $(SRCDIR)/ADAQAnalysisGUI.cc
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
@@ -118,7 +122,7 @@ $(BUILDDIR)/ADAQAnalysisGUIDict_MPI.o : $(BUILDDIR)/ADAQAnalysisGUIDict.cc
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 # Rule to generate the necessary ROOT dictionary
-$(BUILDDIR)/ADAQAnalysisGUIDict.cc : ADAQAnalysisGUI.hh RootLinkDef.h
+$(BUILDDIR)/ADAQAnalysisGUIDict.cc : $(INCLDIR)/ADAQAnalysisGUI.hh $(INCLDIR)/RootLinkDef.h
 	@echo -e "\nGenerating ROOT dictionary $@ ..."
 	rootcint -f $@ -c -I$(INCLUDES) $^ 
 
