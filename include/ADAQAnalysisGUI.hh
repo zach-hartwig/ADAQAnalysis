@@ -265,9 +265,11 @@ private:
   ADAQTextEntryWithLabel *Title_TEL;
   ADAQTextEntryWithLabel *XAxisTitle_TEL;
   ADAQTextEntryWithLabel *YAxisTitle_TEL;
+  ADAQTextEntryWithLabel *ZAxisTitle_TEL;
 
-  ADAQNumberEntryWithLabel *XAxisSize_NEL, *XAxisOffset_NEL;
-  ADAQNumberEntryWithLabel *YAxisSize_NEL, *YAxisOffset_NEL;  
+  ADAQNumberEntryWithLabel *XAxisSize_NEL, *XAxisOffset_NEL, *XAxisDivs_NEL;
+  ADAQNumberEntryWithLabel *YAxisSize_NEL, *YAxisOffset_NEL, *YAxisDivs_NEL;
+  ADAQNumberEntryWithLabel *ZAxisSize_NEL, *ZAxisOffset_NEL, *ZAxisDivs_NEL;
   
   TGButtonGroup *WaveformDrawOptions_BG;
   TGRadioButton *DrawWaveformWithCurve_RB, *DrawWaveformWithMarkers_RB, *DrawWaveformWithBoth_RB;
@@ -276,8 +278,7 @@ private:
   TGRadioButton *DrawSpectrumWithCurve_RB, *DrawSpectrumWithMarkers_RB, *DrawSpectrumWithBars_RB;
   
   TGCheckButton *SetStatsOff_CB;
-  TGCheckButton *PlotLogYAxis_CB;
-  TGCheckButton *PlotWaveformWithMarkers_CB;
+  TGCheckButton *PlotVerticalAxisInLog_CB;
   
   TGTextButton *ReplotWaveform_TB;
   TGTextButton *ReplotSpectrum_TB;
@@ -445,7 +446,7 @@ private:
 
   // Generally useful data members
   float XAxisMin, XAxisMax, YAxisMin, YAxisMax;
-  string Title, XAxisTitle, YAxisTitle;
+  string Title, XAxisTitle, YAxisTitle, ZAxisTitle;
 
   // Variables to hold waveform processing values
   double WaveformPolarity, PearsonPolarity, Baseline;

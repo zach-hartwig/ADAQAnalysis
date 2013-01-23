@@ -225,13 +225,23 @@ enum{
   // Values for the "Graphics" tabbed frame
 
   OverrideTitles_CB_ID,
+
   Title_TEL_ID,
+
   XAxisTitle_TEL_ID,
   XAxisSize_NEL_ID,
   XAxisOffset_NEL_ID,
+  XAxisDivs_NEL_ID,
+
   YAxisTitle_TEL_ID,
   YAxisSize_NEL_ID,
   YAxisOffset_NEL_ID,
+  YAxisDivs_NEL_ID,
+
+  ZAxisTitle_TEL_ID,
+  ZAxisSize_NEL_ID,
+  ZAxisOffset_NEL_ID,
+  ZAxisDivs_NEL_ID,
   
   DrawWaveformWithCurve_RB_ID,
   DrawWaveformWithMarkers_RB_ID,
@@ -240,6 +250,9 @@ enum{
   DrawSpectrumWithBars_RB_ID,
   DrawSpectrumWithCurve_RB_ID,
   DrawSpectrumWithMarkers_RB_ID,
+
+  SetStatsOff_CB_ID,
+  PlotVerticalAxisInLog_CB_ID,
 
   ResetXAxisLimits_TB_ID,
   ResetYAxisLimits_TB_ID,
