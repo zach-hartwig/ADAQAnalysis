@@ -1,6 +1,6 @@
 #********************************************************************
 #  name: Makefile                  
-#  date: 22 Jan 13
+#  date: 23 Jan 13
 #  auth: Zach Hartwig              
 #
 #  desc: GNUmakefile for building ADAQAnalysisGUI code in seqential
@@ -38,15 +38,18 @@ ROOTMAKE:=$(ROOTSYS)/etc/Makefile.arch
 ROOTLIB = -lSpectrum
 include $(ROOTMAKE)
 
+# Get the execution directory of the makefile
+EXECDIR = $(PWD)
+
 # Specify the locatino of the build directory
-BUILDDIR = build
+BUILDDIR = $(EXECDIR)/build
 
 # Specify the locatino of the binary directory
-BINDIR = bin
+BINDIR = $(EXECDIR)/bin
 
 # Specify the location of the source and header files
-SRCDIR = src
-INCLDIR = include
+SRCDIR = $(EXECDIR)/src
+INCLDIR = $(EXECDIR)/include
 
 # Specify all object files (to be built in the build/ directory)
 OBJS = $(BUILDDIR)/ADAQAnalysisGUI.o $(BUILDDIR)/ADAQAnalysisGUIDict.o 
@@ -145,6 +148,10 @@ both:
 	@make -j3
 	@make ARCH=mpi -j3
 	@echo -e ""
+
+.PHONY:
+test:
+	@echo "$(SRCDIR)"
 
 # Useful notes for the uninitiated:
 #
