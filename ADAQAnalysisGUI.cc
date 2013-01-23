@@ -1,4 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////////////////
+//
 // name: ADAQAnalysisGUI.cc
 // date: 22 Jan 13 (Last updated)
 // auth: Zach Hartwig
@@ -70,24 +71,24 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
     PrintCanvasDirectory(getenv("HOME")), DesplicedDirectory(getenv("HOME")),
     Time(0), RawVoltage(0), RecordLength(0),
     GraphicFileName(""), GraphicFileExtension(""),
-  Trigger_L(new TLine), Floor_L(new TLine), Calibration_L(new TLine), ZSCeiling_L(new TLine), NCeiling_L(new TLine),
-  LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine),
-  PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
-  PSDPeakOffset_L(new TLine), PSDTailOffset_L(new TLine), 
-  LowerLimit_L(new TLine), UpperLimit_L(new TLine), Baseline_B(new TBox), PSDTailIntegral_B(new TBox),
-  Spectrum_H(new TH1F), SpectrumBackground_H(new TH1F), SpectrumDeconvolved_H(new TH1F), 
-  PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
-  MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelArchitecture(PA), SequentialArchitecture(!PA),
-  Verbose(false), ParallelVerbose(true),
-  XAxisMin(0), XAxisMax(1.0), YAxisMin(0), YAxisMax(4095), 
-  Title(""), XAxisTitle(""), YAxisTitle(""),
-  WaveformPolarity(-1.0), PearsonPolarity(1.0), Baseline(0.), PSDFilterPolarity(1.),
-  V1720MaximumBit(4095), NumDataChannels(8),
-  CanvasContainsSpectrum(false), SpectrumExists(false), 
-  CanvasContainsPSDHistogram(false), PSDHistogramExists(false),
-  SpectrumMaxPeaks(0), TotalPeaks(0), TotalDeuterons(0),
-  GaussianBinWidth(1.), CountsBinWidth(1.),
-  ColorManager(new TColor), RNG(new TRandom(424242))
+    Trigger_L(new TLine), Floor_L(new TLine), Calibration_L(new TLine), ZSCeiling_L(new TLine), NCeiling_L(new TLine),
+    LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine),
+    PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
+    PSDPeakOffset_L(new TLine), PSDTailOffset_L(new TLine), 
+    LowerLimit_L(new TLine), UpperLimit_L(new TLine), Baseline_B(new TBox), PSDTailIntegral_B(new TBox),
+    Spectrum_H(new TH1F), SpectrumBackground_H(new TH1F), SpectrumDeconvolved_H(new TH1F), 
+    PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
+    MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelArchitecture(PA), SequentialArchitecture(!PA),
+    Verbose(false), ParallelVerbose(true),
+    XAxisMin(0), XAxisMax(1.0), YAxisMin(0), YAxisMax(4095), 
+    Title(""), XAxisTitle(""), YAxisTitle(""),
+    WaveformPolarity(-1.0), PearsonPolarity(1.0), Baseline(0.), PSDFilterPolarity(1.),
+    V1720MaximumBit(4095), NumDataChannels(8),
+    CanvasContainsSpectrum(false), SpectrumExists(false), 
+    CanvasContainsPSDHistogram(false), PSDHistogramExists(false),
+    SpectrumMaxPeaks(0), TotalPeaks(0), TotalDeuterons(0),
+    GaussianBinWidth(1.), CountsBinWidth(1.),
+    ColorManager(new TColor), RNG(new TRandom(424242))
 {
   SetCleanup(kDeepCleanup);
   
@@ -158,13 +159,6 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
   UpperLimit_L->SetLineColor(2);
   UpperLimit_L->SetLineWidth(2);
 
-  /*
-  PSDFilter_G->SetLineColor(2);
-  PSDFilter_G->SetLineWidth(2);
-  PSDFilter_G->SetMarkerStyle(24);
-  PSDFilter_G->SetMarkerColor(2);
-  */
-
   // Initialize the objects used in the calibration and pulse shape
   // discrimination (PSD) scheme. A set of 8 calibration and 8 PSD
   // filter "managers" -- really, TGraph *'s used for interpolating --
@@ -191,7 +185,6 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
   ADAQHOME = getenv("ADAQHOME");
   ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysisGUI/trunk/bin/ADAQAnalysisGUI_MPI";
   ParallelProcessingFName = "/tmp/ParallelProcessing.root";
-  //ParallelProgressFName = "/tmp/ParallelProgress.txt";
   
   // Set ROOT to print only break messages and above (to suppress the
   // annoying warning from TSpectrum that the peak buffer is full)
@@ -463,15 +456,13 @@ void ADAQAnalysisGUI::CreateMainFrame()
 				     new TGLayoutHints(kLHintsLeft, 0,5,0,5));
   RawWaveform_RB = new TGRadioButton(WaveformType_BG, "Raw voltage", RawWaveform_RB_ID);
   RawWaveform_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
-  //  RawWaveform_RB->SetState(kButtonDown);
+  RawWaveform_RB->SetState(kButtonDown);
   
   BaselineSubtractedWaveform_RB = new TGRadioButton(WaveformType_BG, "Baseline-subtracted", BaselineSubtractedWaveform_RB_ID);
   BaselineSubtractedWaveform_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
-  BaselineSubtractedWaveform_RB->SetState(kButtonDown);
-  
+
   ZeroSuppressionWaveform_RB = new TGRadioButton(WaveformType_BG, "Zero suppression", ZeroSuppressionWaveform_RB_ID);
   ZeroSuppressionWaveform_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
-  //ZeroSuppressionWaveform_RB->SetState(kButtonDown);
 
   WaveformSpecification_HF->AddFrame(WaveformPolarity_BG = new TGButtonGroup(WaveformSpecification_HF, "Polarity", kVerticalFrame),
 				     new TGLayoutHints(kLHintsLeft, 5,5,0,5));
@@ -482,7 +473,6 @@ void ADAQAnalysisGUI::CreateMainFrame()
   
   NegativeWaveform_RB = new TGRadioButton(WaveformPolarity_BG, "Negative", NegativeWaveform_RB_ID);
   NegativeWaveform_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
-  //NegativeWaveform_RB->SetState(kButtonDown);
 
   // Zero suppression options
 
@@ -826,7 +816,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
   SpectrumIntegralError_NEFL->GetEntry()->Resize(100,20);
   SpectrumIntegralError_NEFL->GetEntry()->SetState(false);
 
-  SpectrumFrame_VF->AddFrame(CreateSpectrum_TB = new TGTextButton(SpectrumFrame_VF, "Process waveforms", CreateSpectrum_TB_ID),
+  SpectrumFrame_VF->AddFrame(CreateSpectrum_TB = new TGTextButton(SpectrumFrame_VF, "Create spectrum", CreateSpectrum_TB_ID),
 		       new TGLayoutHints(kLHintsCenterX | kLHintsTop, 5,5,0,0));
   CreateSpectrum_TB->Resize(200, 30);
   CreateSpectrum_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
@@ -852,7 +842,6 @@ void ADAQAnalysisGUI::CreateMainFrame()
   PSDAnalysis_GF->AddFrame(PSDEnable_CB = new TGCheckButton(PSDAnalysis_GF, "Discriminate pulse shapes", PSDEnable_CB_ID),
                            new TGLayoutHints(kLHintsNormal, 0,5,5,0));
   PSDEnable_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
-  PSDEnable_CB->SetState(kButtonDown);
 
   PSDAnalysis_GF->AddFrame(PSDChannel_CBL = new ADAQComboBoxWithLabel(PSDAnalysis_GF, "", -1),
                            new TGLayoutHints(kLHintsNormal, 0,5,0,0));
@@ -879,42 +868,48 @@ void ADAQAnalysisGUI::CreateMainFrame()
   PSDNumTotalBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDNumTotalBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PSDNumTotalBins_NEL->GetEntry()->SetNumber(100);
+  PSDNumTotalBins_NEL->GetEntry()->SetState(false);
 
   TGHorizontalFrame *TotalBins_HF = new TGHorizontalFrame(PSDAnalysis_GF);
   PSDAnalysis_GF->AddFrame(TotalBins_HF);
 
-  TotalBins_HF->AddFrame(PSDMinTotalBin_NEL = new ADAQNumberEntryWithLabel(TotalBins_HF, "Min. total", -1),
+  TotalBins_HF->AddFrame(PSDMinTotalBin_NEL = new ADAQNumberEntryWithLabel(TotalBins_HF, "Min.", -1),
 			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMinTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDMinTotalBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PSDMinTotalBin_NEL->GetEntry()->SetNumber(0);
+  PSDMinTotalBin_NEL->GetEntry()->SetState(false);
 
-  TotalBins_HF->AddFrame(PSDMaxTotalBin_NEL = new ADAQNumberEntryWithLabel(TotalBins_HF, "Max total", -1),
+  TotalBins_HF->AddFrame(PSDMaxTotalBin_NEL = new ADAQNumberEntryWithLabel(TotalBins_HF, "Max.", -1),
 			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMaxTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDMaxTotalBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PSDMaxTotalBin_NEL->GetEntry()->SetNumber(50000);
-
+  PSDMaxTotalBin_NEL->GetEntry()->SetState(false);
+  
   PSDAnalysis_GF->AddFrame(PSDNumTailBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. tail bins (Y axis)", -1),
-			  new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
   PSDNumTailBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDNumTailBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PSDNumTailBins_NEL->GetEntry()->SetNumber(100);
+  PSDNumTailBins_NEL->GetEntry()->SetState(false);
 
   TGHorizontalFrame *TailBins_HF = new TGHorizontalFrame(PSDAnalysis_GF);
   PSDAnalysis_GF->AddFrame(TailBins_HF);
 
-  TailBins_HF->AddFrame(PSDMinTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Min. tail", -1),
+  TailBins_HF->AddFrame(PSDMinTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Min.", -1),
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMinTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDMinTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PSDMinTailBin_NEL->GetEntry()->SetNumber(0);
+  PSDMinTailBin_NEL->GetEntry()->SetState(false);
 
-  TailBins_HF->AddFrame(PSDMaxTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Max. tail", -1),
+  TailBins_HF->AddFrame(PSDMaxTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Max.", -1),
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMaxTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDMaxTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PSDMaxTailBin_NEL->GetEntry()->SetNumber(25000);
+  PSDMaxTailBin_NEL->GetEntry()->SetState(false);
 
 
   PSDAnalysis_GF->AddFrame(PSDThreshold_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Threshold (ADC)", -1),
@@ -941,12 +936,14 @@ void ADAQAnalysisGUI::CreateMainFrame()
   
   PSDAnalysis_GF->AddFrame(PSDPlotType_CBL = new ADAQComboBoxWithLabel(PSDAnalysis_GF, "Plot type", PSDPlotType_CBL_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,5));
-  PSDPlotType_CBL->GetComboBox()->AddEntry("COLZ",0);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("COL",0);
   PSDPlotType_CBL->GetComboBox()->AddEntry("LEGO2",1);
   PSDPlotType_CBL->GetComboBox()->AddEntry("SURF3",2);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("CONT",3);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("SURF4",3);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("CONT",4);
   PSDPlotType_CBL->GetComboBox()->Select(0);
   PSDPlotType_CBL->GetComboBox()->Connect("Selected(int,int)", "ADAQAnalysisGUI", this, "HandleComboBox(int,int)");
+  PSDPlotType_CBL->GetComboBox()->SetEnabled(false);
 
   PSDAnalysis_GF->AddFrame(PSDPlotTailIntegration_CB = new TGCheckButton(PSDAnalysis_GF, "Plot tail integration region", PSDPlotTailIntegration_CB_ID),
                            new TGLayoutHints(kLHintsNormal, 0,5,0,5));
@@ -955,10 +952,12 @@ void ADAQAnalysisGUI::CreateMainFrame()
 
   PSDAnalysis_GF->AddFrame(PSDEnableFilterCreation_CB = new TGCheckButton(PSDAnalysis_GF, "Enable filter creation", PSDEnableFilterCreation_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  PSDEnableFilterCreation_CB->SetState(kButtonDisabled);
   
   PSDAnalysis_GF->AddFrame(PSDEnableFilter_CB = new TGCheckButton(PSDAnalysis_GF, "Enable filter use", PSDEnableFilter_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDEnableFilter_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
+  PSDEnableFilter_CB->SetState(kButtonDisabled);
 
   TGHorizontalFrame *PSDFilterPolarity_HF = new TGHorizontalFrame(PSDAnalysis_GF);
   PSDAnalysis_GF->AddFrame(PSDFilterPolarity_HF);
@@ -967,10 +966,13 @@ void ADAQAnalysisGUI::CreateMainFrame()
 				 new TGLayoutHints(kLHintsNormal, 5,5,0,5));
   PSDPositiveFilter_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
   PSDPositiveFilter_RB->SetState(kButtonDown);
+  PSDPositiveFilter_RB->SetState(kButtonDisabled);
 
   PSDFilterPolarity_HF->AddFrame(PSDNegativeFilter_RB = new TGRadioButton(PSDFilterPolarity_HF, "Negative", PSDNegativeFilter_RB_ID),
 				 new TGLayoutHints(kLHintsNormal, 5,5,0,5));
   PSDNegativeFilter_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
+  PSDNegativeFilter_RB->SetState(kButtonDisabled);
+
   
   PSDAnalysis_GF->AddFrame(PSDClearFilter_TB = new TGTextButton(PSDAnalysis_GF, "Clear filter", PSDClearFilter_TB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,5));
@@ -978,15 +980,17 @@ void ADAQAnalysisGUI::CreateMainFrame()
   PSDClearFilter_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
   PSDClearFilter_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
   PSDClearFilter_TB->ChangeOptions(PSDClearFilter_TB->GetOptions() | kFixedSize);
-  PSDClearFilter_TB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleTextButtons()");
+  PSDClearFilter_TB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleTextButtons()")
+;  PSDClearFilter_TB->SetState(kButtonDisabled);
   
-  PSDAnalysis_GF->AddFrame(PSDCalculate_TB = new TGTextButton(PSDAnalysis_GF, "Calculate PSD", PSDCalculate_TB_ID),
+  PSDAnalysis_GF->AddFrame(PSDCalculate_TB = new TGTextButton(PSDAnalysis_GF, "Create PSD histogram", PSDCalculate_TB_ID),
                            new TGLayoutHints(kLHintsNormal, 0,5,5,5));
   PSDCalculate_TB->Resize(200,30);
   PSDCalculate_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
   PSDCalculate_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
   PSDCalculate_TB->ChangeOptions(PSDCalculate_TB->GetOptions() | kFixedSize);
   PSDCalculate_TB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleTextButtons()");
+  PSDCalculate_TB->SetState(kButtonDisabled);
 
   // Count rate
 
@@ -1185,7 +1189,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
   UpdateFreq_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   UpdateFreq_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   UpdateFreq_NEL->GetEntry()->SetLimitValues(1,100);
-  UpdateFreq_NEL->GetEntry()->SetNumber(1);
+  UpdateFreq_NEL->GetEntry()->SetNumber(2);
   
   TGGroupFrame *PearsonAnalysis_GF = new TGGroupFrame(ProcessingFrame_VF, "Pearson (RFQ current) integration", kVerticalFrame);
   ProcessingFrame_VF->AddFrame(PearsonAnalysis_GF, new TGLayoutHints(kLHintsNormal, 15,5,0,0));
@@ -2161,19 +2165,39 @@ void ADAQAnalysisGUI::HandleCheckButtons()
       WidgetState = true;
     }
 
-    PSDPlotTailIntegration_CB->SetState(ButtonState);
+    // Be sure to turn off PSD filtering if the user does not want to
+    // discriminate by pulse shape
+    else{
+      PSDEnableFilter_CB->SetState(kButtonUp);
+    }
+
     PSDChannel_CBL->GetComboBox()->SetEnabled(WidgetState);
     PSDWaveforms_NEL->GetEntry()->SetState(WidgetState);
+    PSDNumTailBins_NEL->GetEntry()->SetState(WidgetState);
+    PSDMinTailBin_NEL->GetEntry()->SetState(WidgetState);
+    PSDMaxTailBin_NEL->GetEntry()->SetState(WidgetState);
+    PSDNumTotalBins_NEL->GetEntry()->SetState(WidgetState);
+    PSDMinTotalBin_NEL->GetEntry()->SetState(WidgetState);
+    PSDMaxTotalBin_NEL->GetEntry()->SetState(WidgetState);
     PSDThreshold_NEL->GetEntry()->SetState(WidgetState);
     PSDPeakOffset_NEL->GetEntry()->SetState(WidgetState);
     PSDTailOffset_NEL->GetEntry()->SetState(WidgetState);
-
+    PSDPlotType_CBL->GetComboBox()->SetEnabled(WidgetState);
+    PSDPlotTailIntegration_CB->SetState(ButtonState);
+    PSDEnableFilterCreation_CB->SetState(ButtonState);
+    PSDEnableFilter_CB->SetState(ButtonState);
+    PSDPositiveFilter_RB->SetState(ButtonState);
+    PSDNegativeFilter_RB->SetState(ButtonState);
+    PSDClearFilter_TB->SetState(ButtonState);
+    PSDCalculate_TB->SetState(ButtonState);
     break;
   }
 
   case PSDEnableFilter_CB_ID:{
-    if(PSDEnableFilter_CB->IsDown())
+    if(PSDEnableFilter_CB->IsDown()){
       UsePSDFilterManager[PSDChannel] = true;
+      FindPeaks_CB->SetState(kButtonDown);
+    }
     else
       UsePSDFilterManager[PSDChannel] = false;
     break;
@@ -2626,19 +2650,25 @@ void ADAQAnalysisGUI::LoadADAQRootFile()
   // Deny parallel binaries access to the ROOT widgets to prevent
   // seg. faults since parallel architecture do not construct widgets
 #ifndef MPI_ENABLED
+
+  int WaveformsInFile = ADAQWaveformTree->GetEntries();
+
+
+
+
   // Set the range of the slider used to plot waveforms such that it
   // can access all the waveforms in the ADAQ ROOT file.
-  WaveformSelector_HS->SetRange(1, ADAQWaveformTree->GetEntries());
+  WaveformSelector_HS->SetRange(1, WaveformsInFile);
 
   // Set the range of the number entry to the maximum number of
   // waveforms available to histogram
-  WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, ADAQWaveformTree->GetEntries());
-  WaveformsToHistogram_NEL->GetEntry()->SetNumber(ADAQWaveformTree->GetEntries());
+  WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
+  WaveformsToHistogram_NEL->GetEntry()->SetNumber(WaveformsInFile);
 
   // Update the ROOT widgets above the embedded canvas to display
   // the file name, total waveofmrs, and record length
   FileName_TE->SetText(ADAQRootFileName.c_str());
-  Waveforms_NEL->SetNumber(ADAQWaveformTree->GetEntries());
+  Waveforms_NEL->SetNumber(WaveformsInFile);
   RecordLength_NEL->SetNumber(ADAQMeasParams->RecordLength);
   
   BaselineCalcMin_NEL->GetEntry()->SetLimitValues(0,RecordLength-1);
@@ -2664,11 +2694,11 @@ void ADAQAnalysisGUI::LoadADAQRootFile()
   PearsonUpperLimit_NEL->GetEntry()->SetLimitValues(1, RecordLength);
   PearsonUpperLimit_NEL->GetEntry()->SetNumber(RecordLength);
   
-  DesplicedWaveformNumber_NEL->GetEntry()->SetLimitValues(1, ADAQWaveformTree->GetEntries());
-  DesplicedWaveformNumber_NEL->GetEntry()->SetNumber(ADAQWaveformTree->GetEntries());
+  DesplicedWaveformNumber_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
+  DesplicedWaveformNumber_NEL->GetEntry()->SetNumber(WaveformsInFile);
   
-  PSDWaveforms_NEL->GetEntry()->SetLimitValues(1, ADAQWaveformTree->GetEntries());
-  PSDWaveforms_NEL->GetEntry()->SetNumber(100);//ADAQWaveformTree->GetEntries());
+  PSDWaveforms_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
+  PSDWaveforms_NEL->GetEntry()->SetNumber(WaveformsInFile);
   
   // Update the XAxis minimum and maximum values for correct plotting
   XAxisMin = 0;
@@ -3341,7 +3371,7 @@ void ADAQAnalysisGUI::CreateSpectrum()
     // Calculate the total RFQ current for this waveform.
     if(IntegratePearson)
       IntegratePearsonWaveform(false);
-    
+
 
     ///////////////////////////////
     // Whole waveform processing //
@@ -3421,7 +3451,10 @@ void ADAQAnalysisGUI::CreateSpectrum()
       if(!PeaksFound)
       	continue;
       
-      CalculatePSDIntegrals();
+      // Calculate the PSD integrals and determine if they pass
+      // the pulse-shape filterthrough the pulse-shape filter
+      if(UsePSDFilterManager[PSDChannel])
+	CalculatePSDIntegrals(false);
       
       // If a PAS is to be created ...
       if(SpectrumTypePAS)
@@ -3759,21 +3792,26 @@ void ADAQAnalysisGUI::PlotPSDHistogram()
     break;
 
   case 1:
-    PSDHistogram_H->Draw("LEGO2Z");
+    PSDHistogram_H->Draw("LEGO2 0Z");
     break;
 
   case 2:
     PSDHistogram_H->Draw("SURF3Z");
     break;
-
-  case 3:
+    
+  case 3: 
+    PSDHistogram_H->SetFillColor(kOrange);
+    PSDHistogram_H->Draw("SURF4");
+    break;
+    
+  case 4:
     PSDHistogram_H->Draw("CONTZ");
     break;
   }
   
-  if(UsePSDFilterManager[PSDChannel])
+  if(PSDEnableFilterCreation_CB->IsDown())
     PlotPSDFilter();
-
+  
   CanvasContainsPSDHistogram = true;
   CanvasContainsSpectrum = false;
   
@@ -4200,7 +4238,7 @@ void ADAQAnalysisGUI::FindPeakLimits(TH1F *Histogram_H, bool PlotPeaksAndGraphic
     // lines representing the peak location and the tail location
     // (including potential offsets) as well as a lightly shaded box
     // representing the tail integration region
-    if(PSDPlotTailIntegration_CB->IsDown() and UsePSDFilterManager[PSDChannel] and PlotPeaksAndGraphics){
+    if(PSDEnable_CB->IsDown() and PSDPlotTailIntegration_CB->IsDown() and PlotPeaksAndGraphics){
       
       if(PSDChannel_CBL->GetComboBox()->GetSelected() ==
 	 ChannelSelector_CBL->GetComboBox()->GetSelected()){
@@ -4409,8 +4447,10 @@ void ADAQAnalysisGUI::CreatePSDHistogram()
     if(!PeaksFound)
       continue;
     
-    // Calculate the "total" and "tail" integrals of each peak 
-    CalculatePSDIntegrals();
+    // Calculate the "total" and "tail" integrals of each
+    // peak. Because we want to create a PSD histogram, pass "true" to
+    // the function to indicate the results should be histogrammed
+    CalculatePSDIntegrals(true);
     
     // Update the user with progress
     if(IsMaster)
@@ -4536,41 +4576,53 @@ void ADAQAnalysisGUI::CreatePSDHistogram()
 }
 
 
-void ADAQAnalysisGUI::CalculatePSDIntegrals()
+// Method to calculate the "tail" and "total" integrals of each of the
+// peaks located by the peak finding algorithm and stored in the class
+// member vector of PeakInfoStruct. Because calculating these
+// integrals are necessary for pulse shape discrimiation, this method
+// also (if specified by the user) applies a PSD filter to the
+// waveforms. Thus, this function is called anytime PSD filtering is
+// required (spectra creation, desplicing, etc), which may or may not
+// require histogramming the result of the PSD integrals. Hence, the
+// function argment boolean to provide flexibility
+void ADAQAnalysisGUI::CalculatePSDIntegrals(bool FillPSDHistogram)
 {
   // Iterate over each peak stored in the vector of PeakInfoStructs...
   vector<PeakInfoStruct>::iterator it;
   for(it=PeakInfoVec.begin(); it!=PeakInfoVec.end(); it++){
-
-    double LowerLimit = (*it).PeakLimit_Lower;
-    double Peak = (*it).PeakPosX + PSDPeakOffset;
-    double UpperLimit = (*it).PeakLimit_Upper + PSDTailOffset;
+    
+    // Assign the integration limits for the tail and total
+    // integrals. Note that peak limit and upper limit have the
+    // user-specified included to provide flexible integration
+    double LowerLimit = (*it).PeakLimit_Lower; // Left-most side of peak
+    double Peak = (*it).PeakPosX + PSDPeakOffset; // The peak location + offset
+    double UpperLimit = (*it).PeakLimit_Upper + PSDTailOffset; // Right-most side of peak + offset
     
     // Compute the total integral (lower to upper limit)
     double TotalIntegral = Waveform_H[PSDChannel]->Integral(LowerLimit, UpperLimit);
     
     // Compute the tail integral (peak to upper limit)
-    double TailIntegral = Waveform_H[PSDChannel]->Integral(Peak, LowerLimit);
-
+    double TailIntegral = Waveform_H[PSDChannel]->Integral(Peak, UpperLimit);
+    
     if(Verbose)
-      cout << "Int(tail) = " << TailIntegral << "\n"
-	   << "Int(total) = " << TotalIntegral << "\n"
+      cout << "PSD tail integral = " << TailIntegral << " (ADC)\n"
+	   << "PSD total integral = " << TotalIntegral << " (ADC)\n"
 	   << endl;
-
+    
     // If the user has enabled a PSD filter ...
     if(UsePSDFilterManager[PSDChannel])
-
+      
       // ... then apply the PSD filter to the waveform. If the
       // waveform does not pass the filter, mark the flag indicating
       // that it should be filtered out due to its pulse shap
       if(ApplyPSDFilter(TailIntegral, TotalIntegral))
 	(*it).PSDFilterFlag = true;
-
+    
     // The total integral of the waveform must exceed the PSDThreshold
     // in order to be histogrammed. This allows the user flexibility
     // in eliminating the large numbers of small waveform events.
-    if(TotalIntegral > PSDThreshold){
-
+    if((TotalIntegral > PSDThreshold) and FillPSDHistogram){
+      
       if((*it).PSDFilterFlag == false)
 	PSDHistogram_H->Fill(TotalIntegral, TailIntegral);
     }
@@ -4647,7 +4699,9 @@ double ADAQAnalysisGUI::SumDoublesToMaster(double SlaveDouble)
 // count rate can only be calculated using sequential
 // architecture. Because only a few thousand waveforms needs to be
 // processed to compute the count rates, it is not presently foreseen
-// that this feature will be implemented in parallel.
+// that this feature will be implemented in parallel. Note also that
+// count rates can only be calculated for RFQ triggered acquisition
+// windows with a known pulse width and rep. rate.
 void ADAQAnalysisGUI::CalculateCountRate()
 {
   if(!ADAQRootFileLoaded)
@@ -4667,7 +4721,6 @@ void ADAQAnalysisGUI::CalculateCountRate()
   
   // Get the number of waveforms to process in the calculation
   int NumWaveforms = CountRateWaveforms_NEL->GetEntry()->GetIntNumber();
-
 
   for(int waveform = 0; waveform<NumWaveforms; waveform++){
     // Process in a separate thread to allow the user to retain
@@ -4690,14 +4743,15 @@ void ADAQAnalysisGUI::CalculateCountRate()
     // Find the peaks in the waveform. Note that this function is
     // responsible for incrementing the 'TotalPeaks' member data
     FindPeaks(Waveform_H[Channel], false);
+
+    // Update the waveform processing progress bar
+    if((waveform+1) % int(WaveformEnd*UpdateFreq*1.0/100) == 0)
+      UpdateProcessingProgress(waveform);
   }
   
   // At this point, the 'TotalPeaks' variable contains the total
   // number of identified peaks after processing the number of
   // waveforms specified by the 'NumWaveforms' variable
-
-  // Conversion from microsecond to second
-  double us2s = 1e-6;
 
   // Compute the time (in seconds) that the RFQ beam was 'on'
   double TotalTime = RFQPulseWidth_NEL->GetEntry()->GetNumber() * us2s * NumWaveforms;
@@ -5514,6 +5568,11 @@ void ADAQAnalysisGUI::CreateDesplicedFile()
     if(!PeaksFound)
       continue;
     
+    // Calculate the PSD integrals and determine if they pass through
+    // the pulse-shape filter 
+    if(UsePSDFilterManager[PSDChannel])
+      CalculatePSDIntegrals(false);
+    
 
     ////////////////////////////////////////
     // Iterate over the peak info structures
@@ -5552,8 +5611,9 @@ void ADAQAnalysisGUI::CreateDesplicedFile()
 					 0);
       
       // Fill the TTree with this despliced waveform provided that the
-      // current peak is not flagged as a piled up pulse
-      if((*peak_iter).PileupFlag == false)
+      // current peak is not flagged as a piled up pulse nor flagged
+      // as a pulse to be filtered out by pulse shape
+      if((*peak_iter).PileupFlag == false and (*peak_iter).PSDFilterFlag == false)
 	T->Fill();
     }
     
@@ -5699,10 +5759,25 @@ void ADAQAnalysisGUI::UpdateProcessingProgress(int Waveform)
 }
 
 
+// Method to create a pulse shape discrimination (PSD) filter, which
+// is a TGraph composed of points defined by the user clicking on the
+// active canvas to define a line used to delinate regions. This
+// function is called by ::HandleCanvas() each time that the user
+// clicks on the active pad, passing the x- and y-pixel click
+// location to the function
 void ADAQAnalysisGUI::CreatePSDFilter(int XPixel, int YPixel)
 {
+  // Pixel coordinates: (x,y) = (0,0) at the top left of the canvas
+  // User coordinates: (x,y) at any point on the canvas corresponds to
+  //                   that point's location on the plotted TGraph or
+  //                   TH1/TH2
 
-  // Get the start and end positions of the TCanvas object 
+  // For some reason, it is necessary to correct the pixel-to-user Y
+  // coordinate returned by ROOT; the X value seems slightly off as
+  // well but only by a very small amount so it will be ignored.
+
+  // Get the start and end positions of the TCanvas object in user
+  // coordinates (the very bottom and top y extent values)
   double CanvasStart_YPos = gPad->GetY1();
   double CanvasEnd_YPos = gPad->GetY2();
     
@@ -5724,7 +5799,8 @@ void ADAQAnalysisGUI::CreatePSDFilter(int XPixel, int YPixel)
   // be used with the TGraph
   PSDFilterXPoints.push_back(XPos);
   PSDFilterYPoints.push_back(YPos);
-  
+ 
+  // Recreate the TGraph representing the "PSDFilter" 
   if(PSDFilterManager[PSDChannel]) delete PSDFilterManager[PSDChannel];
   PSDFilterManager[PSDChannel] = new TGraph(PSDNumFilterPoints, &PSDFilterXPoints[0], &PSDFilterYPoints[0]);
   
@@ -5732,11 +5808,12 @@ void ADAQAnalysisGUI::CreatePSDFilter(int XPixel, int YPixel)
 }
 
 
+// Method to overplot the PSD filter TGraph on the existing canvas
 void ADAQAnalysisGUI::PlotPSDFilter()
 {
   PSDFilterManager[PSDChannel]->SetLineColor(2);
   PSDFilterManager[PSDChannel]->SetLineWidth(2);
-  PSDFilterManager[PSDChannel]->SetMarkerStyle(24);
+  PSDFilterManager[PSDChannel]->SetMarkerStyle(20);
   PSDFilterManager[PSDChannel]->SetMarkerColor(2);
   PSDFilterManager[PSDChannel]->Draw("LP SAME");
   

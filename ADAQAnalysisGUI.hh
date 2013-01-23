@@ -106,7 +106,7 @@ public:
 
   // Methods for general waveform analysis
   void CalculateCountRate();
-  void CalculatePSDIntegrals();
+  void CalculatePSDIntegrals(bool);
   bool ApplyPSDFilter(double,double);
   void IntegratePearsonWaveform(bool PlotPearsonIntegration=true);
   
