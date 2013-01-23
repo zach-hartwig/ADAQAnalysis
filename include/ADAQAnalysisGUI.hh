@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
+//
 // name: ADAQAnalysisGUI.hh
-// date: 22 Jan 13 (Last updated)
+// date: 23 Jan 13 (Last updated)
 // auth: Zach Hartwig
 //
 // desc: ADAQAnalysisGUI.cc is the main implementation file for the
@@ -165,9 +166,6 @@ private:
   TGCheckButton *PlotZeroSuppressionCeiling_CB;
   ADAQNumberEntryWithLabel *ZeroSuppressionCeiling_NEL;
 
-  TGCheckButton *PlotNoiseCeiling_CB;
-  ADAQNumberEntryWithLabel *NoiseCeiling_NEL;
-
   TGCheckButton *FindPeaks_CB;
   ADAQNumberEntryWithLabel *MaxPeaks_NEL;
   ADAQNumberEntryWithLabel *Sigma_NEL;
@@ -243,15 +241,14 @@ private:
   ADAQNumberEntryWithLabel *PSDNumTotalBins_NEL, *PSDMinTotalBin_NEL, *PSDMaxTotalBin_NEL;
 
   ADAQComboBoxWithLabel *PSDPlotType_CBL;
-
-  TGTextButton *PSDPlot_TB, *PSDCalculate_TB;
+  
+  TGTextButton *PSDCalculate_TB;
   
   TGCheckButton *PSDEnableFilterCreation_CB;
   TGCheckButton *PSDEnableFilter_CB;
   TGRadioButton *PSDPositiveFilter_RB, *PSDNegativeFilter_RB;
   TGTextButton *PSDClearFilter_TB;
   
-
   ADAQNumberEntryWithLabel *RFQPulseWidth_NEL;
   ADAQNumberEntryWithLabel *RFQRepRate_NEL;
   ADAQNumberEntryWithLabel *CountRateWaveforms_NEL;
@@ -271,7 +268,13 @@ private:
 
   ADAQNumberEntryWithLabel *XAxisSize_NEL, *XAxisOffset_NEL;
   ADAQNumberEntryWithLabel *YAxisSize_NEL, *YAxisOffset_NEL;  
-
+  
+  TGButtonGroup *WaveformDrawOptions_BG;
+  TGRadioButton *DrawWaveformWithCurve_RB, *DrawWaveformWithMarkers_RB, *DrawWaveformWithBoth_RB;
+  
+  TGButtonGroup *SpectrumDrawOptions_BG;
+  TGRadioButton *DrawSpectrumWithCurve_RB, *DrawSpectrumWithMarkers_RB, *DrawSpectrumWithBars_RB;
+  
   TGCheckButton *SetStatsOff_CB;
   TGCheckButton *PlotLogYAxis_CB;
   TGCheckButton *PlotWaveformWithMarkers_CB;

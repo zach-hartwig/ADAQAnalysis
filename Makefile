@@ -53,7 +53,7 @@ OBJS = $(BUILDDIR)/ADAQAnalysisGUI.o $(BUILDDIR)/ADAQAnalysisGUIDict.o
 
 # Specify the includes for the ROOT dictionary build
 INCLUDES=$(ADAQHOME)/source/root/GUI/trunk/include
-CXXFLAGS += -I$(INCLUDES) -I$(INCLDIR) #-I.
+CXXFLAGS += -I$(INCLUDES) -I$(INCLDIR)
 
 # Specify the required Boost libraries
 #CXXFLAGS += -lboost_thread-mt
@@ -122,7 +122,7 @@ $(BUILDDIR)/ADAQAnalysisGUIDict_MPI.o : $(BUILDDIR)/ADAQAnalysisGUIDict.cc
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 # Rule to generate the necessary ROOT dictionary
-$(BUILDDIR)/ADAQAnalysisGUIDict.cc : $(INCLDIR)/ADAQAnalysisGUI.hh $(INCLDIR)/RootLinkDef.h
+$(BUILDDIR)/ADAQAnalysisGUIDict.cc : $(INCLDIR)/ADAQAnalysisGUI.hh $(INCLDIR)/RootLinkDef.hh
 	@echo -e "\nGenerating ROOT dictionary $@ ..."
 	rootcint -f $@ -c -I$(INCLUDES) $^ 
 

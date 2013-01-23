@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // name: ADAQAnalysisGUI.cc
-// date: 22 Jan 13 (Last updated)
+// date: 23 Jan 13 (Last updated)
 // auth: Zach Hartwig
 //
 // desc: ADAQAnalysisGUI.cc is the main implementation file for the
@@ -48,6 +48,7 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <iomanip>
+#include <ctime>
 using namespace std;
 
 // MPI
@@ -62,6 +63,7 @@ using namespace std;
 // ADAQ
 #include "ADAQAnalysisGUI.hh"
 #include "ADAQAnalysisConstants.hh"
+#include "ADAQAnalysisVersion.hh"
 
 ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
   : TGMainFrame(gClient->GetRoot()),
@@ -88,7 +90,7 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
     CanvasContainsPSDHistogram(false), PSDHistogramExists(false),
     SpectrumMaxPeaks(0), TotalPeaks(0), TotalDeuterons(0),
     GaussianBinWidth(1.), CountsBinWidth(1.),
-    ColorManager(new TColor), RNG(new TRandom(424242))
+    ColorManager(new TColor), RNG(new TRandom(time(NULL)))
 {
   SetCleanup(kDeepCleanup);
   
@@ -179,11 +181,20 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
     CalibrationData.push_back(Init);
   }
   
-  // Assign the location of the ADAQAnalysisGUI parallel binary as
-  // well as the location of the ROOT TFile that will contain the
-  // values necessary for parallel processing
+  // Assign the location of the ADAQAnalysisGUI parallel binary
+  // (depends on whether the presently executed binary is a develpment
+  // or production version of the code)
   ADAQHOME = getenv("ADAQHOME");
-  ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysisGUI/trunk/bin/ADAQAnalysisGUI_MPI";
+
+  if(VersionString == "Development")
+    ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysisGUI/trunk/bin/ADAQAnalysisGUI_MPI";
+  else{
+    ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysisGUI/versions/" + VersionString + "/bin/ADAQAnalysisGUI_MPI";
+  }
+
+  // Assign the locatino of the temporary parallel processing ROOT
+  // file, which is used to transmit data computed in parallel
+  // architecture back to sequential architecture
   ParallelProcessingFName = "/tmp/ParallelProcessing.root";
   
   // Set ROOT to print only break messages and above (to suppress the
@@ -451,7 +462,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
 
   TGHorizontalFrame *WaveformSpecification_HF = new TGHorizontalFrame(WaveformOptions_CF);
   WaveformOptions_CF->AddFrame(WaveformSpecification_HF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
-
+  
   WaveformSpecification_HF->AddFrame(WaveformType_BG = new TGButtonGroup(WaveformSpecification_HF, "Type", kVerticalFrame),
 				     new TGLayoutHints(kLHintsLeft, 0,5,0,5));
   RawWaveform_RB = new TGRadioButton(WaveformType_BG, "Raw voltage", RawWaveform_RB_ID);
@@ -478,22 +489,12 @@ void ADAQAnalysisGUI::CreateMainFrame()
 
   WaveformOptions_CF->AddFrame(PlotZeroSuppressionCeiling_CB = new TGCheckButton(WaveformOptions_CF, "Plot zero suppression ceiling", PlotZeroSuppressionCeiling_CB_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
+  PlotZeroSuppressionCeiling_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
   
   WaveformOptions_CF->AddFrame(ZeroSuppressionCeiling_NEL = new ADAQNumberEntryWithLabel(WaveformOptions_CF, "Zero suppression ceiling", ZeroSuppressionCeiling_NEL_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,0,5));
   ZeroSuppressionCeiling_NEL->GetEntry()->SetNumber(15);
   ZeroSuppressionCeiling_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
-
-  /*
-  // Noise options (currently unused)
-  WaveformOptions_CF->AddFrame(PlotNoiseCeiling_CB = new TGCheckButton(WaveformOptions_CF, "Plot noise ceiling", PlotNoiseCeiling_CB_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
-  
-  WaveformOptions_CF->AddFrame(NoiseCeiling_NEL = new ADAQNumberEntryWithLabel(WaveformOptions_CF, "Noise ceiling", NoiseCeiling_NEL_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,0,5));
-  NoiseCeiling_NEL->GetEntry()->SetNumber(20);
-  NoiseCeiling_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
-  */
 
   // Peak finding (ROOT TSpectrum) options
 
@@ -513,7 +514,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
 		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
   Sigma_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   Sigma_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  Sigma_NEL->GetEntry()->SetNumber(1);
+  Sigma_NEL->GetEntry()->SetNumber(15);
   Sigma_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
 
   WaveformOptions_CF->AddFrame(Resolution_NEL = new ADAQNumberEntryWithLabel(WaveformOptions_CF, "Resolution", Resolution_NEL_ID),
@@ -952,7 +953,9 @@ void ADAQAnalysisGUI::CreateMainFrame()
 
   PSDAnalysis_GF->AddFrame(PSDEnableFilterCreation_CB = new TGCheckButton(PSDAnalysis_GF, "Enable filter creation", PSDEnableFilterCreation_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  PSDEnableFilterCreation_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
   PSDEnableFilterCreation_CB->SetState(kButtonDisabled);
+
   
   PSDAnalysis_GF->AddFrame(PSDEnableFilter_CB = new TGCheckButton(PSDAnalysis_GF, "Enable filter use", PSDEnableFilter_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
@@ -1049,6 +1052,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
   // Override default plot titles
   GraphicsOptions_CF->AddFrame(OverrideTitles_CB = new TGCheckButton(GraphicsOptions_CF, "Override plot and axis titles", OverrideTitles_CB_ID),
 			       new TGLayoutHints(kLHintsNormal, 15,5,5,5));
+  OverrideTitles_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
 
   // Plot title text entry
   GraphicsOptions_CF->AddFrame(Title_TEL = new ADAQTextEntryWithLabel(GraphicsOptions_CF, "Plot title", Title_TEL_ID),
@@ -1098,15 +1102,37 @@ void ADAQAnalysisGUI::CreateMainFrame()
   YAxisOffset_NEL->GetEntry()->SetNumber(1.5);
   YAxisOffset_NEL->GetEntry()->Resize(50, 20);
 
+  GraphicsOptions_CF->AddFrame(WaveformDrawOptions_BG = new TGButtonGroup(GraphicsOptions_CF, "Waveform draw options", kHorizontalFrame),
+			      new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  
+  DrawWaveformWithCurve_RB = new TGRadioButton(WaveformDrawOptions_BG, "Smooth curve   ", DrawWaveformWithCurve_RB_ID);
+  DrawWaveformWithCurve_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
+  DrawWaveformWithCurve_RB->SetState(kButtonDown);
+  
+  DrawWaveformWithMarkers_RB = new TGRadioButton(WaveformDrawOptions_BG, "Markers   ", DrawWaveformWithMarkers_RB_ID);
+  DrawWaveformWithMarkers_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
+  
+  DrawWaveformWithBoth_RB = new TGRadioButton(WaveformDrawOptions_BG, "Both", DrawWaveformWithBoth_RB_ID);
+  DrawWaveformWithBoth_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
+  
+  GraphicsOptions_CF->AddFrame(SpectrumDrawOptions_BG = new TGButtonGroup(GraphicsOptions_CF, "Spectrum draw options", kHorizontalFrame),
+			      new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  
+  DrawSpectrumWithCurve_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Smooth curve   ", DrawSpectrumWithCurve_RB_ID);
+  DrawSpectrumWithCurve_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
+  DrawSpectrumWithCurve_RB->SetState(kButtonDown);
+  
+  DrawSpectrumWithMarkers_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Markers", DrawSpectrumWithMarkers_RB_ID);
+  DrawSpectrumWithMarkers_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
+
+  DrawSpectrumWithBars_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Bars   ", DrawSpectrumWithBars_RB_ID);
+  DrawSpectrumWithBars_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
+
   GraphicsOptions_CF->AddFrame(SetStatsOff_CB = new TGCheckButton(GraphicsOptions_CF, "Set statistics off", -1),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,5));
   
   GraphicsOptions_CF->AddFrame(PlotLogYAxis_CB = new TGCheckButton(GraphicsOptions_CF, "Log. Y-axis", -1),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,5));
-  
-  GraphicsOptions_CF->AddFrame(PlotWaveformWithMarkers_CB = new TGCheckButton(GraphicsOptions_CF, "Plot waveform with markers", PlotWaveformWithMarkers_CB_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,5,5));
-  PlotWaveformWithMarkers_CB->Connect("Clicked()","ADAQAnalysisGUI",this,"HandleCheckButtons()");
   
   GraphicsOptions_CF->AddFrame(AutoYAxisRange_CB = new TGCheckButton(GraphicsOptions_CF, "Auto. Y Axis Range", -1),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
@@ -1457,7 +1483,15 @@ void ADAQAnalysisGUI::CreateMainFrame()
   
   SetBackgroundColor(ColorManager->Number2Pixel(16));
   
-  SetWindowName("ADAQ Data Analysis Command Center                                               Fear is the mind-killer.");
+  // Create a string that will be located in the title bar of the
+  // ADAQAnalysisGUI to identify the version number of the code
+  string TitleString;
+  if(VersionString == "Development")
+    TitleString = "ADAQ Analysis Code (Development version)                                             Fear is the mind-killer.";
+  else
+    TitleString = "ADAQ Analysis Code (Production version " + VersionString + ")                                       Fear is the mind-killer.";
+
+  SetWindowName(TitleString.c_str());
   MapSubwindows();
   Resize(1125,800);
   MapWindow();
@@ -1773,22 +1807,32 @@ void ADAQAnalysisGUI::HandleTextButtons()
     int CurrentChannel = ChannelSelector_CBL->GetComboBox()->GetSelected();
     
     if(UseCalibrationManager[CurrentChannel]){
-      TCanvas *Calibration_C = new TCanvas("Calibration_C","CalibrationManager TGraph",0,0,600,400);
-      
       stringstream ss;
       ss << "CalibrationManager TGraph for Channel[" << CurrentChannel << "]";
       string Title = ss.str();
-      
+
       CalibrationManager[CurrentChannel]->SetTitle(Title.c_str());
+
       CalibrationManager[CurrentChannel]->GetXaxis()->SetTitle("Pulse unit [ADC]");
+      CalibrationManager[CurrentChannel]->GetXaxis()->SetTitleSize(0.05);
+      CalibrationManager[CurrentChannel]->GetXaxis()->SetTitleOffset(1.2);
+      CalibrationManager[CurrentChannel]->GetXaxis()->CenterTitle();
+      CalibrationManager[CurrentChannel]->GetXaxis()->SetLabelSize(0.05);
+
       CalibrationManager[CurrentChannel]->GetYaxis()->SetTitle("Energy");
+      CalibrationManager[CurrentChannel]->GetYaxis()->SetTitleSize(0.05);
+      CalibrationManager[CurrentChannel]->GetYaxis()->SetTitleOffset(1.2);
+      CalibrationManager[CurrentChannel]->GetYaxis()->CenterTitle();
+      CalibrationManager[CurrentChannel]->GetYaxis()->SetLabelSize(0.05);
+
       CalibrationManager[CurrentChannel]->SetMarkerSize(2);
-      CalibrationManager[CurrentChannel]->SetMarkerStyle(20);
+      CalibrationManager[CurrentChannel]->SetMarkerStyle(23);
+      CalibrationManager[CurrentChannel]->SetMarkerColor(1);
+      CalibrationManager[CurrentChannel]->SetLineWidth(2);
+      CalibrationManager[CurrentChannel]->SetLineColor(1);
       CalibrationManager[CurrentChannel]->Draw("ALP");
 
-      Calibration_C->Update();
-
-      Canvas_EC->GetCanvas()->cd(0);
+      Canvas_EC->GetCanvas()->Update();
     }
     break;
   }
@@ -1884,9 +1928,6 @@ void ADAQAnalysisGUI::HandleTextButtons()
     }
     else
       ProcessWaveformsInParallel("discriminating");
-    break;
-    
-  case PSDPlot_TB_ID:
     break;
     
   case DesplicedFileSelection_TB_ID:{
@@ -2011,20 +2052,21 @@ void ADAQAnalysisGUI::HandleCheckButtons()
       delete PeakFinder;
     
     // Create a TSpectrum PeakFinder using the appropriate widget to set 
-   // the maximum number of peaks that can be found
+    // the maximum number of peaks that can be found
     PeakFinder = new TSpectrum(MaxPeaks_NEL->GetEntry()->GetIntNumber());
-
+    
     PlotWaveform();
     break;
 
-  case PlotTrigger_CB_ID:
-  case PlotBaseline_CB_ID:
+  case PlotZeroSuppressionCeiling_CB_ID:
   case PlotFloor_CB_ID:
   case PlotCrossings_CB_ID:
   case PlotPeakIntegratingRegion_CB_ID:
+  case PlotTrigger_CB_ID:
+  case PlotBaseline_CB_ID:
   case UsePileupRejection_CB_ID:
   case PlotPearsonIntegration_CB_ID:
-  case PlotWaveformWithMarkers_CB_ID:
+  case OverrideTitles_CB_ID:
     PlotWaveform();
     break;
     
@@ -2169,6 +2211,8 @@ void ADAQAnalysisGUI::HandleCheckButtons()
     // discriminate by pulse shape
     else{
       PSDEnableFilter_CB->SetState(kButtonUp);
+      if(!CanvasContainsSpectrum and !CanvasContainsPSDHistogram)
+	PlotWaveform();
     }
 
     PSDChannel_CBL->GetComboBox()->SetEnabled(WidgetState);
@@ -2193,6 +2237,16 @@ void ADAQAnalysisGUI::HandleCheckButtons()
     break;
   }
 
+  case PSDEnableFilterCreation_CB_ID:{
+
+    if(PSDEnableFilterCreation_CB->IsDown() and !CanvasContainsPSDHistogram){
+      CreateMessageBox("The canvas does not presently contain a PSD histogram! PSD filter creation is not possible!","Stop");
+      PSDEnableFilterCreation_CB->SetState(kButtonUp);
+      break;
+    }
+    break;
+  }
+
   case PSDEnableFilter_CB_ID:{
     if(PSDEnableFilter_CB->IsDown()){
       UsePSDFilterManager[PSDChannel] = true;
@@ -2202,6 +2256,8 @@ void ADAQAnalysisGUI::HandleCheckButtons()
       UsePSDFilterManager[PSDChannel] = false;
     break;
   }
+
+
     
   case PSDPlotTailIntegration_CB_ID:{
     if(!FindPeaks_CB->IsDown())
@@ -2358,7 +2414,6 @@ void ADAQAnalysisGUI::HandleNumberEntries()
   case Resolution_NEL_ID:
   case Floor_NEL_ID:
   case ZeroSuppressionCeiling_NEL_ID:
-  case NoiseCeiling_NEL_ID:
   case PearsonLowerLimit_NEL_ID:
   case PearsonMiddleLimit_NEL_ID:
   case PearsonUpperLimit_NEL_ID:
@@ -2484,6 +2539,20 @@ void ADAQAnalysisGUI::HandleRadioButtons()
       PSDPositiveFilter_RB->SetState(kButtonUp);
       PSDFilterPolarity = -1.;
     }
+    break;
+
+
+  case DrawWaveformWithCurve_RB_ID:
+  case DrawWaveformWithMarkers_RB_ID:
+  case DrawWaveformWithBoth_RB_ID:
+    PlotWaveform();
+    break;
+
+  case DrawSpectrumWithBars_RB_ID:
+  case DrawSpectrumWithCurve_RB_ID:
+  case DrawSpectrumWithMarkers_RB_ID:
+    
+    PlotSpectrum();
     break;
   }
 }
@@ -3139,8 +3208,9 @@ void ADAQAnalysisGUI::PlotWaveform()
     YAxisTitle = YAxisTitle_TEL->GetEntry()->GetText();
   }
   else{
-    Waveform_H[Channel]->GetXaxis()->SetTitle("Time [4 ns samples]");
-    Waveform_H[Channel]->GetYaxis()->SetTitle("Voltage [ADC]");
+    Title = "Digitized Waveform";
+    XAxisTitle = "Time [4 ns samples]";
+    YAxisTitle = "Voltage [ADC]";
   }
   
   Canvas_EC->GetCanvas()->SetLeftMargin(0.13);
@@ -3171,15 +3241,20 @@ void ADAQAnalysisGUI::PlotWaveform()
   
   Waveform_H[Channel]->SetLineColor(4);
   Waveform_H[Channel]->SetStats(false);  
-
+  
   Waveform_H[Channel]->SetMarkerStyle(24);
-  Waveform_H[Channel]->SetMarkerSize(1);
+  Waveform_H[Channel]->SetMarkerSize(1.0);
   Waveform_H[Channel]->SetMarkerColor(4);
   
-  if(PlotWaveformWithMarkers_CB->IsDown())
-    Waveform_H[Channel]->Draw("CP");
-  else
-    Waveform_H[Channel]->Draw("C");
+  string DrawString;
+  if(DrawWaveformWithCurve_RB->IsDown())
+    DrawString = "C";
+  else if(DrawWaveformWithMarkers_RB->IsDown())
+    DrawString = "P";
+  else if(DrawWaveformWithBoth_RB->IsDown())
+    DrawString = "CP";
+  
+  Waveform_H[Channel]->Draw(DrawString.c_str());
     
 
   // The user may choose to plot a number of graphical objects
@@ -3654,6 +3729,7 @@ void ADAQAnalysisGUI::PlotSpectrum()
   // ... otherwise use the default titles
   else{
     // Assign the default titles
+    Title = "Pulse Spectrum";
     XAxisTitle = "Pulse units [ADC]";
     YAxisTitle = "Counts";
   }
@@ -3700,7 +3776,21 @@ void ADAQAnalysisGUI::PlotSpectrum()
 
   /////////////////////////
   // Plot the main spectrum
-  Spectrum2Plot_H->Draw("C");
+  string DrawString;
+  if(DrawSpectrumWithBars_RB->IsDown()){
+    Spectrum2Plot_H->SetFillColor(4);
+    DrawString = "B";
+  }
+  else if(DrawSpectrumWithCurve_RB->IsDown())
+    DrawString = "C";
+  else if(DrawSpectrumWithMarkers_RB->IsDown()){
+    Spectrum2Plot_H->SetMarkerStyle(24);
+    Spectrum2Plot_H->SetMarkerColor(4);
+    Spectrum2Plot_H->SetMarkerSize(1.0);
+    DrawString = "P";
+  }
+  
+  Spectrum2Plot_H->Draw(DrawString.c_str());
 
   ////////////////////////////////////////////
   // Overlay the background spectra if desired
@@ -5065,17 +5155,21 @@ void ADAQAnalysisGUI::CreateMessageBox(string Message, string IconName)
   if(IconName == "Asterisk")
     IconType = kMBIconAsterisk;
   
-  const int NumTitles = 4;
+  const int NumTitles = 6;
 
   string BoxTitlesAsterisk[] = {"ADAQAnalysisGUI says 'good job!", 
 				"Oh, so you are competent!",
 				"This is a triumph of science!",
-				"Excellent work. You're practically a PhD now."};
-
+				"Excellent work. You're practically a PhD now.",
+				"For you ARE the Kwisatz Haderach!",
+				"There will be a parade in your honor."};
+  
   string BoxTitlesStop[] = {"ADAQAnalysisGUI is disappointed in you...", 
 			    "Seriously? I'd like another operator, please.",
 			    "Unacceptable. Just totally unacceptable.",
-			    "That was about as successful as the Hindenburg..."};
+			    "That was about as successful as the Hindenburg...",
+			    "You blew it!",
+			    "Abominable! Off with you head!" };
 
   // Surprise the user!
   int RndmInt = RNG->Integer(NumTitles);
