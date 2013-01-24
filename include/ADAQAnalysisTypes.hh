@@ -242,6 +242,11 @@ enum{
   ZAxisSize_NEL_ID,
   ZAxisOffset_NEL_ID,
   ZAxisDivs_NEL_ID,
+
+  PaletteAxisTitle_TEL_ID,
+  PaletteAxisSize_NEL_ID,
+  PaletteAxisOffset_NEL_ID,
+  PaletteAxisDivs_NEL_ID,
   
   DrawWaveformWithCurve_RB_ID,
   DrawWaveformWithMarkers_RB_ID,

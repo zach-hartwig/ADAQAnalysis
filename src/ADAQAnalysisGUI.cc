@@ -38,6 +38,7 @@
 #include <TGMsgBox.h>
 #include <TVectorD.h>
 #include <TChain.h>
+#include <TPaletteAxis.h>
 
 // C++
 #include <string>
@@ -83,7 +84,7 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelArchitecture(PA), SequentialArchitecture(!PA),
     Verbose(false), ParallelVerbose(true),
     XAxisMin(0), XAxisMax(1.0), YAxisMin(0), YAxisMax(4095), 
-    Title(""), XAxisTitle(""), YAxisTitle(""), ZAxisTitle(""),
+    Title(""), XAxisTitle(""), YAxisTitle(""), ZAxisTitle(""), PaletteAxisTitle(""),
     WaveformPolarity(-1.0), PearsonPolarity(1.0), Baseline(0.), PSDFilterPolarity(1.),
     V1720MaximumBit(4095), NumDataChannels(8),
     CanvasContainsSpectrum(false), SpectrumExists(false), 
@@ -1047,113 +1048,13 @@ void ADAQAnalysisGUI::CreateMainFrame()
   /////////////////////////////////////////
   // Fill the graphics options tabbed frame
 
-  // Override default plot titles
-  GraphicsOptions_CF->AddFrame(OverrideTitles_CB = new TGCheckButton(GraphicsOptions_CF, "Override plot and axis titles", OverrideTitles_CB_ID),
-			       new TGLayoutHints(kLHintsNormal, 15,5,5,5));
-  OverrideTitles_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
-
-  // Plot title text entry
-  GraphicsOptions_CF->AddFrame(Title_TEL = new ADAQTextEntryWithLabel(GraphicsOptions_CF, "Plot title", Title_TEL_ID),
-			       new TGLayoutHints(kLHintsNormal, 15,5,5,5));
-
-  // X-axis title text entry
-  GraphicsOptions_CF->AddFrame(XAxisTitle_TEL = new ADAQTextEntryWithLabel(GraphicsOptions_CF, "X-axis title", XAxisTitle_TEL_ID),
-			       new TGLayoutHints(kLHintsNormal, 15,5,5,0));
-
-  // A horizontal frame for the X-axis title/label size and offset
-  TGHorizontalFrame *XAxisTitleOptions_HF = new TGHorizontalFrame(GraphicsOptions_CF);
-  GraphicsOptions_CF->AddFrame(XAxisTitleOptions_HF, new TGLayoutHints(kLHintsNormal, 15,5,0,5));
+  TGCanvas *GraphicsFrame_C = new TGCanvas(GraphicsOptions_CF, 320, 705, kDoubleBorder);
+  GraphicsOptions_CF->AddFrame(GraphicsFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
   
-  XAxisTitleOptions_HF->AddFrame(XAxisSize_NEL = new ADAQNumberEntryWithLabel(XAxisTitleOptions_HF, "Size", XAxisSize_NEL_ID),		
-				 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  XAxisSize_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
-  XAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  XAxisSize_NEL->GetEntry()->SetNumber(0.04);
-  XAxisSize_NEL->GetEntry()->Resize(60, 20);
-  XAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
+  TGVerticalFrame *GraphicsFrame_VF = new TGVerticalFrame(GraphicsFrame_C->GetViewPort(), 320, 705);
+  GraphicsFrame_C->SetContainer(GraphicsFrame_VF);
   
-  XAxisTitleOptions_HF->AddFrame(XAxisOffset_NEL = new ADAQNumberEntryWithLabel(XAxisTitleOptions_HF, "Offset", XAxisOffset_NEL_ID),		
-				 new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  XAxisOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
-  XAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  XAxisOffset_NEL->GetEntry()->SetNumber(1.5);
-  XAxisOffset_NEL->GetEntry()->Resize(50, 20);
-  XAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
-
-  XAxisTitleOptions_HF->AddFrame(XAxisDivs_NEL = new ADAQNumberEntryWithLabel(XAxisTitleOptions_HF, "Divs", XAxisDivs_NEL_ID),		
-				 new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  XAxisDivs_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  XAxisDivs_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  XAxisDivs_NEL->GetEntry()->SetNumber(510);
-  XAxisDivs_NEL->GetEntry()->Resize(50, 20);
-  XAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
-
-  // Y-axis title text entry
-  GraphicsOptions_CF->AddFrame(YAxisTitle_TEL = new ADAQTextEntryWithLabel(GraphicsOptions_CF, "Y-axis title", YAxisTitle_TEL_ID),
-			       new TGLayoutHints(kLHintsNormal, 15,5,5,0));
-  
-  // A horizontal frame for the Y-axis title/label size and offset
-  TGHorizontalFrame *YAxisTitleOptions_HF = new TGHorizontalFrame(GraphicsOptions_CF);
-  GraphicsOptions_CF->AddFrame(YAxisTitleOptions_HF, new TGLayoutHints(kLHintsNormal, 15,5,0,5));
-
-  YAxisTitleOptions_HF->AddFrame(YAxisSize_NEL = new ADAQNumberEntryWithLabel(YAxisTitleOptions_HF, "Size", YAxisSize_NEL_ID),		
-				 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  YAxisSize_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
-  YAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  YAxisSize_NEL->GetEntry()->SetNumber(0.04);
-  YAxisSize_NEL->GetEntry()->Resize(60, 20);
-  YAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
-  
-  YAxisTitleOptions_HF->AddFrame(YAxisOffset_NEL = new ADAQNumberEntryWithLabel(YAxisTitleOptions_HF, "Offset", YAxisOffset_NEL_ID),		
-				 new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  YAxisOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
-  YAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  YAxisOffset_NEL->GetEntry()->SetNumber(1.5);
-  YAxisOffset_NEL->GetEntry()->Resize(50, 20);
-  YAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
-
-  YAxisTitleOptions_HF->AddFrame(YAxisDivs_NEL = new ADAQNumberEntryWithLabel(YAxisTitleOptions_HF, "Divs", YAxisDivs_NEL_ID),		
-				 new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  YAxisDivs_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  YAxisDivs_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  YAxisDivs_NEL->GetEntry()->SetNumber(510);
-  YAxisDivs_NEL->GetEntry()->Resize(50, 20);
-  YAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
-
-  GraphicsOptions_CF->AddFrame(ZAxisTitle_TEL = new ADAQTextEntryWithLabel(GraphicsOptions_CF, "Z-axis title", ZAxisTitle_TEL_ID),
-			       new TGLayoutHints(kLHintsNormal, 15,5,5,0));
-
-  // A horizontal frame for the Z-axis title/label size and offset
-  TGHorizontalFrame *ZAxisTitleOptions_HF = new TGHorizontalFrame(GraphicsOptions_CF);
-  GraphicsOptions_CF->AddFrame(ZAxisTitleOptions_HF, new TGLayoutHints(kLHintsNormal, 15,5,0,5));
-
-  ZAxisTitleOptions_HF->AddFrame(ZAxisSize_NEL = new ADAQNumberEntryWithLabel(ZAxisTitleOptions_HF, "Size", ZAxisSize_NEL_ID),		
-				 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  ZAxisSize_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
-  ZAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  ZAxisSize_NEL->GetEntry()->SetNumber(0.04);
-  ZAxisSize_NEL->GetEntry()->Resize(60, 20);
-  ZAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
-  
-  ZAxisTitleOptions_HF->AddFrame(ZAxisOffset_NEL = new ADAQNumberEntryWithLabel(ZAxisTitleOptions_HF, "Offset", ZAxisOffset_NEL_ID),		
-				 new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  ZAxisOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
-  ZAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  ZAxisOffset_NEL->GetEntry()->SetNumber(1.5);
-  ZAxisOffset_NEL->GetEntry()->Resize(50, 20);
-  ZAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
-
-  ZAxisTitleOptions_HF->AddFrame(ZAxisDivs_NEL = new ADAQNumberEntryWithLabel(ZAxisTitleOptions_HF, "Divs", ZAxisDivs_NEL_ID),		
-				 new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  ZAxisDivs_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  ZAxisDivs_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  ZAxisDivs_NEL->GetEntry()->SetNumber(510);
-  ZAxisDivs_NEL->GetEntry()->Resize(50, 20);
-  ZAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
-
-
-
-  GraphicsOptions_CF->AddFrame(WaveformDrawOptions_BG = new TGButtonGroup(GraphicsOptions_CF, "Waveform draw options", kHorizontalFrame),
+  GraphicsFrame_VF->AddFrame(WaveformDrawOptions_BG = new TGButtonGroup(GraphicsFrame_VF, "Waveform draw options", kHorizontalFrame),
 			      new TGLayoutHints(kLHintsNormal, 5,5,5,5));
   
   DrawWaveformWithCurve_RB = new TGRadioButton(WaveformDrawOptions_BG, "Smooth curve   ", DrawWaveformWithCurve_RB_ID);
@@ -1166,7 +1067,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
   DrawWaveformWithBoth_RB = new TGRadioButton(WaveformDrawOptions_BG, "Both", DrawWaveformWithBoth_RB_ID);
   DrawWaveformWithBoth_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
   
-  GraphicsOptions_CF->AddFrame(SpectrumDrawOptions_BG = new TGButtonGroup(GraphicsOptions_CF, "Spectrum draw options", kHorizontalFrame),
+  GraphicsFrame_VF->AddFrame(SpectrumDrawOptions_BG = new TGButtonGroup(GraphicsFrame_VF, "Spectrum draw options", kHorizontalFrame),
 			      new TGLayoutHints(kLHintsNormal, 5,5,5,5));
   
   DrawSpectrumWithCurve_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Smooth curve   ", DrawSpectrumWithCurve_RB_ID);
@@ -1179,19 +1080,19 @@ void ADAQAnalysisGUI::CreateMainFrame()
   DrawSpectrumWithBars_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Bars", DrawSpectrumWithBars_RB_ID);
   DrawSpectrumWithBars_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
 
-  GraphicsOptions_CF->AddFrame(SetStatsOff_CB = new TGCheckButton(GraphicsOptions_CF, "Set statistics off", SetStatsOff_CB_ID),
+  GraphicsFrame_VF->AddFrame(SetStatsOff_CB = new TGCheckButton(GraphicsFrame_VF, "Set statistics off", SetStatsOff_CB_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,5));
   SetStatsOff_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
   
-  GraphicsOptions_CF->AddFrame(PlotVerticalAxisInLog_CB = new TGCheckButton(GraphicsOptions_CF, "Vertical axis in log.", PlotVerticalAxisInLog_CB_ID),
+  GraphicsFrame_VF->AddFrame(PlotVerticalAxisInLog_CB = new TGCheckButton(GraphicsFrame_VF, "Vertical axis in log.", PlotVerticalAxisInLog_CB_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,5));
   PlotVerticalAxisInLog_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
   
-  GraphicsOptions_CF->AddFrame(AutoYAxisRange_CB = new TGCheckButton(GraphicsOptions_CF, "Auto. Y Axis Range (waveform only)", -1),
+  GraphicsFrame_VF->AddFrame(AutoYAxisRange_CB = new TGCheckButton(GraphicsFrame_VF, "Auto. Y Axis Range (waveform only)", -1),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
 
-  TGHorizontalFrame *ResetAxesLimits_HF = new TGHorizontalFrame(GraphicsOptions_CF);
-  GraphicsOptions_CF->AddFrame(ResetAxesLimits_HF, new TGLayoutHints(kLHintsLeft,15,5,5,5));
+  TGHorizontalFrame *ResetAxesLimits_HF = new TGHorizontalFrame(GraphicsFrame_VF);
+  GraphicsFrame_VF->AddFrame(ResetAxesLimits_HF, new TGLayoutHints(kLHintsLeft,15,5,5,5));
   
   ResetAxesLimits_HF->AddFrame(ResetXAxisLimits_TB = new TGTextButton(ResetAxesLimits_HF, "Reset X Axis", ResetXAxisLimits_TB_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
@@ -1203,7 +1104,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
   ResetYAxisLimits_TB->Resize(175, 40);
   ResetYAxisLimits_TB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleTextButtons()");
   
-  GraphicsOptions_CF->AddFrame(ReplotWaveform_TB = new TGTextButton(GraphicsOptions_CF, "Replot waveform", ReplotWaveform_TB_ID),
+  GraphicsFrame_VF->AddFrame(ReplotWaveform_TB = new TGTextButton(GraphicsFrame_VF, "Replot waveform", ReplotWaveform_TB_ID),
 			       new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
   ReplotWaveform_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
   ReplotWaveform_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
@@ -1211,7 +1112,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
   ReplotWaveform_TB->ChangeOptions(ReplotWaveform_TB->GetOptions() | kFixedSize);
   ReplotWaveform_TB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleTextButtons()");
 
-  GraphicsOptions_CF->AddFrame(ReplotSpectrum_TB = new TGTextButton(GraphicsOptions_CF, "Replot spectrum", ReplotSpectrum_TB_ID),
+  GraphicsFrame_VF->AddFrame(ReplotSpectrum_TB = new TGTextButton(GraphicsFrame_VF, "Replot spectrum", ReplotSpectrum_TB_ID),
 			       new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
   ReplotSpectrum_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
   ReplotSpectrum_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
@@ -1219,13 +1120,189 @@ void ADAQAnalysisGUI::CreateMainFrame()
   ReplotSpectrum_TB->ChangeOptions(ReplotSpectrum_TB->GetOptions() | kFixedSize);
   ReplotSpectrum_TB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleTextButtons()");
 
-  GraphicsOptions_CF->AddFrame(ReplotPSDHistogram_TB = new TGTextButton(GraphicsOptions_CF, "Replot PSD histogram", ReplotPSDHistogram_TB_ID),
+  GraphicsFrame_VF->AddFrame(ReplotPSDHistogram_TB = new TGTextButton(GraphicsFrame_VF, "Replot PSD histogram", ReplotPSDHistogram_TB_ID),
 			       new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
   ReplotPSDHistogram_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
   ReplotPSDHistogram_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
   ReplotPSDHistogram_TB->Resize(200,30);
   ReplotPSDHistogram_TB->ChangeOptions(ReplotPSDHistogram_TB->GetOptions() | kFixedSize);
   ReplotPSDHistogram_TB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleTextButtons()");
+
+  // Override default plot options
+  GraphicsFrame_VF->AddFrame(OverrideTitles_CB = new TGCheckButton(GraphicsFrame_VF, "Override default graphical options", OverrideTitles_CB_ID),
+			       new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  OverrideTitles_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
+
+  // Plot title text entry
+  GraphicsFrame_VF->AddFrame(Title_TEL = new ADAQTextEntryWithLabel(GraphicsFrame_VF, "Plot title", Title_TEL_ID),
+			       new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+
+  // X-axis title options
+
+  TGGroupFrame *XAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "X Axis", kVerticalFrame);
+  GraphicsFrame_VF->AddFrame(XAxis_GF, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+
+  XAxis_GF->AddFrame(XAxisTitle_TEL = new ADAQTextEntryWithLabel(XAxis_GF, "Title", XAxisTitle_TEL_ID),
+		     new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+
+  TGHorizontalFrame *XAxisTitleOptions_HF = new TGHorizontalFrame(XAxis_GF);
+  XAxis_GF->AddFrame(XAxisTitleOptions_HF, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
+  
+  XAxisTitleOptions_HF->AddFrame(XAxisSize_NEL = new ADAQNumberEntryWithLabel(XAxisTitleOptions_HF, "Size", XAxisSize_NEL_ID),		
+				 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  XAxisSize_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  XAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  XAxisSize_NEL->GetEntry()->SetNumber(0.04);
+  XAxisSize_NEL->GetEntry()->Resize(50, 20);
+  XAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
+  
+  XAxisTitleOptions_HF->AddFrame(XAxisOffset_NEL = new ADAQNumberEntryWithLabel(XAxisTitleOptions_HF, "Offset", XAxisOffset_NEL_ID),		
+				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
+  XAxisOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  XAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  XAxisOffset_NEL->GetEntry()->SetNumber(1.5);
+  XAxisOffset_NEL->GetEntry()->Resize(50, 20);
+  XAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
+
+  XAxis_GF->AddFrame(XAxisDivs_NEL = new ADAQNumberEntryWithLabel(XAxis_GF, "Divisions", XAxisDivs_NEL_ID),		
+		     new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  XAxisDivs_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  XAxisDivs_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  XAxisDivs_NEL->GetEntry()->SetNumber(510);
+  XAxisDivs_NEL->GetEntry()->Resize(50, 20);
+  XAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
+
+  // Y-axis title options
+
+  TGGroupFrame *YAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "Y Axis", kVerticalFrame);
+  GraphicsFrame_VF->AddFrame(YAxis_GF, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  
+  YAxis_GF->AddFrame(YAxisTitle_TEL = new ADAQTextEntryWithLabel(YAxis_GF, "Title", YAxisTitle_TEL_ID),
+			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  
+  TGHorizontalFrame *YAxisTitleOptions_HF = new TGHorizontalFrame(YAxis_GF);
+  YAxis_GF->AddFrame(YAxisTitleOptions_HF, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
+
+  YAxisTitleOptions_HF->AddFrame(YAxisSize_NEL = new ADAQNumberEntryWithLabel(YAxisTitleOptions_HF, "Size", YAxisSize_NEL_ID),		
+				 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  YAxisSize_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  YAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  YAxisSize_NEL->GetEntry()->SetNumber(0.04);
+  YAxisSize_NEL->GetEntry()->Resize(50, 20);
+  YAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
+  
+  YAxisTitleOptions_HF->AddFrame(YAxisOffset_NEL = new ADAQNumberEntryWithLabel(YAxisTitleOptions_HF, "Offset", YAxisOffset_NEL_ID),		
+				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
+  YAxisOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  YAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  YAxisOffset_NEL->GetEntry()->SetNumber(1.5);
+  YAxisOffset_NEL->GetEntry()->Resize(50, 20);
+  YAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
+
+  YAxis_GF->AddFrame(YAxisDivs_NEL = new ADAQNumberEntryWithLabel(YAxis_GF, "Divisions", YAxisDivs_NEL_ID),		
+		     new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  YAxisDivs_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  YAxisDivs_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  YAxisDivs_NEL->GetEntry()->SetNumber(510);
+  YAxisDivs_NEL->GetEntry()->Resize(50, 20);
+  YAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
+
+  // Z-axis options
+
+  TGGroupFrame *ZAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "Z Axis", kVerticalFrame);
+  GraphicsFrame_VF->AddFrame(ZAxis_GF, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+
+  ZAxis_GF->AddFrame(ZAxisTitle_TEL = new ADAQTextEntryWithLabel(ZAxis_GF, "Title", ZAxisTitle_TEL_ID),
+			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+
+  TGHorizontalFrame *ZAxisTitleOptions_HF = new TGHorizontalFrame(ZAxis_GF);
+  ZAxis_GF->AddFrame(ZAxisTitleOptions_HF, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
+
+  ZAxisTitleOptions_HF->AddFrame(ZAxisSize_NEL = new ADAQNumberEntryWithLabel(ZAxisTitleOptions_HF, "Size", ZAxisSize_NEL_ID),		
+				 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  ZAxisSize_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  ZAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  ZAxisSize_NEL->GetEntry()->SetNumber(0.04);
+  ZAxisSize_NEL->GetEntry()->Resize(50, 20);
+  ZAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
+  
+  ZAxisTitleOptions_HF->AddFrame(ZAxisOffset_NEL = new ADAQNumberEntryWithLabel(ZAxisTitleOptions_HF, "Offset", ZAxisOffset_NEL_ID),		
+				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
+  ZAxisOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  ZAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  ZAxisOffset_NEL->GetEntry()->SetNumber(1.5);
+  ZAxisOffset_NEL->GetEntry()->Resize(50, 20);
+  ZAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
+
+  ZAxis_GF->AddFrame(ZAxisDivs_NEL = new ADAQNumberEntryWithLabel(ZAxis_GF, "Divisions", ZAxisDivs_NEL_ID),		
+		     new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  ZAxisDivs_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  ZAxisDivs_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  ZAxisDivs_NEL->GetEntry()->SetNumber(510);
+  ZAxisDivs_NEL->GetEntry()->Resize(50, 20);
+  ZAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
+
+  // Color palette options
+
+  TGGroupFrame *PaletteAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "Palette Axis", kVerticalFrame);
+  GraphicsFrame_VF->AddFrame(PaletteAxis_GF, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+
+  PaletteAxis_GF->AddFrame(PaletteAxisTitle_TEL = new ADAQTextEntryWithLabel(PaletteAxis_GF, "Title", PaletteAxisTitle_TEL_ID),
+			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  
+  // A horizontal frame for the Z-axis title/label size and offset
+  TGHorizontalFrame *PaletteAxisTitleOptions_HF = new TGHorizontalFrame(PaletteAxis_GF);
+  PaletteAxis_GF->AddFrame(PaletteAxisTitleOptions_HF, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
+
+  PaletteAxisTitleOptions_HF->AddFrame(PaletteAxisSize_NEL = new ADAQNumberEntryWithLabel(PaletteAxisTitleOptions_HF, "Size", PaletteAxisSize_NEL_ID),		
+				 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  PaletteAxisSize_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PaletteAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PaletteAxisSize_NEL->GetEntry()->SetNumber(0.04);
+  PaletteAxisSize_NEL->GetEntry()->Resize(50, 20);
+  PaletteAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
+  
+  PaletteAxisTitleOptions_HF->AddFrame(PaletteAxisOffset_NEL = new ADAQNumberEntryWithLabel(PaletteAxisTitleOptions_HF, "Offset", PaletteAxisOffset_NEL_ID),		
+				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
+  PaletteAxisOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PaletteAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PaletteAxisOffset_NEL->GetEntry()->SetNumber(1.1);
+  PaletteAxisOffset_NEL->GetEntry()->Resize(50, 20);
+  PaletteAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
+
+  TGHorizontalFrame *PaletteAxisPositions_HF1 = new TGHorizontalFrame(PaletteAxis_GF);
+  PaletteAxis_GF->AddFrame(PaletteAxisPositions_HF1, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
+
+  PaletteAxisPositions_HF1->AddFrame(PaletteX1_NEL = new ADAQNumberEntryWithLabel(PaletteAxisPositions_HF1, "X1", -1),
+				    new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  PaletteX1_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PaletteX1_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PaletteX1_NEL->GetEntry()->SetNumber(0.85);
+  PaletteX1_NEL->GetEntry()->Resize(50, 20);
+
+  PaletteAxisPositions_HF1->AddFrame(PaletteX2_NEL = new ADAQNumberEntryWithLabel(PaletteAxisPositions_HF1, "X2", -1),
+				    new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  PaletteX2_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PaletteX2_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PaletteX2_NEL->GetEntry()->SetNumber(0.90);
+  PaletteX2_NEL->GetEntry()->Resize(50, 20);
+
+  TGHorizontalFrame *PaletteAxisPositions_HF2 = new TGHorizontalFrame(PaletteAxis_GF);
+  PaletteAxis_GF->AddFrame(PaletteAxisPositions_HF2, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
+
+  PaletteAxisPositions_HF2->AddFrame(PaletteY1_NEL = new ADAQNumberEntryWithLabel(PaletteAxisPositions_HF2, "Y1", -1),
+				    new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  PaletteY1_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PaletteY1_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PaletteY1_NEL->GetEntry()->SetNumber(0.05);
+  PaletteY1_NEL->GetEntry()->Resize(50, 20);
+
+  PaletteAxisPositions_HF2->AddFrame(PaletteY2_NEL = new ADAQNumberEntryWithLabel(PaletteAxisPositions_HF2, "Y2", -1),
+				    new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  PaletteY2_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PaletteY2_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PaletteY2_NEL->GetEntry()->SetNumber(0.65);
+  PaletteY2_NEL->GetEntry()->Resize(50, 20);
 
 
   ///////////////////////////////////
@@ -3934,18 +4011,25 @@ void ADAQAnalysisGUI::PlotPSDHistogram()
     XAxisTitle = XAxisTitle_TEL->GetEntry()->GetText();
     YAxisTitle = YAxisTitle_TEL->GetEntry()->GetText();
     ZAxisTitle = ZAxisTitle_TEL->GetEntry()->GetText();
+    PaletteAxisTitle = PaletteAxisTitle_TEL->GetEntry()->GetText();
   }
   else{
     Title = "Pulse Shape Discrimination Integrals";
     XAxisTitle = "Waveform total integral [ADC]";
     YAxisTitle = "Waveform tail integral [ADC]";
     ZAxisTitle = "Number of waveforms";
+    PaletteAxisTitle ="";
   }
 
   // Get the desired axes divisions
   int XAxisDivs = XAxisDivs_NEL->GetEntry()->GetIntNumber();
   int YAxisDivs = YAxisDivs_NEL->GetEntry()->GetIntNumber();
   int ZAxisDivs = ZAxisDivs_NEL->GetEntry()->GetIntNumber();
+
+  // Hack to make the X axis of the 2D PSD histogram actually look
+  // decent given the large numbers involved
+  if(!OverrideTitles_CB->IsDown())
+    XAxisDivs = 505;
   
   if(SetStatsOff_CB->IsDown())
     PSDHistogram_H->SetStats(false);
@@ -4010,6 +4094,23 @@ void ADAQAnalysisGUI::PlotPSDHistogram()
     PSDHistogram_H->Draw("CONTZ");
     break;
   }
+
+  // The canvas must be updated before the TPaletteAxis is accessed
+  Canvas_EC->GetCanvas()->Update();
+
+  TPaletteAxis *ColorPalette = (TPaletteAxis *)PSDHistogram_H->GetListOfFunctions()->FindObject("palette");
+  ColorPalette->GetAxis()->SetTitle(PaletteAxisTitle.c_str());
+  ColorPalette->GetAxis()->SetTitleSize(PaletteAxisSize_NEL->GetEntry()->GetNumber());
+  ColorPalette->GetAxis()->SetTitleOffset(PaletteAxisOffset_NEL->GetEntry()->GetNumber());
+  ColorPalette->GetAxis()->CenterTitle();
+  ColorPalette->GetAxis()->SetLabelSize(PaletteAxisSize_NEL->GetEntry()->GetNumber());
+
+  ColorPalette->SetX1NDC(PaletteX1_NEL->GetEntry()->GetNumber());
+  ColorPalette->SetX2NDC(PaletteX2_NEL->GetEntry()->GetNumber());
+  ColorPalette->SetY1NDC(PaletteY1_NEL->GetEntry()->GetNumber());
+  ColorPalette->SetY2NDC(PaletteY2_NEL->GetEntry()->GetNumber());
+  
+  ColorPalette->Draw();
   
   if(PSDEnableFilterCreation_CB->IsDown())
     PlotPSDFilter();

@@ -266,10 +266,13 @@ private:
   ADAQTextEntryWithLabel *XAxisTitle_TEL;
   ADAQTextEntryWithLabel *YAxisTitle_TEL;
   ADAQTextEntryWithLabel *ZAxisTitle_TEL;
+  ADAQTextEntryWithLabel *PaletteAxisTitle_TEL;
 
   ADAQNumberEntryWithLabel *XAxisSize_NEL, *XAxisOffset_NEL, *XAxisDivs_NEL;
   ADAQNumberEntryWithLabel *YAxisSize_NEL, *YAxisOffset_NEL, *YAxisDivs_NEL;
   ADAQNumberEntryWithLabel *ZAxisSize_NEL, *ZAxisOffset_NEL, *ZAxisDivs_NEL;
+  ADAQNumberEntryWithLabel *PaletteAxisSize_NEL, *PaletteAxisOffset_NEL;
+  ADAQNumberEntryWithLabel *PaletteX1_NEL, *PaletteX2_NEL, *PaletteY1_NEL, *PaletteY2_NEL;
   
   TGButtonGroup *WaveformDrawOptions_BG;
   TGRadioButton *DrawWaveformWithCurve_RB, *DrawWaveformWithMarkers_RB, *DrawWaveformWithBoth_RB;
@@ -446,7 +449,7 @@ private:
 
   // Generally useful data members
   float XAxisMin, XAxisMax, YAxisMin, YAxisMax;
-  string Title, XAxisTitle, YAxisTitle, ZAxisTitle;
+  string Title, XAxisTitle, YAxisTitle, ZAxisTitle, PaletteAxisTitle;
 
   // Variables to hold waveform processing values
   double WaveformPolarity, PearsonPolarity, Baseline;
