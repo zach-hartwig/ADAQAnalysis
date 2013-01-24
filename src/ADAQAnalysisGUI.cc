@@ -4048,6 +4048,10 @@ void ADAQAnalysisGUI::PlotPSDHistogram()
   else
     gPad->SetLogz(false);
 
+  // The X and Y axes should never be plotted in log
+  gPad->SetLogx(false);
+  gPad->SetLogy(false);
+
   PSDHistogram_H->SetTitle(Title.c_str());
   
   PSDHistogram_H->GetXaxis()->SetTitle(XAxisTitle.c_str());
@@ -4095,22 +4099,27 @@ void ADAQAnalysisGUI::PlotPSDHistogram()
     break;
   }
 
-  // The canvas must be updated before the TPaletteAxis is accessed
-  Canvas_EC->GetCanvas()->Update();
+  // Modify the histogram color palette only for the histograms that
+  // actually create a palette
+  if(PlotTypeID != 3){
 
-  TPaletteAxis *ColorPalette = (TPaletteAxis *)PSDHistogram_H->GetListOfFunctions()->FindObject("palette");
-  ColorPalette->GetAxis()->SetTitle(PaletteAxisTitle.c_str());
-  ColorPalette->GetAxis()->SetTitleSize(PaletteAxisSize_NEL->GetEntry()->GetNumber());
-  ColorPalette->GetAxis()->SetTitleOffset(PaletteAxisOffset_NEL->GetEntry()->GetNumber());
-  ColorPalette->GetAxis()->CenterTitle();
-  ColorPalette->GetAxis()->SetLabelSize(PaletteAxisSize_NEL->GetEntry()->GetNumber());
+    // The canvas must be updated before the TPaletteAxis is accessed
+    Canvas_EC->GetCanvas()->Update();
 
-  ColorPalette->SetX1NDC(PaletteX1_NEL->GetEntry()->GetNumber());
-  ColorPalette->SetX2NDC(PaletteX2_NEL->GetEntry()->GetNumber());
-  ColorPalette->SetY1NDC(PaletteY1_NEL->GetEntry()->GetNumber());
-  ColorPalette->SetY2NDC(PaletteY2_NEL->GetEntry()->GetNumber());
-  
-  ColorPalette->Draw();
+    TPaletteAxis *ColorPalette = (TPaletteAxis *)PSDHistogram_H->GetListOfFunctions()->FindObject("palette");
+    ColorPalette->GetAxis()->SetTitle(PaletteAxisTitle.c_str());
+    ColorPalette->GetAxis()->SetTitleSize(PaletteAxisSize_NEL->GetEntry()->GetNumber());
+    ColorPalette->GetAxis()->SetTitleOffset(PaletteAxisOffset_NEL->GetEntry()->GetNumber());
+    ColorPalette->GetAxis()->CenterTitle();
+    ColorPalette->GetAxis()->SetLabelSize(PaletteAxisSize_NEL->GetEntry()->GetNumber());
+    
+    ColorPalette->SetX1NDC(PaletteX1_NEL->GetEntry()->GetNumber());
+    ColorPalette->SetX2NDC(PaletteX2_NEL->GetEntry()->GetNumber());
+    ColorPalette->SetY1NDC(PaletteY1_NEL->GetEntry()->GetNumber());
+    ColorPalette->SetY2NDC(PaletteY2_NEL->GetEntry()->GetNumber());
+    
+    ColorPalette->Draw();
+  }
   
   if(PSDEnableFilterCreation_CB->IsDown())
     PlotPSDFilter();
