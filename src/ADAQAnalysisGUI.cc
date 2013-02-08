@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // name: ADAQAnalysisGUI.cc
-// date: 23 Jan 13 (Last updated)
+// date: 01 Feb 13 (Last updated)
 // auth: Zach Hartwig
 //
 // desc: ADAQAnalysisGUI.cc is the main implementation file for the
@@ -186,7 +186,8 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
   // (depends on whether the presently executed binary is a develpment
   // or production version of the code)
   ADAQHOME = getenv("ADAQHOME");
-
+  USER = getenv("USER");
+  
   if(VersionString == "Development")
     ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysisGUI/trunk/bin/ADAQAnalysisGUI_MPI";
   else{
@@ -196,8 +197,8 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
   // Assign the locatino of the temporary parallel processing ROOT
   // file, which is used to transmit data computed in parallel
   // architecture back to sequential architecture
-  ParallelProcessingFName = "/tmp/ParallelProcessing.root";
-  
+  ParallelProcessingFName = "/tmp/ParallelProcessing_" + USER + ".root";
+
   // Set ROOT to print only break messages and above (to suppress the
   // annoying warning from TSpectrum that the peak buffer is full)
   gErrorIgnoreLevel = kBreak;
@@ -2051,7 +2052,7 @@ void ADAQAnalysisGUI::HandleTextButtons()
   case PSDCalculate_TB_ID:
     if(!ADAQRootFileLoaded)
       return;
-
+    
     if(ProcessingSeq_RB->IsDown()){
       CreatePSDHistogram();
       PlotPSDHistogram();
@@ -4086,7 +4087,7 @@ void ADAQAnalysisGUI::PlotPSDHistogram()
     break;
 
   case 2:
-    PSDHistogram_H->Draw("SURF3Z");
+    PSDHistogram_H->Draw("SURF3 Z");
     break;
     
   case 3: 
@@ -4118,7 +4119,8 @@ void ADAQAnalysisGUI::PlotPSDHistogram()
     ColorPalette->SetY1NDC(PaletteY1_NEL->GetEntry()->GetNumber());
     ColorPalette->SetY2NDC(PaletteY2_NEL->GetEntry()->GetNumber());
     
-    ColorPalette->Draw();
+    // Draw the modifed color palette on the same canvas
+    ColorPalette->Draw("SAME");
   }
   
   if(PSDEnableFilterCreation_CB->IsDown())
@@ -4870,8 +4872,7 @@ void ADAQAnalysisGUI::CreatePSDHistogram()
     MasterPSDHistogram_H->SetEntries(ReturnDouble);
     
     // Open the TFile  and write all the necessary object to it
-
-    ParallelProcessingFile = new TFile(ParallelProcessingFName.c_str(), "Update");
+    ParallelProcessingFile = new TFile(ParallelProcessingFName.c_str(), "update");
     
     MasterPSDHistogram_H->Write("MasterPSDHistogram");
 
@@ -5643,7 +5644,7 @@ void ADAQAnalysisGUI::ProcessWaveformsInParallel(string ProcessingType)
 
     /////////////////////////////
     // Pulse shape discriminating 
-
+    
     else if(ProcessingType == "discriminating"){
       PSDHistogram_H = (TH2F *)ParallelProcessingFile->Get("MasterPSDHistogram");
       PSDHistogramExists = true;

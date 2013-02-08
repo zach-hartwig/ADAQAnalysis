@@ -433,7 +433,7 @@ private:
   int PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin;
 
   // Strings for specifying binaries and ROOT files
-  string ADAQHOME;
+  string ADAQHOME, USER;
   string ParallelBinaryName;
   string ParallelProcessingFName;
   string ParallelProgressFName;
