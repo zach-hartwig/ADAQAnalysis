@@ -103,7 +103,9 @@ public:
   // Methods to individual waveforms and spectra
   void PlotWaveform();
   void PlotSpectrum();
+  void PlotSpectrumDerivative();
   void PlotPSDHistogram();
+
 
   // Methods for general waveform analysis
   void CalculateCountRate();
@@ -222,6 +224,9 @@ private:
   TGCheckButton *SpectrumNormalizePeakToCurrent_CB;
   ADAQNumberEntryFieldWithLabel *SpectrumIntegral_NEFL;
   ADAQNumberEntryFieldWithLabel *SpectrumIntegralError_NEFL;
+  
+  TGCheckButton *SpectrumOverplotDerivative_CB;
+  TGCheckButton *SpectrumDerivativeInLog_CB;
 
   TGTextButton *CreateSpectrum_TB;
 
@@ -285,6 +290,7 @@ private:
   
   TGTextButton *ReplotWaveform_TB;
   TGTextButton *ReplotSpectrum_TB;
+  TGTextButton *ReplotSpectrumDerivative_TB;
   TGTextButton *ReplotPSDHistogram_TB;
 
 
@@ -376,10 +382,13 @@ private:
   TLine *PearsonLowerLimit_L, *PearsonMiddleLimit_L, *PearsonUpperLimit_L;
   TLine *PSDPeakOffset_L, *PSDTailOffset_L;
   TLine *LowerLimit_L, *UpperLimit_L;
+  TLine *DerivativeReference_L;
   TBox *Baseline_B, *PSDTailIntegral_B;
   
   // ROOT TH1F histograms for storing the waveform and pulse spectrum
   TH1F *Waveform_H[8], *Spectrum_H, *SpectrumBackground_H, *SpectrumDeconvolved_H;
+
+  TH1F *Spectrum2Plot_H;
   
   // ROOT TSpectrum peak-finding object that operates on TH1F
   TSpectrum *PeakFinder;
@@ -469,8 +478,7 @@ private:
   int NumDataChannels;
 
   // Bool to determine what canvas presently contains
-  bool CanvasContainsSpectrum, SpectrumExists;
-  bool CanvasContainsPSDHistogram, PSDHistogramExists;
+  bool SpectrumExists, PSDHistogramExists;
 
   // Max number of peaks expected for TSpectrum on spectra
   int SpectrumMaxPeaks;
@@ -489,6 +497,10 @@ private:
 
   // A ROOT random number generator (RNG)
   TRandom *RNG;
+
+  // 
+  enum {zWaveform, zSpectrum, zSpectrumDerivative, zPSDHistogram};
+  int CanvasContents;
   
   // Define the ADAQAnalysisGUI to ROOT
   ClassDef(ADAQAnalysisGUI, 1);

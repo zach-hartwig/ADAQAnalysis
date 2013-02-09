@@ -78,7 +78,8 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
     LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine),
     PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
     PSDPeakOffset_L(new TLine), PSDTailOffset_L(new TLine), 
-    LowerLimit_L(new TLine), UpperLimit_L(new TLine), Baseline_B(new TBox), PSDTailIntegral_B(new TBox),
+    LowerLimit_L(new TLine), UpperLimit_L(new TLine), DerivativeReference_L(new TLine),
+    Baseline_B(new TBox), PSDTailIntegral_B(new TBox),
     Spectrum_H(new TH1F), SpectrumBackground_H(new TH1F), SpectrumDeconvolved_H(new TH1F), 
     PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelArchitecture(PA), SequentialArchitecture(!PA),
@@ -87,8 +88,7 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
     Title(""), XAxisTitle(""), YAxisTitle(""), ZAxisTitle(""), PaletteAxisTitle(""),
     WaveformPolarity(-1.0), PearsonPolarity(1.0), Baseline(0.), PSDFilterPolarity(1.),
     V1720MaximumBit(4095), NumDataChannels(8),
-    CanvasContainsSpectrum(false), SpectrumExists(false), 
-    CanvasContainsPSDHistogram(false), PSDHistogramExists(false),
+    SpectrumExists(false), PSDHistogramExists(false),
     SpectrumMaxPeaks(0), TotalPeaks(0), TotalDeuterons(0),
     GaussianBinWidth(1.), CountsBinWidth(1.),
     ColorManager(new TColor), RNG(new TRandom(time(NULL)))
@@ -161,6 +161,11 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
   UpperLimit_L->SetLineStyle(7);
   UpperLimit_L->SetLineColor(2);
   UpperLimit_L->SetLineWidth(2);
+
+  DerivativeReference_L->SetLineStyle(7);
+  DerivativeReference_L->SetLineColor(2);
+  DerivativeReference_L->SetLineWidth(2);
+
 
   // Initialize the objects used in the calibration and pulse shape
   // discrimination (PSD) scheme. A set of 8 calibration and 8 PSD
@@ -819,6 +824,16 @@ void ADAQAnalysisGUI::CreateMainFrame()
   SpectrumIntegralError_NEFL->GetEntry()->Resize(100,20);
   SpectrumIntegralError_NEFL->GetEntry()->SetState(false);
 
+  SpectrumAnalysis_GF->AddFrame(SpectrumOverplotDerivative_CB = new TGCheckButton(SpectrumAnalysis_GF, "Overplotspectrum derivative", SpectrumOverplotDerivative_CB_ID),
+				new TGLayoutHints(kLHintsNormal, 5,5,5,0));
+  SpectrumOverplotDerivative_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
+  
+  SpectrumAnalysis_GF->AddFrame(SpectrumDerivativeInLog_CB = new TGCheckButton(SpectrumAnalysis_GF, "Take log10 of derivative", SpectrumDerivativeInLog_CB_ID),
+				new TGLayoutHints(kLHintsNormal, 5,5,0,5));
+  SpectrumDerivativeInLog_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
+  SpectrumDerivativeInLog_CB->SetState(kButtonDisabled);
+  
+  
   SpectrumFrame_VF->AddFrame(CreateSpectrum_TB = new TGTextButton(SpectrumFrame_VF, "Create spectrum", CreateSpectrum_TB_ID),
 		       new TGLayoutHints(kLHintsCenterX | kLHintsTop, 5,5,0,0));
   CreateSpectrum_TB->Resize(200, 30);
@@ -1114,12 +1129,20 @@ void ADAQAnalysisGUI::CreateMainFrame()
   ReplotWaveform_TB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleTextButtons()");
 
   GraphicsFrame_VF->AddFrame(ReplotSpectrum_TB = new TGTextButton(GraphicsFrame_VF, "Replot spectrum", ReplotSpectrum_TB_ID),
-			       new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
+			     new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
   ReplotSpectrum_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
   ReplotSpectrum_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
   ReplotSpectrum_TB->Resize(200,30);
   ReplotSpectrum_TB->ChangeOptions(ReplotSpectrum_TB->GetOptions() | kFixedSize);
   ReplotSpectrum_TB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleTextButtons()");
+  
+  GraphicsFrame_VF->AddFrame(ReplotSpectrumDerivative_TB = new TGTextButton(GraphicsFrame_VF, "Replot spectrum derivative", ReplotSpectrumDerivative_TB_ID),
+			     new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
+  ReplotSpectrumDerivative_TB->Resize(200, 30);
+  ReplotSpectrumDerivative_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
+  ReplotSpectrumDerivative_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
+  ReplotSpectrumDerivative_TB->ChangeOptions(ReplotSpectrumDerivative_TB->GetOptions() | kFixedSize);
+  ReplotSpectrumDerivative_TB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleTextButtons()");
 
   GraphicsFrame_VF->AddFrame(ReplotPSDHistogram_TB = new TGTextButton(GraphicsFrame_VF, "Replot PSD histogram", ReplotPSDHistogram_TB_ID),
 			       new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
@@ -2019,6 +2042,19 @@ void ADAQAnalysisGUI::HandleTextButtons()
       CreateMessageBox("A valid spectrum does not yet exist; therefore, it is difficult to replot it!","Stop");
     break;
 
+    ////////////////////////////////////////////
+    // Actions to replot the spectrum derivative
+    
+  case ReplotSpectrumDerivative_TB_ID:
+    
+    if(SpectrumExists){
+      SpectrumOverplotDerivative_CB->SetState(kButtonUp);
+      PlotSpectrumDerivative();
+    }
+    else
+      CreateMessageBox("A valid spectrum does not yet exist; therefore, the spectrum derivative cannot be plotted!","Stop");
+    break;
+      
     //////////////////////////////////////
     // Actions to replot the PSD histogram
     
@@ -2038,6 +2074,9 @@ void ADAQAnalysisGUI::HandleTextButtons()
     if(ProcessingSeq_RB->IsDown()){
       CreateSpectrum();
       PlotSpectrum();
+      
+      if(SpectrumOverplotDerivative_CB->IsDown())
+	PlotSpectrumDerivative();
     }
     
     // Create spectrum with parallel processing
@@ -2148,16 +2187,25 @@ void ADAQAnalysisGUI::HandleTextButtons()
     PSDFilterManager[Channel] = new TGraph();
     
     PSDEnableFilter_CB->SetState(kButtonUp);
-    
-    if(CanvasContainsSpectrum)
-      PlotSpectrum();
-    else if(CanvasContainsPSDHistogram)
-      PlotPSDHistogram();
-    else
+
+    switch(CanvasContents){
+    case zWaveform:
       PlotWaveform();
+      break;
+      
+    case zSpectrum:
+      PlotSpectrum();
+      break;
+
+    case zPSDHistogram:
+      PlotPSDHistogram();
+      break;
+    }
     break;
   }
- }
+
+
+}
 
 
 void ADAQAnalysisGUI::HandleCheckButtons()
@@ -2203,12 +2251,27 @@ void ADAQAnalysisGUI::HandleCheckButtons()
   case OverrideTitles_CB_ID:
   case PlotVerticalAxisInLog_CB_ID:
   case SetStatsOff_CB_ID:
-    if(CanvasContainsSpectrum)
-      PlotSpectrum();
-    else if(CanvasContainsPSDHistogram)
-      PlotPSDHistogram();
-    else
+
+    switch(CanvasContents){
+    case zWaveform:
       PlotWaveform();
+      break;
+      
+    case zSpectrum:{
+      PlotSpectrum();
+      if(SpectrumOverplotDerivative_CB->IsDown())
+	PlotSpectrumDerivative();
+      break;
+    }
+      
+    case zSpectrumDerivative:
+      PlotSpectrumDerivative();
+      break;
+      
+    case zPSDHistogram:
+      PlotPSDHistogram();
+      break;
+    }
     break;
     
   case SpectrumCalibration_CB_ID:{
@@ -2352,7 +2415,7 @@ void ADAQAnalysisGUI::HandleCheckButtons()
     // discriminate by pulse shape
     else{
       PSDEnableFilter_CB->SetState(kButtonUp);
-      if(!CanvasContainsSpectrum and !CanvasContainsPSDHistogram)
+      if(CanvasContents == zWaveform)
 	PlotWaveform();
     }
 
@@ -2380,7 +2443,7 @@ void ADAQAnalysisGUI::HandleCheckButtons()
 
   case PSDEnableFilterCreation_CB_ID:{
 
-    if(PSDEnableFilterCreation_CB->IsDown() and !CanvasContainsPSDHistogram){
+    if(PSDEnableFilterCreation_CB->IsDown() and CanvasContents != zPSDHistogram){
       CreateMessageBox("The canvas does not presently contain a PSD histogram! PSD filter creation is not possible!","Stop");
       PSDEnableFilterCreation_CB->SetState(kButtonUp);
       break;
@@ -2404,7 +2467,32 @@ void ADAQAnalysisGUI::HandleCheckButtons()
     PlotWaveform();
     break;
   }
-  
+
+  case SpectrumOverplotDerivative_CB_ID:{
+    if(!SpectrumExists){
+      CreateMessageBox("A valid spectrum does not yet exists! The calculation of a spectrum derivative is, therefore, moot!", "Stop");
+      break;
+    }
+    else{
+      if(SpectrumOverplotDerivative_CB->IsDown()){
+	PlotSpectrum();
+	PlotSpectrumDerivative();
+	SpectrumDerivativeInLog_CB->SetState(kButtonUp);
+      }
+      else{
+	PlotSpectrum();
+	SpectrumDerivativeInLog_CB->SetState(kButtonDisabled);
+      }
+      break;
+    }
+  }
+    
+  case SpectrumDerivativeInLog_CB_ID:{
+    PlotSpectrum();
+    PlotSpectrumDerivative();
+    break;
+  }
+    
   default:
     break;
   }
@@ -2440,29 +2528,26 @@ void ADAQAnalysisGUI::HandleDoubleSliders()
   switch(SliderID){
     
   case XAxisLimits_THS_ID:
-    if(CanvasContainsSpectrum and SpectrumExists)
-      PlotSpectrum();
-    else if(CanvasContainsPSDHistogram and PSDHistogramExists)
-      PlotPSDHistogram();
-    break;
-    
   case YAxisLimits_DVS_ID:
-    if(CanvasContainsSpectrum and SpectrumExists)
-      PlotSpectrum();
-    else if(CanvasContainsPSDHistogram and PSDHistogramExists)
-      PlotPSDHistogram();
-    break;
-    
   case SpectrumIntegrationLimits_DHS_ID:
-    if(CanvasContainsSpectrum and SpectrumExists)
+    
+    if(CanvasContents == zWaveform)
+      PlotWaveform();
+
+    else if(CanvasContents == zSpectrum and SpectrumExists){
       PlotSpectrum();
-    else if(CanvasContainsPSDHistogram and PSDHistogramExists)
+      if(SpectrumOverplotDerivative_CB->IsDown())
+	PlotSpectrumDerivative();
+    }
+    
+    else if(CanvasContents == zSpectrumDerivative and SpectrumExists)
+      PlotSpectrumDerivative();
+    
+    else if(CanvasContents == zPSDHistogram and PSDHistogramExists)
       PlotPSDHistogram();
+
     break;
   }
-  
-  if(!CanvasContainsSpectrum and !CanvasContainsPSDHistogram)
-    PlotWaveform();
 }
 
 
@@ -2479,7 +2564,7 @@ void ADAQAnalysisGUI::HandleTripleSliderPointer()
 
   // If the pulse spectrum object (Spectrum_H) exists and the user has
   // selected calibration mode via the appropriate check button ...
-  if(Spectrum_H and SpectrumCalibration_CB->IsDown() and CanvasContainsSpectrum){
+  if(Spectrum_H and SpectrumCalibration_CB->IsDown() and CanvasContents == zSpectrum){
     
     // Calculate the position along the X-axis of the pulse spectrum
     // (the "area" or "height" in ADC units) based on the current
@@ -2585,13 +2670,26 @@ void ADAQAnalysisGUI::HandleNumberEntries()
   case ZAxisSize_NEL_ID:
   case ZAxisOffset_NEL_ID:
   case ZAxisDivs_NEL_ID:
-    if(CanvasContainsSpectrum)
-      PlotSpectrum();
-    else if(CanvasContainsPSDHistogram)
-      PlotPSDHistogram();
-    else
+
+    switch(CanvasContents){
+    case zWaveform:
       PlotWaveform();
-    
+      break;
+      
+    case zSpectrum:
+      PlotSpectrum();
+      break;
+
+    case zSpectrumDerivative:
+      PlotSpectrumDerivative();
+      break;
+      
+    case zPSDHistogram:
+      PlotPSDHistogram();
+      break;
+    }
+    break;
+
   default:
     break;
   }
@@ -3488,12 +3586,11 @@ void ADAQAnalysisGUI::PlotWaveform()
   if(FindPeaks_CB->IsDown())
     FindPeaks(Waveform_H[Channel]);
   
-  // Set the class member bool that tells the code what is currently
-  // plotted on the embedded canvas, waveform or spectrum. This is
-  // important for influencing the behavior of the vertical and
-  // horizontal double sliders used to "zoom" on the canvas contents
-  CanvasContainsSpectrum = false;
-  CanvasContainsPSDHistogram = false;
+  // Set the class member int that tells the code what is currently
+  // plotted on the embedded canvas. This is important for influencing
+  // the behavior of the vertical and horizontal double sliders used
+  // to "zoom" on the canvas contents
+  CanvasContents = zWaveform;
   
   if(PlotPearsonIntegration_CB->IsDown())
     IntegratePearsonWaveform(true);
@@ -3845,13 +3942,13 @@ void ADAQAnalysisGUI::PlotSpectrum()
   //////////////////////////////////
   // Determine main spectrum to plot
 
-  TH1F *Spectrum2Plot_H = 0;
-
+  //  TH1F *Spectrum2Plot_H = 0;
+  
   if(SpectrumFindBackground_CB->IsDown() and SpectrumLessBackground_RB->IsDown())
     Spectrum2Plot_H = (TH1F *)SpectrumDeconvolved_H->Clone();
   else
     Spectrum2Plot_H = (TH1F *)Spectrum_H->Clone();
-
+  
 
   //////////////////////
   // X and Y axis ranges
@@ -3973,12 +4070,11 @@ void ADAQAnalysisGUI::PlotSpectrum()
   // Update the canvas
   Canvas_EC->GetCanvas()->Update();
 
-  // Set the class member bools that tells the code what is currently
+  // Set the class member int that tells the code what is currently
   // plotted on the embedded canvas. This is important for influencing
   // the behavior of the vertical and horizontal double sliders used
   // to "zoom" on the canvas contents
-  CanvasContainsSpectrum = true;
-  CanvasContainsPSDHistogram = false;
+  CanvasContents = zSpectrum;
 }
 
 // Method to extract the digitized data on the specified data channel
@@ -4125,9 +4221,8 @@ void ADAQAnalysisGUI::PlotPSDHistogram()
   
   if(PSDEnableFilterCreation_CB->IsDown())
     PlotPSDFilter();
-  
-  CanvasContainsPSDHistogram = true;
-  CanvasContainsSpectrum = false;
+
+  CanvasContents = zPSDHistogram;
   
   Canvas_EC->GetCanvas()->Update();
 }
@@ -5626,6 +5721,9 @@ void ADAQAnalysisGUI::ProcessWaveformsInParallel(string ProcessingType)
       Spectrum_H = (TH1F *)ParallelProcessingFile->Get("MasterHistogram");
       SpectrumExists = true;
       PlotSpectrum();
+      
+      if(SpectrumOverplotDerivative_CB->IsDown())
+	PlotSpectrumDerivative();
 
       // Obtain the total number of deuterons integrated during
       // histogram creation and update the ROOT widget
@@ -6138,6 +6236,190 @@ void ADAQAnalysisGUI::PlotPSDFilter()
 }
 
 
+// Method to compute and plot the derivative of the pulse spectrum
+void ADAQAnalysisGUI::PlotSpectrumDerivative()
+{
+  if(!Spectrum_H){
+    CreateMessageBox("A valid Spectrum_H object was not found! Spectrum derivative plotting will abort!","Stop");
+    return;
+  }
+
+  ///////////////////////////////////////
+  // Calculate the spectrum derivative //
+  ///////////////////////////////////////
+  // The discrete spectrum derivative is simply defined as the
+  // difference between bin N_i and N_i-1 and then scaled down. The
+  // main purpose is more quantitatively examine spectra for peaks,
+  // edges, and other features.
+
+  // If the user has selected to plot the derivative on top of the
+  // spectrum, assign a vertical offset that will be used to plot the
+  // derivative vertically centered in the canvas window. Also, reduce
+  // the vertical scale of the total derivative such that it will
+  // appropriately fit within the spectrum canvas.
+  double VerticalOffset = 0;
+  double ScaleFactor = 1.;
+  if(SpectrumOverplotDerivative_CB->IsDown()){
+    VerticalOffset = Spectrum2Plot_H->GetMaximum() / 2;
+    ScaleFactor = 1.3;
+  }
+
+  const int NumBins = Spectrum2Plot_H->GetNbinsX();
+
+  double BinCenters[NumBins], Differences[NumBins];  
+
+  // Iterate over the bins to assign the bin center and the difference
+  // between bins N_i and N_i-1 to the designed arrays
+  for(int bin = 0; bin<NumBins; bin++){
+    
+    BinCenters[bin] = Spectrum2Plot_H->GetBinCenter(bin);
+    
+    double Previous = Spectrum2Plot_H->GetBinContent(bin-1);
+    double Current = Spectrum2Plot_H->GetBinContent(bin);
+
+    if(SpectrumDerivativeInLog_CB->IsDown()){
+      
+      double epsilon = 0.00001;
+      
+      if(Previous < epsilon)
+	Previous = epsilon;
+      
+      if(Current < epsilon)
+	Current = epsilon;
+      
+      Differences[bin] = (log10(Current) - log10(Previous) + VerticalOffset);
+    }
+    else
+      Differences[bin] = (ScaleFactor*(Current - Previous)) + VerticalOffset;
+  }
+  
+
+  //////////////////////////////
+  // Set graphical attributes //
+  //////////////////////////////
+
+  ///////////////
+  // Graph titles
+
+  if(OverrideTitles_CB->IsDown()){
+    // Assign the titles to strings
+    Title = Title_TEL->GetEntry()->GetText();
+    XAxisTitle = XAxisTitle_TEL->GetEntry()->GetText();
+    YAxisTitle = YAxisTitle_TEL->GetEntry()->GetText();
+  }
+  // ... otherwise use the default titles
+  else{
+    // Assign the default titles
+    Title = "Spectrum Derivative";
+    XAxisTitle = "Pulse units [ADC]";
+    YAxisTitle = "Counts";
+  }
+
+  // Get the desired axes divisions
+  int XAxisDivs = XAxisDivs_NEL->GetEntry()->GetIntNumber();
+  int YAxisDivs = YAxisDivs_NEL->GetEntry()->GetIntNumber();
+
+
+  /////////////////////
+  // Logarithmic Y axis
+  
+  if(PlotVerticalAxisInLog_CB->IsDown())
+    gPad->SetLogy(true);
+  else
+    gPad->SetLogy(false);
+
+  Canvas_EC->GetCanvas()->SetLeftMargin(0.13);
+  Canvas_EC->GetCanvas()->SetBottomMargin(0.12);
+  Canvas_EC->GetCanvas()->SetRightMargin(0.05);
+
+  ///////////////////
+  // Create the graph
+
+  TGraph *SpectrumDerivative_G = new TGraph(NumBins, BinCenters, Differences);
+  SpectrumDerivative_G->SetTitle(Title.c_str());
+
+  SpectrumDerivative_G->GetXaxis()->SetTitle(XAxisTitle.c_str());
+  SpectrumDerivative_G->GetXaxis()->SetTitleSize(XAxisSize_NEL->GetEntry()->GetNumber());
+  SpectrumDerivative_G->GetXaxis()->SetLabelSize(XAxisSize_NEL->GetEntry()->GetNumber());
+  SpectrumDerivative_G->GetXaxis()->SetTitleOffset(XAxisOffset_NEL->GetEntry()->GetNumber());
+  SpectrumDerivative_G->GetXaxis()->CenterTitle();
+  SpectrumDerivative_G->GetXaxis()->SetNdivisions(XAxisDivs, true);
+
+  SpectrumDerivative_G->GetYaxis()->SetTitle(YAxisTitle.c_str());
+  SpectrumDerivative_G->GetYaxis()->SetTitleSize(YAxisSize_NEL->GetEntry()->GetNumber());
+  SpectrumDerivative_G->GetYaxis()->SetLabelSize(YAxisSize_NEL->GetEntry()->GetNumber());
+  SpectrumDerivative_G->GetYaxis()->SetTitleOffset(YAxisOffset_NEL->GetEntry()->GetNumber());
+  SpectrumDerivative_G->GetYaxis()->CenterTitle();
+  SpectrumDerivative_G->GetYaxis()->SetNdivisions(YAxisDivs, true);
+
+  SpectrumDerivative_G->SetLineColor(2);
+  SpectrumDerivative_G->SetLineWidth(2);
+  SpectrumDerivative_G->SetMarkerStyle(24);
+  SpectrumDerivative_G->SetMarkerSize(1.0);
+  SpectrumDerivative_G->SetMarkerColor(2);
+
+  //////////////////////
+  // X and Y axis limits
+
+  float Min, Max;
+
+  // The X axis range should be identical to the spectrum
+  XAxisLimits_THS->GetPosition(Min,Max);
+  XAxisMin = Spectrum2Plot_H->GetXaxis()->GetXmax() * Min;
+  XAxisMax = Spectrum2Plot_H->GetXaxis()->GetXmax() * Max;
+  SpectrumDerivative_G->GetXaxis()->SetRangeUser(XAxisMin, XAxisMax);
+
+  YAxisLimits_DVS->GetPosition(Min,Max);
+
+  // The derivative can eithe be overplotted on the spectrum or
+  // plotted on it's own, which determines how the Y-axis canvas
+  // sliders should be used to set the Y axis ranges
+
+  if(SpectrumOverplotDerivative_CB->IsDown()){
+
+    if(PlotVerticalAxisInLog_CB->IsDown() and Max==1)
+      YAxisMin = 1.0;
+    else if(SpectrumFindBackground_CB->IsDown() and SpectrumLessBackground_RB->IsDown())
+      YAxisMin = (Spectrum2Plot_H->GetMaximumBin() * (1-Max)) - (Spectrum2Plot_H->GetMaximumBin()*0.8);
+    else
+      YAxisMin = Spectrum2Plot_H->GetBinContent(Spectrum2Plot_H->GetMaximumBin()) * (1-Max);
+    
+    YAxisMax = Spectrum2Plot_H->GetBinContent(Spectrum2Plot_H->GetMaximumBin()) * (1-Min) * 1.05;
+  
+    SpectrumDerivative_G->GetYaxis()->SetRangeUser(YAxisMin, YAxisMax);
+    
+    SpectrumDerivative_G->Draw("LP SAME");    
+
+    // Plot a "zero" reference line (which is shifted by the vertical
+    // offset just like the derivative) to show where the derivative
+    // switches sign
+    DerivativeReference_L->DrawLine(XAxisMin, VerticalOffset, XAxisMax, VerticalOffset);
+  }
+  
+  else{
+
+    // Calculates values that will allow the sliders to span the full
+    // range of the derivative that, unlike all the other plotted
+    // objects, typically has a substantial negative range
+    double MinValue = SpectrumDerivative_G->GetHistogram()->GetMinimum();
+    double MaxValue = SpectrumDerivative_G->GetHistogram()->GetMaximum();
+    double AbsValue = abs(MinValue) + abs(MaxValue);
+
+    YAxisMin = MinValue + (AbsValue * (1-Max));
+    YAxisMax = MaxValue - (AbsValue * Min);
+
+    SpectrumDerivative_G->GetYaxis()->SetRangeUser(YAxisMin, YAxisMax);
+    
+    SpectrumDerivative_G->Draw("ALP");
+    
+    // Set the class member int denoting that the canvas now contains
+    // only a spectrum derivative
+    CanvasContents = zSpectrumDerivative;
+  }
+  Canvas_EC->GetCanvas()->Update();
+}
+
+
 ///////////////////////////
 // The C++ main() method //
 ///////////////////////////
@@ -6227,3 +6509,4 @@ int main(int argc, char *argv[])
   
   return 0;
 }
+

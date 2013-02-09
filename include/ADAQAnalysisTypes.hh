@@ -193,8 +193,10 @@ enum{
   SpectrumUseGaussianFit_CB_ID,
   SpectrumNormalizePeakToCurrent_CB_ID,
 
-  CreateSpectrum_TB_ID,
+  SpectrumOverplotDerivative_CB_ID,
+  SpectrumDerivativeInLog_CB_ID,
 
+  CreateSpectrum_TB_ID,
 
 
   /////////////////////////////////////////
@@ -264,6 +266,7 @@ enum{
 
   ReplotWaveform_TB_ID,
   ReplotSpectrum_TB_ID,
+  ReplotSpectrumDerivative_TB_ID,
   ReplotPSDHistogram_TB_ID,
 
   
@@ -287,7 +290,6 @@ enum{
 
   DesplicedFileSelection_TB_ID,
   DesplicedFileCreation_TB_ID,
-
 
   
   //////////////////////////////////////////
