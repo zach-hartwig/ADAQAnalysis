@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // name: ADAQAnalysisGUI.cc
-// date: 01 Feb 13 (Last updated)
+// date: 07 Feb 13 (Last updated)
 // auth: Zach Hartwig
 //
 // desc: ADAQAnalysisGUI.cc is the main implementation file for the
@@ -785,14 +785,17 @@ void ADAQAnalysisGUI::CreateMainFrame()
   SpectrumRangeMax_NEL->GetEntry()->SetState(false);
   SpectrumRangeMax_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
 
-  SpectrumAnalysis_GF->AddFrame(SpectrumWithBackground_RB = new TGRadioButton(SpectrumAnalysis_GF, "Plot with background", SpectrumWithBackground_RB_ID),
-				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
+  TGHorizontalFrame *BackgroundPlotting_HF = new TGHorizontalFrame(SpectrumAnalysis_GF);
+  SpectrumAnalysis_GF->AddFrame(BackgroundPlotting_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+
+  BackgroundPlotting_HF->AddFrame(SpectrumWithBackground_RB = new TGRadioButton(BackgroundPlotting_HF, "Plot with bckgnd", SpectrumWithBackground_RB_ID),
+				  new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumWithBackground_RB->SetState(kButtonDown);
   SpectrumWithBackground_RB->SetState(kButtonDisabled);
   SpectrumWithBackground_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
   
-  SpectrumAnalysis_GF->AddFrame(SpectrumLessBackground_RB = new TGRadioButton(SpectrumAnalysis_GF, "Plot less background", SpectrumLessBackground_RB_ID),
-				new TGLayoutHints(kLHintsNormal, 5,5,0,5));
+  BackgroundPlotting_HF->AddFrame(SpectrumLessBackground_RB = new TGRadioButton(BackgroundPlotting_HF, "Plot less bckgnd", SpectrumLessBackground_RB_ID),
+				  new TGLayoutHints(kLHintsNormal, 5,5,0,5));
   SpectrumLessBackground_RB->SetState(kButtonDisabled);
   SpectrumLessBackground_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
 
@@ -819,20 +822,19 @@ void ADAQAnalysisGUI::CreateMainFrame()
   SpectrumIntegral_NEFL->GetEntry()->SetState(false);
 
   SpectrumAnalysis_GF->AddFrame(SpectrumIntegralError_NEFL = new ADAQNumberEntryFieldWithLabel(SpectrumAnalysis_GF, "Error", -1),
-				new TGLayoutHints(kLHintsNormal, 5,5,0,5));
+				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumIntegralError_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal, TGNumberFormat::kNEANonNegative);
   SpectrumIntegralError_NEFL->GetEntry()->Resize(100,20);
   SpectrumIntegralError_NEFL->GetEntry()->SetState(false);
 
-  SpectrumAnalysis_GF->AddFrame(SpectrumOverplotDerivative_CB = new TGCheckButton(SpectrumAnalysis_GF, "Overplotspectrum derivative", SpectrumOverplotDerivative_CB_ID),
+  SpectrumAnalysis_GF->AddFrame(SpectrumOverplotDerivative_CB = new TGCheckButton(SpectrumAnalysis_GF, "Overplot spectrum derivative", SpectrumOverplotDerivative_CB_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,5,0));
   SpectrumOverplotDerivative_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
-  
+
   SpectrumAnalysis_GF->AddFrame(SpectrumDerivativeInLog_CB = new TGCheckButton(SpectrumAnalysis_GF, "Take log10 of derivative", SpectrumDerivativeInLog_CB_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,0,5));
   SpectrumDerivativeInLog_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
   SpectrumDerivativeInLog_CB->SetState(kButtonDisabled);
-  
   
   SpectrumFrame_VF->AddFrame(CreateSpectrum_TB = new TGTextButton(SpectrumFrame_VF, "Create spectrum", CreateSpectrum_TB_ID),
 		       new TGLayoutHints(kLHintsCenterX | kLHintsTop, 5,5,0,0));
@@ -885,7 +887,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
   PSDNumTotalBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDNumTotalBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDNumTotalBins_NEL->GetEntry()->SetNumber(100);
+  PSDNumTotalBins_NEL->GetEntry()->SetNumber(150);
   PSDNumTotalBins_NEL->GetEntry()->SetState(false);
 
   TGHorizontalFrame *TotalBins_HF = new TGHorizontalFrame(PSDAnalysis_GF);
@@ -909,7 +911,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
   PSDNumTailBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDNumTailBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDNumTailBins_NEL->GetEntry()->SetNumber(100);
+  PSDNumTailBins_NEL->GetEntry()->SetNumber(150);
   PSDNumTailBins_NEL->GetEntry()->SetState(false);
 
   TGHorizontalFrame *TailBins_HF = new TGHorizontalFrame(PSDAnalysis_GF);
@@ -941,14 +943,14 @@ void ADAQAnalysisGUI::CreateMainFrame()
   PSDAnalysis_GF->AddFrame(PSDPeakOffset_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Peak offset (sample)", PSDPeakOffset_NEL_ID),
                            new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDPeakOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDPeakOffset_NEL->GetEntry()->SetNumber(5);
+  PSDPeakOffset_NEL->GetEntry()->SetNumber(7);
   PSDPeakOffset_NEL->GetEntry()->SetState(false);
   PSDPeakOffset_NEL->GetEntry()->Connect("ValueSet(long", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
 
   PSDAnalysis_GF->AddFrame(PSDTailOffset_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Tail offset (sample)", PSDTailOffset_NEL_ID),
                            new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDTailOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDTailOffset_NEL->GetEntry()->SetNumber(40);
+  PSDTailOffset_NEL->GetEntry()->SetNumber(30);
   PSDTailOffset_NEL->GetEntry()->SetState(false);
   PSDTailOffset_NEL->GetEntry()->Connect("ValueSet(long", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
   
@@ -2069,6 +2071,11 @@ void ADAQAnalysisGUI::HandleTextButtons()
   case CreateSpectrum_TB_ID:
     if(!ADAQRootFileLoaded)
       return;
+
+    // Alert the user the filtering particles by PSD into the spectra
+    // requires integration type peak finder to be used
+    //    if(UsePSDFilterManager[PSDChannel] and IntegrationTypeWholeWaveform)
+    //      CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
     
     // Create spectrum with sequential processing
     if(ProcessingSeq_RB->IsDown()){
@@ -2167,6 +2174,11 @@ void ADAQAnalysisGUI::HandleTextButtons()
     if(!ADAQRootFileLoaded)
       return;
 
+    // Alert the user the filtering particles by PSD into the spectra
+    // requires integration type peak finder to be used
+    //if(UsePSDFilterManager[PSDChannel] and IntegrationTypeWholeWaveform)
+    //      CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
+    
     // Desplice waveforms sequentially
     if(ProcessingSeq_RB->IsDown())
       CreateDesplicedFile();
@@ -4192,7 +4204,7 @@ void ADAQAnalysisGUI::PlotPSDHistogram()
     break;
     
   case 4:
-    PSDHistogram_H->Draw("CONTZ");
+    PSDHistogram_H->Draw("CONT Z");
     break;
   }
 
@@ -4215,7 +4227,6 @@ void ADAQAnalysisGUI::PlotPSDHistogram()
     ColorPalette->SetY1NDC(PaletteY1_NEL->GetEntry()->GetNumber());
     ColorPalette->SetY2NDC(PaletteY2_NEL->GetEntry()->GetNumber());
     
-    // Draw the modifed color palette on the same canvas
     ColorPalette->Draw("SAME");
   }
   
@@ -6008,6 +6019,7 @@ void ADAQAnalysisGUI::CreateDesplicedFile()
       // limits and using them to assign the bounded voltage values to
       // the TTree variable from the Waveform_H object
       int index = 0;
+
       for(int sample=(*peak_iter).PeakLimit_Lower; sample<(*peak_iter).PeakLimit_Upper; sample++){
 	VoltageInADC_AllChannels[0].push_back(Waveform_H[Channel]->GetBinContent(sample));;
 	index++;
