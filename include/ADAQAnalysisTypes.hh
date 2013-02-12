@@ -118,10 +118,12 @@ enum{
   // Values for the menu frame
 
   MenuFileOpen_ID,
-  MenuFileSaveSpectrumData_ID,
+  MenuFileSaveSpectrum_ID,
+  MenuFileSaveSpectrumDerivative_ID,
+  MenuFileSavePSDHistogramSlice_ID,
   MenuFilePrint_ID,
   MenuFileExit_ID,
-
+  
 
   /////////////////////////////////////////
   // Values for the "Waveform" tabbed frame
@@ -212,6 +214,10 @@ enum{
 
   PSDPlotTailIntegration_CB_ID,
 
+  PSDEnableHistogramSlicing_CB_ID,
+  PSDHistogramSliceX_RB_ID,
+  PSDHistogramSliceY_RB_ID,
+
   PSDEnableFilterCreation_CB_ID,
   PSDEnableFilter_CB_ID,
   PSDPositiveFilter_RB_ID,
@@ -260,6 +266,7 @@ enum{
 
   SetStatsOff_CB_ID,
   PlotVerticalAxisInLog_CB_ID,
+  PlotSpectrumDerivativeError_CB_ID,
 
   ResetXAxisLimits_TB_ID,
   ResetYAxisLimits_TB_ID,

@@ -19,6 +19,7 @@
 #include <TTree.h>
 #include <TBrowser.h>
 #include <TGraph.h>
+#include <TGraphErrors.h>
 #include <TAxis.h>
 #include <TCanvas.h>
 #include <TApplication.h>
@@ -39,6 +40,7 @@
 #include <TVectorD.h>
 #include <TChain.h>
 #include <TPaletteAxis.h>
+#include <TStyle.h>
 
 // C++
 #include <string>
@@ -70,7 +72,7 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
   : TGMainFrame(gClient->GetRoot()),
     ADAQMeasParams(0), ADAQRootFile(0), ADAQRootFileName(""), ADAQRootFileLoaded(false), ADAQWaveformTree(0), 
     ADAQParResults(NULL), ADAQParResultsLoaded(false),
-    DataDirectory(getenv("PWD")), SaveSpectrumDirectory(getenv("HOME")),
+    DataDirectory(getenv("PWD")), SaveSpectrumDirectory(getenv("HOME")), SaveHistogramDirectory(getenv("HOME")),
     PrintCanvasDirectory(getenv("HOME")), DesplicedDirectory(getenv("HOME")),
     Time(0), RawVoltage(0), RecordLength(0),
     GraphicFileName(""), GraphicFileExtension(""),
@@ -88,7 +90,7 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
     Title(""), XAxisTitle(""), YAxisTitle(""), ZAxisTitle(""), PaletteAxisTitle(""),
     WaveformPolarity(-1.0), PearsonPolarity(1.0), Baseline(0.), PSDFilterPolarity(1.),
     V1720MaximumBit(4095), NumDataChannels(8),
-    SpectrumExists(false), PSDHistogramExists(false),
+    SpectrumExists(false), SpectrumDerivativeExists(false), PSDHistogramExists(false), PSDHistogramSliceExists(false),
     SpectrumMaxPeaks(0), TotalPeaks(0), TotalDeuterons(0),
     GaussianBinWidth(1.), CountsBinWidth(1.),
     ColorManager(new TColor), RNG(new TRandom(time(NULL)))
@@ -367,7 +369,9 @@ void ADAQAnalysisGUI::CreateMainFrame()
 
   TGPopupMenu *MenuFile = new TGPopupMenu(gClient->GetRoot());
   MenuFile->AddEntry("&Open ADAQ ROOT file ...", MenuFileOpen_ID);
-  MenuFile->AddEntry("&Save spectrum data to file ...", MenuFileSaveSpectrumData_ID);
+  MenuFile->AddEntry("&Save spectrum to file ...", MenuFileSaveSpectrum_ID);
+  MenuFile->AddEntry("Save spectrum &derivative to file ...", MenuFileSaveSpectrumDerivative_ID);
+  MenuFile->AddEntry("Save PSD &histogram slice to file ...", MenuFileSavePSDHistogramSlice_ID);
   MenuFile->AddEntry("&Print canvas ...", MenuFilePrint_ID);
   MenuFile->AddSeparator();
   MenuFile->AddEntry("E&xit", MenuFileExit_ID);
@@ -969,7 +973,25 @@ void ADAQAnalysisGUI::CreateMainFrame()
                            new TGLayoutHints(kLHintsNormal, 0,5,0,5));
   PSDPlotTailIntegration_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
   PSDPlotTailIntegration_CB->SetState(kButtonDisabled);
+  
+  PSDAnalysis_GF->AddFrame(PSDEnableHistogramSlicing_CB = new TGCheckButton(PSDAnalysis_GF, "Enable histogram slicing", PSDEnableHistogramSlicing_CB_ID),
+			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  PSDEnableHistogramSlicing_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
 
+  TGHorizontalFrame *PSDHistogramSlicing_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSDHistogramSlicing_HF, new TGLayoutHints(kLHintsCenterX, 0,5,0,5));
+  
+  PSDHistogramSlicing_HF->AddFrame(PSDHistogramSliceX_RB = new TGRadioButton(PSDHistogramSlicing_HF, "X slice", PSDHistogramSliceX_RB_ID),
+				   new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  PSDHistogramSliceX_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
+  PSDHistogramSliceX_RB->SetState(kButtonDown);
+  PSDHistogramSliceX_RB->SetState(kButtonDisabled);
+
+  PSDHistogramSlicing_HF->AddFrame(PSDHistogramSliceY_RB = new TGRadioButton(PSDHistogramSlicing_HF, "Y slice", PSDHistogramSliceY_RB_ID),
+				   new TGLayoutHints(kLHintsNormal, 20,0,0,0));
+  PSDHistogramSliceY_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
+  PSDHistogramSliceY_RB->SetState(kButtonDisabled);
+  
   PSDAnalysis_GF->AddFrame(PSDEnableFilterCreation_CB = new TGCheckButton(PSDAnalysis_GF, "Enable filter creation", PSDEnableFilterCreation_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
   PSDEnableFilterCreation_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
@@ -1099,15 +1121,19 @@ void ADAQAnalysisGUI::CreateMainFrame()
   DrawSpectrumWithBars_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
 
   GraphicsFrame_VF->AddFrame(SetStatsOff_CB = new TGCheckButton(GraphicsFrame_VF, "Set statistics off", SetStatsOff_CB_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
   SetStatsOff_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
   
   GraphicsFrame_VF->AddFrame(PlotVerticalAxisInLog_CB = new TGCheckButton(GraphicsFrame_VF, "Vertical axis in log.", PlotVerticalAxisInLog_CB_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+			       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
   PlotVerticalAxisInLog_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
+
+  GraphicsFrame_VF->AddFrame(PlotSpectrumDerivativeError_CB = new TGCheckButton(GraphicsFrame_VF, "Plot spectrum derivative error", PlotSpectrumDerivativeError_CB_ID),
+			     new TGLayoutHints(kLHintsNormal, 15,5,0,0));
+  PlotSpectrumDerivativeError_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
   
   GraphicsFrame_VF->AddFrame(AutoYAxisRange_CB = new TGCheckButton(GraphicsFrame_VF, "Auto. Y Axis Range (waveform only)", -1),
-			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
+			       new TGLayoutHints(kLHintsLeft, 15,5,0,5));
 
   TGHorizontalFrame *ResetAxesLimits_HF = new TGHorizontalFrame(GraphicsFrame_VF);
   GraphicsFrame_VF->AddFrame(ResetAxesLimits_HF, new TGLayoutHints(kLHintsLeft,15,5,5,5));
@@ -1694,64 +1720,36 @@ void ADAQAnalysisGUI::HandleMenu(int MenuID)
     break;
   }
 
-  case MenuFileSaveSpectrumData_ID:{
+  case MenuFileSaveSpectrum_ID:{
     
-    if(!Spectrum_H){
+    if(!SpectrumExists){
       CreateMessageBox("No spectra have been created yet and, therefore, there is nothing to save!","Stop");
       break;
     }
     
-    const char *FileTypes[] = {"ASCII file",  "*.dat",
-			       "CSV file",    "*.csv",
-			       0,             0};
-    
-    TGFileInfo FileInformation;
-    FileInformation.fFileTypes = FileTypes;
-    FileInformation.fIniDir = StrDup(SaveSpectrumDirectory.c_str());
-    
-    new TGFileDialog(gClient->GetRoot(), this, kFDSave, &FileInformation);
-    
-    if(FileInformation.fFilename==NULL)
-      CreateMessageBox("No file was selected so the spectrum data will not be saved!\nSelect a valid file to save the spectrum data","Stop");
-    else{
-      string SpectrumFileName, SpectrumFileExtension;
-      size_t Found = string::npos;
-      
-      // Get the file name for the output spectrum data. Note that
-      // FileInformation.fFilename is the absolute path to the file.
-      SpectrumFileName = FileInformation.fFilename;
+    SaveHistogramData(Spectrum_H);
+    break;
+  }
 
-      // Strip the data file name off the absolute file path and set
-      // the path to the DataDirectory variable. Thus, the "current"
-      // directory from which a file was selected will become the new
-      // default directory that automically opens
-      size_t pos = SpectrumFileName.find_last_of("/");
-      if(pos != string::npos)
-	SaveSpectrumDirectory  = ADAQRootFileName.substr(0,pos);
+  case MenuFileSaveSpectrumDerivative_ID:{
 
-      // Strip the file extension (the start of the file extension is
-      // assumed here to begin with the final period) to extract just
-      // the save file name.
-      Found = SpectrumFileName.find_last_of(".");
-      if(Found != string::npos)
-	SpectrumFileName = SpectrumFileName.substr(0, Found);
-
-      // Extract only the "." with the file extension. Note that anove
-      // the "*" character precedes the file extension string when
-      // passed to the FileInformation class in order for files
-      // containing that expression to be displaced to the
-      // user. However, I strip the "*" such that the "." plus file
-      // extension can be used by the SaveSpectrumData() function to
-      // determine the format of spectrum save file.
-      SpectrumFileExtension = FileInformation.fFileTypes[FileInformation.fFileTypeIdx+1];
-      Found = SpectrumFileExtension.find_last_of("*");
-      if(Found != string::npos)
-	SpectrumFileExtension = SpectrumFileExtension.substr(Found+1, SpectrumFileExtension.size());
-      
-      // Call the function that actually saves the spectrum in the
-      // desired format
-      SaveSpectrumData(SpectrumFileName, SpectrumFileExtension);
+    if(!SpectrumDerivativeExists){
+      CreateMessageBox("No spectrum derivatives have been created yet and, therefore, there is nothing to save!","Stop");
+      break;
     }
+
+    SaveHistogramData(SpectrumDerivative_H);
+    break;
+  }
+    
+  case MenuFileSavePSDHistogramSlice_ID:{
+    
+    if(!PSDHistogramSliceExists){
+      CreateMessageBox("No PSD histogram slices have been created yet and, therefore, there is nothing to save!","Stop");
+      break;
+    }
+
+    SaveHistogramData(PSDHistogramSlice_H);
     break;
   }
 
@@ -1823,8 +1821,6 @@ void ADAQAnalysisGUI::HandleMenu(int MenuID)
   default:
     break;
   }
-
-
 }
 
 
@@ -2480,6 +2476,29 @@ void ADAQAnalysisGUI::HandleCheckButtons()
     break;
   }
 
+  case PSDEnableHistogramSlicing_CB_ID:{
+    if(PSDEnableHistogramSlicing_CB->IsDown()){
+      PSDHistogramSliceX_RB->SetState(kButtonUp);
+      PSDHistogramSliceY_RB->SetState(kButtonUp);
+    }
+    else{
+      // Disable histogram buttons
+      PSDHistogramSliceX_RB->SetState(kButtonDisabled);
+      PSDHistogramSliceY_RB->SetState(kButtonDisabled);
+
+      // Replot the PSD histogram
+      PlotPSDHistogram();
+      
+      // Delete the canvas containing the PSD slice histogram and
+      // close the window (formerly) containing the canvas
+      TCanvas *PSDSlice_C = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("PSDSlice_C");
+      if(PSDSlice_C)
+	PSDSlice_C->Close();
+    }
+    break;
+  }
+
+  case PlotSpectrumDerivativeError_CB_ID:
   case SpectrumOverplotDerivative_CB_ID:{
     if(!SpectrumExists){
       CreateMessageBox("A valid spectrum does not yet exists! The calculation of a spectrum derivative is, therefore, moot!", "Stop");
@@ -2490,6 +2509,9 @@ void ADAQAnalysisGUI::HandleCheckButtons()
 	PlotSpectrum();
 	PlotSpectrumDerivative();
 	SpectrumDerivativeInLog_CB->SetState(kButtonUp);
+      }
+      else if(PlotSpectrumDerivativeError_CB->IsDown()){
+	PlotSpectrumDerivative();
       }
       else{
 	PlotSpectrum();
@@ -2806,7 +2828,21 @@ void ADAQAnalysisGUI::HandleRadioButtons()
     }
     break;
 
-
+  case PSDHistogramSliceX_RB_ID:
+    if(PSDHistogramSliceX_RB->IsDown())
+      PSDHistogramSliceY_RB->SetState(kButtonUp);
+    
+    if(CanvasContents == zPSDHistogram)
+      PlotPSDHistogram();
+    break;
+    
+  case PSDHistogramSliceY_RB_ID:
+    if(PSDHistogramSliceY_RB->IsDown())
+      PSDHistogramSliceX_RB->SetState(kButtonUp);
+    if(CanvasContents == zPSDHistogram)
+      PlotPSDHistogram();
+    break;
+    
   case DrawWaveformWithCurve_RB_ID:
   case DrawWaveformWithMarkers_RB_ID:
   case DrawWaveformWithBoth_RB_ID:
@@ -2843,6 +2879,19 @@ void ADAQAnalysisGUI::HandleCanvas(int EventID, int XPixel, int YPixel, TObject 
   // the down-click to the PSD filter creation function
   if(PSDEnableFilterCreation_CB->IsDown() and EventID == 1)
     CreatePSDFilter(XPixel, YPixel);
+  
+  if(PSDEnableHistogramSlicing_CB->IsDown()){
+    
+    // The user may click the canvas to "freeze" the PSD histogram
+    // slice position, which ensures the PSD histogram slice at that
+    // point remains plotted in the standalone canvas
+    if(EventID == 1){
+      PSDEnableHistogramSlicing_CB->SetState(kButtonUp);
+      return;
+    }
+    else
+      PlotPSDHistogramSlice(XPixel, YPixel);
+  }
 }
 
 
@@ -4239,6 +4288,178 @@ void ADAQAnalysisGUI::PlotPSDHistogram()
 }
 
 
+void ADAQAnalysisGUI::PlotPSDHistogramSlice(int XPixel, int YPixel)
+{
+  // pixel coordinates: refers to an (X,Y) position on the canvas
+  //                    using X and Y pixel IDs. The (0,0) pixel is in
+  //                    the upper-left hand corner of the canvas
+  //
+  // user coordinates: refers to a position on the canvas using the X
+  //                   and Y axes of the plotted object to assign a
+  //                   X and Y value to a particular pixel
+  
+  // Get the cursor position in user coordinates
+  double XPos = gPad->AbsPixeltoX(XPixel);
+  double YPos = gPad->AbsPixeltoY(YPixel);
+
+  // Get the min/max x values in user coordinates
+  double XMin = gPad->GetUxmin();
+  double XMax = gPad->GetUxmax();
+
+  // Get the min/max y values in user coordinates
+  double YMin = gPad->GetUymin();
+  double YMax = gPad->GetUymax();
+
+  // Compute the min/max x values in pixel coordinates
+  double PixelXMin = gPad->XtoAbsPixel(XMin);
+  double PixelXMax = gPad->XtoAbsPixel(XMax);
+
+  // Compute the min/max y values in pixel coodinates
+  double PixelYMin = gPad->YtoAbsPixel(YMin);
+  double PixelYMax = gPad->YtoAbsPixel(YMax);
+  
+  // Enable the canvas feedback mode to help in smoothly plotting a
+  // line representing the user's desired value
+  gPad->GetCanvas()->FeedbackMode(kTRUE);
+  
+  ////////////////////////////////////////
+  // Draw a line representing the slice //
+  ////////////////////////////////////////
+  // A line will be drawn along the X or Y slice depending on the
+  // user's selection and current position on the canvas object. Note
+  // that the unique pad ID is used to prevent having to redraw the
+  // TH2F PSDHistogram_H object each time the user moves the cursor
+
+  if(PSDHistogramSliceX_RB->IsDown()){
+    int XPixelOld = gPad->GetUniqueID();
+    
+    gVirtualX->DrawLine(XPixelOld, PixelYMin, XPixelOld, PixelYMax);
+    gVirtualX->DrawLine(XPixel, PixelYMin, XPixel, PixelYMax);
+
+    gPad->SetUniqueID(XPixel);
+  }
+  else if(PSDHistogramSliceY_RB->IsDown()){
+
+    int YPixelOld = gPad->GetUniqueID();
+  
+    gVirtualX->DrawLine(PixelXMin, YPixelOld, PixelXMax, YPixelOld);
+
+    gVirtualX->DrawLine(PixelXMin, YPixel, PixelXMax, YPixel);
+    
+    gPad->SetUniqueID(YPixel);
+  }
+
+  
+  ////////////////////////////////////////
+  // Draw the TH1D PSDHistogram_H slice //
+  ////////////////////////////////////////
+  // A 1D histogram representing the slice along X (or Y) at the value
+  // specified by the cursor position on the canvas will be drawn in a
+  // separate canvas to enable continual selection of slices. The PSD
+  // histogram slice canvas is kept open until the user turns off
+  // histogram slicing to enable smooth plotting
+
+  ////////////////////
+  // Canvas assignment
+
+  string SliceCanvasName = "PSDSlice_C";
+  string SliceHistogramName = "PSDSlice_H";
+
+  // Get the list of current canvas objects
+  TCanvas *PSDSlice_C = (TCanvas *)gROOT->GetListOfCanvases()->FindObject(SliceCanvasName.c_str());
+
+  // If the canvas then delete the contents to prevent memory leaks
+  if(PSDSlice_C)
+    delete PSDSlice_C->GetPrimitive(SliceHistogramName.c_str());
+  
+  // ... otherwise, create a new canvas
+  else{
+    PSDSlice_C = new TCanvas(SliceCanvasName.c_str(), "PSD Histogram Slice", 700, 500, 600, 400);
+    PSDSlice_C->SetGrid(true);
+    PSDSlice_C->SetLeftMargin(0.13);
+    PSDSlice_C->SetBottomMargin(0.13);
+  }
+  
+  // Ensure the PSD slice canvas is the active canvas
+  PSDSlice_C->cd();
+
+
+  /////////////////////////////////
+  // Create the PSD slice histogram
+
+  // An integer to determine which bin in the TH2F PSDHistogram_H
+  // object should be sliced
+  int PSDSliceBin = -1;
+
+  // The 1D histogram slice object
+  TH1D *PSDSlice_H = 0;
+
+  string HistogramTitle, XAxisTitle;
+
+  // Create a slice at a specific "X" (total pulse integral) value,
+  // i.e. create a 1D histogram of the "Y" (tail pulse integrals)
+  // values at a specific value of "X" (total pulse integral).
+  if(PSDHistogramSliceX_RB->IsDown()){
+    PSDSliceBin = PSDHistogram_H->GetXaxis()->FindBin(gPad->PadtoX(XPos));
+    PSDSlice_H = PSDHistogram_H->ProjectionY("",PSDSliceBin,PSDSliceBin);
+
+    stringstream ss;
+    ss << "PSDHistogram X slice at " << XPos << " ADC";
+    HistogramTitle = ss.str();
+
+    XAxisTitle = PSDHistogram_H->GetYaxis()->GetTitle();
+  }
+  
+  // Create a slice at a specific "Y" (tail pulse integral) value,
+  // i.e. create a 1D histogram of the "X" (total pulse integrals)
+  // values at a specific value of "Y" (tail pulse integral).
+  else{
+    PSDSliceBin = PSDHistogram_H->GetYaxis()->FindBin(gPad->PadtoY(YPos));
+    PSDSlice_H = PSDHistogram_H->ProjectionX("",PSDSliceBin,PSDSliceBin);
+
+    stringstream ss;
+    ss << "PSDHistogram Y slice at " << YPos << " ADC";
+    HistogramTitle = ss.str();
+    
+    XAxisTitle = PSDHistogram_H->GetXaxis()->GetTitle();
+  }
+  
+  /////////////////////////////////
+  // Set slice histogram attributes
+  
+  PSDSlice_H->SetName(SliceHistogramName.c_str());
+  PSDSlice_H->SetTitle(HistogramTitle.c_str());
+
+  PSDSlice_H->GetXaxis()->SetTitle(XAxisTitle.c_str());
+  PSDSlice_H->GetXaxis()->SetTitleSize(0.05);
+  PSDSlice_H->GetXaxis()->SetTitleOffset(1.1);
+  PSDSlice_H->GetXaxis()->SetLabelSize(0.05);
+  PSDSlice_H->GetXaxis()->CenterTitle();
+  
+  PSDSlice_H->GetYaxis()->SetTitle("Counts");
+  PSDSlice_H->GetYaxis()->SetTitleSize(0.05);
+  PSDSlice_H->GetYaxis()->SetTitleOffset(1.1);
+  PSDSlice_H->GetYaxis()->SetLabelSize(0.05);
+  PSDSlice_H->GetYaxis()->CenterTitle();
+  
+  PSDSlice_H->SetFillColor(4);
+  PSDSlice_H->Draw("B");
+
+  // Save the histogram  to a class member TH1F object
+  if(PSDHistogramSlice_H) delete PSDHistogramSlice_H;
+  PSDHistogramSlice_H = (TH1D *)PSDSlice_H->Clone("PSDHistogramSlice_H");
+  PSDHistogramSliceExists = true;
+  
+  // Update the standalone canvas
+  PSDSlice_C->Update();
+
+  gPad->GetCanvas()->FeedbackMode(kFALSE);
+  
+  // Reset the main embedded canvas to active
+  Canvas_EC->GetCanvas()->cd();
+}
+
+
 void ADAQAnalysisGUI::CalculateRawWaveform(int Channel)
 {
   vector<int> RawVoltage = *WaveformVecPtrs[Channel];
@@ -5423,58 +5644,6 @@ void ADAQAnalysisGUI::IntegrateSpectrum()
 }
 
 
-void ADAQAnalysisGUI::SaveSpectrumData(string SpectrumFileName, string SpectrumFileExtension)
-{
-  // Ensure that the spectrum histogram object exists
-  if(!Spectrum_H){
-    CreateMessageBox("The Spectrum_H object does not yet exist so there is nothing to save to file!","Stop");
-    return;
-  }
-  // If the spectrum histogram exists ...
-  else{
-
-    // Error check the filename extensions
-    if(SpectrumFileExtension == ".dat" or SpectrumFileExtension == ".csv"){
-      
-      // Create an ofstream object to write the data to a file
-      string SpectrumFile = SpectrumFileName + SpectrumFileExtension;
-      ofstream SpectrumOutput(SpectrumFile.c_str(), ofstream::trunc);
-      
-      // Assign the data separator based on file extension
-      string separator;
-      if(SpectrumFileExtension == ".dat")
-	separator = "\t";
-      else if(SpectrumFileExtension == ".csv")
-	separator = ",";
-   
-      // Get the number of bins in the spectrum histogram
-      int Bins = Spectrum_H->GetNbinsX();
-
-      // Iterate over all the bins in spectrum histogram and output
-      // the bin center (value on the X axis of the histogram) and the
-      // bin content (value on the Y axis of the histogram)
-      for(int i=1; i<=Bins; i++){
-	double BinCenter = Spectrum_H->GetBinCenter(i);
-	double BinContent = Spectrum_H->GetBinContent(i);
-
-	SpectrumOutput << BinCenter << separator << BinContent
-		       << endl;
-      }
-
-      // Close the ofstream object
-      SpectrumOutput.close();
-      
-      string SuccessMessage = "The spectrum data has been successfully saved to the following file:\n" + SpectrumFile;
-      CreateMessageBox(SuccessMessage,"Asterisk");
-    }
-    else{
-      CreateMessageBox("Unacceptable file extension for the spectrum data file! Valid extensions are '.dat' and '.csv'!","Stop");
-      return;
-    }
-  }
-}
-
-
 // Creates a separate pop-up box with a message for the user. Function
 // is modular to allow flexibility in use.
 void ADAQAnalysisGUI::CreateMessageBox(string Message, string IconName)
@@ -6280,11 +6449,21 @@ void ADAQAnalysisGUI::PlotSpectrumDerivative()
 
   double BinCenters[NumBins], Differences[NumBins];  
 
+  double BinCenterErrors[NumBins], DifferenceErrors[NumBins];
+
   // Iterate over the bins to assign the bin center and the difference
   // between bins N_i and N_i-1 to the designed arrays
   for(int bin = 0; bin<NumBins; bin++){
     
     BinCenters[bin] = Spectrum2Plot_H->GetBinCenter(bin);
+    
+    // Recall that TH1F bin 0 is the underfill bin; therfore, set the
+    // difference between bins 0/-1 and 0/1 to zero to account for
+    // bins that do not contain relevant content for the derivative
+    if(bin < 2){
+      Differences[bin] = VerticalOffset;
+      continue;
+    }
     
     double Previous = Spectrum2Plot_H->GetBinContent(bin-1);
     double Current = Spectrum2Plot_H->GetBinContent(bin);
@@ -6301,8 +6480,25 @@ void ADAQAnalysisGUI::PlotSpectrumDerivative()
       
       Differences[bin] = (log10(Current) - log10(Previous) + VerticalOffset);
     }
-    else
+    else{
+     
+      // Compute the "derivative", i.e. the difference between the
+      // current and previous bin contents
       Differences[bin] = (ScaleFactor*(Current - Previous)) + VerticalOffset;
+
+      // Assume that the error in the bin centers is zero
+      BinCenterErrors[bin] = 0.;
+      
+      // Compute the error in the "derivative" by adding the bin
+      // content in quadrature since bin content is uncorrelated. This
+      // is a more *accurate* measure of error
+      // DifferenceErrors[bin] = sqrt(pow(sqrt(Current,2)) + pow(sqrt(Previous,2)))
+      
+      // Compute the error in the "derivative" by simply adding the
+      // error in the current and previous bins. This is an extremely
+      // conservative measure of error
+      DifferenceErrors[bin] = sqrt(Current) + sqrt(Previous);
+    }
   }
   
 
@@ -6344,10 +6540,18 @@ void ADAQAnalysisGUI::PlotSpectrumDerivative()
   Canvas_EC->GetCanvas()->SetBottomMargin(0.12);
   Canvas_EC->GetCanvas()->SetRightMargin(0.05);
 
+
   ///////////////////
   // Create the graph
 
-  TGraph *SpectrumDerivative_G = new TGraph(NumBins, BinCenters, Differences);
+  gStyle->SetEndErrorSize(0);
+  
+  TGraph *SpectrumDerivative_G;
+  if(PlotSpectrumDerivativeError_CB->IsDown())
+    SpectrumDerivative_G = new TGraphErrors(NumBins, BinCenters, Differences, BinCenterErrors, DifferenceErrors);
+  else
+    SpectrumDerivative_G = new TGraph(NumBins, BinCenters, Differences);
+
   SpectrumDerivative_G->SetTitle(Title.c_str());
 
   SpectrumDerivative_G->GetXaxis()->SetTitle(XAxisTitle.c_str());
@@ -6370,6 +6574,7 @@ void ADAQAnalysisGUI::PlotSpectrumDerivative()
   SpectrumDerivative_G->SetMarkerSize(1.0);
   SpectrumDerivative_G->SetMarkerColor(2);
 
+ 
   //////////////////////
   // X and Y axis limits
 
@@ -6400,8 +6605,13 @@ void ADAQAnalysisGUI::PlotSpectrumDerivative()
   
     SpectrumDerivative_G->GetYaxis()->SetRangeUser(YAxisMin, YAxisMax);
     
-    SpectrumDerivative_G->Draw("LP SAME");    
-
+    if(PlotSpectrumDerivativeError_CB->IsDown()){
+      SpectrumDerivative_G->SetLineColor(1);
+      SpectrumDerivative_G->Draw("P SAME");
+    }
+    else
+      SpectrumDerivative_G->Draw("LP SAME");
+    
     // Plot a "zero" reference line (which is shifted by the vertical
     // offset just like the derivative) to show where the derivative
     // switches sign
@@ -6422,13 +6632,128 @@ void ADAQAnalysisGUI::PlotSpectrumDerivative()
 
     SpectrumDerivative_G->GetYaxis()->SetRangeUser(YAxisMin, YAxisMax);
     
-    SpectrumDerivative_G->Draw("ALP");
+    if(PlotSpectrumDerivativeError_CB->IsDown()){
+      SpectrumDerivative_G->SetLineColor(1);
+      SpectrumDerivative_G->Draw("AP");
+    }
+    else
+      SpectrumDerivative_G->Draw("ALP");
     
     // Set the class member int denoting that the canvas now contains
     // only a spectrum derivative
     CanvasContents = zSpectrumDerivative;
   }
+  
+  // If the TH1F object that stores the spectrum derivative exists
+  // then delete/recreate it
+  if(SpectrumDerivative_H) delete SpectrumDerivative_H;
+  SpectrumDerivative_H = new TH1F("SpectrumDerivative_H","SpectrumDerivative_H", SpectrumNumBins, SpectrumMinBin, SpectrumMaxBin);
+  
+  // Iterate over the TGraph derivative points and assign them to the
+  // TH1F object. The main purpose for converting this to a TH1F is so
+  // that the generic/modular function SaveHistogramData() can be used
+  // to output the spectrum derivative data to a file. We also
+  // subtract off the vertical offset used for plotting to ensure the
+  // derivative is vertically centered at zero.
+
+  double x,y;
+  for(int bin=0; bin<SpectrumNumBins; bin++){
+    SpectrumDerivative_G->GetPoint(bin,x,y);
+    SpectrumDerivative_H->SetBinContent(bin, y-VerticalOffset);
+  }
+  
+  SpectrumDerivativeExists = true;
+  
   Canvas_EC->GetCanvas()->Update();
+}
+
+
+// Method used to output a generic TH1 object to a data text file in
+// the format column1 == bin center, column2 == bin content. Note that
+// the function accepts class types TH1 such that any derived class
+// (TH1F, TH1D ...) can be saved with this function
+void ADAQAnalysisGUI::SaveHistogramData(TH1 *HistogramToSave_H)
+{
+  // Create character arrays that enable file type selection (.dat
+  // files have data columns separated by spaces and .csv have data
+  // columns separated by commas)
+  const char *FileTypes[] = {"ASCII file",  "*.dat",
+			     "CSV file",    "*.csv",
+			     0,             0};
+  
+  TGFileInfo FileInformation;
+  FileInformation.fFileTypes = FileTypes;
+  FileInformation.fIniDir = StrDup(SaveHistogramDirectory.c_str());
+  
+  new TGFileDialog(gClient->GetRoot(), this, kFDSave, &FileInformation);
+  
+  if(FileInformation.fFilename==NULL)
+    CreateMessageBox("No file was selected! Nothing will be saved to file!","Stop");
+  else{
+    string FileName, FileExtension;
+    size_t Found = string::npos;
+    
+    // Get the file name for the output histogram data. Note that
+    // FileInformation.fFilename is the absolute path to the file.
+    FileName = FileInformation.fFilename;
+
+    // Strip the data file name off the absolute file path and set
+    // the path to the DataDirectory variable. Thus, the "current"
+    // directory from which a file was selected will become the new
+    // default directory that automically opens
+    size_t pos = FileName.find_last_of("/");
+    if(pos != string::npos)
+      SaveHistogramDirectory  = ADAQRootFileName.substr(0,pos);
+
+    // Strip the file extension (the start of the file extension is
+    // assumed here to begin with the final period) to extract just
+    // the save file name.
+    Found = FileName.find_last_of(".");
+    if(Found != string::npos)
+      FileName = FileName.substr(0, Found);
+
+    // Extract only the "." with the file extension. Note that anove
+    // the "*" character precedes the file extension string when
+    // passed to the FileInformation class in order for files
+    // containing that expression to be displaced to the
+    // user. However, I strip the "*" such that the "." plus file
+    // extension can be used by the SaveSpectrumData() function to
+    // determine the format of spectrum save file.
+    FileExtension = FileInformation.fFileTypes[FileInformation.fFileTypeIdx+1];
+    Found = FileExtension.find_last_of("*");
+    if(Found != string::npos)
+      FileExtension = FileExtension.substr(Found+1, FileExtension.size());
+
+    if(FileExtension == ".dat" or FileExtension == ".csv"){
+
+      string FullFileName = FileName + FileExtension;
+
+      ofstream HistogramOutput(FullFileName.c_str(), ofstream::trunc);
+
+      // Assign the data separator based on file extension
+      string separator;
+      if(FileExtension == ".dat")
+	separator = "\t";
+      else if(FileExtension == ".csv")
+	separator = ",";
+      
+      int NumBins = HistogramToSave_H->GetNbinsX();
+      
+      for(int bin=0; bin<=NumBins; bin++)
+	HistogramOutput << HistogramToSave_H->GetBinCenter(bin) << separator
+			<< HistogramToSave_H->GetBinContent(bin)
+			<< endl;
+      
+      HistogramOutput.close();
+      
+      string SuccessMessage = "The histogram data has been successfully saved to the following file:\n" + FullFileName;
+      CreateMessageBox(SuccessMessage,"Asterisk");
+    }
+    else{
+      CreateMessageBox("Unacceptable file extension for the spectrum data file! Valid extensions are '.dat' and '.csv'!","Stop");
+      return;
+    }
+  }
 }
 
 

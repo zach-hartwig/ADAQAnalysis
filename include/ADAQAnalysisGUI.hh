@@ -86,13 +86,15 @@ public:
   void FindPeakHeights();
   void FindSpectrumPeaks();
   void IntegrateSpectrum();
-  void SaveSpectrumData(string, string);
   void CreateSpectrum();
   void CreateDesplicedFile();
   void CreatePSDHistogram();
   double CalculateBaseline(vector<int> *);  
   void CalculateSpectrumBackground(TH1F *);
-
+  
+  // Method to save a generic histogram to a data file
+  void SaveHistogramData(TH1 *);
+  
   // Methods to handle the processing of waveforms in parallel
   void ProcessWaveformsInParallel(string);
   void SaveParallelProcessingData();
@@ -105,7 +107,7 @@ public:
   void PlotSpectrum();
   void PlotSpectrumDerivative();
   void PlotPSDHistogram();
-
+  void PlotPSDHistogramSlice(int, int);
 
   // Methods for general waveform analysis
   void CalculateCountRate();
@@ -235,7 +237,7 @@ private:
   // Widgets for the analysis tabbed frame //
   ///////////////////////////////////////////
   
-  TGCheckButton *PSDEnable_CB, *PSDPlotTailIntegration_CB;
+  TGCheckButton *PSDEnable_CB;
   ADAQComboBoxWithLabel *PSDChannel_CBL;
   ADAQNumberEntryWithLabel *PSDThreshold_NEL;
   ADAQNumberEntryWithLabel *PSDPeakOffset_NEL;
@@ -246,6 +248,11 @@ private:
   ADAQNumberEntryWithLabel *PSDNumTotalBins_NEL, *PSDMinTotalBin_NEL, *PSDMaxTotalBin_NEL;
 
   ADAQComboBoxWithLabel *PSDPlotType_CBL;
+
+  TGCheckButton *PSDPlotTailIntegration_CB;
+  
+  TGCheckButton *PSDEnableHistogramSlicing_CB;
+  TGRadioButton *PSDHistogramSliceX_RB, *PSDHistogramSliceY_RB;
   
   TGTextButton *PSDCalculate_TB;
   
@@ -287,6 +294,7 @@ private:
   
   TGCheckButton *SetStatsOff_CB;
   TGCheckButton *PlotVerticalAxisInLog_CB;
+  TGCheckButton *PlotSpectrumDerivativeError_CB;
   
   TGTextButton *ReplotWaveform_TB;
   TGTextButton *ReplotSpectrum_TB;
@@ -363,7 +371,7 @@ private:
   bool ADAQParResultsLoaded;
   
   // Strings used to store the current directory for various files
-  string DataDirectory, SaveSpectrumDirectory;
+  string DataDirectory, SaveSpectrumDirectory, SaveHistogramDirectory;;
   string PrintCanvasDirectory, DesplicedDirectory;
   
   // Vectors and variables for extracting waveforms from the TTree in
@@ -389,6 +397,9 @@ private:
   TH1F *Waveform_H[8], *Spectrum_H, *SpectrumBackground_H, *SpectrumDeconvolved_H;
 
   TH1F *Spectrum2Plot_H;
+
+  TH1F *SpectrumDerivative_H;
+  TH1D *PSDHistogramSlice_H;
   
   // ROOT TSpectrum peak-finding object that operates on TH1F
   TSpectrum *PeakFinder;
@@ -477,8 +488,9 @@ private:
   // Number of data channels in the ADAQ ROOT files
   int NumDataChannels;
 
-  // Bool to determine what canvas presently contains
-  bool SpectrumExists, PSDHistogramExists;
+  // Bool to determine what graphical objects exist
+  bool SpectrumExists, SpectrumDerivativeExists;
+  bool PSDHistogramExists, PSDHistogramSliceExists;
 
   // Max number of peaks expected for TSpectrum on spectra
   int SpectrumMaxPeaks;
