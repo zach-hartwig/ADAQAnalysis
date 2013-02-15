@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // name: ADAQAnalysisGUI.cc
-// date: 07 Feb 13 (Last updated)
+// date: 14 Feb 13 (Last updated)
 // auth: Zach Hartwig
 //
 // desc: ADAQAnalysisGUI.cc is the main implementation file for the
@@ -2480,6 +2480,9 @@ void ADAQAnalysisGUI::HandleCheckButtons()
     if(PSDEnableHistogramSlicing_CB->IsDown()){
       PSDHistogramSliceX_RB->SetState(kButtonUp);
       PSDHistogramSliceY_RB->SetState(kButtonUp);
+      
+      // Temporary hack ZSH 12 Feb 13
+      PSDHistogramSliceX_RB->SetState(kButtonDown);
     }
     else{
       // Disable histogram buttons
@@ -3802,8 +3805,18 @@ void ADAQAnalysisGUI::CreateSpectrum()
 	// floor, then add that bin to the pulse area integral
 	for(int sample=0; sample<Waveform_H[Channel]->GetEntries(); sample++){
 	  SampleHeight = Waveform_H[Channel]->GetBinContent(sample);
-	  if(SampleHeight >= Floor)
-	    PulseArea += SampleHeight;
+
+	  // ZSH: At present, the whole-waveform spectra creation
+	  // simply integrates throught the entire waveform. Ideally,
+	  // I would like to eliminate the signal noise by eliminating
+	  // it from the integral with a threshold. But to avoid
+	  // confusing the user and to ensure consistency, I will
+	  // simply trust cancellation of + and - noise to avoid
+	  // broadening the photo peaks. May want to implement a
+	  // "minimum waveform height to be histogrammed" at some
+	  // point in the future.
+	  // if(SampleHeight >= 20)
+	  PulseArea += SampleHeight;
 	}
 	
 	// If the calibration manager is to be used to convert the
@@ -4144,14 +4157,23 @@ void ADAQAnalysisGUI::PlotSpectrum()
 // used to operate on the waveform
 void ADAQAnalysisGUI::PlotPSDHistogram()
 {
+  // Check to ensure that the PSD histogram object exists!
   if(!PSDHistogram_H){
     CreateMessageBox("A valid PSDHistogram object was not found! PSD histogram plotting will abort!","Stop");
+    return;
+  }
+
+  // If the PSD histogram has zero events then alert the user and
+  // abort plotting. This can happen, for example, if the PSD channel
+  // was incorrectly set to an "empty" data channel
+  if(PSDHistogram_H->GetEntries() == 0){
+    CreateMessageBox("The PSD histogram had zero entries! Recheck PSD settings and take another whirl around the merry-go-round!","Stop");
     return;
   }
   
   //////////////////////
   // X and Y axis ranges
-
+  
   float Min,Max;
 
   XAxisLimits_THS->GetPosition(Min,Max);
@@ -6570,7 +6592,7 @@ void ADAQAnalysisGUI::PlotSpectrumDerivative()
 
   SpectrumDerivative_G->SetLineColor(2);
   SpectrumDerivative_G->SetLineWidth(2);
-  SpectrumDerivative_G->SetMarkerStyle(24);
+  SpectrumDerivative_G->SetMarkerStyle(20);
   SpectrumDerivative_G->SetMarkerSize(1.0);
   SpectrumDerivative_G->SetMarkerColor(2);
 
