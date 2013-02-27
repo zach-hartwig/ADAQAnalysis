@@ -124,6 +124,7 @@ public:
   void UpdateProcessingProgress(int);
   void CreatePSDFilter(int, int);
   void PlotPSDFilter();
+  void SetCalibrationWidgetState(bool, EButtonState);
 
   // Methods to recieve and act upon ROOT widget signals
   void HandleMenu(int);
@@ -201,6 +202,7 @@ private:
   TGRadioButton *IntegrationTypeWholeWaveform_RB;
 
   TGCheckButton *SpectrumCalibration_CB;
+  TGRadioButton *SpectrumCalibrationManual_RB, *SpectrumCalibrationFixedEP_RB;
   ADAQComboBoxWithLabel *SpectrumCalibrationPoint_CBL;
   ADAQNumberEntryWithLabel *SpectrumCalibrationEnergy_NEL;
   ADAQNumberEntryWithLabel *SpectrumCalibrationPulseUnit_NEL;
@@ -228,7 +230,6 @@ private:
   ADAQNumberEntryFieldWithLabel *SpectrumIntegralError_NEFL;
   
   TGCheckButton *SpectrumOverplotDerivative_CB;
-  TGCheckButton *SpectrumDerivativeInLog_CB;
 
   TGTextButton *CreateSpectrum_TB;
 
@@ -294,7 +295,9 @@ private:
   
   TGCheckButton *SetStatsOff_CB;
   TGCheckButton *PlotVerticalAxisInLog_CB;
+
   TGCheckButton *PlotSpectrumDerivativeError_CB;
+  TGCheckButton *PlotAbsValueSpectrumDerivative_CB;
   
   TGTextButton *ReplotWaveform_TB;
   TGTextButton *ReplotSpectrum_TB;

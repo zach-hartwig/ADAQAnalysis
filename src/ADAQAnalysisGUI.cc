@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // name: ADAQAnalysisGUI.cc
-// date: 14 Feb 13 (Last updated)
+// date: 27 Feb 13 (Last updated)
 // auth: Zach Hartwig
 //
 // desc: ADAQAnalysisGUI.cc is the main implementation file for the
@@ -668,11 +668,27 @@ void ADAQAnalysisGUI::CreateMainFrame()
 				   new TGLayoutHints(kLHintsLeft, 0,0,0,5));
   SpectrumCalibration_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
   SpectrumCalibration_CB->SetState(kButtonUp);
+
+  TGHorizontalFrame *SpectrumCalibrationType_HF = new TGHorizontalFrame(SpectrumCalibration_GF);
+  SpectrumCalibration_GF->AddFrame(SpectrumCalibrationType_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+
+  SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationManual_RB = new TGRadioButton(SpectrumCalibrationType_HF, "Manual entry", SpectrumCalibrationManual_RB_ID),
+				       new TGLayoutHints(kLHintsNormal, 0,15,0,5));
+  SpectrumCalibrationManual_RB->SetState(kButtonDown);
+  SpectrumCalibrationManual_RB->SetState(kButtonDisabled);
+  SpectrumCalibrationManual_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
+  
+  SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationFixedEP_RB = new TGRadioButton(SpectrumCalibrationType_HF, "EP detector", SpectrumCalibrationFixedEP_RB_ID),
+				       new TGLayoutHints(kLHintsNormal, 0,0,0,5));
+  SpectrumCalibrationFixedEP_RB->SetState(kButtonDisabled);
+  SpectrumCalibrationFixedEP_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
+  
   
   SpectrumCalibration_GF->AddFrame(SpectrumCalibrationPoint_CBL = new ADAQComboBoxWithLabel(SpectrumCalibration_GF, "", SpectrumCalibrationPoint_CBL_ID),
-				   new TGLayoutHints(kLHintsNormal));
+				   new TGLayoutHints(kLHintsNormal, 0,0,5,5));
   SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Point 0",0);
   SpectrumCalibrationPoint_CBL->GetComboBox()->Select(0);
+  SpectrumCalibrationPoint_CBL->GetComboBox()->SetEnabled(false);
     
   SpectrumCalibration_GF->AddFrame(SpectrumCalibrationEnergy_NEL = new ADAQNumberEntryWithLabel(SpectrumCalibration_GF, "Energy (keV or MeV)", SpectrumCalibrationEnergy_NEL_ID),
 					  new TGLayoutHints(kLHintsLeft,0,0,5,0));
@@ -835,11 +851,6 @@ void ADAQAnalysisGUI::CreateMainFrame()
 				new TGLayoutHints(kLHintsNormal, 5,5,5,0));
   SpectrumOverplotDerivative_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
 
-  SpectrumAnalysis_GF->AddFrame(SpectrumDerivativeInLog_CB = new TGCheckButton(SpectrumAnalysis_GF, "Take log10 of derivative", SpectrumDerivativeInLog_CB_ID),
-				new TGLayoutHints(kLHintsNormal, 5,5,0,5));
-  SpectrumDerivativeInLog_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
-  SpectrumDerivativeInLog_CB->SetState(kButtonDisabled);
-  
   SpectrumFrame_VF->AddFrame(CreateSpectrum_TB = new TGTextButton(SpectrumFrame_VF, "Create spectrum", CreateSpectrum_TB_ID),
 		       new TGLayoutHints(kLHintsCenterX | kLHintsTop, 5,5,0,0));
   CreateSpectrum_TB->Resize(200, 30);
@@ -908,7 +919,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
 			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMaxTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDMaxTotalBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDMaxTotalBin_NEL->GetEntry()->SetNumber(50000);
+  PSDMaxTotalBin_NEL->GetEntry()->SetNumber(20000);
   PSDMaxTotalBin_NEL->GetEntry()->SetState(false);
   
   PSDAnalysis_GF->AddFrame(PSDNumTailBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. tail bins (Y axis)", -1),
@@ -932,7 +943,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMaxTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDMaxTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDMaxTailBin_NEL->GetEntry()->SetNumber(25000);
+  PSDMaxTailBin_NEL->GetEntry()->SetNumber(5000);
   PSDMaxTailBin_NEL->GetEntry()->SetState(false);
 
 
@@ -941,7 +952,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
   PSDThreshold_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDThreshold_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   PSDThreshold_NEL->GetEntry()->SetLimitValues(0,4095); // Updated when ADAQ ROOT file loaded
-  PSDThreshold_NEL->GetEntry()->SetNumber(100); // Updated when ADAQ ROOT file loaded
+  PSDThreshold_NEL->GetEntry()->SetNumber(1500); // Updated when ADAQ ROOT file loaded
   PSDThreshold_NEL->GetEntry()->SetState(false);
   
   PSDAnalysis_GF->AddFrame(PSDPeakOffset_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Peak offset (sample)", PSDPeakOffset_NEL_ID),
@@ -954,7 +965,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
   PSDAnalysis_GF->AddFrame(PSDTailOffset_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Tail offset (sample)", PSDTailOffset_NEL_ID),
                            new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDTailOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDTailOffset_NEL->GetEntry()->SetNumber(30);
+  PSDTailOffset_NEL->GetEntry()->SetNumber(29);
   PSDTailOffset_NEL->GetEntry()->SetState(false);
   PSDTailOffset_NEL->GetEntry()->Connect("ValueSet(long", "ADAQAnalysisGUI", this, "HandleNumberEntries()");
   
@@ -1131,6 +1142,10 @@ void ADAQAnalysisGUI::CreateMainFrame()
   GraphicsFrame_VF->AddFrame(PlotSpectrumDerivativeError_CB = new TGCheckButton(GraphicsFrame_VF, "Plot spectrum derivative error", PlotSpectrumDerivativeError_CB_ID),
 			     new TGLayoutHints(kLHintsNormal, 15,5,0,0));
   PlotSpectrumDerivativeError_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
+  
+  GraphicsFrame_VF->AddFrame(PlotAbsValueSpectrumDerivative_CB = new TGCheckButton(GraphicsFrame_VF, "Plot abs. value of spectrum derivative ", PlotAbsValueSpectrumDerivative_CB_ID),
+			     new TGLayoutHints(kLHintsNormal, 15,5,0,0));
+  PlotAbsValueSpectrumDerivative_CB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleCheckButtons()");
   
   GraphicsFrame_VF->AddFrame(AutoYAxisRange_CB = new TGCheckButton(GraphicsFrame_VF, "Auto. Y Axis Range (waveform only)", -1),
 			       new TGLayoutHints(kLHintsLeft, 15,5,0,5));
@@ -1372,11 +1387,11 @@ void ADAQAnalysisGUI::CreateMainFrame()
 			       new TGLayoutHints(kLHintsNormal, 15,5,5,5));
   ProcessingSeq_RB = new TGRadioButton(ProcessingType_BG, "Sequential    ", ProcessingSeq_RB_ID);
   ProcessingSeq_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
-  ProcessingSeq_RB->SetState(kButtonDown);
+  //ProcessingSeq_RB->SetState(kButtonDown);
   
   ProcessingPar_RB = new TGRadioButton(ProcessingType_BG, "Parallel", ProcessingPar_RB_ID);
   ProcessingPar_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
-  //ProcessingPar_RB->SetState(kButtonDown);
+  ProcessingPar_RB->SetState(kButtonDown);
 
   
   // Processing processing options
@@ -2003,10 +2018,14 @@ void ADAQAnalysisGUI::HandleTextButtons()
     CalibrationData[CurrentChannel].PulseUnit.clear();
 
     // Delete the current channel's depracated calibration manager
-    // TGraph object to prevent memory leaks
-    if(UseCalibrationManager[CurrentChannel])
+    // TGraph object to prevent memory leaks but reallocat the TGraph
+    // object to prevent seg. faults when writing the
+    // CalibrationManager to the ROOT parallel processing file
+    if(UseCalibrationManager[CurrentChannel]){
       delete CalibrationManager[CurrentChannel];
-
+      CalibrationManager[CurrentChannel] = new TGraph;
+    }
+    
     // Set the current channel's calibration boolean to false,
     // indicating that the calibration manager will NOT be used within
     // the acquisition loop
@@ -2018,7 +2037,6 @@ void ADAQAnalysisGUI::HandleTextButtons()
     SpectrumCalibrationPoint_CBL->GetComboBox()->Select(0);
     SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);
     SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(1.0);
-
     break;
   }
 
@@ -2284,40 +2302,18 @@ void ADAQAnalysisGUI::HandleCheckButtons()
     
   case SpectrumCalibration_CB_ID:{
     
-    // All of the calibration widgets (except the check button) are
-    // disabled when the calibration check button is "up" and enabled
-    // when the calibration button is "down". Set the widget states
-    // appropriately based on the check button state, as well as the
-    // presence of the calibration line on the embedded canvas
-    
-    bool NumberEntryState;
-    EButtonState ButtonState;
-
     if(SpectrumCalibration_CB->IsDown()){
-      // Set the widget state variables to true and up
-      NumberEntryState = true;
-      ButtonState = kButtonUp;
-      
-      // Draw the calibration line on the spectrum
-      HandleTripleSliderPointer();
+      SpectrumCalibrationManual_RB->SetState(kButtonUp);
+      SpectrumCalibrationFixedEP_RB->SetState(kButtonUp);
+
+      SetCalibrationWidgetState(true, kButtonUp);
     }
     else{
-      // Set the widget state variables to false and disabled
-      NumberEntryState = false;
-      ButtonState = kButtonDisabled;
-	
-      // Clear the vertical calibration line from the spectrum
-      PlotSpectrum();
+      SpectrumCalibrationManual_RB->SetState(kButtonDisabled);
+      SpectrumCalibrationFixedEP_RB->SetState(kButtonDisabled);
+
+      SetCalibrationWidgetState(false, kButtonDisabled);
     }
-    
-    // Set the widget states based on above variable set results
-    SpectrumCalibrationPoint_CBL->GetComboBox()->SetEnabled(NumberEntryState);
-    SpectrumCalibrationEnergy_NEL->GetEntry()->SetState(NumberEntryState);
-    SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetState(NumberEntryState);
-    SpectrumCalibrationSetPoint_TB->SetState(ButtonState);
-    SpectrumCalibrationCalibrate_TB->SetState(ButtonState);
-    SpectrumCalibrationPlot_TB->SetState(ButtonState);
-    SpectrumCalibrationReset_TB->SetState(ButtonState);
     break;
   }
     
@@ -2502,6 +2498,7 @@ void ADAQAnalysisGUI::HandleCheckButtons()
   }
 
   case PlotSpectrumDerivativeError_CB_ID:
+  case PlotAbsValueSpectrumDerivative_CB_ID:
   case SpectrumOverplotDerivative_CB_ID:{
     if(!SpectrumExists){
       CreateMessageBox("A valid spectrum does not yet exists! The calculation of a spectrum derivative is, therefore, moot!", "Stop");
@@ -2511,25 +2508,17 @@ void ADAQAnalysisGUI::HandleCheckButtons()
       if(SpectrumOverplotDerivative_CB->IsDown()){
 	PlotSpectrum();
 	PlotSpectrumDerivative();
-	SpectrumDerivativeInLog_CB->SetState(kButtonUp);
       }
       else if(PlotSpectrumDerivativeError_CB->IsDown()){
 	PlotSpectrumDerivative();
       }
       else{
 	PlotSpectrum();
-	SpectrumDerivativeInLog_CB->SetState(kButtonDisabled);
       }
       break;
     }
   }
-    
-  case SpectrumDerivativeInLog_CB_ID:{
-    PlotSpectrum();
-    PlotSpectrumDerivative();
-    break;
-  }
-    
+
   default:
     break;
   }
@@ -2770,7 +2759,42 @@ void ADAQAnalysisGUI::HandleRadioButtons()
     WaveformPolarity = -1.0;
     PlotWaveform();
     break;
-	
+
+  case SpectrumCalibrationManual_RB_ID:{
+    
+    if(SpectrumCalibrationManual_RB->IsDown()){
+      SpectrumCalibrationFixedEP_RB->SetState(kButtonUp);
+      
+      SetCalibrationWidgetState(true, kButtonUp);
+      
+      SpectrumCalibrationReset_TB->Clicked();
+    }
+
+    break;
+  }    
+    
+  case SpectrumCalibrationFixedEP_RB_ID:{
+
+    if(SpectrumCalibrationFixedEP_RB->IsDown()){
+      SpectrumCalibrationManual_RB->SetState(kButtonUp);
+
+      SetCalibrationWidgetState(false, kButtonDisabled);
+    }
+    
+    int CurrentChannel = ChannelSelector_CBL->GetComboBox()->GetSelected();
+    
+    //      if(UseCalibrationManager[CurrentChannel])
+    //	delete CalibrationManager[CurrentChannel];
+    
+    CalibrationManager[CurrentChannel] = new TGraph(NumCalibrationPoints_FixedEP,
+						    PulseUnitPoints_FixedEP,
+						    EnergyPoints_FixedEP);
+    
+    UseCalibrationManager[CurrentChannel] = true;
+    
+    break;
+  }
+  
   case SpectrumWithBackground_RB_ID:
     SpectrumLessBackground_RB->SetState(kButtonUp);
     CalculateSpectrumBackground(Spectrum_H);
@@ -3319,7 +3343,7 @@ void ADAQAnalysisGUI::SaveParallelProcessingData()
   // The PSD filter
   ADAQParParams->UsePSDFilterManager = UsePSDFilterManager;
   ADAQParParams->PSDFilterManager = PSDFilterManager;
-  
+
   
   //////////////////////////////////////////////////
   // Write the transient parallel value storage file
@@ -6477,7 +6501,9 @@ void ADAQAnalysisGUI::PlotSpectrumDerivative()
   // between bins N_i and N_i-1 to the designed arrays
   for(int bin = 0; bin<NumBins; bin++){
     
-    BinCenters[bin] = Spectrum2Plot_H->GetBinCenter(bin);
+    // Set the bin center right in between the two bin centers used to
+    // calculate the spectrumderivative
+    BinCenters[bin] = (Spectrum2Plot_H->GetBinCenter(bin) + Spectrum2Plot_H->GetBinCenter(bin-1)) / 2;
     
     // Recall that TH1F bin 0 is the underfill bin; therfore, set the
     // difference between bins 0/-1 and 0/1 to zero to account for
@@ -6490,37 +6516,25 @@ void ADAQAnalysisGUI::PlotSpectrumDerivative()
     double Previous = Spectrum2Plot_H->GetBinContent(bin-1);
     double Current = Spectrum2Plot_H->GetBinContent(bin);
 
-    if(SpectrumDerivativeInLog_CB->IsDown()){
-      
-      double epsilon = 0.00001;
-      
-      if(Previous < epsilon)
-	Previous = epsilon;
-      
-      if(Current < epsilon)
-	Current = epsilon;
-      
-      Differences[bin] = (log10(Current) - log10(Previous) + VerticalOffset);
-    }
-    else{
-     
-      // Compute the "derivative", i.e. the difference between the
-      // current and previous bin contents
-      Differences[bin] = (ScaleFactor*(Current - Previous)) + VerticalOffset;
-
-      // Assume that the error in the bin centers is zero
-      BinCenterErrors[bin] = 0.;
-      
-      // Compute the error in the "derivative" by adding the bin
-      // content in quadrature since bin content is uncorrelated. This
-      // is a more *accurate* measure of error
-      // DifferenceErrors[bin] = sqrt(pow(sqrt(Current,2)) + pow(sqrt(Previous,2)))
-      
-      // Compute the error in the "derivative" by simply adding the
-      // error in the current and previous bins. This is an extremely
-      // conservative measure of error
-      DifferenceErrors[bin] = sqrt(Current) + sqrt(Previous);
-    }
+    // Compute the "derivative", i.e. the difference between the
+    // current and previous bin contents
+    Differences[bin] = (ScaleFactor*(Current - Previous)) + VerticalOffset;
+    
+    if(PlotAbsValueSpectrumDerivative_CB->IsDown())
+      Differences[bin] = abs(Differences[bin]);
+    
+    // Assume that the error in the bin centers is zero
+    BinCenterErrors[bin] = 0.;
+    
+    // Compute the error in the "derivative" by adding the bin
+    // content in quadrature since bin content is uncorrelated. This
+    // is a more *accurate* measure of error
+    DifferenceErrors[bin] = sqrt(pow(sqrt(Current),2) + pow(sqrt(Previous),2));
+    
+    // Compute the error in the "derivative" by simply adding the
+    // error in the current and previous bins. This is a very
+    // *conservative* measure of error
+    // DifferenceErrors[bin] = sqrt(Current) + sqrt(Previous);
   }
   
 
@@ -6776,6 +6790,19 @@ void ADAQAnalysisGUI::SaveHistogramData(TH1 *HistogramToSave_H)
       return;
     }
   }
+}
+
+
+void ADAQAnalysisGUI::SetCalibrationWidgetState(bool WidgetState, EButtonState ButtonState)
+{
+  // Set the widget states based on above variable set results
+  SpectrumCalibrationPoint_CBL->GetComboBox()->SetEnabled(WidgetState);
+  SpectrumCalibrationEnergy_NEL->GetEntry()->SetState(WidgetState);
+  SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetState(WidgetState);
+  SpectrumCalibrationSetPoint_TB->SetState(ButtonState);
+  SpectrumCalibrationCalibrate_TB->SetState(ButtonState);
+  SpectrumCalibrationPlot_TB->SetState(ButtonState);
+  SpectrumCalibrationReset_TB->SetState(ButtonState);
 }
 
 

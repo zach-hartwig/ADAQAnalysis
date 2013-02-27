@@ -169,6 +169,8 @@ enum{
   SpectrumMaxBin_NEL_ID,
 
   SpectrumCalibration_CB_ID,
+  SpectrumCalibrationManual_RB_ID,
+  SpectrumCalibrationFixedEP_RB_ID,
   SpectrumCalibrationPoint_CBL_ID,
   SpectrumCalibrationEnergy_NEL_ID,
   SpectrumCalibrationPulseUnit_NEL_ID,
@@ -196,7 +198,6 @@ enum{
   SpectrumNormalizePeakToCurrent_CB_ID,
 
   SpectrumOverplotDerivative_CB_ID,
-  SpectrumDerivativeInLog_CB_ID,
 
   CreateSpectrum_TB_ID,
 
@@ -266,7 +267,10 @@ enum{
 
   SetStatsOff_CB_ID,
   PlotVerticalAxisInLog_CB_ID,
+
   PlotSpectrumDerivativeError_CB_ID,
+  PlotAbsValueSpectrumDerivative_CB_ID,
+
 
   ResetXAxisLimits_TB_ID,
   ResetYAxisLimits_TB_ID,

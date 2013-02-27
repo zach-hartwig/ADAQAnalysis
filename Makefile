@@ -55,12 +55,23 @@ INCLDIR = $(EXECDIR)/include
 OBJS = $(BUILDDIR)/ADAQAnalysisGUI.o $(BUILDDIR)/ADAQAnalysisGUIDict.o 
 
 # Specify the includes for the ROOT dictionary build
-INCLUDES=$(ADAQHOME)/source/root/GUI/trunk/include
+INCLUDES = $(ADAQHOME)/source/root/GUI/trunk/include
 CXXFLAGS += -I$(INCLUDES) -I$(INCLDIR)
 
-# Specify the required Boost libraries
-#CXXFLAGS += -lboost_thread-mt
-BOOSTLIBS = -lboost_thread-mt
+# Specify the required Boost libraries. Note that the sws/cmodws
+# cluster recently upgraded GCC, which breaks the ancient fucking
+# version of Boost (1.42.0 from Feb 2010!) that is in the RHEL
+# repository. I have, therefore, built the most recent Boost (1.53.0)
+# that must be used if compiling on sws/cmodws cluster
+
+DOMAIN=$(findstring .psfc.mit.edu, $(HOSTNAME))
+
+ifeq ($(DOMAIN),.psfc.mit.edu)
+   BOOSTLIBS = -L/home/hartwig/scratch/boost/boost_1_53_0/lib -lboost_thread -lboost_system
+   CXXFLAGS += -I/home/hartwig/scratch/boost/boost_1_53_0/include
+else
+   BOOSTLIBS = -lboost_thread-mt
+endif
 
 # If the user desires to build a parallel version of the binary then
 # set a number of key macros for the build. Note that the Open MPI C++
@@ -108,7 +119,7 @@ $(PAR_TARGET) : $(OBJS)
 
 $(BUILDDIR)/ADAQAnalysisGUI.o : $(SRCDIR)/ADAQAnalysisGUI.cc 
 	@echo -e "\nBuilding $@ ..."
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(BOOSTLIBS) -c -o $@ $<
 
 $(BUILDDIR)/ADAQAnalysisGUIDict.o : $(BUILDDIR)/ADAQAnalysisGUIDict.cc
 	@echo -e "\nBuilding $@ ..."
@@ -151,7 +162,7 @@ both:
 
 .PHONY:
 test:
-	@echo "$(SRCDIR)"
+	@echo "$(DOMAIN)"
 
 # Useful notes for the uninitiated:
 #
