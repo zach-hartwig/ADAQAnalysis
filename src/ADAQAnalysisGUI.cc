@@ -1392,7 +1392,6 @@ void ADAQAnalysisGUI::CreateMainFrame()
   ProcessingPar_RB = new TGRadioButton(ProcessingType_BG, "Parallel", ProcessingPar_RB_ID);
   ProcessingPar_RB->Connect("Clicked()", "ADAQAnalysisGUI", this, "HandleRadioButtons()");
   ProcessingPar_RB->SetState(kButtonDown);
-
   
   // Processing processing options
   
@@ -1404,8 +1403,7 @@ void ADAQAnalysisGUI::CreateMainFrame()
   NumProcessors_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   NumProcessors_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   NumProcessors_NEL->GetEntry()->SetLimitValues(2,8);
-  NumProcessors_NEL->GetEntry()->SetNumber(1);
-  NumProcessors_NEL->GetEntry()->SetState(false);
+  NumProcessors_NEL->GetEntry()->SetNumber(NumProcessors);
   
   ProcessingOptions_GF->AddFrame(UpdateFreq_NEL = new ADAQNumberEntryWithLabel(ProcessingOptions_GF, "Update freq (% done)", -1),
 				 new TGLayoutHints(kLHintsNormal, 0,0,5,0));
