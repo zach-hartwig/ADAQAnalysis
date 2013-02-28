@@ -6713,6 +6713,7 @@ void ADAQAnalysisGUI::SaveHistogramData(TH1 *HistogramToSave_H)
   // columns separated by commas)
   const char *FileTypes[] = {"ASCII file",  "*.dat",
 			     "CSV file",    "*.csv",
+			     "ROOT file",   "*.root",
 			     0,             0};
   
   TGFileInfo FileInformation;
@@ -6783,8 +6784,20 @@ void ADAQAnalysisGUI::SaveHistogramData(TH1 *HistogramToSave_H)
       string SuccessMessage = "The histogram data has been successfully saved to the following file:\n" + FullFileName;
       CreateMessageBox(SuccessMessage,"Asterisk");
     }
+    else if(FileExtension == ".root"){
+
+      string FullFileName = FileName + FileExtension;
+
+      TFile *HistogramOutput = new TFile(FullFileName.c_str(), "recreate");
+      
+      HistogramToSave_H->Write("Spectrum");
+      HistogramOutput->Close();
+      
+      string SuccessMessage = "The TH1 * histogram named 'Spectrum' has been successfully saved to the following file:\n" + FullFileName;
+      CreateMessageBox(SuccessMessage,"Asterisk");
+    }
     else{
-      CreateMessageBox("Unacceptable file extension for the spectrum data file! Valid extensions are '.dat' and '.csv'!","Stop");
+      CreateMessageBox("Unacceptable file extension for the spectrum data file! Valid extensions are '.dat', '.csv', and '.root'!","Stop");
       return;
     }
   }
