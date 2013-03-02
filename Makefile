@@ -119,7 +119,7 @@ $(PAR_TARGET) : $(OBJS)
 
 $(BUILDDIR)/ADAQAnalysisGUI.o : $(SRCDIR)/ADAQAnalysisGUI.cc 
 	@echo -e "\nBuilding $@ ..."
-	$(CXX) $(CXXFLAGS) $(BOOSTLIBS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(BUILDDIR)/ADAQAnalysisGUIDict.o : $(BUILDDIR)/ADAQAnalysisGUIDict.cc
 	@echo -e "\nBuilding $@ ..."

@@ -197,9 +197,8 @@ ADAQAnalysisGUI::ADAQAnalysisGUI(bool PA, string CmdLineArg)
   
   if(VersionString == "Development")
     ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysisGUI/trunk/bin/ADAQAnalysisGUI_MPI";
-  else{
+  else
     ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysisGUI/versions/" + VersionString + "/bin/ADAQAnalysisGUI_MPI";
-  }
 
   // Assign the locatino of the temporary parallel processing ROOT
   // file, which is used to transmit data computed in parallel
