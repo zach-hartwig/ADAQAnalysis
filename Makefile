@@ -1,6 +1,6 @@
 #********************************************************************
 #  name: Makefile                  
-#  date: 23 Jan 13
+#  date: 17 Apr 13
 #  auth: Zach Hartwig              
 #
 #  desc: GNUmakefile for building ADAQAnalysisGUI code in seqential
@@ -12,6 +12,7 @@
 #  Dependencies
 #  -- ROOT (mandatory)
 #  -- ADAQ libraries (mandatory)
+#  -- CAEN -Comm, -VME, -Digitizer (mandatory)
 #  -- Boost, including Boost thread libraries (mandatory)
 #  -- Open MPI (optional; code will compiles without)
 # 
@@ -55,7 +56,7 @@ INCLDIR = $(EXECDIR)/include
 OBJS = $(BUILDDIR)/ADAQAnalysisGUI.o $(BUILDDIR)/ADAQAnalysisGUIDict.o 
 
 # Specify the includes for the ROOT dictionary build
-INCLUDES = $(ADAQHOME)/source/root/GUI/trunk/include
+INCLUDES = $(ADAQHOME)/acquisition/root/GUI/trunk/include
 CXXFLAGS += -I$(INCLUDES) -I$(INCLDIR)
 
 # Specify the required Boost libraries. Note that the sws/cmodws
