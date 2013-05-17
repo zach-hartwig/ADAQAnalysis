@@ -1,21 +1,15 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
-// name: ADAQAnalysisGUI.hh
-// date: 23 Jan 13 (Last updated)
+// name: ADAQAnalysisInterface.hh
+// date: 17 May 13
 // auth: Zach Hartwig
 //
-// desc: ADAQAnalysisGUI.cc is the main implementation file for the
-//       ADAQAnalysisGUI program. ADAQAnalysisGUI is exactly that: an
-//       incredibly powerful graphical user interface (GUI) that can
-//       be used to view, analyze, and operate on ADAQ-formatted ROOT
-//       data files. The graphical interface, as well as the bulk of
-//       the underlying analysis tooks, are provided by the ROOT
-//       toolkit. 
+// desc: 
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __ADAQAnalysisGUI_hh__
-#define __ADAQAnalysisGUI_hh__ 1
+#ifndef __ADAQAnalysisInterface_hh__
+#define __ADAQAnalysisInterface_hh__ 1
 
 // ROOT
 #include <TGraph.h>
@@ -58,14 +52,14 @@ using namespace std;
 #include "ADAQAnalysisTypes.hh"
 
 
-class ADAQAnalysisGUI : public TGMainFrame
+class ADAQAnalysisInterface : public TGMainFrame
 {
 
 public:
 
   // Constructor/destructor
-  ADAQAnalysisGUI(bool, string);
-  ~ADAQAnalysisGUI();
+  ADAQAnalysisInterface(bool, string);
+  ~ADAQAnalysisInterface();
   
   // Create the ROOT graphical interface
   void CreateMainFrame();
@@ -513,14 +507,11 @@ private:
   // A ROOT random number generator (RNG)
   TRandom *RNG;
 
-  // 
   enum {zWaveform, zSpectrum, zSpectrumDerivative, zPSDHistogram};
   int CanvasContents;
   
-  // Define the ADAQAnalysisGUI to ROOT
-  ClassDef(ADAQAnalysisGUI, 1);
+  // Define the class to ROOT
+  ClassDef(ADAQAnalysisInterface, 1);
 };
-  
-
 
 #endif

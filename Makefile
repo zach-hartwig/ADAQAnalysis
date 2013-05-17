@@ -1,15 +1,14 @@
 #********************************************************************
 #  name: Makefile                  
-#  date: 17 Apr 13
+#  date: 17 May 13
 #  auth: Zach Hartwig              
 #
-#  desc: GNUmakefile for building ADAQAnalysisGUI code in seqential
-#        and parallel versions (options for building are provided
-#        below). The intermediary build files are placed in the build/
-#        directory; the final binaries are build in the bin/
-#        directory.
+#  desc: GNUmakefile for building ADAQAnalysis code in seqential and
+#        parallel versions (options for building are provided
+#        below). The intermediary build files are placed in build/;
+#        the final binaries are placed in bin/.
 #
-#  Dependencies
+#  dpnd: The build system depends on the following:
 #  -- ROOT (mandatory)
 #  -- ADAQ libraries (mandatory)
 #  -- CAEN -Comm, -VME, -Digitizer (mandatory)
@@ -30,7 +29,9 @@
 #
 #********************************************************************
 
+#***************************#
 #**** MACRO DEFINITIONS ****#
+#***************************#
 
 # Include the Makefile for ROOT-based projects
 RC:=root-config
@@ -53,7 +54,9 @@ SRCDIR = $(EXECDIR)/src
 INCLDIR = $(EXECDIR)/include
 
 # Specify all object files (to be built in the build/ directory)
-OBJS = $(BUILDDIR)/ADAQAnalysisGUI.o $(BUILDDIR)/ADAQAnalysisGUIDict.o 
+SRCFILES = $(wildcard $(SRCDIR)/*.cc)
+TMP = $(patsubst %.cc,%.o,$(SRCFILES))
+OBJS = $(subst /src/,/build/,$(TMP))
 
 # Specify the includes for the ROOT dictionary build
 INCLUDES = $(ADAQHOME)/acquisition/root/GUI/trunk/include
@@ -81,7 +84,7 @@ endif
 # preprocessing directive in the source code to protect MPI code in
 # case the user would like to build on a system without Open MPI
 ifeq ($(ARCH),mpi)
-   PAR_TARGET = $(BINDIR)/ADAQAnalysisGUI_MPI
+   PAR_TARGET = $(BINDIR)/ADAQAnalysis_MPI
    CXX := mpic++
    CXXFLAGS += -DMPI_ENABLED -I.
    MPI_ENABLED := 1
@@ -91,7 +94,7 @@ ifeq ($(ARCH),mpi)
 # If the user desires to build teh sequential version of the binary
 # then set the macros requires for the sequential build
 else	
-   SEQ_TARGET = $(BINDIR)/ADAQAnalysisGUI
+   SEQ_TARGET = $(BINDIR)/ADAQAnalysis
 
    ifeq ($(HOSTNAME),TheBlackArrow)
       CXX := clang++
@@ -101,47 +104,71 @@ else
 
 endif
 
+
+#***************#
 #**** RULES ****#
+#***************#
 
-# Rules to build the sequential (SEQ) and the paralle (PAR) binary
-# versions of ADAQAnalysisGUI
-
-$(SEQ_TARGET) : $(OBJS)
+$(SEQ_TARGET) : $(OBJS) $(BUILDDIR)/ADAQAnalysisDict.o
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTGLIBS) $(ROOTLIB) $(BOOSTLIBS)
 	@echo -e "\n$@ build is complete!\n"
 
-$(PAR_TARGET) : $(OBJS)
+$(PAR_TARGET) : $(OBJS) $(BUILDDIR)/ADAQAnalysisDict.o
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTGLIBS) $(ROOTLIB) $(BOOSTLIBS)
 	@echo -e "\n$@ build is complete!\n"
 
+#********************************************#
 # Rules to build the sequential object files
 
-$(BUILDDIR)/ADAQAnalysisGUI.o : $(SRCDIR)/ADAQAnalysisGUI.cc 
+$(BUILDDIR)/ADAQAnalysis.o : $(SRCDIR)/ADAQAnalysis.cc 
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(BUILDDIR)/ADAQAnalysisGUIDict.o : $(BUILDDIR)/ADAQAnalysisGUIDict.cc
+$(BUILDDIR)/ADAQAnalysisInterface.o : $(SRCDIR)/ADAQAnalysisInterface.cc $(INCLDIR)/ADAQAnalysisInterface.hh
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
+$(BUILDDIR)/ADAQAnalysisManager.o : $(SRCDIR)/ADAQAnalysisManager.cc $(INCLDIR)/ADAQAnalysisManager.hh
+	@echo -e "\nBuilding $@ ..."
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+$(BUILDDIR)/ADAQAnalysisDict.o : $(BUILDDIR)/ADAQAnalysisDict.cc
+	@echo -e "\nBuilding $@ ..."
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+
+#******************************************#
 # Rules to build the parallel object files
 
-$(BUILDDIR)/ADAQAnalysisGUI_MPI.o : $(SRCDIR)/ADAQAnalysisGUI.cc
+$(BUILDDIR)/ADAQAnalysis_MPI.o : $(SRCDIR)/ADAQAnalysis.cc
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(BUILDDIR)/ADAQAnalysisGUIDict_MPI.o : $(BUILDDIR)/ADAQAnalysisGUIDict.cc
+$(BUILDDIR)/ADAQAnalysisInterface_MPI.o : $(SRCDIR)/ADAQAnalysisInterface.cc $(INCLDIR)/ADAQAnalysisInterface.hh
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
+$(BUILDDIR)/ADAQAnalysisManager_MPI.o : $(SRCDIR)/ADAQAnalysisManager.cc $(INCLDIR)/ADAQAnalysisManager.hh
+	@echo -e "\nBuilding $@ ..."
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+$(BUILDDIR)/ADAQAnalysisDict_MPI.o : $(BUILDDIR)/ADAQAnalysisDict.cc
+	@echo -e "\nBuilding $@ ..."
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+
+#************************************************#
 # Rule to generate the necessary ROOT dictionary
-$(BUILDDIR)/ADAQAnalysisGUIDict.cc : $(INCLDIR)/ADAQAnalysisGUI.hh $(INCLDIR)/RootLinkDef.hh
+
+$(BUILDDIR)/ADAQAnalysisDict.cc : $(INCLDIR)/*.hh $(INCLDIR)/RootLinkDef.hh
 	@echo -e "\nGenerating ROOT dictionary $@ ..."
 	rootcint -f $@ -c -I$(INCLUDES) $^ 
 
-# Clean the directory of all build files and binaries
+
+#*************#
+# Phony rules
 .PHONY: 
 clean:
 	@echo -e "\nCleaning up the build files ..."
@@ -150,20 +177,20 @@ clean:
 
 .PHONY:	
 par:
-	@echo -e "\nBuilding parallel version of ADAQAnalysisGUI ...\n"
-	@make ARCH=mpi -j3
+	@echo -e "\nBuilding parallel version of ADAQAnalysis ...\n"
+	@make ARCH=mpi -j2
 	@echo -e ""
 
 .PHONY:
 both:
-	@echo -e "\nBuilding sequential and parallel versions of ADAQAnalysisGUI ...\n"
+	@echo -e "\nBuilding sequential and parallel versions of ADAQAnalysis ...\n"
 	@make -j3
-	@make ARCH=mpi -j3
+	@make ARCH=mpi -j2
 	@echo -e ""
 
 .PHONY:
 test:
-	@echo "$(DOMAIN)"
+	@echo "$(OBJS)"
 
 # Useful notes for the uninitiated:
 #
