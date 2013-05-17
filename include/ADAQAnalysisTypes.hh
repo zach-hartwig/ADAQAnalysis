@@ -13,6 +13,8 @@
 #ifndef __ADAQAnalysisTypes_hh__
 #define __ADAQAnalysisTypes_hh__ 1
 
+#include <TGraph.h>
+
 // Structure that contains information on a single peak found by the
 // TSpectrum PeakFinder during waveform processing. For each peak
 // found, this structure is filled with the relevant information and

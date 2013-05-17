@@ -1,3 +1,13 @@
+//////////////////////////////////////////////////////////////////////////////////////////
+// 
+// name: ADAQAnalysis.cc
+// date: 17 May 13
+// auth: Zach Hartwig
+// 
+// desc:
+//
+//////////////////////////////////////////////////////////////////////////////////////////
+
 #include <TApplication.h>
 
 #include <iostream>
@@ -8,6 +18,7 @@
 #endif
 
 #include "ADAQAnalysisInterface.hh"
+#include "ADAQAnalysisManager.hh"
 
 int main(int argc, char *argv[])
 {
@@ -22,7 +33,7 @@ int main(int argc, char *argv[])
 #ifdef MPI_ENABLED
   ParallelArchitecture = true;
 #endif
-
+  
   // A word on the use of the first cmd line arg: the first cmd line
   // arg is used in different ways depending on the binary
   // architecture. For sequential arch, the user may specify a valid
@@ -45,8 +56,8 @@ int main(int argc, char *argv[])
     CmdLineArg = "unspecified";
   
   // If only 1 cmd line arg was specified then assign it to
-  // corresponding string that will be passed to the ADAQAnalysis
-  // class constructor for use
+  // corresponding string that will be passed to the
+  // ADAQAnalysisManager class constructor for use
   else if(argc==2)
     CmdLineArg = argv[1];
 
@@ -66,25 +77,27 @@ int main(int argc, char *argv[])
       exit(-42);
     }
   }    
-
+  
   // Run ROOT in standalone mode
   TApplication *TheApplication = new TApplication("ADAQAnalysis", &argc, argv);
   
-  // Create the main analysis class
-  ADAQAnalysisInterface *TheInterface = new ADAQAnalysisInterface(ParallelArchitecture, CmdLineArg);
+
+  // Create the singleton analysis manager
+  ADAQAnalysisManager *TheManager = new ADAQAnalysisManager(ParallelArchitecture);
   
-  // For sequential binaries only ...
+  // Create the graphical interface for sequential arch. only
   if(!ParallelArchitecture){
-    
-    // Connect the main frame for the 
-    TheInterface->Connect("CloseWindow()", "ADAQAnalysis", TheInterface, "HandleTerminate()");
-    
+    ADAQAnalysisInterface *TheInterface = new ADAQAnalysisInterface;
+    TheInterface->Connect("CloseWindow()", "ADAQAnalysisInterface", TheInterface, "HandleTerminate()");
+  
     // Run the application
     TheApplication->Run();
+    
+    delete TheInterface;
   }
-  
-  // Garbage collection
-  delete TheInterface;
+
+  delete TheManager;
+
   delete TheApplication;
   
   // Finalize the MPI session

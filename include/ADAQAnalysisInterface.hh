@@ -12,7 +12,6 @@
 #define __ADAQAnalysisInterface_hh__ 1
 
 // ROOT
-#include <TGraph.h>
 #include <TROOT.h>
 #include <TGMenu.h>
 #include <TGButton.h>
@@ -22,18 +21,12 @@
 #include <TGDoubleSlider.h>
 #include <TGTripleSlider.h>
 #include <TColor.h>
-#include <TFile.h>
-#include <TTree.h>
 #include <TLine.h>
 #include <TBox.h>
-#include <TSpectrum.h>
-#include <TGraph.h>
 #include <TGProgressBar.h>
 #include <TObject.h>
 #include <TRandom.h>
 #include <TGMsgBox.h>
-#include <TH1F.h>
-#include <TH2F.h>
 
 // C++
 #include <string>
@@ -50,6 +43,7 @@ using namespace std;
 // ADAQ
 #include "ADAQRootGUIClasses.hh"
 #include "ADAQAnalysisTypes.hh"
+#include "ADAQAnalysisManager.hh"
 
 
 class ADAQAnalysisInterface : public TGMainFrame
@@ -58,66 +52,22 @@ class ADAQAnalysisInterface : public TGMainFrame
 public:
 
   // Constructor/destructor
-  ADAQAnalysisInterface(bool, string);
+  ADAQAnalysisInterface();
   ~ADAQAnalysisInterface();
   
   // Create the ROOT graphical interface
   void CreateMainFrame();
 
-  // Load an ADAQ ROOT file for processing
-  void LoadADAQRootFile();
 
-  // Member functions that are used to extract/produce waveforms
-  void CalculateRawWaveform(int);
-  void CalculateBSWaveform(int, bool CurrentWaveform=false);
-  void CalculateZSWaveform(int, bool CurrentWaveform=false);
-
-  // Methods to operate on waveforms and spectra
-  bool FindPeaks(TH1F *, bool PlotPeaksAndGraphics=true);
-  void FindPeakLimits(TH1F *, bool PlotPeaksAndGraphics=true);
-  void IntegratePeaks();
-  void RejectPileup(TH1F *);
-  void FindPeakHeights();
-  void FindSpectrumPeaks();
-  void IntegrateSpectrum();
-  void CreateSpectrum();
-  void CreateDesplicedFile();
-  void CreatePSDHistogram();
-  double CalculateBaseline(vector<int> *);  
-  void CalculateSpectrumBackground(TH1F *);
-  
-  // Method to save a generic histogram to a data file
-  void SaveHistogramData(TH1 *);
-  
-  // Methods to handle the processing of waveforms in parallel
-  void ProcessWaveformsInParallel(string);
   void SaveParallelProcessingData();
   void LoadParallelProcessingData();
-  double* SumDoubleArrayToMaster(double*, size_t);
-  double SumDoublesToMaster(double);
 
-  // Methods to individual waveforms and spectra
-  void PlotWaveform();
-  void PlotSpectrum();
-  void PlotSpectrumDerivative();
-  void PlotPSDHistogram();
-  void PlotPSDHistogramSlice(int, int);
-
-  // Methods for general waveform analysis
-  void CalculateCountRate();
-  void CalculatePSDIntegrals(bool);
-  bool ApplyPSDFilter(double,double);
-  void IntegratePearsonWaveform(bool PlotPearsonIntegration=true);
-  
   // Method to readout ROOT widget values to class member data
   void ReadoutWidgetValues();
 
   // Method to alert the user via a ROOT message box
   void CreateMessageBox(string, string);
 
-  void UpdateProcessingProgress(int);
-  void CreatePSDFilter(int, int);
-  void PlotPSDFilter();
   void SetCalibrationWidgetState(bool, EButtonState);
 
   // Methods to recieve and act upon ROOT widget signals
@@ -134,6 +84,8 @@ public:
   void HandleTerminate();
 
 private:
+
+  ADAQAnalysisManager *TheAnalysisManager;
 
   /////////////////////////////////////////////////////////
   // Widget objects for the WaveformOptions tabbed frame //
@@ -504,11 +456,10 @@ private:
   // Create a TColor ROOT object to handle pixel-2-color conversions
   TColor *ColorManager;
 
-  // A ROOT random number generator (RNG)
-  TRandom *RNG;
-
   enum {zWaveform, zSpectrum, zSpectrumDerivative, zPSDHistogram};
   int CanvasContents;
+  
+  ADAQAnalysisManager *AnalysisMgr;
   
   // Define the class to ROOT
   ClassDef(ADAQAnalysisInterface, 1);
