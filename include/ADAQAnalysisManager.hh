@@ -78,14 +78,23 @@ public:
   double CalculateBaseline(vector<int> *);  
   double CalculateBaseline(TH1F *);
 
-  void CreateSpectrum();
-
+  bool FindPeaks(TH1F *);
+  void FindPeakLimits(TH1F *);
   void IntegratePeaks();
   void FindPeakHeights();
+
+  void CreateSpectrum();
 
   void UpdateProcessingProgress(int);
 
   TH1F *GetSpectrum() {return Spectrum_H;}
+  vector<PeakInfoStruct> GetPeakInfoVec() {return PeakInfoVec;}
+
+  void CreateNewPeakFinder(int NumPeaks){
+    if(PeakFinder) delete PeakFinder;
+    PeakFinder = new TSpectrum(NumPeaks);
+  }
+  
   
 private:
   bool FileOpen;
@@ -94,8 +103,7 @@ private:
 
 
   /*
-  bool FindPeaks(TH1F *, bool PlotPeaksAndGraphics=true);
-  void FindPeakLimits(TH1F *, bool PlotPeaksAndGraphics=true);
+
 
   void RejectPileup(TH1F *);
 
@@ -204,26 +212,6 @@ private:
   // Variables used to specify whether to print to stdout
   bool Verbose, ParallelVerbose;
   
-  // Member data for storing ROOT widget variables
-  int WaveformToPlot, Channel;
-  int SpectrumNumBins, SpectrumMinBin, SpectrumMaxBin;
-  int WaveformsToHistogram, MaxPeaks, ZeroSuppressionCeiling;
-  int BaselineCalcMin, BaselineCalcMax, Floor;
-  int UpdateFreq;
-  bool PlotFloor, PlotCrossings, PlotPeakIntegratingRegion, PlotPearsonIntegration, UsePileupRejection;
-  bool IntegratePearson, IntegrateRawPearson, IntegrateFitToPearson;
-  int PearsonLowerLimit, PearsonMiddleLimit, PearsonUpperLimit;
-  bool RawWaveform, BaselineSubtractedWaveform, ZeroSuppressionWaveform;
-  bool IntegrationTypeWholeWaveform, IntegrationTypePeakFinder, SpectrumTypePHS, SpectrumTypePAS;
-  int PearsonChannel;
-  double Sigma, Resolution;
-  string DesplicedFileName;
-  int DesplicedWaveformBuffer, WaveformsToDesplice, DesplicedWaveformLength;
-  int PSDChannel, PSDThreshold, PSDPeakOffset, PSDTailOffset;
-  int PSDWaveformsToDiscriminate;
-  int PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin;
-  int PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin;
-
   // Strings for specifying binaries and ROOT files
   string ADAQHOME, USER;
   string ParallelBinaryName;
@@ -239,12 +227,8 @@ private:
   // Number of processors/threads available on current system
   int NumProcessors;
 
-  // Generally useful data members
-  float XAxisMin, XAxisMax, YAxisMin, YAxisMax;
-  string Title, XAxisTitle, YAxisTitle, ZAxisTitle, PaletteAxisTitle;
-
   // Variables to hold waveform processing values
-  double WaveformPolarity, PearsonPolarity, Baseline;
+  double Baseline;
 
   // Variables for PSD histograms and filter
   TH2F *PSDHistogram_H, *MasterPSDHistogram_H;

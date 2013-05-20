@@ -33,9 +33,7 @@ ADAQAnalysisManager::ADAQAnalysisManager(bool PA)
     PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelArchitecture(PA), SequentialArchitecture(!PA),
     Verbose(false), ParallelVerbose(true),
-    XAxisMin(0), XAxisMax(1.0), YAxisMin(0), YAxisMax(4095), 
-    Title(""), XAxisTitle(""), YAxisTitle(""), ZAxisTitle(""), PaletteAxisTitle(""),
-    WaveformPolarity(-1.0), PearsonPolarity(1.0), Baseline(0.), PSDFilterPolarity(1.),
+    Baseline(0.), PSDFilterPolarity(1.),
     V1720MaximumBit(4095), NumDataChannels(8),
     SpectrumExists(false), SpectrumDerivativeExists(false), PSDHistogramExists(false), PSDHistogramSliceExists(false),
     SpectrumMaxPeaks(0), TotalPeaks(0), TotalDeuterons(0),
@@ -414,6 +412,233 @@ double ADAQAnalysisManager::CalculateBaseline(TH1F *Waveform)
 }
 
 
+// Method used to find peaks in any TH1F object.  
+bool ADAQAnalysisManager::FindPeaks(TH1F *Histogram_H)
+{
+  // Use the PeakFinder to determine the number of potential peaks in
+  // the waveform and return the total number of peaks that the
+  // algorithm has found. "Potential" peaks are those that meet the
+  // criterion of the TSpectrum::Search algorithm with the
+  // user-specified (via the appropriate widgets) tuning
+  // parameters. They are "potential" because I want to impose a
+  // minimum threshold criterion (called the "floor") that potential
+  // peaks must meet before being declared real peaks. Note that the
+  // plotting of markers on TSpectrum's peaks have been disabled so
+  // that I can plot my "successful" peaks once they are determined
+  //
+  // sigma = distance between allowable peak finds
+  // resolution = fraction of max peak above which peaks are valid
+  
+  int NumPotentialPeaks = PeakFinder->Search(Histogram_H,				    
+					     ADAQSettings->Sigma,
+					     "goff", 
+					     ADAQSettings->Resolution);
+  
+  // Since the PeakFinder actually found potential peaks then get the
+  // X and Y positions of the potential peaks from the PeakFinder
+  float *PotentialPeakPosX = PeakFinder->GetPositionX();
+  float *PotentialPeakPosY = PeakFinder->GetPositionY();
+  
+  // Initialize the counter of successful peaks to zero and clear the
+  // peak info vector in preparation for the next set of peaks
+  NumPeaks = 0;
+  PeakInfoVec.clear();
+  
+  // For each of the potential peaks found by the PeakFinder...
+  for(int peak=0; peak<NumPotentialPeaks; peak++){
+    
+    // Determine if the peaks Y value (voltage) is above the "floor"
+    //if(PotentialPeakPosY[peak] > Floor_NEL->GetEntry()->GetIntNumber()){
+    if(PotentialPeakPosY[peak] > ADAQSettings->Floor){
+      
+      // Success! This peak was a winner. Let's give it a prize.
+      
+      // Increment the counter for successful peaks in the present waveform
+      NumPeaks++;
+
+      // Increment the counter for total peaks in all processed waveforms
+      TotalPeaks++;
+      
+      // Create a PeakInfoStruct to hold the current successful peaks'
+      // information. Store the X and Y position in the structure and
+      // push it back into the dedicated vector for later use
+      PeakInfoStruct PeakInfo;
+      PeakInfo.PeakID = NumPeaks;
+      PeakInfo.PeakPosX = PotentialPeakPosX[peak];
+      PeakInfo.PeakPosY = PotentialPeakPosY[peak];
+      PeakInfoVec.push_back(PeakInfo);
+    }
+  }
+
+  // Call the member functions that will find the lower (leftwards on
+  // the time axis) and upper (rightwards on the time axis)
+  // integration limits for each successful peak in the waveform
+  FindPeakLimits(Histogram_H);
+
+  // Function returns 'false' if zero peaks are found; algorithms can
+  // use this flag to exit from analysis for this acquisition window
+  // to save on CPU time
+  if(NumPeaks == 0)
+    return false;
+  else
+    return true;
+}
+
+
+// Method to find the lower/upper peak limits in any histogram.
+void ADAQAnalysisManager::FindPeakLimits(TH1F *Histogram_H)
+{
+  // Vector that will hold the sample number after which the floor was
+  // crossed from the low (below the floor) to the high (above the
+  // floor) side. The vector will eventually hold all the candidates for
+  // a detector waveform rising edge
+  vector<int> FloorCrossing_Low2High;
+
+  // Vector that will hold the sample number before which the floor
+  // was crossed from the high (above the floor) to the low (above the
+  // floor) side. The vector will eventually hold all the candidates
+  // for a detector waveform decay tail back to the baseline
+  vector<int> FloorCrossing_High2Low;
+
+  // Clear the vector that stores the lower and upper peak limits for
+  // all "successful" peaks in the present histogram. We are done with
+  // the old ones and have moved on to a new histogram so we need to
+  // start with a clean slate
+  PeakLimits.clear();
+
+  // Get the number of bins in the current histogram
+  int NumBins = Histogram_H->GetNbinsX();
+
+  double PreStepValue, PostStepValue;
+
+  // Iterate through the waveform to look for floor crossings ...
+  for(int sample=1; sample<NumBins; sample++){
+
+    PreStepValue = Histogram_H->GetBinContent(sample-1);
+    PostStepValue = Histogram_H->GetBinContent(sample);
+    
+    // If a low-to-high floor crossing occurred ...
+    if(PreStepValue<ADAQSettings->Floor and PostStepValue>=ADAQSettings->Floor)
+      FloorCrossing_Low2High.push_back(sample-1);
+    
+    // If a high-to-low floor crossing occurred ...
+    if(PreStepValue>=ADAQSettings->Floor and PostStepValue<ADAQSettings->Floor)
+      FloorCrossing_High2Low.push_back(sample);
+    
+  }
+  
+  // For each peak located by the TSpectrum PeakFinder and determined
+  // to be above the floor, the following (probably inefficient)
+  // determines the closest sample on either side of each peak that
+  // crosses the floor. To the left of the peak (in time), the
+  // crossing is a "low-2-high" crossing; to the right of the peak (in
+  // time), the crossing is a "high-2-low" crossing. 
+
+  vector<PeakInfoStruct>::iterator peak_iter;
+  for(peak_iter=PeakInfoVec.begin(); peak_iter!=PeakInfoVec.end(); peak_iter++){
+    
+    // Counters which will be incremented conditionally such that the
+    // correct samples for low-2-high and high-2-low crossings can be
+    // accessed after the conditional testing for crossings
+    int FloorCrossing_Low2High_index = -1;
+    int FloorCrossing_High2Low_index = -1;
+    
+    // Iterator to loop over the FloorCrossing_* vectors, which as
+    // you'll recall hold all the low-2-high and high-2-low crossings,
+    // respectively, that were found for the digitized waveform
+    vector<int>::iterator it;
+
+    // Iterate over the vector containing all the low-2-high crossings
+    // in the waveform...
+    
+    if(FloorCrossing_Low2High.size() == 1)
+      FloorCrossing_Low2High_index = 0;
+    else{
+      for(it=FloorCrossing_Low2High.begin(); it!=FloorCrossing_Low2High.end(); it++){
+	
+	// The present algorithm determines the lower integration
+	// limit by considering the closest low-2-high floor crossing
+	// on the left side of the peak, i.e. the algorithm identifies
+	// the rising edge of a detector pulse closest to the
+	// peak. Here, we test to determine if the present low-2-high
+	// crossing causes the peak position minues the low-2-high to
+	// go negative. If so, we break without incrementing the
+	// index; otherwise, we increment the index and continue
+	// looping.
+
+	if((*peak_iter).PeakPosX - *it < 0)
+	  break;
+	
+	FloorCrossing_Low2High_index++;
+      }
+    }
+
+    // Iterate over the vector containing all the high-2-low crossings
+    // in the waveform...
+    
+    if(FloorCrossing_High2Low.size() == 1)
+      FloorCrossing_High2Low_index = 0;
+    else{
+      for(it=FloorCrossing_High2Low.begin(); it!=FloorCrossing_High2Low.end(); it++){
+      	
+	// The present algorithm determines the upper integration
+	// limit by considering the closest high-2-low floor crossing
+	// on the right side of the peak, i.e. the algorithm
+	// identifies the falling edge of a detector pulse closest to
+	// the peak. Here, the FloorCrossing_High2Low_index is
+	// incremented until the first high-2-low crossing is found on
+	// the right side of the peak, i.e. the peak position less the
+	// low-2-high crossing becomes negative. The index variable
+	// can then be used later to extract the correct lower limit
+
+	FloorCrossing_High2Low_index++;
+	
+	if((*peak_iter).PeakPosX - *it < 0)
+	  break;
+	
+      }
+    }
+  	
+    // Very rare events (more often when triggering of the RFQ timing
+    // pulse) can cause waveforms that have detector pulses whose
+    // voltages exceed what is the obvious the baseline during the
+    // start (sample=0) or end (sample=RecordLength) of the waveform,
+    // The present algorithm will not be able to determine the correct
+    // lower and upper integration limits and, hence, the
+    // FloorCrossing_*_index will remain at its -1 initialization
+    // value. The -1 will be used later to exclude this peak from
+    // analysis
+
+    if((int)FloorCrossing_Low2High.size() < FloorCrossing_Low2High_index or
+       (int)FloorCrossing_High2Low.size() < FloorCrossing_High2Low_index){
+      
+      cout << "FloorCrossing_Low2High.size() = " << FloorCrossing_Low2High.size()  << "\n"
+	   << "FloorCrossing_Low2High_index = " << FloorCrossing_Low2High_index << "\n"
+	   << endl;
+      
+      cout << "FloorCrossing_High2Low.size() = " << FloorCrossing_High2Low.size()  << "\n"
+	   << "FloorCrossing_High2Low_index = " << FloorCrossing_High2Low_index << "\n"
+	   << endl;
+    }
+
+    // If the algorithm has successfully determined both low and high
+    // floor crossings (which now become the lower and upper
+    // integration limits for the present peak)...
+    if(FloorCrossing_Low2High_index > -1 and FloorCrossing_High2Low_index > -1){
+      (*peak_iter).PeakLimit_Lower = FloorCrossing_Low2High[FloorCrossing_Low2High_index];
+      (*peak_iter).PeakLimit_Upper = FloorCrossing_High2Low[FloorCrossing_High2Low_index];
+    }
+  }
+
+  // The following call examines each peak in the now-full PeakInfoVec
+  // to determine whether or not the peak is part of a "piled-up"
+  // peak. If so, the PeakInfoVec.PileupFlag is marked true to flag
+  // the peak to any later analysis methods
+  //  if(UsePileupRejection)
+  //    RejectPileup(Histogram_H);
+}
+
+
 void ADAQAnalysisManager::CreateSpectrum()
 {
   // Delete the previous Spectrum_H TH1F object if it exists to
@@ -435,6 +660,8 @@ void ADAQAnalysisManager::CreateSpectrum()
 			ADAQSettings->SpectrumNumBins, 
 			ADAQSettings->SpectrumMinBin,
 			ADAQSettings->SpectrumMaxBin);
+
+  int Channel = ADAQSettings->Channel;
   
   
   // Variables for calculating pulse height and area
@@ -629,7 +856,7 @@ void ADAQAnalysisManager::CreateSpectrum()
       // Note that we must add a +1 to the waveform number in order to
       // get the modulo to land on the correct intervals
       if(IsMaster)
-      	if((waveform+1) % int(WaveformEnd*UpdateFreq*1.0/100) == 0)
+      	if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
       	  UpdateProcessingProgress(waveform);
     }
   }
@@ -761,8 +988,6 @@ void ADAQAnalysisManager::CreateSpectrum()
 }
 
 
-
-
 void ADAQAnalysisManager::IntegratePeaks()
 {
   // Iterate over each peak stored in the vector of PeakInfoStructs...
@@ -784,8 +1009,8 @@ void ADAQAnalysisManager::IntegratePeaks()
 
     // ...and use the lower and upper peak limits to calculate the
     // integral under each waveform peak that has passed all criterion
-    double PeakIntegral = Waveform_H[Channel]->Integral((*it).PeakLimit_Lower,
-							(*it).PeakLimit_Upper);
+    double PeakIntegral = Waveform_H[ADAQSettings->Channel]->Integral((*it).PeakLimit_Lower,
+								    (*it).PeakLimit_Upper);
     
     // If the user has calibrated the spectrum, then transform the
     // peak integral in pulse units [ADC] to energy units
@@ -808,17 +1033,19 @@ void ADAQAnalysisManager::FindPeakHeights()
     // If pileup rejection is begin used, examine the pileup flag
     // stored in each PeakInfoStruct to determine whether or not this
     // peak is part of a pileup events. If so, skip it...
-    if(UsePileupRejection and (*it).PileupFlag==true)
-      continue;
+    //    if(UsePileupRejection and (*it).PileupFlag==true)
+    //      continue;
 
     // If the PSD filter is desired, examine the PSD filter flag
     // stored in each PeakInfoStruct to determine whether or not this
     // peak should be filtered out of the spectrum.
-    if(UsePSDFilterManager[PSDChannel] and (*it).PSDFilterFlag==true)
-      continue;
+    //    if(UsePSDFilterManager[PSDChannel] and (*it).PSDFilterFlag==true)
+    //      continue;
     
     // Initialize the peak height for each peak region
     double PeakHeight = 0.;
+
+    int Channel = ADAQSettings->Channel;
     
     // Iterate over the samples between lower and upper integration
     // limits to determine the maximum peak height

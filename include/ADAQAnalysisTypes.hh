@@ -165,16 +165,14 @@ public:
 
   // Analysis
 
-  bool DiscriminatePulseShapes;
-
+  bool PSDEnable;
   int PSDChannel, PSDWaveformsToDiscriminate;
   int PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin;
   int PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin;
   int PSDThreshold, PSDTailOffset, PSDPeakOffset;
 
   string PSDPlotType;
-  
-  bool EnableHistogramSlicing, PSDXSlice, PSDYSlice;
+  bool PSDPlotTailIntegrationRegion, EnableHistogramSlicing, PSDXSlice, PSDYSlice;
 
   bool EnableFilterCreation, EnableFilterUse;
   int PSDFilterPolarity;
@@ -188,7 +186,7 @@ public:
   bool WaveformCurve, WaveformMarkers, WaveformBoth;
   bool SpectrumCurve, SpectrumMarkers, SpectrumBars;
   bool StatsOff, PlotVerticalAxisInLog;
-  bool PlotSpectrumDerivativeError, PlotAbsvalueSpectrumDerivative, YAxisAutoRange;
+  bool PlotSpectrumDerivativeError, PlotAbsvalueSpectrumDerivative, PlotYAxisWithAutoRange;
   bool OverrideGraphicalDefault;
 
   string PlotTitle, XAxisTitle, YAxisTitle, ZAxisTitle, PaletteTitle;

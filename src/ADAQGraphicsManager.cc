@@ -1,4 +1,7 @@
+#include <TMarker.h>
+
 #include "ADAQGraphicsManager.hh"
+
 
 #include <iostream>
 using namespace std;
@@ -13,7 +16,7 @@ ADAQGraphicsManager *ADAQGraphicsManager::GetInstance()
 
 ADAQGraphicsManager::ADAQGraphicsManager()
   : Trigger_L(new TLine), Floor_L(new TLine), Baseline_B(new TBox), ZSCeiling_L(new TLine),
-    LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine), Calibration_L(new TLine),
+    LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine), IntegrationRegion_B(new TBox), Calibration_L(new TLine),
     PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
     PSDPeakOffset_L(new TLine), PSDTailOffset_L(new TLine), PSDTailIntegral_B(new TBox),
     LowerLimit_L(new TLine), UpperLimit_L(new TLine), DerivativeReference_L(new TLine)
@@ -34,16 +37,19 @@ ADAQGraphicsManager::ADAQGraphicsManager()
   Baseline_B->SetFillColor(8);
 
   ZSCeiling_L->SetLineStyle(7);
-  ZSCeiling_L->SetLineColor(7);
+  ZSCeiling_L->SetLineColor(kViolet+1);
   ZSCeiling_L->SetLineWidth(2);
 
   LPeakDelimiter_L->SetLineStyle(7);
   LPeakDelimiter_L->SetLineWidth(2);
-  LPeakDelimiter_L->SetLineColor(6);
+  LPeakDelimiter_L->SetLineColor(kGreen+3);
   
   RPeakDelimiter_L->SetLineStyle(7);
   RPeakDelimiter_L->SetLineWidth(2);
-  RPeakDelimiter_L->SetLineColor(7);
+  RPeakDelimiter_L->SetLineColor(kGreen+1);
+
+  IntegrationRegion_B->SetFillColor(kGreen+2);
+  IntegrationRegion_B->SetFillStyle(3003);
   
   Calibration_L->SetLineStyle(7);
   Calibration_L->SetLineColor(2);
@@ -62,15 +68,15 @@ ADAQGraphicsManager::ADAQGraphicsManager()
   PearsonUpperLimit_L->SetLineWidth(2);
 
   PSDPeakOffset_L->SetLineStyle(7);
-  PSDPeakOffset_L->SetLineColor(8);
+  PSDPeakOffset_L->SetLineColor(kMagenta+3);
   PSDPeakOffset_L->SetLineWidth(2);
 
   PSDTailOffset_L->SetLineStyle(7);
-  PSDTailOffset_L->SetLineColor(8);
+  PSDTailOffset_L->SetLineColor(kMagenta+1);
   PSDTailOffset_L->SetLineWidth(2);
 
-  PSDTailIntegral_B->SetFillStyle(3002);
-  PSDTailIntegral_B->SetFillColor(38);
+  PSDTailIntegral_B->SetFillStyle(3003);
+  PSDTailIntegral_B->SetFillColor(kMagenta+2);
 
   LowerLimit_L->SetLineStyle(7);
   LowerLimit_L->SetLineColor(2);
@@ -131,7 +137,7 @@ void ADAQGraphicsManager::PlotWaveform()
     if(YMin == 0)
       YMin = 0.05;
   }
-  else if(ADAQSettings->YAxisAutoRange){
+  else if(ADAQSettings->PlotYAxisWithAutoRange){
     YMin = Waveform_H->GetBinContent(Waveform_H->GetMinimumBin()) - 10;
     YMax = Waveform_H->GetBinContent(Waveform_H->GetMaximumBin()) + 10;
   }
@@ -232,6 +238,86 @@ void ADAQGraphicsManager::PlotWaveform()
 			BaselinePlotMaxValue);
   }
   
+  if(ADAQSettings->PlotFloor)
+    Floor_L->DrawLine(XMin, ADAQSettings->Floor, XMax, ADAQSettings->Floor);
+
+  if(ADAQSettings->FindPeaks){
+    AnalysisMgr->FindPeaks(Waveform_H);
+    
+    vector<PeakInfoStruct> PeakInfoVec = AnalysisMgr->GetPeakInfoVec();
+    
+    vector<PeakInfoStruct>::iterator it;
+    for(it = PeakInfoVec.begin(); it != PeakInfoVec.end(); it++){
+
+      TMarker *PeakMarker = new TMarker((*it).PeakPosX,
+					(*it).PeakPosY*1.15,
+					it-PeakInfoVec.begin());
+      
+      PeakMarker->SetMarkerColor(kRed);
+      PeakMarker->SetMarkerStyle(23);
+      PeakMarker->SetMarkerSize(2.0);
+      PeakMarker->Draw();
+
+
+      if(ADAQSettings->PlotCrossings){
+	TMarker *Low2HighMarker = new TMarker((*it).PeakLimit_Lower,
+					      ADAQSettings->Floor,
+					      it-PeakInfoVec.begin());
+	Low2HighMarker->SetMarkerColor(kGreen+3);
+	Low2HighMarker->SetMarkerStyle(29);
+	Low2HighMarker->SetMarkerSize(2.0);
+	Low2HighMarker->Draw();
+	
+	TMarker *High2LowMarker = new TMarker((*it).PeakLimit_Upper, 
+					      ADAQSettings->Floor,
+					      it-PeakInfoVec.begin());
+	High2LowMarker->SetMarkerColor(kGreen+1);
+	High2LowMarker->SetMarkerStyle(29);
+	High2LowMarker->SetMarkerSize(2.0);
+	High2LowMarker->Draw();
+      }
+
+
+      if(ADAQSettings->PlotPeakIntegratingRegion){
+
+	LPeakDelimiter_L->DrawLine((*it).PeakLimit_Lower,
+				   YMin,
+				   (*it).PeakLimit_Lower,
+				   YMax);
+	
+	RPeakDelimiter_L->DrawLine((*it).PeakLimit_Upper,
+				   YMin,
+				   (*it).PeakLimit_Upper,
+				   YMax);    
+	
+	if((*it).PileupFlag == true)
+	  IntegrationRegion_B->SetFillColor(kRed);
+	else
+	  IntegrationRegion_B->SetFillColor(kGreen+2);
+	
+	IntegrationRegion_B->DrawBox((*it).PeakLimit_Lower,
+				     YMin,
+				     (*it).PeakLimit_Upper,
+				     YMax);
+      }
+      
+      
+      if(ADAQSettings->PSDEnable and ADAQSettings->PSDPlotTailIntegrationRegion)
+	if(ADAQSettings->PSDChannel == ADAQSettings->Channel){
+	  
+	  int PeakOffset = ADAQSettings->PSDPeakOffset;
+	  int LowerPos = (*it).PeakPosX + PeakOffset;
+	  
+	  int TailOffset = ADAQSettings->PSDTailOffset;
+	  int UpperPos = (*it).PeakLimit_Upper + TailOffset;
+	  
+	  PSDPeakOffset_L->DrawLine(LowerPos, YMin, LowerPos, YMax);
+	  PSDTailIntegral_B->DrawBox(LowerPos, YMin, UpperPos, YMax);
+	  PSDTailOffset_L->DrawLine(UpperPos, YMin, UpperPos, YMax);
+	}
+    }
+  }
+
   
   if(ADAQSettings->PlotPearsonIntegration){
     PearsonLowerLimit_L->DrawLine(ADAQSettings->PearsonLowerLimit,
@@ -251,10 +337,9 @@ void ADAQGraphicsManager::PlotWaveform()
 				  YMax);
   }
 
-  TheCanvas->Update();
   
-  //if(FindPeaks_CB->IsDown())
-  //    {}//FindPeaks(Waveform_H);
+
+
   
   // Set the class member int that tells the code what is currently
   // plotted on the embedded canvas. This is important for influencing
@@ -265,6 +350,7 @@ void ADAQGraphicsManager::PlotWaveform()
   //  if(ADAQSettings->PlotPearsonIntegration)
   //    IntegratePearsonWaveform(true);
   
+  TheCanvas->Update();
 }
 
 

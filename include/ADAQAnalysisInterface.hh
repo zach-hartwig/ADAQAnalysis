@@ -111,7 +111,6 @@ private:
   TGButtonGroup *WaveformPolarity_BG;
   TGRadioButton *PositiveWaveform_RB, *NegativeWaveform_RB;
 
-  TGCheckButton *AutoYAxisRange_CB;
   TGCheckButton *PlotTrigger_CB;
   TGTextButton *ResetXAxisLimits_TB;
   TGTextButton *ResetYAxisLimits_TB;
@@ -252,6 +251,8 @@ private:
 
   TGCheckButton *PlotSpectrumDerivativeError_CB;
   TGCheckButton *PlotAbsValueSpectrumDerivative_CB;
+
+  TGCheckButton *AutoYAxisRange_CB;
   
   TGTextButton *ReplotWaveform_TB;
   TGTextButton *ReplotSpectrum_TB;

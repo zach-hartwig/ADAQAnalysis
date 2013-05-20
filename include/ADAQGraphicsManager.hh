@@ -53,6 +53,7 @@ private:
 
   TLine *Trigger_L, *Floor_L, *Calibration_L, *ZSCeiling_L;
   TLine *LPeakDelimiter_L, *RPeakDelimiter_L;
+  TBox *IntegrationRegion_B;
   TLine *PearsonLowerLimit_L, *PearsonMiddleLimit_L, *PearsonUpperLimit_L;
   TLine *PSDPeakOffset_L, *PSDTailOffset_L;
   TLine *LowerLimit_L, *UpperLimit_L;

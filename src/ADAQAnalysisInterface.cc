@@ -1973,7 +1973,7 @@ void ADAQAnalysisInterface::HandleCheckButtons()
   // which the user has just sent a signal...
   TGCheckButton *ActiveCheckButton = (TGCheckButton *) gTQSender;
   int CheckButtonID = ActiveCheckButton->WidgetId();
-
+  
   if(!ADAQFileLoaded)
     return;
 
@@ -1992,7 +1992,7 @@ void ADAQAnalysisInterface::HandleCheckButtons()
     // the maximum number of peaks that can be found
     //    PeakFinder = new TSpectrum(MaxPeaks_NEL->GetEntry()->GetIntNumber());
     
-    //    PlotWaveform();
+    GraphicsMgr->PlotWaveform();
     break;
 
   case PlotZeroSuppressionCeiling_CB_ID:
@@ -2012,22 +2012,22 @@ void ADAQAnalysisInterface::HandleCheckButtons()
     
     switch(GraphicsMgr->GetCanvasContentType()){
     case zWaveform:
-      //PlotWaveform();
+      GraphicsMgr->PlotWaveform();
       break;
       
     case zSpectrum:{
-      //PlotSpectrum();
+      GraphicsMgr->PlotSpectrum();
       if(SpectrumOverplotDerivative_CB->IsDown())
-	//PlotSpectrumDerivative();
+	GraphicsMgr->PlotSpectrumDerivative();
       break;
     }
       
     case zSpectrumDerivative:
-      //PlotSpectrumDerivative();
+      GraphicsMgr->PlotSpectrumDerivative();
       break;
       
     case zPSDHistogram:
-      //PlotPSDHistogram();
+      GraphicsMgr->PlotPSDHistogram();
       break;
     }
     break;
@@ -2052,7 +2052,7 @@ void ADAQAnalysisInterface::HandleCheckButtons()
   case SpectrumFindPeaks_CB_ID:
     if(!AnalysisMgr->GetSpectrumExists())
       break;
-
+    
     if(SpectrumFindPeaks_CB->IsDown()){
       SpectrumNumPeaks_NEL->GetEntry()->SetState(true);
       SpectrumSigma_NEL->GetEntry()->SetState(true);
@@ -2065,7 +2065,7 @@ void ADAQAnalysisInterface::HandleCheckButtons()
       SpectrumSigma_NEL->GetEntry()->SetState(false);
       SpectrumResolution_NEL->GetEntry()->SetState(false);
 
-      //PlotSpectrum();
+      GraphicsMgr->PlotSpectrum();
     }
     break;
     
@@ -2080,15 +2080,15 @@ void ADAQAnalysisInterface::HandleCheckButtons()
       SpectrumLessBackground_RB->SetState(kButtonUp);
 
       //CalculateSpectrumBackground(Spectrum_H);
-      //PlotSpectrum();
+      GraphicsMgr->PlotSpectrum();
     }
     else{
       SpectrumRangeMin_NEL->GetEntry()->SetState(false);
       SpectrumRangeMax_NEL->GetEntry()->SetState(false);
       SpectrumWithBackground_RB->SetState(kButtonDisabled);
       SpectrumLessBackground_RB->SetState(kButtonDisabled);
-
-      //PlotSpectrum();
+      
+      GraphicsMgr->PlotSpectrum();
     }
     break;
 
@@ -2101,7 +2101,7 @@ void ADAQAnalysisInterface::HandleCheckButtons()
     if(SpectrumFindIntegral_CB->IsDown())
       {}//IntegrateSpectrum();
     else
-      {}//PlotSpectrum();
+      GraphicsMgr->PlotSpectrum();
     break;
     
   case SpectrumNormalizePeakToCurrent_CB_ID:
@@ -2190,7 +2190,7 @@ void ADAQAnalysisInterface::HandleCheckButtons()
   case PSDEnableFilter_CB_ID:{
     if(PSDEnableFilter_CB->IsDown()){
       //UsePSDFilterManager[PSDChannel] = true;
-      //FindPeaks_CB->SetState(kButtonDown);
+      FindPeaks_CB->SetState(kButtonDown);
     }
     else
       {}//UsePSDFilterManager[PSDChannel] = false;
@@ -2200,8 +2200,8 @@ void ADAQAnalysisInterface::HandleCheckButtons()
   case PSDPlotTailIntegration_CB_ID:{
     if(!FindPeaks_CB->IsDown())
       {}
-      //FindPeaks_CB->SetState(kButtonDown);
-    //PlotWaveform();
+    //FindPeaks_CB->SetState(kButtonDown);
+    GraphicsMgr->PlotWaveform();
     break;
   }
 
@@ -2219,7 +2219,7 @@ void ADAQAnalysisInterface::HandleCheckButtons()
       PSDHistogramSliceY_RB->SetState(kButtonDisabled);
 
       // Replot the PSD histogram
-      //PlotPSDHistogram();
+      GraphicsMgr->PlotPSDHistogram();
       
       // Delete the canvas containing the PSD slice histogram and
       // close the window (formerly) containing the canvas
@@ -2239,14 +2239,14 @@ void ADAQAnalysisInterface::HandleCheckButtons()
     }
     else{
       if(SpectrumOverplotDerivative_CB->IsDown()){
-	//PlotSpectrum();
-	//PlotSpectrumDerivative();
+	GraphicsMgr->PlotSpectrum();
+	GraphicsMgr->PlotSpectrumDerivative();
       }
       else if(PlotSpectrumDerivativeError_CB->IsDown()){
-	//PlotSpectrumDerivative();
+	GraphicsMgr->PlotSpectrumDerivative();
       }
       else{
-	//PlotSpectrum();
+	GraphicsMgr->PlotSpectrum();
       }
       break;
     }
@@ -2363,6 +2363,9 @@ void ADAQAnalysisInterface::HandleNumberEntries()
   int NumberEntryID = ActiveNumberEntry->WidgetId();
   
   SaveSettings();
+  
+  if(!ADAQFileLoaded)
+    return;
 
   switch(NumberEntryID){
 
@@ -2371,47 +2374,28 @@ void ADAQAnalysisInterface::HandleNumberEntries()
     // position of slider if the number entry value changes
   case WaveformSelector_NEL_ID:
     WaveformSelector_HS->SetPosition(WaveformSelector_NEL->GetEntry()->GetIntNumber());
-
-    
-    if(ADAQFileLoaded)
-      GraphicsMgr->PlotWaveform();
-    
+    GraphicsMgr->PlotWaveform();
     break;
-
+    
   case MaxPeaks_NEL_ID:
-    if(!AnalysisMgr->GetFileOpen())
-      return;
-
-    // Delete the previoue TSpectrum PeakFinder object if it exists to
-    // prevent memory leaks
-    //if(PeakFinder)
-    //      delete PeakFinder;
-    
-    // Create a TSpectrum PeakFinder using the appropriate widget to set
-    // the maximum number of peaks that can be found
-    //    PeakFinder = new TSpectrum(MaxPeaks_NEL->GetEntry()->GetIntNumber());
-
-    // Update to work with Waveform and Spectrum
-    //    PlotWaveform();
+    AnalysisMgr->CreateNewPeakFinder(ADAQSettings->MaxPeaks);
+    GraphicsMgr->PlotWaveform();
     break;
 
-  case BaselineCalcMin_NEL_ID:
-  case BaselineCalcMax_NEL_ID:
+  case ZeroSuppressionCeiling_NEL_ID:
   case Sigma_NEL_ID:
   case Resolution_NEL_ID:
   case Floor_NEL_ID:
-  case ZeroSuppressionCeiling_NEL_ID:
+  case BaselineCalcMin_NEL_ID:
+  case BaselineCalcMax_NEL_ID:
   case PearsonLowerLimit_NEL_ID:
   case PearsonMiddleLimit_NEL_ID:
   case PearsonUpperLimit_NEL_ID:
   case PSDPeakOffset_NEL_ID:
   case PSDTailOffset_NEL_ID:
-    if(!AnalysisMgr->GetFileOpen())
-      return;
-    else
-      {}//PlotWaveform();
+    GraphicsMgr->PlotWaveform();
     break;
-
+    
   case SpectrumNumPeaks_NEL_ID:
   case SpectrumSigma_NEL_ID:
   case SpectrumResolution_NEL_ID:
@@ -2436,19 +2420,19 @@ void ADAQAnalysisInterface::HandleNumberEntries()
 
     switch(GraphicsMgr->GetCanvasContentType()){
     case zWaveform:
-      //PlotWaveform();
+      GraphicsMgr->PlotWaveform();
       break;
       
     case zSpectrum:
-      //PlotSpectrum();
+      GraphicsMgr->PlotSpectrum();
       break;
 
     case zSpectrumDerivative:
-      //PlotSpectrumDerivative();
+      GraphicsMgr->PlotSpectrumDerivative();
       break;
       
     case zPSDHistogram:
-      //      PlotPSDHistogram();
+      GraphicsMgr->PlotPSDHistogram();
       break;
     }
     break;
@@ -2689,7 +2673,7 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
     ADAQSettings->WaveformPolarity = 1.0;
   else
     ADAQSettings->WaveformPolarity = -1.0;
-
+  
   ADAQSettings->FindPeaks = FindPeaks_CB->IsDown();
   ADAQSettings->MaxPeaks = MaxPeaks_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->Sigma = Sigma_NEL->GetEntry()->GetNumber();
@@ -2725,12 +2709,10 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   //////////////////////////////////////////
   // Values from the "Analysis" tabbed frame 
 
+  ADAQSettings->PSDEnable = PSDEnable_CB->IsDown();
   ADAQSettings->PSDChannel = PSDChannel_CBL->GetComboBox()->GetSelected();
   ADAQSettings->PSDWaveformsToDiscriminate = PSDWaveforms_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDThreshold = PSDThreshold_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDPeakOffset = PSDPeakOffset_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDTailOffset = PSDTailOffset_NEL->GetEntry()->GetIntNumber();
-
+  
   ADAQSettings->PSDNumTailBins = PSDNumTailBins_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->PSDMinTailBin = PSDMinTailBin_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->PSDMaxTailBin = PSDMaxTailBin_NEL->GetEntry()->GetIntNumber();
@@ -2738,6 +2720,13 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->PSDNumTotalBins = PSDNumTotalBins_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->PSDMinTotalBin = PSDMinTotalBin_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->PSDMaxTotalBin = PSDMaxTotalBin_NEL->GetEntry()->GetIntNumber();
+
+  ADAQSettings->PSDThreshold = PSDThreshold_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDPeakOffset = PSDPeakOffset_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDTailOffset = PSDTailOffset_NEL->GetEntry()->GetIntNumber();
+
+  ADAQSettings->PSDPlotType = PSDPlotType_CBL->GetComboBox()->GetSelected();
+  ADAQSettings->PSDPlotTailIntegrationRegion = PSDPlotTailIntegration_CB->IsDown();
 
   if(PSDPositiveFilter_RB->IsDown())
     ADAQSettings->PSDFilterPolarity = 1.0;
@@ -2757,6 +2746,7 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->PlotZeroSuppressionCeiling = PlotZeroSuppressionCeiling_CB->IsDown();
   ADAQSettings->PlotTrigger = PlotTrigger_CB->IsDown();
   ADAQSettings->PlotBaseline = PlotBaseline_CB->IsDown();
+  ADAQSettings->PlotYAxisWithAutoRange = AutoYAxisRange_CB->IsDown();
 
   ADAQSettings->WaveformCurve = DrawWaveformWithCurve_RB->IsDown();
   ADAQSettings->WaveformMarkers = DrawWaveformWithMarkers_RB->IsDown();
@@ -2882,7 +2872,7 @@ void ADAQAnalysisInterface::CreateMessageBox(string Message, string IconName)
 			    "Unacceptable. Just totally unacceptable.",
 			    "That was about as successful as the Hindenburg...",
 			    "You blew it!",
-			    "Abominable! Off with you head!" };
+			    "Abominable! Off with your head!" };
 
   // Surprise the user!
   TRandom *RNG = new TRandom;
@@ -2911,8 +2901,6 @@ void ADAQAnalysisInterface::UpdateForNewFile(string FileName)
   WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
   WaveformsToHistogram_NEL->GetEntry()->SetNumber(WaveformsInFile);
 
-  // Update the ROOT widgets above the embedded canvas to display
-  // the file name, total waveofmrs, and record length
   FileName_TE->SetText(FileName.c_str());
   Waveforms_NEL->SetNumber(WaveformsInFile);
   RecordLength_NEL->SetNumber(RecordLength);
@@ -2940,10 +2928,6 @@ void ADAQAnalysisInterface::UpdateForNewFile(string FileName)
   
   PSDWaveforms_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
   PSDWaveforms_NEL->GetEntry()->SetNumber(WaveformsInFile);
-  
-  // Update the XAxis minimum and maximum values for correct plotting
-  //	XAxisMin = 0;
-  //	XAxisMax = RecordLength;
 }
 
 
