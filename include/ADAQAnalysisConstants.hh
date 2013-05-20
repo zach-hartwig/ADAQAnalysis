@@ -4,7 +4,7 @@
 namespace{
   const double DynamicRange_V1720 = 2.; // [V]
   const int BitDepth_1720 = 12; 
-  const int Bits_V1720 = pow(2,BitDepth_1720);
+  const int Bits_V1720 = pow(2.,BitDepth_1720);
   const int SampleRate_V1720 = 250e6; // [samples / s]
 
   const double adc2volts_V1720 = DynamicRange_V1720 / Bits_V1720; // [V / ADC]

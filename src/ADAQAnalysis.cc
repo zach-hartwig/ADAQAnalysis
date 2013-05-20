@@ -19,6 +19,7 @@
 
 #include "ADAQAnalysisInterface.hh"
 #include "ADAQAnalysisManager.hh"
+#include "ADAQGraphicsManager.hh"
 
 int main(int argc, char *argv[])
 {
@@ -83,20 +84,24 @@ int main(int argc, char *argv[])
   
 
   // Create the singleton analysis manager
-  ADAQAnalysisManager *TheManager = new ADAQAnalysisManager(ParallelArchitecture);
-  
-  // Create the graphical interface for sequential arch. only
+  ADAQAnalysisManager *TheAnalysis = new ADAQAnalysisManager(ParallelArchitecture);
+
   if(!ParallelArchitecture){
+    // Create the graphics plotter
+    ADAQGraphicsManager *TheGraphics = new ADAQGraphicsManager;
+
+    // Create the graphical user interface
     ADAQAnalysisInterface *TheInterface = new ADAQAnalysisInterface;
     TheInterface->Connect("CloseWindow()", "ADAQAnalysisInterface", TheInterface, "HandleTerminate()");
   
     // Run the application
     TheApplication->Run();
     
+    delete TheGraphics;
     delete TheInterface;
   }
 
-  delete TheManager;
+  delete TheAnalysis;
 
   delete TheApplication;
   

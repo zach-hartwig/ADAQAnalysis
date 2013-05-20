@@ -29,13 +29,6 @@ ADAQAnalysisManager::ADAQAnalysisManager(bool PA)
     PrintCanvasDirectory(getenv("HOME")), DesplicedDirectory(getenv("HOME")),
     Time(0), RawVoltage(0), RecordLength(0),
     GraphicFileName(""), GraphicFileExtension(""),
-    Trigger_L(new TLine), Floor_L(new TLine), Calibration_L(new TLine), ZSCeiling_L(new TLine), NCeiling_L(new TLine),
-    LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine),
-    PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
-    PSDPeakOffset_L(new TLine), PSDTailOffset_L(new TLine), 
-    LowerLimit_L(new TLine), UpperLimit_L(new TLine), DerivativeReference_L(new TLine),
-    Baseline_B(new TBox), PSDTailIntegral_B(new TBox),
-    Spectrum_H(new TH1F), SpectrumBackground_H(new TH1F), SpectrumDeconvolved_H(new TH1F), 
     PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelArchitecture(PA), SequentialArchitecture(!PA),
     Verbose(false), ParallelVerbose(true),
@@ -55,73 +48,6 @@ ADAQAnalysisManager::ADAQAnalysisManager(bool PA)
   TheAnalysisManager = this;
 
   /*
-  Trigger_L->SetLineStyle(7);
-  Trigger_L->SetLineColor(2);
-  Trigger_L->SetLineWidth(2);
-
-  Floor_L->SetLineStyle(7);
-  Floor_L->SetLineColor(2);
-  Floor_L->SetLineWidth(2);
-
-  Baseline_B->SetFillStyle(3002);
-  Baseline_B->SetFillColor(8);
-
-  ZSCeiling_L->SetLineStyle(7);
-  ZSCeiling_L->SetLineColor(7);
-  ZSCeiling_L->SetLineWidth(2);
-  
-  NCeiling_L->SetLineStyle(7);
-  NCeiling_L->SetLineColor(6);
-  NCeiling_L->SetLineWidth(2);
-
-  LPeakDelimiter_L->SetLineStyle(7);
-  LPeakDelimiter_L->SetLineWidth(2);
-  LPeakDelimiter_L->SetLineColor(6);
-  
-  RPeakDelimiter_L->SetLineStyle(7);
-  RPeakDelimiter_L->SetLineWidth(2);
-  RPeakDelimiter_L->SetLineColor(7);
-  
-  Calibration_L->SetLineStyle(7);
-  Calibration_L->SetLineColor(2);
-  Calibration_L->SetLineWidth(2);
-
-  PearsonLowerLimit_L->SetLineStyle(7);
-  PearsonLowerLimit_L->SetLineColor(4);
-  PearsonLowerLimit_L->SetLineWidth(2);
-
-  PearsonMiddleLimit_L->SetLineStyle(7);
-  PearsonMiddleLimit_L->SetLineColor(8);
-  PearsonMiddleLimit_L->SetLineWidth(2);
-  
-  PearsonUpperLimit_L->SetLineStyle(7);
-  PearsonUpperLimit_L->SetLineColor(4);
-  PearsonUpperLimit_L->SetLineWidth(2);
-
-  PSDPeakOffset_L->SetLineStyle(7);
-  PSDPeakOffset_L->SetLineColor(8);
-  PSDPeakOffset_L->SetLineWidth(2);
-
-  PSDTailOffset_L->SetLineStyle(7);
-  PSDTailOffset_L->SetLineColor(8);
-  PSDTailOffset_L->SetLineWidth(2);
-
-  PSDTailIntegral_B->SetFillStyle(3002);
-  PSDTailIntegral_B->SetFillColor(38);
-
-  LowerLimit_L->SetLineStyle(7);
-  LowerLimit_L->SetLineColor(2);
-  LowerLimit_L->SetLineWidth(2);
-
-  UpperLimit_L->SetLineStyle(7);
-  UpperLimit_L->SetLineColor(2);
-  UpperLimit_L->SetLineWidth(2);
-
-  DerivativeReference_L->SetLineStyle(7);
-  DerivativeReference_L->SetLineColor(2);
-  DerivativeReference_L->SetLineWidth(2);
-
-
   // Initialize the objects used in the calibration and pulse shape
   // discrimination (PSD) scheme. A set of 8 calibration and 8 PSD
   // filter "managers" -- really, TGraph *'s used for interpolating --
@@ -287,6 +213,242 @@ ADAQAnalysisManager::ADAQAnalysisManager(bool PA)
 
 ADAQAnalysisManager::~ADAQAnalysisManager()
 {;}
+
+
+bool ADAQAnalysisManager::LoadADAQRootFile(string FileName)
+{
+  //////////////////////////////////
+  // Open the specified ROOT file //
+  //////////////////////////////////
+      
+  // Open the specified ROOT file 
+  TFile *ADAQRootFile = new TFile(FileName.c_str(), "read");
+      
+  // If a valid ADAQ ROOT file was NOT opened...
+  if(!ADAQRootFile->IsOpen()){
+    ADAQRootFileLoaded = false;
+  }
+  else{
+
+    /////////////////////////////////////
+    // Extract data from the ROOT file //
+    /////////////////////////////////////
+
+    // Get the ADAQRootMeasParams objects stored in the ROOT file
+    ADAQMeasParams = (ADAQRootMeasParams *)ADAQRootFile->Get("MeasParams");
+  
+    // Get the TTree with waveforms stored in the ROOT file
+    ADAQWaveformTree = (TTree *)ADAQRootFile->Get("WaveformTree");
+
+    // Attempt to get the class containing results that were calculated
+    // in a parallel run of ADAQAnalysisGUI and stored persistently
+    // along with data in the ROOT file. At present, this is only the
+    // despliced waveform files. For standard ADAQ ROOT files, the
+    // ADAQParResults class member will be a NULL pointer
+    ADAQParResults = (ADAQAnalysisParallelResults *)ADAQRootFile->Get("ParResults");
+
+    // If a valid class with the parallel parameters was found
+    // (despliced ADAQ ROOT files, etc) then set the bool to true; if no
+    // class with parallel parameters was found (standard ADAQ ROOT
+    // files) then set the bool to false. This bool will be used
+    // appropriately throughout the code to import parallel results.
+    (ADAQParResults) ? ADAQParResultsLoaded = true : ADAQParResultsLoaded = false;
+
+    // If the ADAQParResults class was loaded then ...
+    if(ADAQParResultsLoaded){
+      // Load the total integrated RFQ current and update the number
+      // entry field widget in the "Analysis" tab frame accordingly
+      TotalDeuterons = ADAQParResults->TotalDeuterons;
+      //if(SequentialArchitecture)
+      //DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
+    
+      if(Verbose)
+	cout << "Total RFQ current from despliced file: " << ADAQParResults->TotalDeuterons << endl;
+    }
+
+    // Get the record length (acquisition window)
+    RecordLength = ADAQMeasParams->RecordLength;
+  
+    // Create the Time vector<int> with size equal to the acquisition
+    // RecordLength. The Time vector, which represents the X-axis of a
+    // plotted waveform, is used for plotting 
+    for(int sample=0; sample<RecordLength; sample++)
+      Time.push_back(sample);
+  
+    // The ADAQ Waveform TTree stores digitized waveforms into
+    // vector<int>s of length RecordLength. Recall that the "record
+    // length" is the width of the acquisition window in time in units
+    // of 4 ns samples. There are 8 vectors<int>s corresponding to the 8
+    // channels on the V1720 digitizer board. The following code
+    // initializes the member object WaveformVecPtrs to be vector of
+    // vectors (outer vector size 8 = 8 V1720 channels; inner vector of
+    // size RecordLength = RecordLength samples). Each of the outer
+    // vectors is assigned to point to the address of the vector<int> in
+    // the ADAQ TTree representing the appopriate V1720 channel data.
+
+    stringstream ss;
+    for(int ch=0; ch<NumDataChannels; ch++){
+      // Create the correct ADAQ TTree branch name
+      ss << "VoltageInADC_Ch" << ch;
+      string BranchName = ss.str();
+
+      // Activate the branch in the ADAQ TTree
+      ADAQWaveformTree->SetBranchStatus(BranchName.c_str(), 1);
+
+      // Set the present channels' class object vector pointer to the
+      // address of that chennel's vector<int> stored in the TTree
+      ADAQWaveformTree->SetBranchAddress(BranchName.c_str(), &WaveformVecPtrs[ch]);
+
+      // Clear the string for the next channel.
+      ss.str("");
+    }
+   
+
+    //////////////////////////////////////////////
+    // Output summary of measurement parameters //
+    //////////////////////////////////////////////
+
+    if(Verbose){
+    
+      cout << "\n\nMEASUREMENT SUMMARY:\n";
+    
+      cout  << "Record Length = " << ADAQMeasParams->RecordLength << "\n"
+	    << "Number of waveforms = " << ADAQWaveformTree->GetEntries() << "\n"
+	    << endl;
+    
+      cout << "\nHIGH VOLTAGE CHANNEL SUMMARY: \n";
+    
+      for(int ch=0; ch<6; ch++){
+	cout << "Detector HV[" << ch << "] = " << ADAQMeasParams->DetectorVoltage[ch] << " V\n"
+	     << "Detector I[" << ch << "] = " << ADAQMeasParams->DetectorCurrent[ch] << " uA\n\n";
+      }
+    
+      cout << "\nDIGITIZER CHANNEL SUMMARY: \n";
+    
+      for(int ch=0; ch<NumDataChannels; ch++)
+	cout << "DC Offset[" << ch << "] = 0x" << ADAQMeasParams->DCOffset[ch] << " ADC\n"
+	     << "Trigger Threshold[" << ch << "] = " << ADAQMeasParams->TriggerThreshold[ch] << " ADC\n"
+	     << "Baseline Calc. Min.[" << ch << "] = " << ADAQMeasParams->BaselineCalcMin[ch] << " ADC\n"
+	     << "Baseline Calc. Max.[" << ch << "] = " << ADAQMeasParams->BaselineCalcMax[ch] << " ADC\n"
+	     << endl;
+    }
+    // Update the bool that determines if a valid ROOT file is loaded
+    ADAQRootFileLoaded = true;
+  }
+  return ADAQRootFileLoaded;
+}
+
+    
+bool ADAQAnalysisManager::LoadACRONYMRootFile(string)
+{return false;}
+
+
+TH1F *ADAQAnalysisManager::CalculateRawWaveform(int Channel, int Waveform)
+{
+  ADAQWaveformTree->GetEntry(Waveform);
+
+  vector<int> RawVoltage = *WaveformVecPtrs[Channel];
+
+  Baseline = CalculateBaseline(&RawVoltage);
+
+  if(Waveform_H[Channel])
+    delete Waveform_H[Channel];
+  
+  Waveform_H[Channel] = new TH1F("Waveform_H", "Raw Waveform", RecordLength-1, 0, RecordLength);
+  
+  vector<int>::iterator iter;
+  for(iter=RawVoltage.begin(); iter!=RawVoltage.end(); iter++)
+    Waveform_H[Channel]->SetBinContent((iter-RawVoltage.begin()), *iter);
+  
+  return Waveform_H[Channel];
+}
+
+
+// Method to extract the digitized data on the specified data channel
+// and store it into a TH1F object after calculating and subtracting
+// the waveform baseline. Note that the function argument bool is used
+// to determine which polarity (a standard (detector) waveform or a
+// Pearson (RFQ current) waveform) should be used in processing
+TH1F* ADAQAnalysisManager::CalculateBSWaveform(int Channel, int Waveform, bool CurrentWaveform)
+{
+  double Polarity;
+  (CurrentWaveform) ? Polarity = PearsonPolarity : Polarity = WaveformPolarity;
+  
+  vector<int> RawVoltage = *WaveformVecPtrs[Channel];
+  
+  Baseline = CalculateBaseline(&RawVoltage);
+  
+  if(Waveform_H[Channel])
+    delete Waveform_H[Channel];
+  
+  Waveform_H[Channel] = new TH1F("Waveform_H","Baseline-subtracted Waveform", RecordLength-1, 0, RecordLength);
+  
+  vector<int>::iterator it;  
+  for(it=RawVoltage.begin(); it!=RawVoltage.end(); it++)
+    Waveform_H[Channel]->SetBinContent((it-RawVoltage.begin()),
+				       Polarity*(*it-Baseline));
+
+  return Waveform_H[Channel];
+}
+
+
+// Method to extract the digitized data on the specified data channel
+// and store it into a TH1F object after computing the zero-suppresion
+// (ZS) waveform. The baseline is calculated and stored into the class
+// member for later use.  Note that the function argument bool is used
+// to determine which polarity (a standard (detector) waveform or a
+// Pearson (RFQ current) waveform) should be used in processing
+TH1F *ADAQAnalysisManager::CalculateZSWaveform(int Channel, int Waveform, bool CurrentWaveform)
+{
+  double Polarity;
+  (CurrentWaveform) ? Polarity = PearsonPolarity : Polarity = WaveformPolarity;
+
+  vector<int> RawVoltage = *WaveformVecPtrs[Channel];
+
+  Baseline = CalculateBaseline(&RawVoltage);
+  
+  vector<double> ZSVoltage;
+  vector<int> ZSPosition;
+  
+  vector<int>::iterator it;
+  for(it=RawVoltage.begin(); it!=RawVoltage.end(); it++){
+    
+    double VoltageMinusBaseline = Polarity*(*it-Baseline);
+    
+    if(VoltageMinusBaseline >= ZeroSuppressionCeiling){
+      ZSVoltage.push_back(VoltageMinusBaseline);
+      ZSPosition.push_back(it - RawVoltage.begin());
+    }
+  }
+  
+  int ZSWaveformSize = ZSVoltage.size();
+  
+  if(Waveform_H[Channel])
+    delete Waveform_H[Channel];
+  
+  Waveform_H[Channel] = new TH1F("Waveform_H","Zero Suppression Waveform", ZSWaveformSize-1, 0, ZSWaveformSize);
+  
+  vector<double>::iterator iter;
+  for(iter=ZSVoltage.begin(); iter!=ZSVoltage.end(); iter++)
+    Waveform_H[Channel]->SetBinContent((iter-ZSVoltage.begin()), *iter);
+
+  return Waveform_H[Channel];
+}
+
+
+// Method to calculate the baseline of a waveform. The "baseline" is
+// simply the average of the waveform voltage taken over the specified
+// range in time (in units of samples)
+double ADAQAnalysisManager::CalculateBaseline(vector<int> *Waveform)
+{
+  int BaselineCalcLength = BaselineCalcMax - BaselineCalcMin;
+  double Baseline = 0.;
+  for(int sample=BaselineCalcMin; sample<BaselineCalcMax; sample++)
+    Baseline += ((*Waveform)[sample]*1.0/BaselineCalcLength);
+  
+  return Baseline;
+}
+
 
 /*
 void ADAQAnalysisInterface::LoadADAQRootFile()
@@ -4036,195 +4198,134 @@ void ADAQAnalysisInterface::LoadParallelProcessingData()
   }
 */
     
-    bool ADAQAnalysisManager::LoadADAQRootFile(string FileName)
-    {
-      //////////////////////////////////
-      // Open the specified ROOT file //
-      //////////////////////////////////
-      
-      // Open the specified ROOT file 
-      TFile *ADAQRootFile = new TFile(FileName.c_str(), "read");
-      
-      // If a valid ADAQ ROOT file was NOT opened...
-      if(!ADAQRootFile->IsOpen()){
-	ADAQRootFileLoaded = false;
-      }
-      else{
-
-	/////////////////////////////////////
-	// Extract data from the ROOT file //
-	/////////////////////////////////////
-
-	// Get the ADAQRootMeasParams objects stored in the ROOT file
-	ADAQMeasParams = (ADAQRootMeasParams *)ADAQRootFile->Get("MeasParams");
-  
-	// Get the TTree with waveforms stored in the ROOT file
-	ADAQWaveformTree = (TTree *)ADAQRootFile->Get("WaveformTree");
-
-	// Attempt to get the class containing results that were calculated
-	// in a parallel run of ADAQAnalysisGUI and stored persistently
-	// along with data in the ROOT file. At present, this is only the
-	// despliced waveform files. For standard ADAQ ROOT files, the
-	// ADAQParResults class member will be a NULL pointer
-	ADAQParResults = (ADAQAnalysisParallelResults *)ADAQRootFile->Get("ParResults");
-
-	// If a valid class with the parallel parameters was found
-	// (despliced ADAQ ROOT files, etc) then set the bool to true; if no
-	// class with parallel parameters was found (standard ADAQ ROOT
-	// files) then set the bool to false. This bool will be used
-	// appropriately throughout the code to import parallel results.
-	(ADAQParResults) ? ADAQParResultsLoaded = true : ADAQParResultsLoaded = false;
-
-	// If the ADAQParResults class was loaded then ...
-	if(ADAQParResultsLoaded){
-	  // Load the total integrated RFQ current and update the number
-	  // entry field widget in the "Analysis" tab frame accordingly
-	  TotalDeuterons = ADAQParResults->TotalDeuterons;
-	  //if(SequentialArchitecture)
-	  //DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
-    
-	  if(Verbose)
-	    cout << "Total RFQ current from despliced file: " << ADAQParResults->TotalDeuterons << endl;
-	}
-
-	// Get the record length (acquisition window)
-	RecordLength = ADAQMeasParams->RecordLength;
-  
-	// Create the Time vector<int> with size equal to the acquisition
-	// RecordLength. The Time vector, which represents the X-axis of a
-	// plotted waveform, is used for plotting 
-	for(int sample=0; sample<RecordLength; sample++)
-	  Time.push_back(sample);
-  
-	// The ADAQ Waveform TTree stores digitized waveforms into
-	// vector<int>s of length RecordLength. Recall that the "record
-	// length" is the width of the acquisition window in time in units
-	// of 4 ns samples. There are 8 vectors<int>s corresponding to the 8
-	// channels on the V1720 digitizer board. The following code
-	// initializes the member object WaveformVecPtrs to be vector of
-	// vectors (outer vector size 8 = 8 V1720 channels; inner vector of
-	// size RecordLength = RecordLength samples). Each of the outer
-	// vectors is assigned to point to the address of the vector<int> in
-	// the ADAQ TTree representing the appopriate V1720 channel data.
-
-	stringstream ss;
-	for(int ch=0; ch<NumDataChannels; ch++){
-	  // Create the correct ADAQ TTree branch name
-	  ss << "VoltageInADC_Ch" << ch;
-	  string BranchName = ss.str();
-
-	  // Activate the branch in the ADAQ TTree
-	  ADAQWaveformTree->SetBranchStatus(BranchName.c_str(), 1);
-
-	  // Set the present channels' class object vector pointer to the
-	  // address of that chennel's vector<int> stored in the TTree
-	  ADAQWaveformTree->SetBranchAddress(BranchName.c_str(), &WaveformVecPtrs[ch]);
-
-	  // Clear the string for the next channel.
-	  ss.str("");
-	}
-   
-
-	//////////////////////////////////////////////
-	// Output summary of measurement parameters //
-	//////////////////////////////////////////////
-
-	if(Verbose){
-    
-	  cout << "\n\nMEASUREMENT SUMMARY:\n";
-    
-	  cout  << "Record Length = " << ADAQMeasParams->RecordLength << "\n"
-		<< "Number of waveforms = " << ADAQWaveformTree->GetEntries() << "\n"
-		<< endl;
-    
-	  cout << "\nHIGH VOLTAGE CHANNEL SUMMARY: \n";
-    
-	  for(int ch=0; ch<6; ch++){
-	    cout << "Detector HV[" << ch << "] = " << ADAQMeasParams->DetectorVoltage[ch] << " V\n"
-		 << "Detector I[" << ch << "] = " << ADAQMeasParams->DetectorCurrent[ch] << " uA\n\n";
-	  }
-    
-	  cout << "\nDIGITIZER CHANNEL SUMMARY: \n";
-    
-	  for(int ch=0; ch<NumDataChannels; ch++)
-	    cout << "DC Offset[" << ch << "] = 0x" << ADAQMeasParams->DCOffset[ch] << " ADC\n"
-		 << "Trigger Threshold[" << ch << "] = " << ADAQMeasParams->TriggerThreshold[ch] << " ADC\n"
-		 << "Baseline Calc. Min.[" << ch << "] = " << ADAQMeasParams->BaselineCalcMin[ch] << " ADC\n"
-		 << "Baseline Calc. Max.[" << ch << "] = " << ADAQMeasParams->BaselineCalcMax[ch] << " ADC\n"
-		 << endl;
-	}
-
-
-	////////////////////////////////////////////
-	// Update various ADAQAnalysisGUI widgets //
-	////////////////////////////////////////////
-
-	// Deny parallel binaries access to the ROOT widgets to prevent
-	// seg. faults since parallel architecture do not construct widgets
-#ifndef MPI_ENABLED
-
-	/*
-	int WaveformsInFile = ADAQWaveformTree->GetEntries();
-
-
-	// Set the range of the slider used to plot waveforms such that it
-	// can access all the waveforms in the ADAQ ROOT file.
-	WaveformSelector_HS->SetRange(1, WaveformsInFile);
-
-	// Set the range of the number entry to the maximum number of
-	// waveforms available to histogram
-	WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
-	WaveformsToHistogram_NEL->GetEntry()->SetNumber(WaveformsInFile);
-
-	// Update the ROOT widgets above the embedded canvas to display
-	// the file name, total waveofmrs, and record length
-	FileName_TE->SetText(ADAQRootFileName.c_str());
-	Waveforms_NEL->SetNumber(WaveformsInFile);
-	RecordLength_NEL->SetNumber(ADAQMeasParams->RecordLength);
-  
-	BaselineCalcMin_NEL->GetEntry()->SetLimitValues(0,RecordLength-1);
-	BaselineCalcMin_NEL->GetEntry()->SetNumber(0);
-  
-	BaselineCalcMax_NEL->GetEntry()->SetLimitValues(1,RecordLength);
-  
-	// Inelegant implementation to automatically set the baseline calc
-	// length to account for real ADAQ data with long acquisition
-	// windows (where we want a lot of samples for an accurate baseline)
-	// or calibration/other data with short acquisition windows (where
-	// we can't take as many samples for baseline calculation)
-	double BaselineCalcMax = 0;
-	(RecordLength > 1500) ? BaselineCalcMax = 750 : BaselineCalcMax = 100;;
-	BaselineCalcMax_NEL->GetEntry()->SetNumber(BaselineCalcMax);
-  
-	PearsonLowerLimit_NEL->GetEntry()->SetLimitValues(0, RecordLength-1);
-	PearsonLowerLimit_NEL->GetEntry()->SetNumber(0);
-
-	PearsonMiddleLimit_NEL->GetEntry()->SetLimitValues(1, RecordLength-1);
-	PearsonMiddleLimit_NEL->GetEntry()->SetNumber(RecordLength/2);
-
-	PearsonUpperLimit_NEL->GetEntry()->SetLimitValues(1, RecordLength);
-	PearsonUpperLimit_NEL->GetEntry()->SetNumber(RecordLength);
-  
-	DesplicedWaveformNumber_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
-	DesplicedWaveformNumber_NEL->GetEntry()->SetNumber(WaveformsInFile);
-  
-	PSDWaveforms_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
-	PSDWaveforms_NEL->GetEntry()->SetNumber(WaveformsInFile);
-  
-	// Update the XAxis minimum and maximum values for correct plotting
-	XAxisMin = 0;
-	XAxisMax = RecordLength;
-	*/
-#endif
-
-	// Update the bool that determines if a valid ROOT file is loaded
-	ADAQRootFileLoaded = true;
-      }
-      return ADAQRootFileLoaded;
-    }
 
     
-    bool ADAQAnalysisManager::LoadACRONYMRootFile(string)
-    {return false;}
+// Method to load the variables necessary for parallel processing from
+// the ROOT file. This method will be called by the ADAQAnalysisGUI
+// parallel binaries immediately before beginning to process waveforms.
+//void ADAQAnalysisInterface::LoadParallelProcessingData()
+//{
+/*
+
+  // Load the ROOT file
+  ParallelProcessingFile = new TFile(ParallelProcessingFName.c_str(), "read");
+
+  // Alert the user if the ROOT file cannont be opened
+  if(!ParallelProcessingFile->IsOpen()){
+    cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << " : Error! Could not load the parallel processing file! Abort!\n"
+	 << endl;
+    exit(-42);
+  }
+  
+  // Load the necessary processing variables
+  else{
+    // Get the custom storage class object from the ROOT file
+    ADAQAnalysisParallelParameters *ADAQParParams = (ADAQAnalysisParallelParameters *)ParallelProcessingFile->Get("ADAQParParams");
+    
+    // Set the ROOT widget-derived variables to class member variables
+
+    //////////////////////////////////////////
+    // Values from the "Waveform" tabbed frame
+    Channel = ADAQParParams->Channel;
+
+    RawWaveform = ADAQParParams->RawWaveform;
+    BaselineSubtractedWaveform = ADAQParParams->BaselineSubtractedWaveform;
+    ZeroSuppressionWaveform = ADAQParParams->ZeroSuppressionWaveform;
+
+    WaveformPolarity = ADAQParParams->WaveformPolarity;
+
+    ZeroSuppressionCeiling = ADAQParParams->ZeroSuppressionCeiling;
+
+    MaxPeaks = ADAQParParams->MaxPeaks;
+    Sigma = ADAQParParams->Sigma;
+    Resolution = ADAQParParams->Resolution;
+    Floor = ADAQParParams->Floor;
+
+    PlotFloor = ADAQParParams->PlotFloor;
+    PlotCrossings = ADAQParParams->PlotCrossings;
+    PlotPeakIntegratingRegion = ADAQParParams->PlotPeakIntegratingRegion;
+
+    UsePileupRejection = ADAQParParams->UsePileupRejection;
+
+    BaselineCalcMin = ADAQParParams->BaselineCalcMin;
+    BaselineCalcMax = ADAQParParams->BaselineCalcMax;
+
+
+    //////////////////////////////////////////
+    // Values from the "Spectrum" tabbed frame
+
+    WaveformsToHistogram = ADAQParParams->WaveformsToHistogram;
+    SpectrumNumBins = ADAQParParams->SpectrumNumBins;
+    SpectrumMinBin = ADAQParParams->SpectrumMinBin;
+    SpectrumMaxBin = ADAQParParams->SpectrumMaxBin;
+
+    SpectrumTypePAS = ADAQParParams->SpectrumTypePAS;
+    SpectrumTypePHS = ADAQParParams->SpectrumTypePHS;
+
+    IntegrationTypeWholeWaveform = ADAQParParams->IntegrationTypeWholeWaveform;
+    IntegrationTypePeakFinder = ADAQParParams->IntegrationTypePeakFinder;
 
     
+    //////////////////////////////////////////
+    // Values from the "Analysis" tabbed frame
+
+    PSDChannel = ADAQParParams->PSDChannel; 
+    PSDWaveformsToDiscriminate = ADAQParParams->PSDWaveformsToDiscriminate;
+    PSDThreshold = ADAQParParams->PSDThreshold; 
+    PSDPeakOffset = ADAQParParams->PSDPeakOffset; 
+    PSDTailOffset = ADAQParParams->PSDTailOffset; 
+
+    PSDNumTailBins = ADAQParParams->PSDNumTailBins; 
+    PSDMinTailBin = ADAQParParams->PSDMinTailBin; 
+    PSDMaxTailBin = ADAQParParams->PSDMaxTailBin; 
+
+    PSDNumTotalBins = ADAQParParams->PSDNumTotalBins;
+    PSDMinTotalBin = ADAQParParams->PSDMinTotalBin; 
+    PSDMaxTotalBin = ADAQParParams->PSDMaxTotalBin; 
+
+    PSDFilterPolarity = ADAQParParams->PSDFilterPolarity;
+
+    WaveformsToDesplice = ADAQParParams->WaveformsToDesplice;
+    DesplicedWaveformBuffer = ADAQParParams->DesplicedWaveformBuffer;
+    DesplicedWaveformLength = ADAQParParams->DesplicedWaveformLength;
+    DesplicedFileName = ADAQParParams->DesplicedFileName;
+
+
+    ////////////////////////////////////////////
+    // Values from the "Processing" tabbed frame
+
+    UpdateFreq = ADAQParParams->UpdateFreq;
+
+    IntegratePearson = ADAQParParams->IntegratePearson;
+    PearsonChannel = ADAQParParams->PearsonChannel;
+
+    PearsonPolarity = ADAQParParams->PearsonPolarity;
+
+    IntegrateRawPearson = ADAQParParams->IntegrateRawPearson;
+    IntegrateFitToPearson = ADAQParParams->IntegrateFitToPearson;
+
+    PearsonLowerLimit = ADAQParParams->PearsonLowerLimit;
+    PearsonMiddleLimit = ADAQParParams->PearsonMiddleLimit;
+    PearsonUpperLimit = ADAQParParams->PearsonUpperLimit;
+
+    PlotPearsonIntegration = ADAQParParams->PlotPearsonIntegration;
+
+
+    ////////////////////////////////////////////////////////
+    // Miscellaneous values required for parallel processing
+
+    ADAQRootFileName = ADAQParParams->ADAQRootFileName;
+
+    UseCalibrationManager = ADAQParParams->UseCalibrationManager;
+    CalibrationManager = ADAQParParams->CalibrationManager;
+    
+    UsePSDFilterManager = ADAQParParams->UsePSDFilterManager;
+    PSDFilterManager = ADAQParParams->PSDFilterManager;
+
+    
+    // Close the ROOT File
+    ParallelProcessingFile->Close();
+  }
+*/
+//}
+

@@ -44,7 +44,7 @@ using namespace std;
 #include "ADAQRootGUIClasses.hh"
 #include "ADAQAnalysisTypes.hh"
 #include "ADAQAnalysisManager.hh"
-
+#include "ADAQGraphicsManager.hh"
 
 class ADAQAnalysisInterface : public TGMainFrame
 {
@@ -54,23 +54,17 @@ public:
   // Constructor/destructor
   ADAQAnalysisInterface();
   ~ADAQAnalysisInterface();
-  
+
   // Create the ROOT graphical interface
-  void CreateMainFrame();
+  void CreateTheMainFrames();
+  void FillWaveformFrame();
+  void FillSpectrumFrame();
+  void FillAnalysisFrame();
+  void FillGraphicsFrame();
+  void FillProcessingFrame();
+  void FillCanvasFrame();
 
-
-  void SaveParallelProcessingData();
-  void LoadParallelProcessingData();
-
-  // Method to readout ROOT widget values to class member data
-  void ReadoutWidgetValues();
-
-  // Method to alert the user via a ROOT message box
-  void CreateMessageBox(string, string);
-
-  void SetCalibrationWidgetState(bool, EButtonState);
-
-  // Methods to recieve and act upon ROOT widget signals
+  // "Slot" methods to recieve and act upon ROOT widget "signals"
   void HandleMenu(int);
   void HandleTextButtons();
   void HandleCheckButtons();
@@ -83,9 +77,21 @@ public:
   void HandleCanvas(int, int, int, TObject *);
   void HandleTerminate();
 
-private:
+  // Method to save all widget values in a storage class
+  void SaveSettings(bool SaveToFile=false);
 
-  ADAQAnalysisManager *TheAnalysisManager;
+  // Method to alert the user via a ROOT message box
+  void CreateMessageBox(string, string);
+
+  void SetCalibrationWidgetState(bool, EButtonState);
+
+private:
+  TGCompositeFrame *WaveformOptions_CF;
+  TGCompositeFrame *SpectrumOptions_CF;
+  TGCompositeFrame *AnalysisOptions_CF;
+  TGCompositeFrame *GraphicsOptions_CF;
+  TGCompositeFrame *ProcessingOptions_CF;
+  TGHorizontalFrame *OptionsAndCanvas_HF;
 
   /////////////////////////////////////////////////////////
   // Widget objects for the WaveformOptions tabbed frame //
@@ -310,156 +316,23 @@ private:
   // Member variables for general use //
   //////////////////////////////////////
 
-  // Objects for opening ADAQ ROOT files and accessing them
-  ADAQRootMeasParams *ADAQMeasParams;
-  TFile *ADAQRootFile;
-  string ADAQRootFileName;
-  bool ADAQRootFileLoaded;
-  TTree *ADAQWaveformTree;
-  ADAQAnalysisParallelResults *ADAQParResults;
-  bool ADAQParResultsLoaded;
-  
-  // Strings used to store the current directory for various files
-  string DataDirectory, SaveSpectrumDirectory, SaveHistogramDirectory;;
-  string PrintCanvasDirectory, DesplicedDirectory;
-  
-  // Vectors and variables for extracting waveforms from the TTree in
-  // the ADAQ ROOT file and storing the information in vector format
-  vector<int> *WaveformVecPtrs[8];
-  vector<int> Time, RawVoltage;
-  int RecordLength;
-
-  // String objects for storing the file name and extension of graphic
-  // files that will receive the contents of the embedded canvas
-  string GraphicFileName, GraphicFileExtension;  
-
-  // ROOT graphical objects to represent various settings
-  TLine *Trigger_L, *Floor_L, *Calibration_L, *ZSCeiling_L, *NCeiling_L;
-  TLine *LPeakDelimiter_L, *RPeakDelimiter_L;
-  TLine *PearsonLowerLimit_L, *PearsonMiddleLimit_L, *PearsonUpperLimit_L;
-  TLine *PSDPeakOffset_L, *PSDTailOffset_L;
-  TLine *LowerLimit_L, *UpperLimit_L;
-  TLine *DerivativeReference_L;
-  TBox *Baseline_B, *PSDTailIntegral_B;
-  
-  // ROOT TH1F histograms for storing the waveform and pulse spectrum
-  TH1F *Waveform_H[8], *Spectrum_H, *SpectrumBackground_H, *SpectrumDeconvolved_H;
-
-  TH1F *Spectrum2Plot_H;
-
-  TH1F *SpectrumDerivative_H;
-  TH1D *PSDHistogramSlice_H;
-  
-  // ROOT TSpectrum peak-finding object that operates on TH1F
-  TSpectrum *PeakFinder;
-
-  // Variables to specify the range of waveforms for processing
-  int WaveformStart, WaveformEnd;
-
-  // Variables and objects that hold peak information. Note that
-  // anything that uses Boost must be protected from ROOT's C++
-  // interpretor in order to successfully compile
-  int NumPeaks;
-  vector<PeakInfoStruct> PeakInfoVec;
-  vector<int> PeakIntegral_LowerLimit, PeakIntegral_UpperLimit;
-#ifndef __CINT__
-  vector< boost::array<int,2> > PeakLimits;
-#endif
-  
-  // Objects that are used in energy calibration of the pulse spectra
-  vector<TGraph *> CalibrationManager;
-  vector<bool> UseCalibrationManager;
-  vector<ADAQChannelCalibrationData> CalibrationData;
-  
-  // Variables used in parallel architecture
-  int MPI_Size, MPI_Rank;
-  bool IsMaster, IsSlave;
-
-  // Bools to specify architecture type
-  bool ParallelArchitecture, SequentialArchitecture;
-
-  // Variables used to specify whether to print to stdout
-  bool Verbose, ParallelVerbose;
-  
-  // Member data for storing ROOT widget variables
-  int WaveformToPlot, Channel;
-  int SpectrumNumBins, SpectrumMinBin, SpectrumMaxBin;
-  int WaveformsToHistogram, MaxPeaks, ZeroSuppressionCeiling;
-  int BaselineCalcMin, BaselineCalcMax, Floor;
-  int UpdateFreq;
-  bool PlotFloor, PlotCrossings, PlotPeakIntegratingRegion, PlotPearsonIntegration, UsePileupRejection;
-  bool IntegratePearson, IntegrateRawPearson, IntegrateFitToPearson;
-  int PearsonLowerLimit, PearsonMiddleLimit, PearsonUpperLimit;
-  bool RawWaveform, BaselineSubtractedWaveform, ZeroSuppressionWaveform;
-  bool IntegrationTypeWholeWaveform, IntegrationTypePeakFinder, SpectrumTypePHS, SpectrumTypePAS;
-  int PearsonChannel;
-  double Sigma, Resolution;
-  string DesplicedFileName;
-  int DesplicedWaveformBuffer, WaveformsToDesplice, DesplicedWaveformLength;
-  int PSDChannel, PSDThreshold, PSDPeakOffset, PSDTailOffset;
-  int PSDWaveformsToDiscriminate;
-  int PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin;
-  int PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin;
-
-  // Strings for specifying binaries and ROOT files
-  string ADAQHOME, USER;
-  string ParallelBinaryName;
-  string ParallelProcessingFName;
-  string ParallelProgressFName;
-  
-  // ROOT TFile to hold values need for parallel processing
-  TFile *ParallelProcessingFile;
-
-  // ROOT TH1F to hold aggregated spectra from parallel processing
-  TH1F *MasterHistogram_H;
+  // Number of data channels in the ADAQ ROOT files
+  const int NumDataChannels;
 
   // Number of processors/threads available on current system
-  int NumProcessors;
+  const int NumProcessors;
 
-  // Generally useful data members
-  float XAxisMin, XAxisMax, YAxisMin, YAxisMax;
-  string Title, XAxisTitle, YAxisTitle, ZAxisTitle, PaletteAxisTitle;
-
-  // Variables to hold waveform processing values
-  double WaveformPolarity, PearsonPolarity, Baseline;
-
-  // Variables for PSD histograms and filter
-  TH2F *PSDHistogram_H, *MasterPSDHistogram_H;
-  double PSDFilterPolarity;
-  vector<TGraph *> PSDFilterManager;
-  vector<bool> UsePSDFilterManager;
-  int PSDNumFilterPoints;
-  vector<int> PSDFilterXPoints, PSDFilterYPoints;
-
-  // Maximum bit value of CAEN X720 digitizer family (4095)
-  int V1720MaximumBit;
-
-  // Number of data channels in the ADAQ ROOT files
-  int NumDataChannels;
-
-  // Bool to determine what graphical objects exist
-  bool SpectrumExists, SpectrumDerivativeExists;
-  bool PSDHistogramExists, PSDHistogramSliceExists;
-
-  // Max number of peaks expected for TSpectrum on spectra
-  int SpectrumMaxPeaks;
-
-  // Aggregated total waveform peaks found during processing
-  int TotalPeaks;
-  
-  // Aggregated total number of deuterons from the RFQ
-  double TotalDeuterons;
-
-  // Bin widths for spectrum integration algorithms
-  double GaussianBinWidth, CountsBinWidth;
-  
-  // Create a TColor ROOT object to handle pixel-2-color conversions
-  TColor *ColorManager;
+  string DataDirectory, PrintDirectory, DesplicedDirectory;
+  string CurrentFileName;
 
   enum {zWaveform, zSpectrum, zSpectrumDerivative, zPSDHistogram};
-  int CanvasContents;
-  
+  int CanvasContentID;
+
+  ADAQAnalysisSettings *ADAQSettings;
+
+  TColor *ColorMgr;
   ADAQAnalysisManager *AnalysisMgr;
+  ADAQGraphicsManager *GraphicsMgr;
   
   // Define the class to ROOT
   ClassDef(ADAQAnalysisInterface, 1);

@@ -20,6 +20,9 @@
 #include <string>
 using namespace std;
 
+// Boost
+#include <boost/thread.hpp>
+
 // MPI
 #ifdef MPI_ENABLED
 #include <mpi.h>
@@ -33,14 +36,19 @@ using namespace std;
 
 
 ADAQAnalysisInterface::ADAQAnalysisInterface()
-  : TGMainFrame(gClient->GetRoot())
+  : TGMainFrame(gClient->GetRoot()),
+    NumDataChannels(8), NumProcessors(boost::thread::hardware_concurrency())
 {
   SetCleanup(kDeepCleanup);
 
-  CreateMainFrame();
+  CreateTheMainFrames();
+
+  ColorMgr = new TColor;
   
   AnalysisMgr = ADAQAnalysisManager::GetInstance();
-  AnalysisMgr->SetEmbeddedCanvasPointer(Canvas_EC);
+
+  GraphicsMgr = ADAQGraphicsManager::GetInstance();
+  GraphicsMgr->SetCanvasPointer(Canvas_EC->GetCanvas());
 }
 
 
@@ -48,7 +56,7 @@ ADAQAnalysisInterface::~ADAQAnalysisInterface()
 {;}
 
 
-void ADAQAnalysisInterface::CreateMainFrame()
+void ADAQAnalysisInterface::CreateTheMainFrames()
 {
   /////////////////////////
   // Create the menu bar //
@@ -76,20 +84,20 @@ void ADAQAnalysisInterface::CreateMainFrame()
   // Create the main frame to hold the options and canvas //
   //////////////////////////////////////////////////////////
 
-  TGHorizontalFrame *OptionsAndCanvas_HF = new TGHorizontalFrame(this);
-  OptionsAndCanvas_HF->SetBackgroundColor(ColorManager->Number2Pixel(16));
-  AddFrame(OptionsAndCanvas_HF, new TGLayoutHints(kLHintsTop, 5, 5,5,5));
+  AddFrame(OptionsAndCanvas_HF = new TGHorizontalFrame(this),
+	   new TGLayoutHints(kLHintsTop, 5, 5,5,5));
+  OptionsAndCanvas_HF->SetBackgroundColor(ColorMgr->Number2Pixel(16));
 
   
   //////////////////////////////////////////////////////////////
   // Create the left-side vertical options frame with tab holder 
 
   TGVerticalFrame *Options_VF = new TGVerticalFrame(OptionsAndCanvas_HF);
-  Options_VF->SetBackgroundColor(ColorManager->Number2Pixel(16));
+  Options_VF->SetBackgroundColor(ColorMgr->Number2Pixel(16));
   OptionsAndCanvas_HF->AddFrame(Options_VF);
   
   TGTab *OptionsTabs_T = new TGTab(Options_VF);
-  OptionsTabs_T->SetBackgroundColor(ColorManager->Number2Pixel(16));
+  OptionsTabs_T->SetBackgroundColor(ColorMgr->Number2Pixel(16));
   Options_VF->AddFrame(OptionsTabs_T, new TGLayoutHints(kLHintsLeft, 15,15,5,5));
 
 
@@ -98,40 +106,64 @@ void ADAQAnalysisInterface::CreateMainFrame()
 
   // The tabbed frame to hold waveform widgets
   TGCompositeFrame *WaveformOptionsTab_CF = OptionsTabs_T->AddTab("Waveform");
-  TGCompositeFrame *WaveformOptions_CF = new TGCompositeFrame(WaveformOptionsTab_CF, 1, 1, kVerticalFrame);
+  WaveformOptionsTab_CF->AddFrame(WaveformOptions_CF = new TGCompositeFrame(WaveformOptionsTab_CF, 1, 1, kVerticalFrame));
   WaveformOptions_CF->Resize(320,735);
   WaveformOptions_CF->ChangeOptions(WaveformOptions_CF->GetOptions() | kFixedSize);
-  WaveformOptionsTab_CF->AddFrame(WaveformOptions_CF);
 
   // The tabbed frame to hold spectrum widgets
   TGCompositeFrame *SpectrumOptionsTab_CF = OptionsTabs_T->AddTab("Spectrum");
-  TGCompositeFrame *SpectrumOptions_CF = new TGCompositeFrame(SpectrumOptionsTab_CF, 1, 1, kVerticalFrame);
+  SpectrumOptionsTab_CF->AddFrame(SpectrumOptions_CF = new TGCompositeFrame(SpectrumOptionsTab_CF, 1, 1, kVerticalFrame));
   SpectrumOptions_CF->Resize(320,735);
   SpectrumOptions_CF->ChangeOptions(SpectrumOptions_CF->GetOptions() | kFixedSize);
-  SpectrumOptionsTab_CF->AddFrame(SpectrumOptions_CF);
 
   // The tabbed frame to hold analysis widgets
   TGCompositeFrame *AnalysisOptionsTab_CF = OptionsTabs_T->AddTab("Analysis");
-  TGCompositeFrame *AnalysisOptions_CF = new TGCompositeFrame(AnalysisOptionsTab_CF, 1, 1, kVerticalFrame);
+  AnalysisOptionsTab_CF->AddFrame(AnalysisOptions_CF = new TGCompositeFrame(AnalysisOptionsTab_CF, 1, 1, kVerticalFrame));
   AnalysisOptions_CF->Resize(320,735);
   AnalysisOptions_CF->ChangeOptions(AnalysisOptions_CF->GetOptions() | kFixedSize);
-  AnalysisOptionsTab_CF->AddFrame(AnalysisOptions_CF);
 
   // The tabbed frame to hold graphical widgets
   TGCompositeFrame *GraphicsOptionsTab_CF = OptionsTabs_T->AddTab("Graphics");
-  TGCompositeFrame *GraphicsOptions_CF = new TGCompositeFrame(GraphicsOptionsTab_CF, 1, 1, kVerticalFrame);
+  GraphicsOptionsTab_CF->AddFrame(GraphicsOptions_CF = new TGCompositeFrame(GraphicsOptionsTab_CF, 1, 1, kVerticalFrame));
   GraphicsOptions_CF->Resize(320,735);
   GraphicsOptions_CF->ChangeOptions(GraphicsOptions_CF->GetOptions() | kFixedSize);
-  GraphicsOptionsTab_CF->AddFrame(GraphicsOptions_CF);
 
   // The tabbed frame to hold parallel processing widgets
   TGCompositeFrame *ProcessingOptionsTab_CF = OptionsTabs_T->AddTab("Processing");
-  TGCompositeFrame *ProcessingOptions_CF = new TGCompositeFrame(ProcessingOptionsTab_CF, 1, 1, kVerticalFrame);
+  ProcessingOptionsTab_CF->AddFrame(ProcessingOptions_CF = new TGCompositeFrame(ProcessingOptionsTab_CF, 1, 1, kVerticalFrame));
   ProcessingOptions_CF->Resize(320,735);
   ProcessingOptions_CF->ChangeOptions(ProcessingOptions_CF->GetOptions() | kFixedSize);
-  ProcessingOptionsTab_CF->AddFrame(ProcessingOptions_CF);
+
+  FillWaveformFrame();
+  FillSpectrumFrame();
+  FillAnalysisFrame();
+  FillGraphicsFrame();
+  FillProcessingFrame();
+  FillCanvasFrame();
+
+  //////////////////////////////////////
+  // Finalize options and map windows //
+  //////////////////////////////////////
+  
+  SetBackgroundColor(ColorMgr->Number2Pixel(16));
+  
+  // Create a string that will be located in the title bar of the
+  // ADAQAnalysisGUI to identify the version number of the code
+  string TitleString;
+  if(VersionString == "Development")
+    TitleString = "ADAQ Analysis Code (Development version)                                             Fear is the mind-killer.";
+  else
+    TitleString = "ADAQ Analysis Code (Production version " + VersionString + ")                                       Fear is the mind-killer.";
+
+  SetWindowName(TitleString.c_str());
+  MapSubwindows();
+  Resize(1125,800);
+  MapWindow();
+}
 
 
+void ADAQAnalysisInterface::FillWaveformFrame()
+{
   /////////////////////////////////////////
   // Fill the waveform options tabbed frame
   
@@ -285,8 +317,11 @@ void ADAQAnalysisInterface::CreateMainFrame()
   WaveformOptions_CF->AddFrame(PlotTrigger_CB = new TGCheckButton(WaveformOptions_CF, "Plot trigger", PlotTrigger_CB_ID),
 		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
   PlotTrigger_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+}
 
 
+void ADAQAnalysisInterface::FillSpectrumFrame()
+{
   /////////////////////////////////////////
   // Fill the spectrum options tabbed frame
   
@@ -543,12 +578,15 @@ void ADAQAnalysisInterface::CreateMainFrame()
   SpectrumFrame_VF->AddFrame(CreateSpectrum_TB = new TGTextButton(SpectrumFrame_VF, "Create spectrum", CreateSpectrum_TB_ID),
 		       new TGLayoutHints(kLHintsCenterX | kLHintsTop, 5,5,0,0));
   CreateSpectrum_TB->Resize(200, 30);
-  CreateSpectrum_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
-  CreateSpectrum_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
+  CreateSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  CreateSpectrum_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   CreateSpectrum_TB->ChangeOptions(CreateSpectrum_TB->GetOptions() | kFixedSize);
   CreateSpectrum_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
-  
+}
 
+
+void ADAQAnalysisInterface::FillAnalysisFrame()
+{
   /////////////////////////////////////////
   // Fill the analysis options tabbed frame
 
@@ -570,6 +608,8 @@ void ADAQAnalysisInterface::CreateMainFrame()
   PSDAnalysis_GF->AddFrame(PSDChannel_CBL = new ADAQComboBoxWithLabel(PSDAnalysis_GF, "", -1),
                            new TGLayoutHints(kLHintsNormal, 0,5,0,0));
 
+  stringstream ss;
+  string entry;
   for(int ch=0; ch<NumDataChannels; ch++){
     ss << ch;
     entry.assign("Channel " + ss.str());
@@ -728,8 +768,8 @@ void ADAQAnalysisInterface::CreateMainFrame()
   PSDAnalysis_GF->AddFrame(PSDCalculate_TB = new TGTextButton(PSDAnalysis_GF, "Create PSD histogram", PSDCalculate_TB_ID),
                            new TGLayoutHints(kLHintsNormal, 0,5,5,5));
   PSDCalculate_TB->Resize(200,30);
-  PSDCalculate_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
-  PSDCalculate_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
+  PSDCalculate_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  PSDCalculate_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   PSDCalculate_TB->ChangeOptions(PSDCalculate_TB->GetOptions() | kFixedSize);
   PSDCalculate_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
   PSDCalculate_TB->SetState(kButtonDisabled);
@@ -762,8 +802,8 @@ void ADAQAnalysisInterface::CreateMainFrame()
 
   CountRate_GF->AddFrame(CalculateCountRate_TB = new TGTextButton(CountRate_GF, "Calculate count rate", CountRate_TB_ID),
                          new TGLayoutHints(kLHintsNormal, 5,5,5,5));
-  CalculateCountRate_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
-  CalculateCountRate_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
+  CalculateCountRate_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  CalculateCountRate_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   CalculateCountRate_TB->Resize(200,30);
   CalculateCountRate_TB->ChangeOptions(CalculateCountRate_TB->GetOptions() | kFixedSize);
   CalculateCountRate_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
@@ -773,7 +813,7 @@ void ADAQAnalysisInterface::CreateMainFrame()
   InstCountRate_NEFL->GetEntry()->Resize(100,20);
   InstCountRate_NEFL->GetEntry()->SetState(kButtonDisabled);
   InstCountRate_NEFL->GetEntry()->SetAlignment(kTextCenterX);
-  InstCountRate_NEFL->GetEntry()->SetBackgroundColor(ColorManager->Number2Pixel(19));
+  InstCountRate_NEFL->GetEntry()->SetBackgroundColor(ColorMgr->Number2Pixel(19));
   InstCountRate_NEFL->GetEntry()->ChangeOptions(InstCountRate_NEFL->GetEntry()->GetOptions() | kFixedSize);
 
   CountRate_GF->AddFrame(AvgCountRate_NEFL = new ADAQNumberEntryFieldWithLabel(CountRate_GF, "Avg. count rate [1/s]", -1),
@@ -781,10 +821,13 @@ void ADAQAnalysisInterface::CreateMainFrame()
   AvgCountRate_NEFL->GetEntry()->Resize(100,20);
   AvgCountRate_NEFL->GetEntry()->SetState(kButtonDisabled);
   AvgCountRate_NEFL->GetEntry()->SetAlignment(kTextCenterX);
-  AvgCountRate_NEFL->GetEntry()->SetBackgroundColor(ColorManager->Number2Pixel(19));
+  AvgCountRate_NEFL->GetEntry()->SetBackgroundColor(ColorMgr->Number2Pixel(19));
   AvgCountRate_NEFL->GetEntry()->ChangeOptions(AvgCountRate_NEFL->GetEntry()->GetOptions() | kFixedSize);
+}
 
 
+void ADAQAnalysisInterface::FillGraphicsFrame()
+{
   /////////////////////////////////////////
   // Fill the graphics options tabbed frame
 
@@ -854,16 +897,16 @@ void ADAQAnalysisInterface::CreateMainFrame()
   
   GraphicsFrame_VF->AddFrame(ReplotWaveform_TB = new TGTextButton(GraphicsFrame_VF, "Replot waveform", ReplotWaveform_TB_ID),
 			       new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
-  ReplotWaveform_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
-  ReplotWaveform_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
+  ReplotWaveform_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  ReplotWaveform_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   ReplotWaveform_TB->Resize(200,30);
   ReplotWaveform_TB->ChangeOptions(ReplotWaveform_TB->GetOptions() | kFixedSize);
   ReplotWaveform_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
 
   GraphicsFrame_VF->AddFrame(ReplotSpectrum_TB = new TGTextButton(GraphicsFrame_VF, "Replot spectrum", ReplotSpectrum_TB_ID),
 			     new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
-  ReplotSpectrum_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
-  ReplotSpectrum_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
+  ReplotSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  ReplotSpectrum_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   ReplotSpectrum_TB->Resize(200,30);
   ReplotSpectrum_TB->ChangeOptions(ReplotSpectrum_TB->GetOptions() | kFixedSize);
   ReplotSpectrum_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
@@ -871,15 +914,15 @@ void ADAQAnalysisInterface::CreateMainFrame()
   GraphicsFrame_VF->AddFrame(ReplotSpectrumDerivative_TB = new TGTextButton(GraphicsFrame_VF, "Replot spectrum derivative", ReplotSpectrumDerivative_TB_ID),
 			     new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
   ReplotSpectrumDerivative_TB->Resize(200, 30);
-  ReplotSpectrumDerivative_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
-  ReplotSpectrumDerivative_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
+  ReplotSpectrumDerivative_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  ReplotSpectrumDerivative_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   ReplotSpectrumDerivative_TB->ChangeOptions(ReplotSpectrumDerivative_TB->GetOptions() | kFixedSize);
   ReplotSpectrumDerivative_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
 
   GraphicsFrame_VF->AddFrame(ReplotPSDHistogram_TB = new TGTextButton(GraphicsFrame_VF, "Replot PSD histogram", ReplotPSDHistogram_TB_ID),
 			       new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
-  ReplotPSDHistogram_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
-  ReplotPSDHistogram_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
+  ReplotPSDHistogram_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  ReplotPSDHistogram_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   ReplotPSDHistogram_TB->Resize(200,30);
   ReplotPSDHistogram_TB->ChangeOptions(ReplotPSDHistogram_TB->GetOptions() | kFixedSize);
   ReplotPSDHistogram_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
@@ -1059,8 +1102,11 @@ void ADAQAnalysisInterface::CreateMainFrame()
   PaletteY2_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PaletteY2_NEL->GetEntry()->SetNumber(0.65);
   PaletteY2_NEL->GetEntry()->Resize(50, 20);
+}
 
 
+void ADAQAnalysisInterface::FillProcessingFrame()
+{
   ///////////////////////////////////
   // Fill the processing widget frame
   
@@ -1110,7 +1156,9 @@ void ADAQAnalysisInterface::CreateMainFrame()
   
   PearsonAnalysis_GF->AddFrame(PearsonChannel_CBL = new ADAQComboBoxWithLabel(PearsonAnalysis_GF, "Contains signal", -1),
 			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  
+
+  stringstream ss;
+  string entry;
   for(int ch=0; ch<NumDataChannels; ch++){
     ss << ch;
     entry.assign("Channel " + ss.str());
@@ -1221,7 +1269,7 @@ void ADAQAnalysisInterface::CreateMainFrame()
   WaveformDesplicerName_HF->AddFrame(DesplicedFileSelection_TB = new TGTextButton(WaveformDesplicerName_HF, "File ... ", DesplicedFileSelection_TB_ID),
 				     new TGLayoutHints(kLHintsLeft, 0,5,5,0));
   DesplicedFileSelection_TB->Resize(60,25);
-  DesplicedFileSelection_TB->SetBackgroundColor(ColorManager->Number2Pixel(18));
+  DesplicedFileSelection_TB->SetBackgroundColor(ColorMgr->Number2Pixel(18));
   DesplicedFileSelection_TB->ChangeOptions(DesplicedFileSelection_TB->GetOptions() | kFixedSize);
   DesplicedFileSelection_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
   
@@ -1229,23 +1277,26 @@ void ADAQAnalysisInterface::CreateMainFrame()
 				     new TGLayoutHints(kLHintsLeft, 5,0,5,5));
   DesplicedFileName_TE->Resize(180,25);
   DesplicedFileName_TE->SetAlignment(kTextRight);
-  DesplicedFileName_TE->SetBackgroundColor(ColorManager->Number2Pixel(18));
+  DesplicedFileName_TE->SetBackgroundColor(ColorMgr->Number2Pixel(18));
   DesplicedFileName_TE->ChangeOptions(DesplicedFileName_TE->GetOptions() | kFixedSize);
   
   WaveformDesplicer_GF->AddFrame(DesplicedFileCreation_TB = new TGTextButton(WaveformDesplicer_GF, "Create despliced file", DesplicedFileCreation_TB_ID),
 				 new TGLayoutHints(kLHintsLeft, 0,0,5,5));
   DesplicedFileCreation_TB->Resize(200, 30);
-  DesplicedFileCreation_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
-  DesplicedFileCreation_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
+  DesplicedFileCreation_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  DesplicedFileCreation_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   DesplicedFileCreation_TB->ChangeOptions(DesplicedFileCreation_TB->GetOptions() | kFixedSize);
   DesplicedFileCreation_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+}
 
 
+void ADAQAnalysisInterface::FillCanvasFrame()
+{
   /////////////////////////////////////
   // Canvas and associated widget frame
 
   TGVerticalFrame *Canvas_VF = new TGVerticalFrame(OptionsAndCanvas_HF);
-  Canvas_VF->SetBackgroundColor(ColorManager->Number2Pixel(16));
+  Canvas_VF->SetBackgroundColor(ColorMgr->Number2Pixel(16));
   OptionsAndCanvas_HF->AddFrame(Canvas_VF, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
 
   // ADAQ ROOT file name text entry
@@ -1254,46 +1305,46 @@ void ADAQAnalysisInterface::CreateMainFrame()
   FileName_TE->Resize(700,20);
   FileName_TE->SetState(false);
   FileName_TE->SetAlignment(kTextCenterX);
-  FileName_TE->SetBackgroundColor(ColorManager->Number2Pixel(18));
+  FileName_TE->SetBackgroundColor(ColorMgr->Number2Pixel(18));
   FileName_TE->ChangeOptions(FileName_TE->GetOptions() | kFixedSize);
 
   // File statistics horizontal frame
 
   TGHorizontalFrame *FileStats_HF = new TGHorizontalFrame(Canvas_VF,700,30);
-  FileStats_HF->SetBackgroundColor(ColorManager->Number2Pixel(16));
+  FileStats_HF->SetBackgroundColor(ColorMgr->Number2Pixel(16));
   Canvas_VF->AddFrame(FileStats_HF, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 5,5,0,5));
 
   // Waveforms
 
   TGHorizontalFrame *WaveformNELAndLabel_HF = new TGHorizontalFrame(FileStats_HF);
-  WaveformNELAndLabel_HF->SetBackgroundColor(ColorManager->Number2Pixel(16));
+  WaveformNELAndLabel_HF->SetBackgroundColor(ColorMgr->Number2Pixel(16));
   FileStats_HF->AddFrame(WaveformNELAndLabel_HF, new TGLayoutHints(kLHintsLeft, 5,35,0,0));
 
   WaveformNELAndLabel_HF->AddFrame(Waveforms_NEL = new TGNumberEntryField(WaveformNELAndLabel_HF,-1),
 				  new TGLayoutHints(kLHintsLeft,5,5,0,0));
-  Waveforms_NEL->SetBackgroundColor(ColorManager->Number2Pixel(18));
+  Waveforms_NEL->SetBackgroundColor(ColorMgr->Number2Pixel(18));
   Waveforms_NEL->SetAlignment(kTextCenterX);
   Waveforms_NEL->SetState(false);
   
   WaveformNELAndLabel_HF->AddFrame(WaveformLabel_L = new TGLabel(WaveformNELAndLabel_HF, " Waveforms "),
 				   new TGLayoutHints(kLHintsLeft,0,5,3,0));
-  WaveformLabel_L->SetBackgroundColor(ColorManager->Number2Pixel(18));
+  WaveformLabel_L->SetBackgroundColor(ColorMgr->Number2Pixel(18));
 
   // Record length
 
   TGHorizontalFrame *RecordLengthNELAndLabel_HF = new TGHorizontalFrame(FileStats_HF);
-  RecordLengthNELAndLabel_HF->SetBackgroundColor(ColorManager->Number2Pixel(16));
+  RecordLengthNELAndLabel_HF->SetBackgroundColor(ColorMgr->Number2Pixel(16));
   FileStats_HF->AddFrame(RecordLengthNELAndLabel_HF, new TGLayoutHints(kLHintsLeft, 5,5,0,0));
 
   RecordLengthNELAndLabel_HF->AddFrame(RecordLength_NEL = new TGNumberEntryField(RecordLengthNELAndLabel_HF,-1),
 				      new TGLayoutHints(kLHintsLeft,5,5,0,0));
-  RecordLength_NEL->SetBackgroundColor(ColorManager->Number2Pixel(18));
+  RecordLength_NEL->SetBackgroundColor(ColorMgr->Number2Pixel(18));
   RecordLength_NEL->SetAlignment(kTextCenterX);
   RecordLength_NEL->SetState(false);
 
   RecordLengthNELAndLabel_HF->AddFrame(RecordLengthLabel_L = new TGLabel(RecordLengthNELAndLabel_HF, " Record length "),
 				       new TGLayoutHints(kLHintsLeft,0,5,3,0));
-  RecordLengthLabel_L->SetBackgroundColor(ColorManager->Number2Pixel(18));
+  RecordLengthLabel_L->SetBackgroundColor(ColorMgr->Number2Pixel(18));
 
   // The embedded canvas
 
@@ -1344,41 +1395,21 @@ void ADAQAnalysisInterface::CreateMainFrame()
   SpectrumIntegrationLimits_DHS->Connect("PositionChanged()", "ADAQAnalysisInterface", this, "HandleDoubleSliders()");
 		      
   TGHorizontalFrame *SubCanvas_HF = new TGHorizontalFrame(Canvas_VF);
-  SubCanvas_HF->SetBackgroundColor(ColorManager->Number2Pixel(16));
+  SubCanvas_HF->SetBackgroundColor(ColorMgr->Number2Pixel(16));
   Canvas_VF->AddFrame(SubCanvas_HF, new TGLayoutHints(kLHintsRight | kLHintsBottom, 5,5,20,5));
   
   SubCanvas_HF->AddFrame(ProcessingProgress_PB = new TGHProgressBar(SubCanvas_HF, TGProgressBar::kFancy, 400),
 			 new TGLayoutHints(kLHintsLeft, 5,55,7,5));
-  ProcessingProgress_PB->SetBarColor(ColorManager->Number2Pixel(41));
+  ProcessingProgress_PB->SetBarColor(ColorMgr->Number2Pixel(41));
   ProcessingProgress_PB->ShowPosition(kTRUE, kFALSE, "%0.f% waveforms processed");
   
   SubCanvas_HF->AddFrame(Quit_TB = new TGTextButton(SubCanvas_HF, "Access standby", Quit_TB_ID),
 			 new TGLayoutHints(kLHintsRight, 5,5,0,5));
   Quit_TB->Resize(200, 40);
-  Quit_TB->SetBackgroundColor(ColorManager->Number2Pixel(36));
-  Quit_TB->SetForegroundColor(ColorManager->Number2Pixel(0));
+  Quit_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  Quit_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   Quit_TB->ChangeOptions(Quit_TB->GetOptions() | kFixedSize);
   Quit_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTerminate()");
-
-  
-  //////////////////////////////////////
-  // Finalize options and map windows //
-  //////////////////////////////////////
-  
-  SetBackgroundColor(ColorManager->Number2Pixel(16));
-  
-  // Create a string that will be located in the title bar of the
-  // ADAQAnalysisGUI to identify the version number of the code
-  string TitleString;
-  if(VersionString == "Development")
-    TitleString = "ADAQ Analysis Code (Development version)                                             Fear is the mind-killer.";
-  else
-    TitleString = "ADAQ Analysis Code (Production version " + VersionString + ")                                       Fear is the mind-killer.";
-
-  SetWindowName(TitleString.c_str());
-  MapSubwindows();
-  Resize(1125,800);
-  MapWindow();
 }
 
 
@@ -1404,9 +1435,8 @@ void ADAQAnalysisInterface::HandleMenu(int MenuID)
     if(FileInformation.fFilename==NULL)
       CreateMessageBox("No valid ADAQ ROOT file was selected so there's nothing to load!\nPlease select a valid file!","Stop");
     else{
-      // Set the file name to a class member object. Note that the
-      // FileInformation.fFilename variable storeds the absolute path
-      // to the data file selected by the user
+      // Note that the FileInformation.fFilename variable storeds the
+      // absolute path to the data file selected by the user
       string FileName = FileInformation.fFilename;
       
       // Strip the data file name off the absolute file path and set
@@ -1418,7 +1448,54 @@ void ADAQAnalysisInterface::HandleMenu(int MenuID)
 	DataDirectory  = FileName.substr(0,pos);
       
       // Load the ROOT file
-      //LoadADAQRootFile();
+      bool FileLoaded = AnalysisMgr->LoadADAQRootFile(FileName);
+
+      if(FileLoaded){
+	int WaveformsInFile = AnalysisMgr->GetADAQNumberOfWaveforms();
+	ADAQRootMeasParams *AMP = AnalysisMgr->GetADAQMeasurementParameters();
+	int RecordLength = AMP->RecordLength;
+
+	WaveformSelector_HS->SetRange(1, WaveformsInFile);
+
+	WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
+	WaveformsToHistogram_NEL->GetEntry()->SetNumber(WaveformsInFile);
+
+	// Update the ROOT widgets above the embedded canvas to display
+	// the file name, total waveofmrs, and record length
+	FileName_TE->SetText(FileName.c_str());
+	Waveforms_NEL->SetNumber(WaveformsInFile);
+	RecordLength_NEL->SetNumber(RecordLength);
+  
+	BaselineCalcMin_NEL->GetEntry()->SetLimitValues(0,RecordLength-1);
+	BaselineCalcMin_NEL->GetEntry()->SetNumber(0);
+  
+	BaselineCalcMax_NEL->GetEntry()->SetLimitValues(1,RecordLength);
+  
+	int BaselineCalcMax = 0;
+	(RecordLength > 1500) ? BaselineCalcMax = 750 : BaselineCalcMax = 100;
+	BaselineCalcMax_NEL->GetEntry()->SetNumber(BaselineCalcMax);
+  
+	PearsonLowerLimit_NEL->GetEntry()->SetLimitValues(0, RecordLength-1);
+	PearsonLowerLimit_NEL->GetEntry()->SetNumber(0);
+
+	PearsonMiddleLimit_NEL->GetEntry()->SetLimitValues(1, RecordLength-1);
+	PearsonMiddleLimit_NEL->GetEntry()->SetNumber(RecordLength/2);
+
+	PearsonUpperLimit_NEL->GetEntry()->SetLimitValues(1, RecordLength);
+	PearsonUpperLimit_NEL->GetEntry()->SetNumber(RecordLength);
+  
+	DesplicedWaveformNumber_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
+	DesplicedWaveformNumber_NEL->GetEntry()->SetNumber(WaveformsInFile);
+  
+	PSDWaveforms_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
+	PSDWaveforms_NEL->GetEntry()->SetNumber(WaveformsInFile);
+  
+	// Update the XAxis minimum and maximum values for correct plotting
+	//	XAxisMin = 0;
+	//	XAxisMax = RecordLength;
+      }
+      else
+	CreateMessageBox("The ADAQ ROOT file that you specified fail to load for some reason!\n","Stop");
     }
     break;
   }
@@ -1426,34 +1503,33 @@ void ADAQAnalysisInterface::HandleMenu(int MenuID)
   case MenuFileSaveSpectrum_ID:{
     
     if(AnalysisMgr->GetSpectrumExists()){
-      //      CreateMessageBox("No spectra have been created yet and, therefore, there is nothing to save!","Stop");
-      //      break;
-      //    }
+      CreateMessageBox("No spectra have been created yet and, therefore, there is nothing to save!","Stop");
+      break;
     }
       
-    //SaveHistogramData(Spectrum_H);
+    AnalysisMgr->SaveHistogramData("Spectrum");
     break;
   }
 
   case MenuFileSaveSpectrumDerivative_ID:{
 
-    if(!TheAnalysisManager->GetSpectrumDerivativeExists()){
+    if(!AnalysisMgr->GetSpectrumDerivativeExists()){
       CreateMessageBox("No spectrum derivatives have been created yet and, therefore, there is nothing to save!","Stop");
       break;
     }
 
-    //    SaveHistogramData(SpectrumDerivative_H);
+    AnalysisMgr->SaveHistogramData("SpectrumDerivative");
     break;
   }
     
   case MenuFileSavePSDHistogramSlice_ID:{
     
-    if(!TheAnalysisManager->GetPSDHistogramExists()){
+    if(!AnalysisMgr->GetPSDHistogramExists()){
       CreateMessageBox("No PSD histogram slices have been created yet and, therefore, there is nothing to save!","Stop");
       break;
     }
 
-    //    SaveHistogramData(PSDHistogramSlice_H);
+    AnalysisMgr->SaveHistogramData("PSD");
     break;
   }
 
@@ -1475,7 +1551,7 @@ void ADAQAnalysisInterface::HandleMenu(int MenuID)
     // Use the ROOT prebuilt file dialog machinery
     TGFileInfo FileInformation;
     FileInformation.fFileTypes = FileTypes;
-    FileInformation.fIniDir = StrDup(PrintCanvasDirectory.c_str());
+    FileInformation.fIniDir = StrDup(PrintDirectory.c_str());
 
     new TGFileDialog(gClient->GetRoot(), this, kFDSave, &FileInformation);
     
@@ -1495,7 +1571,7 @@ void ADAQAnalysisInterface::HandleMenu(int MenuID)
       // default directory that automically opens
       Found = GraphicFileName.find_last_of("/");
       if(Found != string::npos)
-	PrintCanvasDirectory  = ADAQRootFileName.substr(0,Found);
+	PrintDirectory  = CurrentFileName.substr(0,Found);
       
       Found = GraphicFileName.find_last_of(".");
       if(Found != string::npos)
@@ -1530,13 +1606,15 @@ void ADAQAnalysisInterface::HandleMenu(int MenuID)
 
 void ADAQAnalysisInterface::HandleTextButtons()
 {
-  //if(!AnalysisMgr->GetFileOpen())
-  //    return;
+  if(!AnalysisMgr->GetFileOpen())
+    return;
   
   // Get the currently active widget and its ID, i.e. the widget from
   // which the user has just sent a signal...
   TGTextButton *ActiveTextButton = (TGTextButton *) gTQSender;
   int ActiveTextButtonID  = ActiveTextButton->WidgetId();
+
+  SaveSettings();
 
   switch(ActiveTextButtonID){
 
@@ -1553,7 +1631,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
     //    XAxisMin = 0;
     //    XAxisMax = RecordLength;
     
-    //    PlotWaveform();
+    GraphicsMgr->PlotWaveform(ADAQSettings);
     break;
 
   case ResetYAxisLimits_TB_ID:
@@ -1565,8 +1643,8 @@ void ADAQAnalysisInterface::HandleTextButtons()
     //    YAxisMin = 0;
     //    YAxisMax = V1720MaximumBit;
 
-    //    PlotWaveform();
-    //    break;
+    GraphicsMgr->PlotWaveform(ADAQSettings);
+    break;
 
 
     //////////////////////////////////////////
@@ -1741,7 +1819,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
     // Actions to replot the spectrum
 
   case ReplotWaveform_TB_ID:
-    //PlotWaveform();
+    GraphicsMgr->PlotWaveform(ADAQSettings);
     break;
 
     /////////////////////////////////
@@ -1750,12 +1828,9 @@ void ADAQAnalysisInterface::HandleTextButtons()
   case ReplotSpectrum_TB_ID:
     
     if(AnalysisMgr->GetSpectrumExists())
-      {}//PlotSpectrum();
+      GraphicsMgr->PlotSpectrum(ADAQSettings);
     else
       CreateMessageBox("A valid spectrum does not yet exist; therefore, it is difficult to replot it!","Stop");
-
-    AnalysisMgr->TestDraw();
-
     break;
     
     ////////////////////////////////////////////
@@ -1765,7 +1840,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
     
     if(AnalysisMgr->GetSpectrumExists()){
       SpectrumOverplotDerivative_CB->SetState(kButtonUp);
-      //PlotSpectrumDerivative();
+      GraphicsMgr->PlotSpectrumDerivative(ADAQSettings);
     }
     else
       CreateMessageBox("A valid spectrum does not yet exist; therefore, the spectrum derivative cannot be plotted!","Stop");
@@ -1777,7 +1852,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
   case ReplotPSDHistogram_TB_ID:
     
     if(AnalysisMgr->GetPSDHistogramExists())
-      {}//PlotPSDHistogram();
+      GraphicsMgr->PlotPSDHistogram(ADAQSettings);
     else
       CreateMessageBox("A valid PSD histogram does not yet exist; therefore, replotting cannot be achieved!","Stop");
     break;
@@ -1794,10 +1869,10 @@ void ADAQAnalysisInterface::HandleTextButtons()
     // Create spectrum with sequential processing
     if(ProcessingSeq_RB->IsDown()){
       //CreateSpectrum();
-      //PlotSpectrum();
+      GraphicsMgr->PlotSpectrum(ADAQSettings);
       
       if(SpectrumOverplotDerivative_CB->IsDown())
-	{};//PlotSpectrumDerivative();
+	GraphicsMgr->PlotSpectrumDerivative(ADAQSettings);
     }
     
     // Create spectrum with parallel processing
@@ -1815,7 +1890,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
     
     if(ProcessingSeq_RB->IsDown()){
       //CreatePSDHistogram();
-      //PlotPSDHistogram();
+      GraphicsMgr->PlotPSDHistogram(ADAQSettings);
     }
     else
       {}//ProcessWaveformsInParallel("discriminating");
@@ -1833,9 +1908,9 @@ void ADAQAnalysisInterface::HandleTextButtons()
     // files with ".root" extension and despliced ADAQ ROOT files with
     // ".ds.root" extension. 
     string InitialFileName;
-    size_t Pos = ADAQRootFileName.find_last_of("/");
+    size_t Pos = CurrentFileName.find_last_of("/");
     if(Pos != string::npos){
-      string RawFileName = ADAQRootFileName.substr(Pos+1, ADAQRootFileName.size());
+      string RawFileName = CurrentFileName.substr(Pos+1, CurrentFileName.size());
 
       Pos = RawFileName.find_last_of(".");
       if(Pos != string::npos)
@@ -1975,7 +2050,7 @@ void ADAQAnalysisInterface::HandleCheckButtons()
   case PlotVerticalAxisInLog_CB_ID:
   case SetStatsOff_CB_ID:
 
-    switch(CanvasContents){
+    switch(CanvasContentID){
     case zWaveform:
       //PlotWaveform();
       break;
@@ -2116,7 +2191,7 @@ void ADAQAnalysisInterface::HandleCheckButtons()
     // discriminate by pulse shape
     else{
       PSDEnableFilter_CB->SetState(kButtonUp);
-      if(CanvasContents == zWaveform)
+      if(CanvasContentID == zWaveform)
 	{}//PlotWaveform();
     }
 
@@ -2144,7 +2219,7 @@ void ADAQAnalysisInterface::HandleCheckButtons()
 
   case PSDEnableFilterCreation_CB_ID:{
 
-    if(PSDEnableFilterCreation_CB->IsDown() and CanvasContents != zPSDHistogram){
+    if(PSDEnableFilterCreation_CB->IsDown() and CanvasContentID != zPSDHistogram){
       CreateMessageBox("The canvas does not presently contain a PSD histogram! PSD filter creation is not possible!","Stop");
       PSDEnableFilterCreation_CB->SetState(kButtonUp);
       break;
@@ -2154,17 +2229,18 @@ void ADAQAnalysisInterface::HandleCheckButtons()
 
   case PSDEnableFilter_CB_ID:{
     if(PSDEnableFilter_CB->IsDown()){
-      UsePSDFilterManager[PSDChannel] = true;
-      FindPeaks_CB->SetState(kButtonDown);
+      //UsePSDFilterManager[PSDChannel] = true;
+      //FindPeaks_CB->SetState(kButtonDown);
     }
     else
-      UsePSDFilterManager[PSDChannel] = false;
+      {}//UsePSDFilterManager[PSDChannel] = false;
     break;
   }
     
   case PSDPlotTailIntegration_CB_ID:{
     if(!FindPeaks_CB->IsDown())
-      FindPeaks_CB->SetState(kButtonDown);
+      {}
+      //FindPeaks_CB->SetState(kButtonDown);
     //PlotWaveform();
     break;
   }
@@ -2224,17 +2300,16 @@ void ADAQAnalysisInterface::HandleCheckButtons()
 
 void ADAQAnalysisInterface::HandleSliders(int SliderPosition)
 {
+  SaveSettings();
+
   // The slider is used to enable easy selection of waveforms to
   // display. As it slides, do the following...
 
-  // Update the number entry widget that also enables selection of
-  // waveform to plot...
+  // Update the waveform number entry widget 
   WaveformSelector_NEL->GetEntry()->SetNumber(SliderPosition);
 
-  // If an ADAQ ROOT file has been successfully loaded, enable
-  // plotting to occure...
   if(AnalysisMgr->GetFileOpen())
-    {}//PlotWaveform();
+    GraphicsMgr->PlotWaveform(ADAQSettings);
 }
 
 
@@ -2242,6 +2317,8 @@ void ADAQAnalysisInterface::HandleDoubleSliders()
 {
   if(!AnalysisMgr->GetFileOpen())
     return;
+
+  SaveSettings();
   
   // Get the currently active widget and its ID, i.e. the widget from
   // which the user has just sent a signal...
@@ -2254,20 +2331,20 @@ void ADAQAnalysisInterface::HandleDoubleSliders()
   case YAxisLimits_DVS_ID:
   case SpectrumIntegrationLimits_DHS_ID:
     
-    if(CanvasContents == zWaveform)
-      {}//PlotWaveform();
+    if(CanvasContentID == zWaveform)
+      GraphicsMgr->PlotWaveform(ADAQSettings);
 
-    else if(CanvasContents == zSpectrum and SpectrumExists){
-      {}//PlotSpectrum();
+    else if(CanvasContentID == zSpectrum and AnalysisMgr->GetSpectrumExists()){
+      GraphicsMgr->PlotSpectrum(ADAQSettings);
       if(SpectrumOverplotDerivative_CB->IsDown())
-	{}//PlotSpectrumDerivative();
+	GraphicsMgr->PlotSpectrumDerivative(ADAQSettings);
     }
     
-    else if(CanvasContents == zSpectrumDerivative and SpectrumExists)
-      {}//PlotSpectrumDerivative();
+    else if(CanvasContentID == zSpectrumDerivative and AnalysisMgr->GetSpectrumExists())
+      GraphicsMgr->PlotSpectrumDerivative(ADAQSettings);
     
-    else if(CanvasContents == zPSDHistogram and PSDHistogramExists)
-      {}//PlotPSDHistogram();
+    else if(CanvasContentID == zPSDHistogram and AnalysisMgr->GetSpectrumExists())
+      GraphicsMgr->PlotPSDHistogram(ADAQSettings);
 
     break;
   }
@@ -2287,18 +2364,18 @@ void ADAQAnalysisInterface::HandleTripleSliderPointer()
 
   // If the pulse spectrum object (Spectrum_H) exists and the user has
   // selected calibration mode via the appropriate check button ...
-  if(AnalysisMgr->GetSpectrumExists() and SpectrumCalibration_CB->IsDown() and CanvasContents == zSpectrum){
+  if(AnalysisMgr->GetSpectrumExists() and SpectrumCalibration_CB->IsDown() and CanvasContentID == zSpectrum){
     
     // Calculate the position along the X-axis of the pulse spectrum
     // (the "area" or "height" in ADC units) based on the current
     // X-axis maximum and the triple slider's pointer position
-    double CalibrationLineXPos = XAxisLimits_THS->GetPointerPosition() * Spectrum_H->GetXaxis()->GetXmax();
+    //double CalibrationLineXPos = XAxisLimits_THS->GetPointerPosition() * Spectrum_H->GetXaxis()->GetXmax();
 
     // Calculate min. and max. on the Y-axis for plotting
     float Min, Max;
     YAxisLimits_DVS->GetPosition(Min, Max);
-    double CalibrationLineYMin = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-Max);
-    double CalibrationLineYMax = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-Min);
+    //double CalibrationLineYMin = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-Max);
+    //double CalibrationLineYMax = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-Min);
 
     // Redraw the pulse spectrum
     //PlotSpectrum();
@@ -2316,17 +2393,18 @@ void ADAQAnalysisInterface::HandleTripleSliderPointer()
 
     // Set the calibration pulse units for the current calibration
     // point based on the X position of the calibration line
-    SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(CalibrationLineXPos);
+    SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(0); // ZSH CalibrationLineXPos);
   }
 }
 
 
 void ADAQAnalysisInterface::HandleNumberEntries()
 { 
-  // Get the currently active widget and its ID, i.e. the widget from
-  // which the user has just sent a signal...
+  // Get the "active" widget object/ID from which a signal has been sent
   TGNumberEntry *ActiveNumberEntry = (TGNumberEntry *) gTQSender;
   int NumberEntryID = ActiveNumberEntry->WidgetId();
+
+  SaveSettings();
 
   switch(NumberEntryID){
 
@@ -2335,9 +2413,11 @@ void ADAQAnalysisInterface::HandleNumberEntries()
     // position of slider if the number entry value changes
   case WaveformSelector_NEL_ID:
     WaveformSelector_HS->SetPosition(WaveformSelector_NEL->GetEntry()->GetIntNumber());
-    if(!AnalysisMgr->GetFileOpen())
-      return;
-    //PlotWaveform();
+    //if(!AnalysisMgr->GetFileOpen())
+    //      return;
+    
+    GraphicsMgr->PlotWaveform(ADAQSettings);
+    
     break;
 
   case MaxPeaks_NEL_ID:
@@ -2396,7 +2476,7 @@ void ADAQAnalysisInterface::HandleNumberEntries()
   case ZAxisOffset_NEL_ID:
   case ZAxisDivs_NEL_ID:
 
-    switch(CanvasContents){
+    switch(CanvasContentID){
     case zWaveform:
       //PlotWaveform();
       break;
@@ -2450,12 +2530,12 @@ void ADAQAnalysisInterface::HandleRadioButtons()
     break;
 
   case PositiveWaveform_RB_ID:
-    WaveformPolarity = 1.0;
+    //WaveformPolarity = 1.0;
     //PlotWaveform();
     break;
     
   case NegativeWaveform_RB_ID:
-    WaveformPolarity = -1.0;
+    //WaveformPolarity = -1.0;
     //PlotWaveform();
     break;
 
@@ -2521,13 +2601,11 @@ void ADAQAnalysisInterface::HandleRadioButtons()
 
   case PearsonPolarityPositive_RB_ID:
     PearsonPolarityNegative_RB->SetState(kButtonUp);
-    PearsonPolarity = 1.0;
     //PlotWaveform();
     break;
 
   case PearsonPolarityNegative_RB_ID:
     PearsonPolarityPositive_RB->SetState(kButtonUp);
-    PearsonPolarity = -1.0;
     //PlotWaveform();
     break;
 
@@ -2544,14 +2622,12 @@ void ADAQAnalysisInterface::HandleRadioButtons()
   case PSDPositiveFilter_RB_ID:
     if(PSDPositiveFilter_RB->IsDown()){
       PSDNegativeFilter_RB->SetState(kButtonUp);
-      PSDFilterPolarity = 1.;
     }
     break;
 
   case PSDNegativeFilter_RB_ID:
     if(PSDNegativeFilter_RB->IsDown()){
       PSDPositiveFilter_RB->SetState(kButtonUp);
-      PSDFilterPolarity = -1.;
     }
     break;
 
@@ -2559,14 +2635,14 @@ void ADAQAnalysisInterface::HandleRadioButtons()
     if(PSDHistogramSliceX_RB->IsDown())
       PSDHistogramSliceY_RB->SetState(kButtonUp);
     
-    if(CanvasContents == zPSDHistogram)
+    if(CanvasContentID == zPSDHistogram)
       {}//PlotPSDHistogram();
     break;
     
   case PSDHistogramSliceY_RB_ID:
     if(PSDHistogramSliceY_RB->IsDown())
       PSDHistogramSliceX_RB->SetState(kButtonUp);
-    if(CanvasContents == zPSDHistogram)
+    if(CanvasContentID == zPSDHistogram)
       {}//PlotPSDHistogram();
     break;
     
@@ -2628,373 +2704,146 @@ void ADAQAnalysisInterface::HandleTerminate()
 { gApplication->Terminate(); }
 
 
-
-// Method to simply readout out the values of the relevant ROOT
-// widgets and saves the values to the appropriate class member
-// variables.  Ultimately, this is done to ensure that the waveform
-// processing algorithms may be run in parallel architecture (in which
-// the ROOT widgets are not built) with the necessary variables
-// values, which are set by the ROOT widgets. The ROOT widget values
-// are set to member function variables here for access during
-// waveform processing in either sequential (not necessary) or
-// parallal (necessary) architecture
-void ADAQAnalysisInterface::ReadoutWidgetValues()
+void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
 {
-  /*
-  // Order of the following class data member setting processes ro
-  // rughly mimicks the order that their corresponding widgets appears
-  // graphically in the GUI
-  
-  //////////////////////////////////////
-  // Values from "Waveform" tabbed frame
+  if(ADAQSettings)
+    delete ADAQSettings;
 
-  Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
-  WaveformToPlot = WaveformSelector_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings = new ADAQAnalysisSettings;
 
-  RawWaveform = RawWaveform_RB->IsDown();
-  BaselineSubtractedWaveform = BaselineSubtractedWaveform_RB->IsDown();
-  ZeroSuppressionWaveform = ZeroSuppressionWaveform_RB->IsDown();
-  
-  (PositiveWaveform_RB->IsDown()) ? WaveformPolarity = 1.0 : WaveformPolarity = -1.0;
-
-  ZeroSuppressionCeiling = ZeroSuppressionCeiling_NEL->GetEntry()->GetIntNumber();
-
-  MaxPeaks = MaxPeaks_NEL->GetEntry()->GetIntNumber();
-  Sigma = Sigma_NEL->GetEntry()->GetNumber();
-  Resolution = Resolution_NEL->GetEntry()->GetNumber();
-  Floor = Floor_NEL->GetEntry()->GetIntNumber();
-
-  PlotFloor = PlotFloor_CB->IsDown();
-  PlotCrossings = PlotCrossings_CB->IsDown();
-  PlotPeakIntegratingRegion = PlotPeakIntegratingRegion_CB->IsDown();
-
-  UsePileupRejection = UsePileupRejection_CB->IsDown();
-
-  BaselineCalcMin = BaselineCalcMin_NEL->GetEntry()->GetIntNumber();
-  BaselineCalcMax = BaselineCalcMax_NEL->GetEntry()->GetIntNumber();
-
-
-  //////////////////////////////////////
-  // Values from "Spectrum" tabbed frame
-
-  WaveformsToHistogram = WaveformsToHistogram_NEL->GetEntry()->GetIntNumber();
-  SpectrumNumBins = SpectrumNumBins_NEL->GetEntry()->GetIntNumber();
-  SpectrumMinBin = SpectrumMinBin_NEL->GetEntry()->GetIntNumber();
-  SpectrumMaxBin = SpectrumMaxBin_NEL->GetEntry()->GetIntNumber();
-
-  SpectrumTypePAS = SpectrumTypePAS_RB->IsDown();
-  SpectrumTypePHS = SpectrumTypePHS_RB->IsDown();
-
-  IntegrationTypeWholeWaveform = IntegrationTypeWholeWaveform_RB->IsDown();
-  IntegrationTypePeakFinder = IntegrationTypePeakFinder_RB->IsDown();
-
-
-  //////////////////////////////////////////
-  // Values from the "Analysis" tabbed frame
-
-  PSDWaveformsToDiscriminate = PSDWaveforms_NEL->GetEntry()->GetIntNumber();
-  PSDNumTailBins = PSDNumTailBins_NEL->GetEntry()->GetIntNumber();
-  PSDMinTailBin = PSDMinTailBin_NEL->GetEntry()->GetIntNumber();
-  PSDMaxTailBin = PSDMaxTailBin_NEL->GetEntry()->GetIntNumber();
-  
-  PSDChannel = PSDChannel_CBL->GetComboBox()->GetSelected();
-  PSDThreshold = PSDThreshold_NEL->GetEntry()->GetIntNumber();
-  PSDPeakOffset = PSDPeakOffset_NEL->GetEntry()->GetIntNumber();
-  PSDTailOffset = PSDTailOffset_NEL->GetEntry()->GetIntNumber();
-    
-  PSDNumTotalBins = PSDNumTotalBins_NEL->GetEntry()->GetIntNumber();
-  PSDMinTotalBin = PSDMinTotalBin_NEL->GetEntry()->GetIntNumber();
-  PSDMaxTotalBin = PSDMaxTotalBin_NEL->GetEntry()->GetIntNumber();
-  
-  WaveformsToDesplice = DesplicedWaveformNumber_NEL->GetEntry()->GetIntNumber();
-  DesplicedWaveformBuffer = DesplicedWaveformBuffer_NEL->GetEntry()->GetIntNumber();
-  DesplicedWaveformLength = DesplicedWaveformLength_NEL->GetEntry()->GetIntNumber();
-  DesplicedFileName = DesplicedFileName_TE->GetText();
-
-
-  ////////////////////////////////////////
-  // Values from "Processing" tabbed frame
-
-  UpdateFreq = UpdateFreq_NEL->GetEntry()->GetIntNumber();
-
-  IntegratePearson = IntegratePearson_CB->IsDown();
-  PearsonChannel = PearsonChannel_CBL->GetComboBox()->GetSelected();  
-
-  (PearsonPolarityPositive_RB->IsDown()) ? PearsonPolarity = 1.0 : PearsonPolarity = -1.0;
-
-  IntegrateRawPearson = IntegrateRawPearson_RB->IsDown();
-  IntegrateFitToPearson = IntegrateFitToPearson_RB->IsDown();
-
-  PearsonLowerLimit = PearsonLowerLimit_NEL->GetEntry()->GetIntNumber();
-  PearsonMiddleLimit = PearsonMiddleLimit_NEL->GetEntry()->GetIntNumber();
-  PearsonUpperLimit = PearsonUpperLimit_NEL->GetEntry()->GetIntNumber();
-
-  PlotPearsonIntegration = PlotPearsonIntegration_CB->IsDown();  
-  */
-}
-
-
-// Method to store the variables necessary for parallel processing in
-// a ROOT file that will be accessed by the ADAQAnalysisGUI parallel
-// nodes before processing. This method will be called by the
-// sequential ADAQAnalysisGUI binary to save the current state of the
-// ROOT widgets and other variables to a ROOT file for access by the
-// parallel binaries
-void ADAQAnalysisInterface::SaveParallelProcessingData()
-{
-  /*
-  // Set the current sequential GUI widget values to member variables
-  ReadoutWidgetValues();
-
-  // Open a ROOT TFile to store the variables
-  ParallelProcessingFile = new TFile(ParallelProcessingFName.c_str(), "recreate");
-
-  // Create a custom object to store the parameters
-  ADAQAnalysisParallelParameters *ADAQParParams = new ADAQAnalysisParallelParameters;
+  TFile *WidgetValuesFile = 0;
+  if(SaveToFile)
+    {}//WidgetValuesFile = new TFile(WidgetValuesFileName.c_str(), "recreate");
 
   //////////////////////////////////////////
   // Values from the "Waveform" tabbed frame 
 
-  ADAQParParams->Channel = Channel;
+  ADAQSettings->Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
+  ADAQSettings->WaveformToPlot = WaveformSelector_NEL->GetEntry()->GetIntNumber();
 
-  ADAQParParams->RawWaveform = RawWaveform;
-  ADAQParParams->BaselineSubtractedWaveform = BaselineSubtractedWaveform;
-  ADAQParParams->ZeroSuppressionWaveform = ZeroSuppressionWaveform;
+  ADAQSettings->RawWaveform = RawWaveform_RB->IsDown();
+  ADAQSettings->BSWaveform = BaselineSubtractedWaveform_RB->IsDown();
+  ADAQSettings->ZSWaveform = ZeroSuppressionWaveform_RB->IsDown();
 
-  ADAQParParams->WaveformPolarity = WaveformPolarity;
+  if(PositiveWaveform_RB->IsDown())
+    ADAQSettings->WaveformPolarity = 1.0;
+  else
+    ADAQSettings->WaveformPolarity = -1.0;
+    
+  ADAQSettings->ZeroSuppressionCeiling = ZeroSuppressionCeiling_NEL->GetEntry()->GetIntNumber();
 
-  ADAQParParams->ZeroSuppressionCeiling = ZeroSuppressionCeiling;
+  ADAQSettings->MaxPeaks = MaxPeaks_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->Sigma = Sigma_NEL->GetEntry()->GetNumber();
+  ADAQSettings->Resolution = Resolution_NEL->GetEntry()->GetNumber();
+  ADAQSettings->Floor = Floor_NEL->GetEntry()->GetIntNumber();
 
-  ADAQParParams->MaxPeaks = MaxPeaks;
-  ADAQParParams->Sigma = Sigma;
-  ADAQParParams->Resolution = Resolution;
-  ADAQParParams->Floor = Floor;
+  ADAQSettings->PlotFloor = PlotFloor_CB->IsDown();
+  ADAQSettings->PlotCrossings = PlotCrossings_CB->IsDown();
+  ADAQSettings->PlotPeakIntegratingRegion = PlotPeakIntegratingRegion_CB->IsDown();
 
-  ADAQParParams->PlotFloor = PlotFloor;
-  ADAQParParams->PlotCrossings = PlotCrossings;
-  ADAQParParams->PlotPeakIntegratingRegion = PlotPeakIntegratingRegion;
+  ADAQSettings->UsePileupRejection = UsePileupRejection_CB->IsDown();
 
-  ADAQParParams->UsePileupRejection = UsePileupRejection;
-
-  ADAQParParams->BaselineCalcMin = BaselineCalcMin;
-  ADAQParParams->BaselineCalcMax = BaselineCalcMax;
+  ADAQSettings->BaselineCalcMin = BaselineCalcMin_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->BaselineCalcMax = BaselineCalcMax_NEL->GetEntry()->GetIntNumber();
 
 
   //////////////////////////////////////
   // Values from "Spectrum" tabbed frame
 
-  ADAQParParams->WaveformsToHistogram = WaveformsToHistogram;
-  ADAQParParams->SpectrumNumBins = SpectrumNumBins;
-  ADAQParParams->SpectrumMinBin = SpectrumMinBin;
-  ADAQParParams->SpectrumMaxBin = SpectrumMaxBin;
+  ADAQSettings->WaveformsToHistogram = WaveformsToHistogram_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->SpectrumNumBins = SpectrumNumBins_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->SpectrumMinBin = SpectrumMinBin_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->SpectrumMaxBin = SpectrumMaxBin_NEL->GetEntry()->GetIntNumber();
 
-  ADAQParParams->SpectrumTypePAS = SpectrumTypePAS;
-  ADAQParParams->SpectrumTypePHS = SpectrumTypePHS;
+  ADAQSettings->SpectrumTypePAS = SpectrumTypePAS_RB->IsDown();
+  ADAQSettings->SpectrumTypePHS = SpectrumTypePHS_RB->IsDown();
 
-  ADAQParParams->IntegrationTypeWholeWaveform = IntegrationTypeWholeWaveform;
-  ADAQParParams->IntegrationTypePeakFinder = IntegrationTypePeakFinder;
+  ADAQSettings->IntegrationTypeWholeWaveform = IntegrationTypeWholeWaveform_RB->IsDown();
+  ADAQSettings->IntegrationTypePeakFinder = IntegrationTypePeakFinder_RB->IsDown();
 
   
   //////////////////////////////////////////
   // Values from the "Analysis" tabbed frame 
 
-  ADAQParParams->PSDChannel = PSDChannel;
-  ADAQParParams->PSDWaveformsToDiscriminate = PSDWaveformsToDiscriminate;
-  ADAQParParams->PSDThreshold = PSDThreshold;
-  ADAQParParams->PSDPeakOffset = PSDPeakOffset;
-  ADAQParParams->PSDTailOffset = PSDTailOffset;
+  ADAQSettings->PSDChannel = PSDChannel_CBL->GetComboBox()->GetSelected();
+  ADAQSettings->PSDWaveformsToDiscriminate = PSDWaveforms_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDThreshold = PSDThreshold_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDPeakOffset = PSDPeakOffset_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDTailOffset = PSDTailOffset_NEL->GetEntry()->GetIntNumber();
 
-  ADAQParParams->PSDNumTailBins = PSDNumTailBins;
-  ADAQParParams->PSDMinTailBin = PSDMinTailBin;
-  ADAQParParams->PSDMaxTailBin = PSDMaxTailBin;
+  ADAQSettings->PSDNumTailBins = PSDNumTailBins_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDMinTailBin = PSDMinTailBin_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDMaxTailBin = PSDMaxTailBin_NEL->GetEntry()->GetIntNumber();
 
-  ADAQParParams->PSDNumTotalBins = PSDNumTotalBins;
-  ADAQParParams->PSDMinTotalBin = PSDMinTotalBin;
-  ADAQParParams->PSDMaxTotalBin = PSDMaxTotalBin;
+  ADAQSettings->PSDNumTotalBins = PSDNumTotalBins_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDMinTotalBin = PSDMinTotalBin_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDMaxTotalBin = PSDMaxTotalBin_NEL->GetEntry()->GetIntNumber();
 
-  ADAQParParams->PSDFilterPolarity = PSDFilterPolarity;
+  if(PSDPositiveFilter_RB->IsDown())
+    ADAQSettings->PSDFilterPolarity = 1.0;
+  else
+    ADAQSettings->PSDFilterPolarity = -1.0;
 
-  ADAQParParams->WaveformsToDesplice = WaveformsToDesplice;
-  ADAQParParams->DesplicedWaveformBuffer = DesplicedWaveformBuffer;
-  ADAQParParams->DesplicedWaveformLength = DesplicedWaveformLength;
-  ADAQParParams->DesplicedFileName = DesplicedFileName;
+  ADAQSettings->WaveformsToDesplice = DesplicedWaveformNumber_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->DesplicedWaveformBuffer = DesplicedWaveformBuffer_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->DesplicedWaveformLength = DesplicedWaveformLength_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->DesplicedFileName = DesplicedFileName_TE->GetText();
+
+
+  //////////////////////////////////////////
+  // Values from the "Graphics" tabbed frame
+
+  ADAQSettings->PlotVerticalAxisInLog = PlotVerticalAxisInLog_CB->IsDown();
+  ADAQSettings->PlotZeroSuppressionCeiling = PlotZeroSuppressionCeiling_CB->IsDown();
+  ADAQSettings->PlotTrigger = PlotTrigger_CB->IsDown();
+  ADAQSettings->PlotBaseline = PlotBaseline_CB->IsDown();
 
 
   ////////////////////////////////////////
   // Values from "Processing" tabbed frame
 
-  ADAQParParams->UpdateFreq = UpdateFreq;
+  ADAQSettings->UpdateFreq = UpdateFreq_NEL->GetEntry()->GetIntNumber();
 
-  ADAQParParams->IntegratePearson = IntegratePearson;
-  ADAQParParams->PearsonChannel = PearsonChannel;
+  ADAQSettings->IntegratePearson = IntegratePearson_CB->IsDown();
+  ADAQSettings->PearsonChannel = PearsonChannel_CBL->GetComboBox()->GetSelected();  
 
-  ADAQParParams->PearsonPolarity = PearsonPolarity;
+  if(PearsonPolarityPositive_RB->IsDown())
+    ADAQSettings->PearsonPolarity = 1.0;
+  else
+    ADAQSettings->PearsonPolarity = -1.0;
+  
+  ADAQSettings->IntegrateRawPearson = IntegrateRawPearson_RB->IsDown();
+  ADAQSettings->IntegrateFitToPearson = IntegrateFitToPearson_RB->IsDown();
 
-  ADAQParParams->IntegrateRawPearson = IntegrateRawPearson;
-  ADAQParParams->IntegrateFitToPearson = IntegrateFitToPearson;
+  ADAQSettings->PearsonLowerLimit = PearsonLowerLimit_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PearsonMiddleLimit = PearsonMiddleLimit_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PearsonUpperLimit = PearsonUpperLimit_NEL->GetEntry()->GetIntNumber();
 
-  ADAQParParams->PearsonLowerLimit = PearsonLowerLimit;
-  ADAQParParams->PearsonMiddleLimit = PearsonMiddleLimit;
-  ADAQParParams->PearsonUpperLimit = PearsonUpperLimit;
-
-  ADAQParParams->PlotPearsonIntegration = PlotPearsonIntegration;
+  ADAQSettings->PlotPearsonIntegration = PlotPearsonIntegration_CB->IsDown();  
 
 
   ////////////////////////////////////////////////////////
   // Miscellaneous values required for parallel processing
   
   // The ADAQ-formatted ROOT file name
-  ADAQParParams->ADAQRootFileName = ADAQRootFileName;
+  ADAQSettings->ADAQRootFileName = CurrentFileName;
 
   // The calibration maanager bool and array of TGraph *'s
-  ADAQParParams->UseCalibrationManager = UseCalibrationManager;
-  ADAQParParams->CalibrationManager = CalibrationManager;
+  //ADAQSettings->UseCalibrationManager = false;//SpectrumCalibration_CB->IsDown();
+  //  ADAQSettings->CalibrationManager = 0;// CalibrationManager; ZSH
   
   // The PSD filter
-  ADAQParParams->UsePSDFilterManager = UsePSDFilterManager;
-  ADAQParParams->PSDFilterManager = PSDFilterManager;
+  //  ADAQSettings->UsePSDFilterManager = PSDEnableFilter_CB->IsDown();
+  //  ADAQSettings->PSDFilterManager = 0; // PSDFilterManager; ZSH
 
   
-  //////////////////////////////////////////////////
-  // Write the transient parallel value storage file
-
-  // Write the customn storage class to the ROOT file
-  ADAQParParams->Write("ADAQParParams");
-
-  // Write the ROOT file (with its contents) to disk and close
-  ParallelProcessingFile->Write();
-  ParallelProcessingFile->Close();
-  */
-}
-
-
-// Method to load the variables necessary for parallel processing from
-// the ROOT file. This method will be called by the ADAQAnalysisGUI
-// parallel binaries immediately before beginning to process waveforms.
-void ADAQAnalysisInterface::LoadParallelProcessingData()
-{
-/*
-
-  // Load the ROOT file
-  ParallelProcessingFile = new TFile(ParallelProcessingFName.c_str(), "read");
-
-  // Alert the user if the ROOT file cannont be opened
-  if(!ParallelProcessingFile->IsOpen()){
-    cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << " : Error! Could not load the parallel processing file! Abort!\n"
-	 << endl;
-    exit(-42);
+  if(SaveToFile){
+    ADAQSettings->Write("ADAQSettings");
+    WidgetValuesFile->Write();
+    WidgetValuesFile->Close();
   }
-  
-  // Load the necessary processing variables
-  else{
-    // Get the custom storage class object from the ROOT file
-    ADAQAnalysisParallelParameters *ADAQParParams = (ADAQAnalysisParallelParameters *)ParallelProcessingFile->Get("ADAQParParams");
-    
-    // Set the ROOT widget-derived variables to class member variables
 
-    //////////////////////////////////////////
-    // Values from the "Waveform" tabbed frame
-    Channel = ADAQParParams->Channel;
-
-    RawWaveform = ADAQParParams->RawWaveform;
-    BaselineSubtractedWaveform = ADAQParParams->BaselineSubtractedWaveform;
-    ZeroSuppressionWaveform = ADAQParParams->ZeroSuppressionWaveform;
-
-    WaveformPolarity = ADAQParParams->WaveformPolarity;
-
-    ZeroSuppressionCeiling = ADAQParParams->ZeroSuppressionCeiling;
-
-    MaxPeaks = ADAQParParams->MaxPeaks;
-    Sigma = ADAQParParams->Sigma;
-    Resolution = ADAQParParams->Resolution;
-    Floor = ADAQParParams->Floor;
-
-    PlotFloor = ADAQParParams->PlotFloor;
-    PlotCrossings = ADAQParParams->PlotCrossings;
-    PlotPeakIntegratingRegion = ADAQParParams->PlotPeakIntegratingRegion;
-
-    UsePileupRejection = ADAQParParams->UsePileupRejection;
-
-    BaselineCalcMin = ADAQParParams->BaselineCalcMin;
-    BaselineCalcMax = ADAQParParams->BaselineCalcMax;
-
-
-    //////////////////////////////////////////
-    // Values from the "Spectrum" tabbed frame
-
-    WaveformsToHistogram = ADAQParParams->WaveformsToHistogram;
-    SpectrumNumBins = ADAQParParams->SpectrumNumBins;
-    SpectrumMinBin = ADAQParParams->SpectrumMinBin;
-    SpectrumMaxBin = ADAQParParams->SpectrumMaxBin;
-
-    SpectrumTypePAS = ADAQParParams->SpectrumTypePAS;
-    SpectrumTypePHS = ADAQParParams->SpectrumTypePHS;
-
-    IntegrationTypeWholeWaveform = ADAQParParams->IntegrationTypeWholeWaveform;
-    IntegrationTypePeakFinder = ADAQParParams->IntegrationTypePeakFinder;
-
-    
-    //////////////////////////////////////////
-    // Values from the "Analysis" tabbed frame
-
-    PSDChannel = ADAQParParams->PSDChannel; 
-    PSDWaveformsToDiscriminate = ADAQParParams->PSDWaveformsToDiscriminate;
-    PSDThreshold = ADAQParParams->PSDThreshold; 
-    PSDPeakOffset = ADAQParParams->PSDPeakOffset; 
-    PSDTailOffset = ADAQParParams->PSDTailOffset; 
-
-    PSDNumTailBins = ADAQParParams->PSDNumTailBins; 
-    PSDMinTailBin = ADAQParParams->PSDMinTailBin; 
-    PSDMaxTailBin = ADAQParParams->PSDMaxTailBin; 
-
-    PSDNumTotalBins = ADAQParParams->PSDNumTotalBins;
-    PSDMinTotalBin = ADAQParParams->PSDMinTotalBin; 
-    PSDMaxTotalBin = ADAQParParams->PSDMaxTotalBin; 
-
-    PSDFilterPolarity = ADAQParParams->PSDFilterPolarity;
-
-    WaveformsToDesplice = ADAQParParams->WaveformsToDesplice;
-    DesplicedWaveformBuffer = ADAQParParams->DesplicedWaveformBuffer;
-    DesplicedWaveformLength = ADAQParParams->DesplicedWaveformLength;
-    DesplicedFileName = ADAQParParams->DesplicedFileName;
-
-
-    ////////////////////////////////////////////
-    // Values from the "Processing" tabbed frame
-
-    UpdateFreq = ADAQParParams->UpdateFreq;
-
-    IntegratePearson = ADAQParParams->IntegratePearson;
-    PearsonChannel = ADAQParParams->PearsonChannel;
-
-    PearsonPolarity = ADAQParParams->PearsonPolarity;
-
-    IntegrateRawPearson = ADAQParParams->IntegrateRawPearson;
-    IntegrateFitToPearson = ADAQParParams->IntegrateFitToPearson;
-
-    PearsonLowerLimit = ADAQParParams->PearsonLowerLimit;
-    PearsonMiddleLimit = ADAQParParams->PearsonMiddleLimit;
-    PearsonUpperLimit = ADAQParParams->PearsonUpperLimit;
-
-    PlotPearsonIntegration = ADAQParParams->PlotPearsonIntegration;
-
-
-    ////////////////////////////////////////////////////////
-    // Miscellaneous values required for parallel processing
-
-    ADAQRootFileName = ADAQParParams->ADAQRootFileName;
-
-    UseCalibrationManager = ADAQParParams->UseCalibrationManager;
-    CalibrationManager = ADAQParParams->CalibrationManager;
-    
-    UsePSDFilterManager = ADAQParParams->UsePSDFilterManager;
-    PSDFilterManager = ADAQParParams->PSDFilterManager;
-
-    
-    // Close the ROOT File
-    ParallelProcessingFile->Close();
-  }
-*/
+  delete WidgetValuesFile;
 }
 
 

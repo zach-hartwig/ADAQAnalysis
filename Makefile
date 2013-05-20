@@ -97,7 +97,7 @@ else
    SEQ_TARGET = $(BINDIR)/ADAQAnalysis
 
    ifeq ($(HOSTNAME),TheBlackArrow)
-      CXX := clang++
+      CXX := clang++ -ferror-limit=5 -w
    else
       CXX := g++
    endif
@@ -134,6 +134,10 @@ $(BUILDDIR)/ADAQAnalysisManager.o : $(SRCDIR)/ADAQAnalysisManager.cc $(INCLDIR)/
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
+$(BUILDDIR)/ADAQGraphicsManager.o : $(SRCDIR)/ADAQGraphicsManager.cc $(INCLDIR)/ADAQGraphicsManager.hh
+	@echo -e "\nBuilding $@ ..."
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
 $(BUILDDIR)/ADAQAnalysisDict.o : $(BUILDDIR)/ADAQAnalysisDict.cc
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
@@ -154,6 +158,10 @@ $(BUILDDIR)/ADAQAnalysisManager_MPI.o : $(SRCDIR)/ADAQAnalysisManager.cc $(INCLD
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
+$(BUILDDIR)/ADAQGraphicsManager_MPI.o : $(SRCDIR)/ADAQGraphicsManager.cc $(INCLDIR)/ADAQGraphicsManager.hh
+	@echo -e "\nBuilding $@ ..."
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
 $(BUILDDIR)/ADAQAnalysisDict_MPI.o : $(BUILDDIR)/ADAQAnalysisDict.cc
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
@@ -162,7 +170,7 @@ $(BUILDDIR)/ADAQAnalysisDict_MPI.o : $(BUILDDIR)/ADAQAnalysisDict.cc
 #************************************************#
 # Rule to generate the necessary ROOT dictionary
 
-$(BUILDDIR)/ADAQAnalysisDict.cc : $(INCLDIR)/*.hh $(INCLDIR)/RootLinkDef.hh
+$(BUILDDIR)/ADAQAnalysisDict.cc : $(INCLDIR)/*.hh $(INCLDIR)/RootLinkDef.h
 	@echo -e "\nGenerating ROOT dictionary $@ ..."
 	rootcint -f $@ -c -I$(INCLUDES) $^ 
 

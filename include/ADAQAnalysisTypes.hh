@@ -15,6 +15,10 @@
 
 #include <TGraph.h>
 
+#include <string>
+#include <vector>
+using namespace std;
+
 // Structure that contains information on a single peak found by the
 // TSpectrum PeakFinder during waveform processing. For each peak
 // found, this structure is filled with the relevant information and
@@ -91,7 +95,7 @@ public:
   int TotalDeuterons;
   
   int WaveformsToDesplice, DesplicedWaveformBuffer, DesplicedWaveformLength;
-  
+
   vector<TGraph *> CalibrationManager, PSDFilterManager;
   vector<bool> UseCalibrationManager, UsePSDFilterManager;
   
@@ -105,6 +109,52 @@ public:
   double TotalDeuterons;
 
   ClassDef(ADAQAnalysisParallelResults,1);
+};
+
+
+class ADAQAnalysisSettings : public TObject
+{
+public:
+  vector<int> TestVector;
+
+  string ADAQRootFileName;
+
+  string DesplicedFileName;
+  
+  int Channel, WaveformsToHistogram, WaveformToPlot;
+  int SpectrumNumBins, SpectrumMinBin, SpectrumMaxBin;
+  int MaxPeaks, ZeroSuppressionCeiling, Floor;
+  int BaselineCalcMin, BaselineCalcMax;
+  int UpdateFreq;
+  bool PlotFloor, PlotPeakIntegratingRegion, PlotCrossings, UsePileupRejection;
+  bool RawWaveform, BSWaveform, ZSWaveform;
+  bool IntegrationTypeWholeWaveform, IntegrationTypePeakFinder;
+  bool SpectrumTypePHS, SpectrumTypePAS;
+  double Sigma, Resolution;
+  double WaveformPolarity, PearsonPolarity;
+
+  int PSDChannel, PSDWaveformsToDiscriminate;
+  int PSDThreshold, PSDTailOffset, PSDPeakOffset;
+  int PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin;
+  int PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin;
+  int PSDFilterPolarity;
+    
+  int PearsonChannel;
+  bool PlotPearsonIntegration, IntegratePearson, IntegrateRawPearson, IntegrateFitToPearson;
+  int PearsonLowerLimit, PearsonMiddleLimit, PearsonUpperLimit;
+
+  int TotalDeuterons;
+  
+  int WaveformsToDesplice, DesplicedWaveformBuffer, DesplicedWaveformLength;
+
+  bool PlotVerticalAxisInLog, PlotZeroSuppressionCeiling, PlotTrigger, PlotBaseline;
+
+  bool DrawWaveformWithCurve, DrawWaveformWithMarkers, DrawWaveformWithBoth;
+  
+  vector<TGraph *> CalibrationManager, PSDFilterManager;
+  vector<bool> UseCalibrationManager, UsePSDFilterManager;
+  
+  ClassDef(ADAQAnalysisSettings, 1);
 };
 
 

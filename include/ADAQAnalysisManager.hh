@@ -75,21 +75,21 @@ public:
   bool LoadADAQRootFile(string);
   bool LoadACRONYMRootFile(string);
 
+  int GetADAQNumberOfWaveforms() {return ADAQWaveformTree->GetEntries();}
+  ADAQRootMeasParams *GetADAQMeasurementParameters() {return ADAQMeasParams;}
 
+  void SaveHistogramData(string){;}
+
+  TH1F *CalculateRawWaveform(int, int);
+  TH1F *CalculateBSWaveform(int, int, bool CurrentWaveform=false);
+  TH1F *CalculateZSWaveform(int, int, bool CurrentWaveform=false);
+  double CalculateBaseline(vector<int> *);  
   
 private:
   bool FileOpen;
 
 
-  
-  
-
-
   /*
-  void CalculateRawWaveform(int);
-  void CalculateBSWaveform(int, bool CurrentWaveform=false);
-  void CalculateZSWaveform(int, bool CurrentWaveform=false);
-
   bool FindPeaks(TH1F *, bool PlotPeaksAndGraphics=true);
   void FindPeakLimits(TH1F *, bool PlotPeaksAndGraphics=true);
   void IntegratePeaks();
@@ -100,7 +100,7 @@ private:
   void CreateSpectrum();
   void CreateDesplicedFile();
   void CreatePSDHistogram();
-  double CalculateBaseline(vector<int> *);  
+  
   void CalculateSpectrumBackground(TH1F *);
   
   // Method to save a generic histogram to a data file
@@ -160,15 +160,6 @@ private:
   // String objects for storing the file name and extension of graphic
   // files that will receive the contents of the embedded canvas
   string GraphicFileName, GraphicFileExtension;  
-
-  // ROOT graphical objects to represent various settings
-  TLine *Trigger_L, *Floor_L, *Calibration_L, *ZSCeiling_L, *NCeiling_L;
-  TLine *LPeakDelimiter_L, *RPeakDelimiter_L;
-  TLine *PearsonLowerLimit_L, *PearsonMiddleLimit_L, *PearsonUpperLimit_L;
-  TLine *PSDPeakOffset_L, *PSDTailOffset_L;
-  TLine *LowerLimit_L, *UpperLimit_L;
-  TLine *DerivativeReference_L;
-  TBox *Baseline_B, *PSDTailIntegral_B;
   
   // ROOT TH1F histograms for storing the waveform and pulse spectrum
   TH1F *Waveform_H[8], *Spectrum_H, *SpectrumBackground_H, *SpectrumDeconvolved_H;
