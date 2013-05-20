@@ -32,14 +32,22 @@ public:
 
   void SetCanvasPointer(TCanvas *C) { TheCanvas = C; }
 
-  void PlotWaveform(ADAQAnalysisSettings *);
-  void PlotSpectrum(ADAQAnalysisSettings *){;}
-  void PlotSpectrumDerivative(ADAQAnalysisSettings *){;}
-  void PlotPSDHistogram(ADAQAnalysisSettings *){;}
+  void SetADAQSettings(ADAQAnalysisSettings *AAS) { ADAQSettings = AAS; }
+
+  CanvasContentTypes GetCanvasContentType() {return CanvasContentType;}
+
+  void PlotWaveform();
+  void PlotSpectrum();
+  void PlotSpectrumDerivative(){;}
+  void PlotPSDHistogram(){;}
+
+
   
 private:
   
   static ADAQGraphicsManager *TheGraphicsManager;
+
+  ADAQAnalysisSettings *ADAQSettings;
 
   TCanvas *TheCanvas;
 
@@ -52,6 +60,8 @@ private:
   TBox *Baseline_B, *PSDTailIntegral_B;
 
   ADAQAnalysisManager *AnalysisMgr;
+
+  CanvasContentTypes CanvasContentType;
 
   ClassDef(ADAQGraphicsManager, 1)
 };

@@ -46,6 +46,8 @@ struct PeakInfoStruct{
 };
 
 
+enum CanvasContentTypes{zWaveform, zSpectrum, zSpectrumDerivative, zPSDHistogram};
+
 // Structure that contains information on a single calibration point
 // for a single channel. For each calibration point, a structure is
 // filled with the relevant information and pushed back into a vector
@@ -117,42 +119,104 @@ class ADAQAnalysisSettings : public TObject
 public:
   vector<int> TestVector;
 
-  string ADAQRootFileName;
+  // Waveform frame
 
-  string DesplicedFileName;
-  
-  int Channel, WaveformsToHistogram, WaveformToPlot;
-  int SpectrumNumBins, SpectrumMinBin, SpectrumMaxBin;
-  int MaxPeaks, ZeroSuppressionCeiling, Floor;
-  int BaselineCalcMin, BaselineCalcMax;
-  int UpdateFreq;
-  bool PlotFloor, PlotPeakIntegratingRegion, PlotCrossings, UsePileupRejection;
+  int Channel, WaveformToPlot;
   bool RawWaveform, BSWaveform, ZSWaveform;
-  bool IntegrationTypeWholeWaveform, IntegrationTypePeakFinder;
+  int WaveformPolarity;
+  
+  bool PlotZeroSuppressionCeiling;
+  int ZeroSuppressionCeiling;
+
+  bool FindPeaks;
+  int MaxPeaks, Sigma, Floor;
+  double Resolution;
+  
+  bool PlotFloor, PlotPeakIntegratingRegion, PlotCrossings;
+
+  bool UsePileupRejection;
+
+  bool PlotBaseline;
+  int BaselineCalcMin, BaselineCalcMax;
+
+  bool PlotTrigger;
+
+  
+  // Spectrum frame
+
+  int WaveformsToHistogram;
+  int SpectrumNumBins, SpectrumMinBin, SpectrumMaxBin;
   bool SpectrumTypePHS, SpectrumTypePAS;
-  double Sigma, Resolution;
-  double WaveformPolarity, PearsonPolarity;
+  bool IntegrationTypeWholeWaveform, IntegrationTypePeakFinder;
+
+  bool UseManualCalibration, UseEPCalibration;
+  vector<TGraph *> CalibrationManager;
+  vector<bool> UseCalibrationManager;
+
+  string ADAQRootFileName;
+  string DesplicedFileName;
+
+  bool FindBackground;
+  int BackgroundMinBin, BackgroundMaxBin;
+  bool PlotWithBackground, PlotLessBackground;
+
+  bool FindIntegral, IntegralInCounts, UseGaussianFit, NormalizeToCurrent, OverplotSpectrumDerivative;
+
+
+  // Analysis
+
+  bool DiscriminatePulseShapes;
 
   int PSDChannel, PSDWaveformsToDiscriminate;
-  int PSDThreshold, PSDTailOffset, PSDPeakOffset;
   int PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin;
   int PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin;
+  int PSDThreshold, PSDTailOffset, PSDPeakOffset;
+
+  string PSDPlotType;
+  
+  bool EnableHistogramSlicing, PSDXSlice, PSDYSlice;
+
+  bool EnableFilterCreation, EnableFilterUse;
   int PSDFilterPolarity;
-    
-  int PearsonChannel;
-  bool PlotPearsonIntegration, IntegratePearson, IntegrateRawPearson, IntegrateFitToPearson;
+
+  vector<TGraph *> PSDFilterManager;
+  vector<bool> UsePSDFilterManager;
+
+
+  // Graphics
+  
+  bool WaveformCurve, WaveformMarkers, WaveformBoth;
+  bool SpectrumCurve, SpectrumMarkers, SpectrumBars;
+  bool StatsOff, PlotVerticalAxisInLog;
+  bool PlotSpectrumDerivativeError, PlotAbsvalueSpectrumDerivative, YAxisAutoRange;
+  bool OverrideGraphicalDefault;
+
+  string PlotTitle, XAxisTitle, YAxisTitle, ZAxisTitle, PaletteTitle;
+  double XSize, YSize, ZSize, PaletteSize;
+  double XOffset, YOffset, ZOffset, PaletteOffset;
+  int XDivs, YDivs, ZDivs;
+  double PaletteX1, PaletteX2, PaletteY1, PaletteY2;
+
+
+  // Processing
+
+  bool SequentialProcessing, ParallelProcessing;
+  int NumProcessors, UpdateFreq;
+
+  bool IntegratePearson;
+  int PearsonChannel, PearsonPolarity;
+  bool IntegrateRawPearson, IntegrateFitToPearson;
   int PearsonLowerLimit, PearsonMiddleLimit, PearsonUpperLimit;
+  bool PlotPearsonIntegration;
 
   int TotalDeuterons;
   
   int WaveformsToDesplice, DesplicedWaveformBuffer, DesplicedWaveformLength;
 
-  bool PlotVerticalAxisInLog, PlotZeroSuppressionCeiling, PlotTrigger, PlotBaseline;
 
-  bool DrawWaveformWithCurve, DrawWaveformWithMarkers, DrawWaveformWithBoth;
+  // Canvas
+  double XAxisMin, XAxisMax, YAxisMin, YAxisMax;
   
-  vector<TGraph *> CalibrationManager, PSDFilterManager;
-  vector<bool> UseCalibrationManager, UsePSDFilterManager;
   
   ClassDef(ADAQAnalysisSettings, 1);
 };

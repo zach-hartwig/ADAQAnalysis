@@ -94,7 +94,7 @@ ADAQGraphicsManager::~ADAQGraphicsManager()
 }
 
 
-void ADAQGraphicsManager::PlotWaveform(ADAQAnalysisSettings *ADAQSettings)
+void ADAQGraphicsManager::PlotWaveform()
 {
   TH1F *Waveform_H = 0;
   
@@ -111,56 +111,53 @@ void ADAQGraphicsManager::PlotWaveform(ADAQAnalysisSettings *ADAQSettings)
     Waveform_H = AnalysisMgr->CalculateZSWaveform(Channel, Waveform);
 
 
-  float Min, Max;
-  int XAxisSize, YAxisSize;
-
   // Determine the X-axis size and min/max values
-  XAxisSize = Waveform_H->GetNbinsX();
-  
-  /*
-  XAxisLimits_THS->GetPosition(Min, Max);
-  XAxisMin = XAxisSize * Min;
-  XAxisMax = XAxisSize * Max;
+  int XAxisSize = Waveform_H->GetNbinsX();
+
+  double XMin = ADAQSettings->XAxisMin * XAxisSize;
+  double XMax = ADAQSettings->XAxisMax * XAxisSize;
 
   // Determine the Y-axis size (dependent on whether or not the user
   // has opted to allow the Y-axis range to be automatically
   // determined by the size of the waveform or fix the Y-Axis range
   // with the vertical double slider positions) and min/max values
 
-  YAxisLimits_DVS->GetPosition(Min, Max);
-
-  if(PlotVerticalAxisInLog_CB->IsDown()){
-    YAxisMin = V1720MaximumBit * (1 - Max);
-    YAxisMax = V1720MaximumBit * (1 - Min);
+  double YMin, YMax, YAxisSize;
+  
+  if(ADAQSettings->PlotVerticalAxisInLog){
+    YMin = 4095 * (1 - ADAQSettings->YAxisMax);
+    YMax = 4095 * (1 - ADAQSettings->YAxisMin);
     
-    if(YAxisMin == 0)
-      YAxisMin = 0.05;
+    if(YMin == 0)
+      YMin = 0.05;
   }
-  else if(AutoYAxisRange_CB->IsDown()){
-    YAxisMin = Waveform_H[Channel]->GetBinContent(Waveform_H[Channel]->GetMinimumBin()) - 10;
-    YAxisMax = Waveform_H[Channel]->GetBinContent(Waveform_H[Channel]->GetMaximumBin()) + 10;
+  else if(ADAQSettings->YAxisAutoRange){
+    YMin = Waveform_H->GetBinContent(Waveform_H->GetMinimumBin()) - 10;
+    YMax = Waveform_H->GetBinContent(Waveform_H->GetMaximumBin()) + 10;
   }
   else{
-    YAxisLimits_DVS->GetPosition(Min, Max);
-    YAxisMin = (V1720MaximumBit * (1 - Max))-30;
-    YAxisMax = V1720MaximumBit * (1 - Min);
+    YMin = (4095 * (1 - ADAQSettings->YAxisMax))-30;
+    YMax = 4095 * (1 - ADAQSettings->YAxisMin);
   }
-  YAxisSize = YAxisMax - YAxisMin;
 
-  if(OverrideTitles_CB->IsDown()){
-    Title = Title_TEL->GetEntry()->GetText();
-    XAxisTitle = XAxisTitle_TEL->GetEntry()->GetText();
-    YAxisTitle = YAxisTitle_TEL->GetEntry()->GetText();
+  YAxisSize = YMax - YMin;
+
+
+  string Title, XTitle, YTitle;
+  
+  if(ADAQSettings->OverrideGraphicalDefault){
+    Title = ADAQSettings->PlotTitle;
+    XTitle = ADAQSettings->XAxisTitle;
+    YTitle = ADAQSettings->YAxisTitle;
   }
   else{
     Title = "Digitized Waveform";
-    XAxisTitle = "Time [4 ns samples]";
-    YAxisTitle = "Voltage [ADC]";
+    XTitle = "Time [4 ns samples]";
+    YTitle = "Voltage [ADC]";
   }
-
-  int XAxisDivs = XAxisDivs_NEL->GetEntry()->GetIntNumber();
-  int YAxisDivs = YAxisDivs_NEL->GetEntry()->GetIntNumber();
-  */
+  
+  int XDivs = ADAQSettings->XDivs;
+  int YDivs = ADAQSettings->YDivs;
 
   TheCanvas->SetLeftMargin(0.13);
   TheCanvas->SetBottomMargin(0.12);
@@ -170,26 +167,27 @@ void ADAQGraphicsManager::PlotWaveform(ADAQAnalysisSettings *ADAQSettings)
     gPad->SetLogy(true);
   else
     gPad->SetLogy(false);
-  /*
+
   Waveform_H->SetTitle(Title.c_str());
 
-  Waveform_H->GetXaxis()->SetTitle(XAxisTitle.c_str());
-  Waveform_H->GetXaxis()->SetTitleSize(XAxisSize_NEL->GetEntry()->GetNumber());
-  Waveform_H->GetXaxis()->SetLabelSize(XAxisSize_NEL->GetEntry()->GetNumber());
-  Waveform_H->GetXaxis()->SetTitleOffset(XAxisOffset_NEL->GetEntry()->GetNumber());
+  Waveform_H->GetXaxis()->SetTitle(XTitle.c_str());
+  Waveform_H->GetXaxis()->SetTitleSize(ADAQSettings->XSize);
+  Waveform_H->GetXaxis()->SetLabelSize(ADAQSettings->XSize);
+  Waveform_H->GetXaxis()->SetTitleOffset(ADAQSettings->XOffset);
   Waveform_H->GetXaxis()->CenterTitle();
-  Waveform_H->GetXaxis()->SetRangeUser(XAxisMin, XAxisMax);
-  Waveform_H->GetXaxis()->SetNdivisions(XAxisDivs, true);
+  Waveform_H->GetXaxis()->SetRangeUser(XMin, XMax);
+  Waveform_H->GetXaxis()->SetNdivisions(XDivs, true);
 
-  Waveform_H->GetYaxis()->SetTitle(YAxisTitle.c_str());
-  Waveform_H->GetYaxis()->SetTitleSize(YAxisSize_NEL->GetEntry()->GetNumber());
-  Waveform_H->GetYaxis()->SetLabelSize(YAxisSize_NEL->GetEntry()->GetNumber());
-  Waveform_H->GetYaxis()->SetTitleOffset(YAxisOffset_NEL->GetEntry()->GetNumber());
+  Waveform_H->GetYaxis()->SetTitle(YTitle.c_str());
+  Waveform_H->GetYaxis()->SetTitleSize(ADAQSettings->YSize);
+  Waveform_H->GetYaxis()->SetLabelSize(ADAQSettings->YSize);
+  Waveform_H->GetYaxis()->SetTitleOffset(ADAQSettings->YOffset);
   Waveform_H->GetYaxis()->CenterTitle();
-  Waveform_H->GetYaxis()->SetNdivisions(YAxisDivs, true);
-  Waveform_H->SetMinimum(YAxisMin);
-  Waveform_H->SetMaximum(YAxisMax);
-  */
+  Waveform_H->GetYaxis()->SetNdivisions(YDivs, true);
+
+  Waveform_H->SetMinimum(YMin);
+  Waveform_H->SetMaximum(YMax);
+
   Waveform_H->SetLineColor(kBlue);
   Waveform_H->SetStats(false);  
   
@@ -198,87 +196,61 @@ void ADAQGraphicsManager::PlotWaveform(ADAQAnalysisSettings *ADAQSettings)
   Waveform_H->SetMarkerColor(4);
   
   string DrawString;
-  if(ADAQSettings->DrawWaveformWithCurve)
+  if(ADAQSettings->WaveformCurve)
     DrawString = "C";
-  else if(ADAQSettings->DrawWaveformWithMarkers)
+  else if(ADAQSettings->WaveformMarkers)
     DrawString = "P";
-  else if(ADAQSettings->DrawWaveformWithBoth)
+  else if(ADAQSettings->WaveformBoth)
     DrawString = "CP";
   
   Waveform_H->Draw(DrawString.c_str());
     
-
-  // The user may choose to plot a number of graphical objects
-  // representing various waveform parameters (zero suppression
-  // ceiling, noise ceiling, trigger, baseline calculation, ... ) to
-  // aid him/her optimizing the parameter values
-
   if(ADAQSettings->PlotZeroSuppressionCeiling)
-    {}/*
-    ZSCeiling_L->DrawLine(XAxisMin,
-			  ZeroSuppressionCeiling_NEL->GetEntry()->GetIntNumber(),
-			  XAxisMax,
-			  ZeroSuppressionCeiling_NEL->GetEntry()->GetIntNumber());
-      */
-
-
-  //  if(PlotNoiseCeiling_CB->IsDown())
-  //    NCeiling_L->DrawLine(XAxisMin,
-  //			 NoiseCeiling_NEL->GetEntry()->GetIntNumber(),
-  //			 XAxisMax,
-  //			 NoiseCeiling_NEL->GetEntry()->GetIntNumber());
-
+    ZSCeiling_L->DrawLine(XMin,
+			  ADAQSettings->ZeroSuppressionCeiling,
+			  XMax,
+			  ADAQSettings->ZeroSuppressionCeiling);
 
   if(ADAQSettings->PlotTrigger)
-  {}/*Trigger_L->DrawLine(XAxisMin,
-		      ADAQMeasParams->TriggerThreshold[Channel], 
-		      XAxisMax,
-		      ADAQMeasParams->TriggerThreshold[Channel]);
-    */
+    Trigger_L->DrawLine(XMin,
+			AnalysisMgr->GetADAQMeasurementParameters()->TriggerThreshold[Channel], 
+			XMax,
+			AnalysisMgr->GetADAQMeasurementParameters()->TriggerThreshold[Channel]);
 
-  // The user may choose to overplot a transparent box on the
-  // waveform. The lower and upper X limits of the box represent the
-  // min/max baseline calculation bounds; the Y position of the box
-  // center represents the calculated value of the baseline. Note that
-  // plotting the baseline is disabled for ZS waveforms since plotting
-  // on a heavily modified X-axis range does not visually represent
-  // the actual region of the waveform used for baseline calculation.
   if(ADAQSettings->PlotBaseline and !ADAQSettings->ZSWaveform){
-    
-    /*
+    double Baseline = AnalysisMgr->CalculateBaseline(Waveform_H);
     double BaselinePlotMinValue = Baseline - (0.04 * YAxisSize);
     double BaselinePlotMaxValue = Baseline + (0.04 * YAxisSize);
-    if(ADAQSettings->BaselineSubtractedWaveform){
+    
+    if(ADAQSettings->BSWaveform){
       BaselinePlotMinValue = -0.04 * YAxisSize;
       BaselinePlotMaxValue = 0.04 * YAxisSize;
     }
-    */
-    /*
-    Baseline_B->DrawBox(BaselineCalcMin_NEL->GetEntry()->GetIntNumber(),
+    Baseline_B->DrawBox(ADAQSettings->BaselineCalcMin,
 			BaselinePlotMinValue,
-			BaselineCalcMax_NEL->GetEntry()->GetIntNumber(),
+			ADAQSettings->BaselineCalcMax,
 			BaselinePlotMaxValue);
-    */
   }
-  /* 
+  
+  
   if(ADAQSettings->PlotPearsonIntegration){
-    PearsonLowerLimit_L->DrawLine(PearsonLowerLimit_NEL->GetEntry()->GetIntNumber(),
-				  YAxisMin,
-				  PearsonLowerLimit_NEL->GetEntry()->GetIntNumber(),
-				  YAxisMax);
-
-    if(ADAQSettings->IntegrateFitToPearson)
-      PearsonMiddleLimit_L->DrawLine(PearsonMiddleLimit_NEL->GetEntry()->GetIntNumber(),
-				     YAxisMin,
-				     PearsonMiddleLimit_NEL->GetEntry()->GetIntNumber(),
-				     YAxisMax);
+    PearsonLowerLimit_L->DrawLine(ADAQSettings->PearsonLowerLimit,
+				  YMin,
+				  ADAQSettings->PearsonLowerLimit,
+				  YMax);
     
-    PearsonUpperLimit_L->DrawLine(PearsonUpperLimit_NEL->GetEntry()->GetIntNumber(),
-				  YAxisMin,
-				  PearsonUpperLimit_NEL->GetEntry()->GetIntNumber(),
-				  YAxisMax);
+    if(ADAQSettings->IntegrateFitToPearson)
+      PearsonMiddleLimit_L->DrawLine(ADAQSettings->PearsonMiddleLimit,
+				     YMin,
+				     ADAQSettings->PearsonMiddleLimit,
+				     YMax);
+    
+    PearsonUpperLimit_L->DrawLine(ADAQSettings->PearsonUpperLimit,
+				  YMin,
+				  ADAQSettings->PearsonUpperLimit,
+				  YMax);
   }
-  */
+
   TheCanvas->Update();
   
   //if(FindPeaks_CB->IsDown())
@@ -288,10 +260,152 @@ void ADAQGraphicsManager::PlotWaveform(ADAQAnalysisSettings *ADAQSettings)
   // plotted on the embedded canvas. This is important for influencing
   // the behavior of the vertical and horizontal double sliders used
   // to "zoom" on the canvas contents
-  //CanvasContents = zWaveform;
+  CanvasContentType = zWaveform;
   
   //  if(ADAQSettings->PlotPearsonIntegration)
   //    IntegratePearsonWaveform(true);
+  
+}
 
 
+void ADAQGraphicsManager::PlotSpectrum()
+{
+  TH1F *Spectrum_H = AnalysisMgr->GetSpectrum();
+
+  if(!Spectrum_H){
+    //CreateMessageBox("A valid Spectrum_H object was not found! Spectrum plotting will abort!","Stop");
+    return;
+  }
+
+  //////////////////////////////////
+  // Determine main spectrum to plot
+
+  //  TH1F *Spectrum2Plot_H = 0;
+  
+  //  if(SpectrumFindBackground_CB->IsDown() and SpectrumLessBackground_RB->IsDown())
+  //    Spectrum2Plot_H = (TH1F *)SpectrumDeconvolved_H->Clone();
+  //  else
+  //    Spectrum2Plot_H = (TH1F *)Spectrum_H->Clone();
+  
+
+  double XMin = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
+  double XMax = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
+
+  Spectrum_H->GetXaxis()->SetRangeUser(XMin, XMax);
+
+  double YMin, YMax;
+  if(ADAQSettings->PlotVerticalAxisInLog and ADAQSettings->YAxisMax==1)
+    YMin = 1.0;
+  else if(ADAQSettings->FindBackground and ADAQSettings->PlotLessBackground)
+    YMin = (Spectrum_H->GetMaximumBin() * (1-ADAQSettings->YAxisMax)) - (Spectrum_H->GetMaximumBin()*0.8);
+  else
+    YMin = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-ADAQSettings->YAxisMax);
+  
+  YMax = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-ADAQSettings->YAxisMin) * 1.05;
+  
+  Spectrum_H->SetMinimum(YMin);
+  Spectrum_H->SetMaximum(YMax);
+
+  
+  /////////////////
+  // Spectrum title
+
+  string Title, XTitle, YTitle;
+
+  if(ADAQSettings->OverrideGraphicalDefault){
+    Title = ADAQSettings->PlotTitle;
+    XTitle = ADAQSettings->XAxisTitle;
+    YTitle = ADAQSettings->YAxisTitle;
+  }
+  else{
+    Title = "Pulse Spectrum";
+    XTitle = "Pulse units [ADC]";
+    YTitle = "Counts";
+  }
+
+  // Get the desired axes divisions
+  int XDivs = ADAQSettings->XDivs;
+  int YDivs = ADAQSettings->YDivs;
+
+  
+  ////////////////////
+  // Statistics legend
+
+  if(ADAQSettings->StatsOff)
+    Spectrum_H->SetStats(false);
+  else
+    Spectrum_H->SetStats(true);
+
+
+  /////////////////////
+  // Logarithmic Y axis
+  
+  if(ADAQSettings->PlotVerticalAxisInLog)
+    gPad->SetLogy(true);
+  else
+    gPad->SetLogy(false);
+  
+  TheCanvas->SetLeftMargin(0.13);
+  TheCanvas->SetBottomMargin(0.12);
+  TheCanvas->SetRightMargin(0.05);
+
+  ////////////////////////////////
+  // Axis and graphical attributes
+
+  Spectrum_H->SetTitle(Title.c_str());
+
+  Spectrum_H->GetXaxis()->SetTitle(XTitle.c_str());
+  Spectrum_H->GetXaxis()->SetTitleSize(ADAQSettings->XSize);
+  Spectrum_H->GetXaxis()->SetLabelSize(ADAQSettings->XSize);
+  Spectrum_H->GetXaxis()->SetTitleOffset(ADAQSettings->XOffset);
+  Spectrum_H->GetXaxis()->CenterTitle();
+  Spectrum_H->GetXaxis()->SetNdivisions(XDivs, true);
+
+  Spectrum_H->GetYaxis()->SetTitle(YTitle.c_str());
+  Spectrum_H->GetYaxis()->SetTitleSize(ADAQSettings->YSize);
+  Spectrum_H->GetYaxis()->SetLabelSize(ADAQSettings->YSize);
+  Spectrum_H->GetYaxis()->SetTitleOffset(ADAQSettings->YOffset);
+  Spectrum_H->GetYaxis()->CenterTitle();
+  Spectrum_H->GetYaxis()->SetNdivisions(YDivs, true);
+
+  Spectrum_H->SetLineColor(4);
+  Spectrum_H->SetLineWidth(2);
+
+  /////////////////////////
+  // Plot the main spectrum
+  string DrawString;
+  if(ADAQSettings->SpectrumBars){
+    Spectrum_H->SetFillStyle(4100);
+    Spectrum_H->SetFillColor(4);
+    DrawString = "B";
+  }
+  else if(ADAQSettings->SpectrumCurve){
+    Spectrum_H->SetFillStyle(4000);
+    DrawString = "C";
+  }
+  else if(ADAQSettings->SpectrumMarkers){
+    Spectrum_H->SetMarkerStyle(24);
+    Spectrum_H->SetMarkerColor(4);
+    Spectrum_H->SetMarkerSize(1.0);
+    DrawString = "P";
+  }
+  
+  Spectrum_H->Draw(DrawString.c_str());
+
+  ////////////////////////////////////////////
+  // Overlay the background spectra if desired
+  //  if(ADAQSettings->FindBackground and ADAQSettings->PlotWithBackground)
+  //    SpectrumBackground_H->Draw("C SAME");
+
+  if(ADAQSettings->FindIntegral)
+    {};//IntegrateSpectrum();
+  
+  // Update the canvas
+  TheCanvas->Update();
+
+  // Set the class member int that tells the code what is currently
+  // plotted on the embedded canvas. This is important for influencing
+  // the behavior of the vertical and horizontal double sliders used
+  // to "zoom" on the canvas contents
+  CanvasContentType = zSpectrum;
 }

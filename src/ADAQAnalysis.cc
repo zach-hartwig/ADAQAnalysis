@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 
   // Create the singleton analysis manager
   ADAQAnalysisManager *TheAnalysis = new ADAQAnalysisManager(ParallelArchitecture);
-
+  
   if(!ParallelArchitecture){
     // Create the graphics plotter
     ADAQGraphicsManager *TheGraphics = new ADAQGraphicsManager;

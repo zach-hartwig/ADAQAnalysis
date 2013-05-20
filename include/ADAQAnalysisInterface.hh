@@ -80,6 +80,8 @@ public:
   // Method to save all widget values in a storage class
   void SaveSettings(bool SaveToFile=false);
 
+  void UpdateForNewFile(string);
+
   // Method to alert the user via a ROOT message box
   void CreateMessageBox(string, string);
 
@@ -322,11 +324,10 @@ private:
   // Number of processors/threads available on current system
   const int NumProcessors;
 
+  bool ADAQFileLoaded, ACRONYMFileLoaded;
+
   string DataDirectory, PrintDirectory, DesplicedDirectory;
   string CurrentFileName;
-
-  enum {zWaveform, zSpectrum, zSpectrumDerivative, zPSDHistogram};
-  int CanvasContentID;
 
   ADAQAnalysisSettings *ADAQSettings;
 

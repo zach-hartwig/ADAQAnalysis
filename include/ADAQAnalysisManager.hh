@@ -24,6 +24,7 @@
 #include <TTree.h>
 #include <TRandom.h>
 #include <TColor.h>
+#include <TGProgressBar.h>
 
 #include <string>
 #include <vector>
@@ -46,9 +47,6 @@ public:
 
   static ADAQAnalysisManager *GetInstance();
   
-  void SetEmbeddedCanvasPointer(TRootEmbeddedCanvas *EC) {TheEmbeddedCanvas_EC = EC;}
-  TRootEmbeddedCanvas *GetEmbeddedCanvasPointer() {return TheEmbeddedCanvas_EC;}
-  
   void SetFileOpen(bool FO) {FileOpen = FO;}
   bool GetFileOpen() {return FileOpen;}
 
@@ -61,22 +59,16 @@ public:
   void SetPSDHistogramExists(bool PHE) {PSDHistogramExists = PHE;}
   bool GetPSDHistogramExists() {return PSDHistogramExists;}
 
-  void TestDraw(){
-
-    TH1F *H = new TH1F("H","H",200,-4,4);
-    H->FillRandom("gaus",1000000);
-    H->SetFillColor(2);
-    TheEmbeddedCanvas_EC->GetCanvas()->cd(0);
-    H->Draw("B");
-    TheEmbeddedCanvas_EC->GetCanvas()->Update();
-  }
-
-
   bool LoadADAQRootFile(string);
   bool LoadACRONYMRootFile(string);
 
   int GetADAQNumberOfWaveforms() {return ADAQWaveformTree->GetEntries();}
   ADAQRootMeasParams *GetADAQMeasurementParameters() {return ADAQMeasParams;}
+
+
+  void SetProgressBarPointer(TGHProgressBar *PB) { ProcessingProgressBar = PB; }
+
+  void SetADAQSettings(ADAQAnalysisSettings *AAS) { ADAQSettings = AAS; }
 
   void SaveHistogramData(string){;}
 
@@ -84,20 +76,32 @@ public:
   TH1F *CalculateBSWaveform(int, int, bool CurrentWaveform=false);
   TH1F *CalculateZSWaveform(int, int, bool CurrentWaveform=false);
   double CalculateBaseline(vector<int> *);  
+  double CalculateBaseline(TH1F *);
+
+  void CreateSpectrum();
+
+  void IntegratePeaks();
+  void FindPeakHeights();
+
+  void UpdateProcessingProgress(int);
+
+  TH1F *GetSpectrum() {return Spectrum_H;}
   
 private:
   bool FileOpen;
+
+  TGHProgressBar *ProcessingProgressBar;
 
 
   /*
   bool FindPeaks(TH1F *, bool PlotPeaksAndGraphics=true);
   void FindPeakLimits(TH1F *, bool PlotPeaksAndGraphics=true);
-  void IntegratePeaks();
+
   void RejectPileup(TH1F *);
-  void FindPeakHeights();
+
   void FindSpectrumPeaks();
   void IntegrateSpectrum();
-  void CreateSpectrum();
+
   void CreateDesplicedFile();
   void CreatePSDHistogram();
   
@@ -126,7 +130,7 @@ private:
   bool ApplyPSDFilter(double,double);
   void IntegratePearsonWaveform(bool PlotPearsonIntegration=true);
 
-  void UpdateProcessingProgress(int);
+
   void CreatePSDFilter(int, int);
   void PlotPSDFilter();
   void SetCalibrationWidgetState(bool, EButtonState);
@@ -136,7 +140,7 @@ private:
   
   static ADAQAnalysisManager *TheAnalysisManager;
 
-  TRootEmbeddedCanvas *TheEmbeddedCanvas_EC;
+  ADAQAnalysisSettings *ADAQSettings;
 
   // Objects for opening ADAQ ROOT files and accessing them
   ADAQRootMeasParams *ADAQMeasParams;
@@ -278,8 +282,8 @@ private:
   // A ROOT random number generator (RNG)
   TRandom *RNG;
 
-  enum {zWaveform, zSpectrum, zSpectrumDerivative, zPSDHistogram};
-  int CanvasContents;
+  //  enum {zWaveform, zSpectrum, zSpectrumDerivative, zPSDHistogram};
+  //  int CanvasContents;
 
   // Define the class to ROOT
   ClassDef(ADAQAnalysisManager, 1)
