@@ -1705,15 +1705,11 @@ void ADAQAnalysisInterface::HandleTextButtons()
     double PulseUnit = SpectrumCalibrationPulseUnit_NEL->GetEntry()->GetNumber();
     
     // Get the current channel being histogrammed in DGScope
-    int CurrentChannel = ChannelSelector_CBL->GetComboBox()->GetSelected();
+    int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
 
-    /*
-    if(SetPoint == CalibrationData[CurrentChannel].PointID.size()){
-      
-      CalibrationData[CurrentChannel].PointID.push_back(SetPoint);
-      CalibrationData[CurrentChannel].Energy.push_back(Energy);
-      CalibrationData[CurrentChannel].PulseUnit.push_back(PulseUnit);
-      
+    bool NewPoint = AnalysisMgr->SetCalibrationPoint(Channel, SetPoint, Energy, PulseUnit);
+    
+    if(NewPoint){
       // Add a new point to the number of calibration points in case
       // the user wants to add subsequent points to the calibration
       stringstream ss;
@@ -1729,23 +1725,14 @@ void ADAQAnalysisInterface::HandleTextButtons()
       SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);
       SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(1.0);
     }
-    
-    // ...or if the user is re-setting previously set points then
-    // simply overwrite the preexisting values in the vectors
-    else{
-      CalibrationData[CurrentChannel].Energy[SetPoint] = Energy;
-      CalibrationData[CurrentChannel].PulseUnit[SetPoint] = PulseUnit;
-    }
-    */
     break;
   }
 
-
     //////////////////////////////////////
     // Actions for setting the calibration
-
+    
   case SpectrumCalibrationCalibrate_TB_ID:{
-
+    
     // If there are 2 or more points in the current channel's
     // calibration data set then create a new TGraph object. The
     // TGraph object will have pulse units [ADC] on the X-axis and the
@@ -1756,27 +1743,13 @@ void ADAQAnalysisInterface::HandleTextButtons()
     // efficiently in the acquisition loop.
 
     // Get the current channel being histogrammed in 
-    int CurrentChannel = ChannelSelector_CBL->GetComboBox()->GetSelected();
+    int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
 
-    /*
-    if(CalibrationData[CurrentChannel].PointID.size() >= 2){
+    bool Success = AnalysisMgr->SetCalibration(Channel);
 
-      // Determine the total number of calibration points in the
-      // current channel's calibration data set
-      const int NumCalibrationPoints = CalibrationData[CurrentChannel].PointID.size();
+    if(!Success)
+      CreateMessageBox("The calibration could not be set!","Stop");
 
-      // Create a new "CalibrationManager" TGraph object.
-      CalibrationManager[CurrentChannel] = new TGraph(NumCalibrationPoints,
-						      &CalibrationData[CurrentChannel].PulseUnit[0],
-						      &CalibrationData[CurrentChannel].Energy[0]);
-      
-      // Set the current channel's calibration boolean to true,
-      // indicating that the current channel will convert pulse units
-      // to energy within the acquisition loop before histogramming
-      // the result into the channel's spectrum
-      UseCalibrationManager[CurrentChannel] = true;
-    }
-    */
     break;
   }
 
@@ -1785,38 +1758,10 @@ void ADAQAnalysisInterface::HandleTextButtons()
     
   case SpectrumCalibrationPlot_TB_ID:{
     
-    int CurrentChannel = ChannelSelector_CBL->GetComboBox()->GetSelected();
+    int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
     
-    /*
-    if(UseCalibrationManager[CurrentChannel]){
-      stringstream ss;
-      ss << "CalibrationManager TGraph for Channel[" << CurrentChannel << "]";
-      string Title = ss.str();
+    GraphicsMgr->PlotCalibration(Channel);
 
-      CalibrationManager[CurrentChannel]->SetTitle(Title.c_str());
-
-      CalibrationManager[CurrentChannel]->GetXaxis()->SetTitle("Pulse unit [ADC]");
-      CalibrationManager[CurrentChannel]->GetXaxis()->SetTitleSize(0.05);
-      CalibrationManager[CurrentChannel]->GetXaxis()->SetTitleOffset(1.2);
-      CalibrationManager[CurrentChannel]->GetXaxis()->CenterTitle();
-      CalibrationManager[CurrentChannel]->GetXaxis()->SetLabelSize(0.05);
-
-      CalibrationManager[CurrentChannel]->GetYaxis()->SetTitle("Energy");
-      CalibrationManager[CurrentChannel]->GetYaxis()->SetTitleSize(0.05);
-      CalibrationManager[CurrentChannel]->GetYaxis()->SetTitleOffset(1.2);
-      CalibrationManager[CurrentChannel]->GetYaxis()->CenterTitle();
-      CalibrationManager[CurrentChannel]->GetYaxis()->SetLabelSize(0.05);
-
-      CalibrationManager[CurrentChannel]->SetMarkerSize(2);
-      CalibrationManager[CurrentChannel]->SetMarkerStyle(23);
-      CalibrationManager[CurrentChannel]->SetMarkerColor(1);
-      CalibrationManager[CurrentChannel]->SetLineWidth(2);
-      CalibrationManager[CurrentChannel]->SetLineColor(1);
-      CalibrationManager[CurrentChannel]->Draw("ALP");
-
-      Canvas_EC->GetCanvas()->Update();
-    }
-    */
     break;
   }
 
@@ -1824,37 +1769,20 @@ void ADAQAnalysisInterface::HandleTextButtons()
     // Actions for resetting CalibrationManager
     
   case SpectrumCalibrationReset_TB_ID:{
-
+    
     // Get the current channel being histogrammed in 
-    int CurrentChannel = ChannelSelector_CBL->GetComboBox()->GetSelected();
-
-    /*
-    // Clear the channel calibration vectors for the current channel
-    CalibrationData[CurrentChannel].PointID.clear();
-    CalibrationData[CurrentChannel].Energy.clear();
-    CalibrationData[CurrentChannel].PulseUnit.clear();
-
-    // Delete the current channel's depracated calibration manager
-    // TGraph object to prevent memory leaks but reallocat the TGraph
-    // object to prevent seg. faults when writing the
-    // CalibrationManager to the ROOT parallel processing file
-    if(UseCalibrationManager[CurrentChannel]){
-      delete CalibrationManager[CurrentChannel];
-      CalibrationManager[CurrentChannel] = new TGraph;
-    }
+    int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
     
-    // Set the current channel's calibration boolean to false,
-    // indicating that the calibration manager will NOT be used within
-    // the acquisition loop
-    UseCalibrationManager[CurrentChannel] = false;
-    
-    */
+    bool Success = AnalysisMgr->ClearCalibration(Channel);
+
     // Reset the calibration widgets
-    SpectrumCalibrationPoint_CBL->GetComboBox()->RemoveAll();
-    SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Point 0", 0);
-    SpectrumCalibrationPoint_CBL->GetComboBox()->Select(0);
-    SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);
-    SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(1.0);
+    if(Success){
+      SpectrumCalibrationPoint_CBL->GetComboBox()->RemoveAll();
+      SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Point 0", 0);
+      SpectrumCalibrationPoint_CBL->GetComboBox()->Select(0);
+      SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);
+      SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(1.0);
+    }
     break;
   }
 
@@ -2109,6 +2037,8 @@ void ADAQAnalysisInterface::HandleCheckButtons()
       SpectrumCalibrationFixedEP_RB->SetState(kButtonUp);
 
       SetCalibrationWidgetState(true, kButtonUp);
+      
+      HandleTripleSliderPointer();
     }
     else{
       SpectrumCalibrationManual_RB->SetState(kButtonDisabled);
@@ -2397,35 +2327,30 @@ void ADAQAnalysisInterface::HandleTripleSliderPointer()
   // If the pulse spectrum object (Spectrum_H) exists and the user has
   // selected calibration mode via the appropriate check button ...
   if(AnalysisMgr->GetSpectrumExists() and SpectrumCalibration_CB->IsDown() and GraphicsMgr->GetCanvasContentType() == zSpectrum){
-    
+
+    TH1F *Spectrum_H = AnalysisMgr->GetSpectrum();
+        
     // Calculate the position along the X-axis of the pulse spectrum
     // (the "area" or "height" in ADC units) based on the current
     // X-axis maximum and the triple slider's pointer position
-    //double CalibrationLineXPos = XAxisLimits_THS->GetPointerPosition() * Spectrum_H->GetXaxis()->GetXmax();
-
+    double XPos = XAxisLimits_THS->GetPointerPosition() * Spectrum_H->GetXaxis()->GetXmax();
+    
     // Calculate min. and max. on the Y-axis for plotting
     float Min, Max;
     YAxisLimits_DVS->GetPosition(Min, Max);
-    //double CalibrationLineYMin = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-Max);
-    //double CalibrationLineYMax = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-Min);
+    double YMin = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-Max);
+    double YMax = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-Min);
 
     // Redraw the pulse spectrum
-    //PlotSpectrum();
-
-    // Draw the new calibration line position
-    /*
-    Calibration_L->DrawLine(CalibrationLineXPos,
-			    CalibrationLineYMin,
-			    CalibrationLineXPos,
-			    CalibrationLineYMax);
-    */
+    GraphicsMgr->PlotSpectrum();
+    GraphicsMgr->PlotCalibrationLine(XPos, YMin, YMax);
 
     // Update the canvas with the new spectrum and calibration line
-    //Canvas_EC->GetCanvas()->Update();
-
+    Canvas_EC->GetCanvas()->Update();
+    
     // Set the calibration pulse units for the current calibration
     // point based on the X position of the calibration line
-    SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(0); // ZSH CalibrationLineXPos);
+    SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(XPos);
   }
 }
 
@@ -2920,16 +2845,13 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   
   ADAQSettings->ADAQFileName = ADAQFileName;
 
-
-
   // Spectrum calibration objects
-  //ADAQSettings->UseCalibrationManager = SpectrumCalibration_CB->IsDown();
-  //ADAQSettings->CalibrationManager = CalibrationManager; 
+  ADAQSettings->UseCalibrationManager = AnalysisMgr->GetUseCalibrationManager();
+  ADAQSettings->CalibrationManager = AnalysisMgr->GetCalibrationManager();
   
   // PSD filter objects
-  //    ADAQSettings->UsePSDFilterManager = PSDEnableFilter_CB->IsDown();
-  //  ADAQSettings->PSDFilterManager = PSDFilterManager;
-  
+  ADAQSettings->UsePSDFilterManager = AnalysisMgr->GetUsePSDFilterManager();
+  ADAQSettings->PSDFilterManager = AnalysisMgr->GetPSDFilterManager();
 
   // Update the settings object pointer in the manager classes
   AnalysisMgr->SetADAQSettings(ADAQSettings);

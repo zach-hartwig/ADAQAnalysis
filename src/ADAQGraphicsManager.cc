@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <sstream>
 using namespace std;
 
 
@@ -763,28 +764,45 @@ void ADAQGraphicsManager::PlotSpectrumDerivative()
   // only a spectrum derivative
   CanvasContentType = zSpectrumDerivative;
 
-  /*
-  
-  // If the TH1F object that stores the spectrum derivative exists
-  // then delete/recreate it
-  if(SpectrumDerivative_H) delete SpectrumDerivative_H;
-  SpectrumDerivative_H = new TH1F("SpectrumDerivative_H","SpectrumDerivative_H", SpectrumNumBins, SpectrumMinBin, SpectrumMaxBin);
-  
-  // Iterate over the TGraph derivative points and assign them to the
-  // TH1F object. The main purpose for converting this to a TH1F is so
-  // that the generic/modular function SaveHistogramData() can be used
-  // to output the spectrum derivative data to a file. We also
-  // subtract off the vertical offset used for plotting to ensure the
-  // derivative is vertically centered at zero.
+  TheCanvas->Update();
+}
 
-  double x,y;
-  for(int bin=0; bin<SpectrumNumBins; bin++){
-    SpectrumDerivative_G->GetPoint(bin,x,y);
-    SpectrumDerivative_H->SetBinContent(bin, y-VerticalOffset);
-  }
+
+void ADAQGraphicsManager::PlotCalibration(int Channel)
+{
+  vector<TGraph *> CalibrationManager = AnalysisMgr->GetCalibrationManager();
   
-  SpectrumDerivativeExists = true;
-  */
+  stringstream ss;
+  ss << "CalibrationManager TGraph for Channel[" << Channel << "]";
+  string Title = ss.str();
+  
+  CalibrationManager[Channel]->SetTitle(Title.c_str());
+  
+  CalibrationManager[Channel]->GetXaxis()->SetTitle("Pulse unit [ADC]");
+  CalibrationManager[Channel]->GetXaxis()->SetTitleSize(0.05);
+  CalibrationManager[Channel]->GetXaxis()->SetTitleOffset(1.2);
+  CalibrationManager[Channel]->GetXaxis()->CenterTitle();
+  CalibrationManager[Channel]->GetXaxis()->SetLabelSize(0.05);
+  
+  CalibrationManager[Channel]->GetYaxis()->SetTitle("Energy");
+  CalibrationManager[Channel]->GetYaxis()->SetTitleSize(0.05);
+  CalibrationManager[Channel]->GetYaxis()->SetTitleOffset(1.2);
+  CalibrationManager[Channel]->GetYaxis()->CenterTitle();
+  CalibrationManager[Channel]->GetYaxis()->SetLabelSize(0.05);
+  
+  CalibrationManager[Channel]->SetMarkerSize(2);
+  CalibrationManager[Channel]->SetMarkerStyle(23);
+  CalibrationManager[Channel]->SetMarkerColor(1);
+  CalibrationManager[Channel]->SetLineWidth(2);
+  CalibrationManager[Channel]->SetLineColor(1);
+  CalibrationManager[Channel]->Draw("ALP");
   
   TheCanvas->Update();
+
+}
+
+
+void ADAQGraphicsManager::PlotCalibrationLine(double XPos, double YMin, double YMax)
+{
+  Calibration_L->DrawLine(XPos, YMin, XPos, YMax);
 }

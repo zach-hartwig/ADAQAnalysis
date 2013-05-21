@@ -40,8 +40,8 @@ public:
   void PlotSpectrum();
   void PlotSpectrumDerivative();
   void PlotPSDHistogram();
-
-
+  void PlotCalibration(int);
+  void PlotCalibrationLine(double, double, double);
   
 private:
   

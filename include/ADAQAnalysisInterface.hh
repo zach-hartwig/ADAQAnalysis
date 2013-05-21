@@ -76,10 +76,10 @@ public:
   void HandleComboBox(int, int);
   void HandleCanvas(int, int, int, TObject *);
   void HandleTerminate();
-
+  
   // Method to save all widget values in a storage class
   void SaveSettings(bool SaveToFile=false);
-
+  
   void UpdateForNewFile(string);
 
   // Method to alert the user via a ROOT message box
@@ -325,17 +325,16 @@ private:
   // Number of processors/threads available on current system
   const int NumProcessors;
 
-  bool ADAQFileLoaded;
-  string ADAQFileName;
-
-  bool ACRONYMFileLoaded;
-  string ACRONYMFileName;
-
+  // Variables relating to files (paths, bools)
   string DataDirectory, PrintDirectory, DesplicedDirectory, HistogramDirectory;
+  bool ADAQFileLoaded, ACRONYMFileLoaded;
+  string ADAQFileName, ACRONYMFileName;
 
+  // The class which holds all ROOT widget settings
   ADAQAnalysisSettings *ADAQSettings;
   string ADAQSettingsFileName;
 
+  // The managers 
   TColor *ColorMgr;
   ADAQAnalysisManager *AnalysisMgr;
   ADAQGraphicsManager *GraphicsMgr;

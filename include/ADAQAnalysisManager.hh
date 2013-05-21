@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // name: ADAQAnalysisInterface.hh
-// date: 17 May 13
+// date: 21 May 13
 // auth: Zach Hartwig
 //
 // desc: 
@@ -128,8 +128,19 @@ public:
   void ProcessWaveformsInParallel(string);
 
   void RejectPileup(TH1F *);
-  
 
+
+  
+  bool SetCalibrationPoint(int, int, double, double);
+  bool SetCalibration(int);
+  bool ClearCalibration(int);
+  vector<TGraph *> GetCalibrationManager() { return CalibrationManager; }
+  vector<bool> GetUseCalibrationManager() { return UseCalibrationManager; }
+
+  vector<TGraph *> GetPSDFilterManager() { return PSDFilterManager; }
+  vector<bool> GetUsePSDFilterManager() { return UsePSDFilterManager; }
+  
+  
 private:
   bool FileOpen;
 
@@ -152,24 +163,13 @@ private:
   void CreateDesplicedFile();
 
   
-
-  
-  // Method to save a generic histogram to a data file
-  void SaveHistogramData(TH1 *);
-  
-  // Methods to handle the processing of waveforms in parallel
-
-  void SaveParallelProcessingData();
-  void LoadParallelProcessingData();
-
-
   // Methods for general waveform analysis
   void CalculateCountRate();
   bool ApplyPSDFilter(double,double);
   
 
   void CreatePSDFilter(int, int);
-  void PlotPSDFilter();
+
   */
 
 private:
@@ -293,9 +293,6 @@ private:
 
   // A ROOT random number generator (RNG)
   TRandom *RNG;
-
-  //  enum {zWaveform, zSpectrum, zSpectrumDerivative, zPSDHistogram};
-  //  int CanvasContents;
 
   // Define the class to ROOT
   ClassDef(ADAQAnalysisManager, 1)

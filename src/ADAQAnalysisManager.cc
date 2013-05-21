@@ -775,9 +775,9 @@ void ADAQAnalysisManager::CreateSpectrum()
 	// If the calibration manager is to be used to convert the
 	// value from pulse units [ADC] to energy units [keV, MeV,
 	// ...] then do so
-	//if(UseCalibrationManager[Channel])
-	//	  PulseHeight = CalibrationManager[Channel]->Eval(PulseHeight);
-
+	if(ADAQSettings->UseCalibrationManager[Channel])
+	  PulseHeight = ADAQSettings->CalibrationManager[Channel]->Eval(PulseHeight);
+	
 	// Add the pulse height to the spectrum histogram	
 	Spectrum_H->Fill(PulseHeight);
       }
@@ -810,9 +810,9 @@ void ADAQAnalysisManager::CreateSpectrum()
 	// If the calibration manager is to be used to convert the
 	// value from pulse units [ADC] to energy units [keV, MeV,
 	// ...] then do so
-	//	if(UseCalibrationManager[Channel])
-	//	  PulseArea = CalibrationManager[Channel]->Eval(PulseArea);
-
+	if(ADAQSettings->UseCalibrationManager[Channel])
+	  PulseArea = ADAQSettings->CalibrationManager[Channel]->Eval(PulseArea);
+	
 	// Add the pulse area to the spectrum histogram
 	Spectrum_H->Fill(PulseArea);
       }
@@ -839,12 +839,12 @@ void ADAQAnalysisManager::CreateSpectrum()
       // integrate the valid peaks to create a PAS or find the peak
       // heights to create a PHS, returning true. If zero peaks are
       // found in the waveform then FindPeaks() returns false
-      //PeaksFound = FindPeaks(Waveform_H[Channel], false);
-
+      PeaksFound = FindPeaks(Waveform_H[Channel]);
+      
       // If no peaks are present in the current waveform then continue
       // on to the next waveform for analysis
-      //      if(!PeaksFound)
-      //      	continue;
+      if(!PeaksFound)
+	continue;
       
       // Calculate the PSD integrals and determine if they pass
       // the pulse-shape filterthrough the pulse-shape filter
@@ -1020,8 +1020,8 @@ void ADAQAnalysisManager::IntegratePeaks()
     
     // If the user has calibrated the spectrum, then transform the
     // peak integral in pulse units [ADC] to energy units
-    //    if(UseCalibrationManager[Channel])
-    //      PeakIntegral = CalibrationManager[Channel]->Eval(PeakIntegral);
+    if(ADAQSettings->UseCalibrationManager[ADAQSettings->WaveformChannel])
+      PeakIntegral = ADAQSettings->CalibrationManager[ADAQSettings->WaveformChannel]->Eval(PeakIntegral);
     
     // Add the peak integral to the PAS 
     Spectrum_H->Fill(PeakIntegral);
@@ -1045,8 +1045,8 @@ void ADAQAnalysisManager::FindPeakHeights()
     // If the PSD filter is desired, examine the PSD filter flag
     // stored in each PeakInfoStruct to determine whether or not this
     // peak should be filtered out of the spectrum.
-    //    if(UsePSDFilterManager[PSDChannel] and (*it).PSDFilterFlag==true)
-    //      continue;
+    if(UsePSDFilterManager[ADAQSettings->PSDChannel] and (*it).PSDFilterFlag==true)
+      continue;
     
     // Initialize the peak height for each peak region
     double PeakHeight = 0.;
@@ -1730,6 +1730,31 @@ TGraph *ADAQAnalysisManager::CalculateSpectrumDerivative()
   else
     SpectrumDerivative_G = new TGraph(NumBins, BinCenters, Differences);
 
+  // Iterate over the TGraph derivative points and assign them to the
+  // TH1F object. The main purpose for converting this to a TH1F is so
+  // that the generic/modular function SaveHistogramData() can be used
+  // to output the spectrum derivative data to a file. We also
+  // subtract off the vertical offset used for plotting to ensure the
+  // derivative is vertically centered at zero.
+  
+  if(SpectrumDerivative_H) delete SpectrumDerivative_H;
+  SpectrumDerivative_H = new TH1F("SpectrumDerivative_H","SpectrumDerivative_H", 
+				  ADAQSettings->SpectrumNumBins, 
+				  ADAQSettings->SpectrumMinBin, 
+				  ADAQSettings->SpectrumMaxBin);
+    
+  double x,y;
+  for(int bin=0; bin<ADAQSettings->SpectrumNumBins; bin++){
+    SpectrumDerivative_G->GetPoint(bin,x,y);
+    SpectrumDerivative_H->SetBinContent(bin, y-VerticalOffset);
+  }
+  
+  SpectrumDerivativeExists = true;
+
+
+
+
+
   return SpectrumDerivative_G;
 }
 
@@ -2047,3 +2072,78 @@ void ADAQAnalysisManager::RejectPileup(TH1F *Histogram_H)
 
   }
 }
+
+
+bool ADAQAnalysisManager::SetCalibrationPoint(int Channel, int SetPoint,
+					      double Energy, double PulseUnit)
+{
+  // Add a new point to the calibration
+  if(SetPoint == CalibrationData[Channel].PointID.size()){
+    CalibrationData[Channel].PointID.push_back(SetPoint);
+    CalibrationData[Channel].Energy.push_back(Energy);
+    CalibrationData[Channel].PulseUnit.push_back(PulseUnit);
+    
+    return true;
+  }
+
+  // Overwrite a previous calibration point
+  else{
+    CalibrationData[Channel].Energy[SetPoint] = Energy;
+    CalibrationData[Channel].PulseUnit[SetPoint] = PulseUnit;
+
+    return false;
+  }
+}
+
+
+
+bool ADAQAnalysisManager::SetCalibration(int Channel)
+{
+  if(CalibrationData[Channel].PointID.size() >= 2){
+    // Determine the total number of calibration points in the
+    // current channel's calibration data set
+    int NumCalibrationPoints = CalibrationData[Channel].PointID.size();
+    
+    // Create a new "CalibrationManager" TGraph object.
+    CalibrationManager[Channel] = new TGraph(NumCalibrationPoints,
+						    &CalibrationData[Channel].PulseUnit[0],
+						    &CalibrationData[Channel].Energy[0]);
+    
+    // Set the current channel's calibration boolean to true,
+    // indicating that the current channel will convert pulse units
+    // to energy within the acquisition loop before histogramming
+    // the result into the channel's spectrum
+    UseCalibrationManager[Channel] = true;
+
+    return true;
+  }
+  else
+    return false;
+}
+
+
+
+bool ADAQAnalysisManager::ClearCalibration(int Channel)
+{
+  // Clear the channel calibration vectors for the current channel
+  CalibrationData[Channel].PointID.clear();
+  CalibrationData[Channel].Energy.clear();
+  CalibrationData[Channel].PulseUnit.clear();
+  
+  // Delete the current channel's depracated calibration manager
+  // TGraph object to prevent memory leaks but reallocat the TGraph
+  // object to prevent seg. faults when writing the
+  // CalibrationManager to the ROOT parallel processing file
+  if(UseCalibrationManager[Channel]){
+    delete CalibrationManager[Channel];
+    CalibrationManager[Channel] = new TGraph;
+  }
+  
+  // Set the current channel's calibration boolean to false,
+  // indicating that the calibration manager will NOT be used within
+  // the acquisition loop
+  UseCalibrationManager[Channel] = false;
+
+  return true;
+}
+
