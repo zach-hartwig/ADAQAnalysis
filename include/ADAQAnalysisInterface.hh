@@ -52,7 +52,7 @@ class ADAQAnalysisInterface : public TGMainFrame
 public:
 
   // Constructor/destructor
-  ADAQAnalysisInterface();
+  ADAQAnalysisInterface(string);
   ~ADAQAnalysisInterface();
 
   // Create the ROOT graphical interface

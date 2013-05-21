@@ -25,13 +25,10 @@ ADAQAnalysisManager *ADAQAnalysisManager::GetInstance()
 { return TheAnalysisManager; }
 
 
-ADAQAnalysisManager::ADAQAnalysisManager(bool PA)
+ADAQAnalysisManager::ADAQAnalysisManager(string CmdLineArg, bool PA)
   : ADAQMeasParams(0), ADAQRootFile(0), ADAQRootFileName(""), ADAQRootFileLoaded(false), ADAQWaveformTree(0), 
     ADAQParResults(NULL), ADAQParResultsLoaded(false),
-    DataDirectory(getenv("PWD")), SaveSpectrumDirectory(getenv("HOME")), SaveHistogramDirectory(getenv("HOME")),
-    PrintCanvasDirectory(getenv("HOME")), DesplicedDirectory(getenv("HOME")),
     Time(0), RawVoltage(0), RecordLength(0),
-    GraphicFileName(""), GraphicFileExtension(""),
     PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelArchitecture(PA), SequentialArchitecture(!PA),
     Verbose(false), ParallelVerbose(true),
@@ -112,13 +109,13 @@ ADAQAnalysisManager::ADAQAnalysisManager(bool PA)
   // the sequential binary can import for further manipulation. The
   // key point is that the sequential binary is running before,
   // during, and after the waveforms are being processing in parallel.
-  /*  
-  else if(ParallelArchitecture){
+ 
+  if(ParallelArchitecture){
     
 #ifdef MPI_ENABLED
     // Get the total number of processors 
     MPI_Size = MPI::COMM_WORLD.Get_size();
-
+    
     // Get the node ID of the present node
     MPI_Rank = MPI::COMM_WORLD.Get_rank();
     
@@ -129,24 +126,27 @@ ADAQAnalysisManager::ADAQAnalysisManager(bool PA)
 
     // Load the parameters required for processing from the ROOT file
     // generated from the sequential binary's ROOT widget settings
-    LoadParallelProcessingData();
+    string ADAQSettingsFile = "/tmp/ADAQSettings.root";
+    TFile *F = new TFile(ADAQSettingsFile.c_str(), "read");
 
+    ADAQSettings = (ADAQAnalysisSettings *)F->Get("ADAQSettings");
+    
     // Load the specified ADAQ ROOT file
-    LoadADAQRootFile();
-
+    LoadADAQRootFile(ADAQSettings->ADAQFileName);
+    
     // Initiate the desired parallel waveform processing algorithm
-
+    
     // Histogram waveforms into a spectrum
     if(CmdLineArg == "histogramming")
       CreateSpectrum();
-
+    
     // Desplice (or "uncouple") waveforms into a new ADAQ ROOT file
     else if(CmdLineArg == "desplicing")
-      CreateDesplicedFile();
-
+      {}//CreateDesplicedFile();
+    
     else if(CmdLineArg == "discriminating")
       CreatePSDHistogram();
-
+    
     // Notify the user of error in processing type specification
     else{
       cout << "\nError! Unspecified command line argument '" << CmdLineArg << "' passed to ADAQAnalysis_MPI!\n"
@@ -156,7 +156,6 @@ ADAQAnalysisManager::ADAQAnalysisManager(bool PA)
       exit(-42);
     }
   }
-  */
 }
 
 
@@ -663,7 +662,7 @@ void ADAQAnalysisManager::CreateSpectrum()
 			ADAQSettings->SpectrumMinBin,
 			ADAQSettings->SpectrumMaxBin);
 
-  int Channel = ADAQSettings->Channel;
+  int Channel = ADAQSettings->WaveformChannel;
   
   
   // Variables for calculating pulse height and area
@@ -1007,8 +1006,8 @@ void ADAQAnalysisManager::IntegratePeaks()
 
     // ...and use the lower and upper peak limits to calculate the
     // integral under each waveform peak that has passed all criterion
-    double PeakIntegral = Waveform_H[ADAQSettings->Channel]->Integral((*it).PeakLimit_Lower,
-								    (*it).PeakLimit_Upper);
+    double PeakIntegral = Waveform_H[ADAQSettings->WaveformChannel]->Integral((*it).PeakLimit_Lower,
+									      (*it).PeakLimit_Upper);
     
     // If the user has calibrated the spectrum, then transform the
     // peak integral in pulse units [ADC] to energy units
@@ -1043,7 +1042,7 @@ void ADAQAnalysisManager::FindPeakHeights()
     // Initialize the peak height for each peak region
     double PeakHeight = 0.;
 
-    int Channel = ADAQSettings->Channel;
+    int Channel = ADAQSettings->WaveformChannel;
     
     // Iterate over the samples between lower and upper integration
     // limits to determine the maximum peak height
@@ -1207,13 +1206,13 @@ void ADAQAnalysisManager::IntegrateSpectrum()
   double Err = 0.;
   
   string IntegralArg = "width";
-  if(ADAQSettings->IntegralInCounts)
+  if(ADAQSettings->SpectrumIntegralInCounts)
     IntegralArg.assign("");
   
   ///////////////////////////////
   // Gaussian fitting/integration
 
-  if(ADAQSettings->UseGaussianFit){
+  if(ADAQSettings->SpectrumUseGaussianFit){
     // Create a gaussian fit between the lower/upper limits; fit the
     // gaussian to the histogram and store the result of the fit in a
     // new TH1F object for analysis
@@ -1235,7 +1234,7 @@ void ADAQAnalysisManager::IntegrateSpectrum()
 					  Err,
 					  IntegralArg.c_str());
     
-    if(ADAQSettings->IntegralInCounts){
+    if(ADAQSettings->SpectrumIntegralInCounts){
       Int *= (GaussianBinWidth/CountsBinWidth);
       Err *= (GaussianBinWidth/CountsBinWidth);
     }
@@ -1265,7 +1264,7 @@ void ADAQAnalysisManager::IntegrateSpectrum()
   
   // The spectrum integral and error may be normalized to the total
   // computed RFQ current if desired by the user
-  if(ADAQSettings->NormalizeToCurrent){
+  if(ADAQSettings->SpectrumNormalizeToCurrent){
     if(TotalDeuterons == 0)
       TotalDeuterons = 1.0;
     else{
@@ -1660,7 +1659,7 @@ TGraph *ADAQAnalysisManager::CalculateSpectrumDerivative()
   // appropriately fit within the spectrum canvas.
   double VerticalOffset = 0;
   double ScaleFactor = 1.;
-  if(ADAQSettings->OverplotSpectrumDerivative){
+  if(ADAQSettings->SpectrumOverplotDerivative){
     VerticalOffset = Spectrum2Plot_H->GetMaximum() / 2;
     ScaleFactor = 1.3;
   }
@@ -1721,3 +1720,145 @@ TGraph *ADAQAnalysisManager::CalculateSpectrumDerivative()
 
   return SpectrumDerivative_G;
 }
+
+
+
+// Method to integrate the Pearson waveform (which measures the RFQ
+// beam current) in order to calculate the number of deuterons
+// delivered during a single waveform. The deuterons/waveform are
+// aggregated into a class member that stores total deuterons for all
+// waveforms processed.
+void ADAQAnalysisManager::IntegratePearsonWaveform(bool PlotPearsonIntegration)
+{
+  /*
+  // The total deutorons delivered for all waveforms in the presently
+  // loaed ADAQ-formatted ROOT file may be stored in the ROOT file
+  // itself if that ROOT file was created during parallel processing.
+  // If this is the case then return from this function since we
+  // already have the number of primary interest.
+  if(ADAQParResultsLoaded)
+    return;
+
+  // Get the V1720/data channel containing the output of the Pearson
+  int Channel = PearsonChannel;
+  
+  // Compute the baseline subtracted Pearson waveform
+  CalculateBSWaveform(PearsonChannel, true);
+  
+  // There are two integration options for the Pearson waveform:
+  // simply integrating the waveform from a lower limit to an upper
+  // limit (in sample time), "raw integration"; fitting two 1st order
+  // functions to the current trace and integrating (and summing)
+  // their area, "fit integration". The firsbt option is the most CPU
+  // efficient but requires a very clean RFQ current traces: the
+  // second options is more CPU expensive but necessary for very noise
+  // Pearson waveforms;
+  
+  if(IntegrateRawPearson){
+    
+    // Integrate the current waveform between the lower/upper limits. 
+    double Integral = Waveform_H[Channel]->Integral(Waveform_H[Channel]->FindBin(PearsonLowerLimit),
+						    Waveform_H[Channel]->FindBin(PearsonUpperLimit));
+    
+    // Compute the total number of deuterons in this waveform by
+    // converting the result of the integral from units of V / ADC
+    // with the appropriate factors.
+    double Deuterons = Integral * adc2volts_V1720 * sample2seconds_V1720;
+    Deuterons *= (volts2amps_Pearson / amplification_Pearson / electron_charge);
+    
+    if(Deuterons > 0)
+      TotalDeuterons += Deuterons;
+	
+    if(Verbose)
+      cout << "Total number of deuterons: " << "\t" << TotalDeuterons << endl;
+    
+    // Options to plot the results of the integration on the canvas
+    // for the user's inspection purposess
+    if(PlotPearsonIntegration){
+
+      DeuteronsInWaveform_NEFL->GetEntry()->SetNumber(Deuterons);
+      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
+      
+      TH1F *Pearson2Integrate_H = (TH1F *)Waveform_H[Channel]->Clone("Pearson2Integrate_H");
+
+      // Plot the integration region of the histogram waveform
+      Pearson2Integrate_H->SetFillColor(4);
+      Pearson2Integrate_H->SetLineColor(2);
+      Pearson2Integrate_H->SetFillStyle(3001);
+      Pearson2Integrate_H->GetXaxis()->SetRangeUser(PearsonLowerLimit, PearsonUpperLimit);
+      Pearson2Integrate_H->Draw("B SAME");
+
+      // Overplot the line representing raw RFQ current waveform
+      Waveform_H[Channel]->SetLineColor(2);
+      Waveform_H[Channel]->SetLineWidth(2);
+      Waveform_H[Channel]->Draw("C SAME");      
+      
+      Canvas_EC->GetCanvas()->Update();
+    }
+  }
+  else if(IntegrateFitToPearson){
+    // Create a TF1 object for the initial rise region of the current
+    // trace; place the result into a TH1F for potential plotting
+    TF1 *RiseFit = new TF1("RiseFit", "pol1", PearsonLowerLimit, PearsonMiddleLimit);
+    Waveform_H[Channel]->Fit("RiseFit","R N Q C");
+    TH1F *RiseFit_H = (TH1F *)RiseFit->GetHistogram();
+
+    // Create a TF1 object for long "flat top" region of the current
+    // trace a TH1F for potential plotting
+    TF1 *PlateauFit = new TF1("PlateauFit", "pol1", PearsonMiddleLimit, PearsonUpperLimit);
+    Waveform_H[Channel]->Fit("PlateauFit","R N Q C");
+    TH1F *PlateauFit_H = (TH1F *)PlateauFit->GetHistogram();
+
+    // Compute the integrals. Note the "width" argument is passed to
+    // the integration to specify that the histogram results should be
+    // multiplied by the bin width.
+    double Integral = RiseFit_H->Integral(RiseFit_H->FindBin(PearsonLowerLimit), 
+					  RiseFit_H->FindBin(PearsonUpperLimit),
+					  "width");
+    
+    Integral += PlateauFit_H->Integral(PlateauFit_H->FindBin(PearsonMiddleLimit),
+				       PlateauFit_H->FindBin(PearsonUpperLimit),
+				       "width");
+
+        
+    // Compute the total number of deuterons in this waveform by
+    // converting the result of the integrals from units of V / ADC
+    // with the appropriate factors.
+    double Deuterons = Integral * adc2volts_V1720 * sample2seconds_V1720;
+    Deuterons *= (volts2amps_Pearson / amplification_Pearson / electron_charge);
+
+    if(Deuterons > 0)
+      TotalDeuterons += Deuterons;
+
+    if(Verbose)
+      cout << "Total number of deuterons: " << "\t" << TotalDeuterons << endl;
+    
+    if(PlotPearsonIntegration){
+      
+      DeuteronsInWaveform_NEFL->GetEntry()->SetNumber(Deuterons);
+      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
+	
+      Waveform_H[Channel]->SetLineColor(2);
+      Waveform_H[Channel]->SetLineWidth(2);
+      Waveform_H[Channel]->Draw("C SAME");
+      
+      RiseFit_H->SetLineColor(8);
+      RiseFit_H->SetFillColor(8);
+      RiseFit_H->SetFillStyle(3001);
+      RiseFit_H->Draw("SAME");
+
+      PlateauFit_H->SetLineColor(4);
+      PlateauFit_H->SetFillColor(4);
+      PlateauFit_H->SetFillStyle(3001);
+      PlateauFit_H->Draw("SAME");
+      
+      Canvas_EC->GetCanvas()->Update();
+    }
+
+    // Delete the TF1 objects to prevent bleeding memory
+    delete RiseFit;
+    delete PlateauFit;
+  }
+  */
+}
+

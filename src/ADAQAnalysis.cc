@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
   // If no first cmd line arg was specified then we will start the
   // analysis with no ADAQ ROOT file loaded via "unspecified" string
   if(argc==1)
-    CmdLineArg = "unspecified";
+    CmdLineArg = "Unspecified";
   
   // If only 1 cmd line arg was specified then assign it to
   // corresponding string that will be passed to the
@@ -84,16 +84,16 @@ int main(int argc, char *argv[])
   
 
   // Create the singleton analysis manager
-  ADAQAnalysisManager *TheAnalysis = new ADAQAnalysisManager(ParallelArchitecture);
+  ADAQAnalysisManager *TheAnalysis = new ADAQAnalysisManager(CmdLineArg, ParallelArchitecture);
   
   if(!ParallelArchitecture){
-    // Create the graphics plotter
+    // Create the singleton graphics manager
     ADAQGraphicsManager *TheGraphics = new ADAQGraphicsManager;
 
     // Create the graphical user interface
-    ADAQAnalysisInterface *TheInterface = new ADAQAnalysisInterface;
+    ADAQAnalysisInterface *TheInterface = new ADAQAnalysisInterface(CmdLineArg);
     TheInterface->Connect("CloseWindow()", "ADAQAnalysisInterface", TheInterface, "HandleTerminate()");
-  
+    
     // Run the application
     TheApplication->Run();
     

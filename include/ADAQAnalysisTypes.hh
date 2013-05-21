@@ -117,11 +117,10 @@ public:
 class ADAQAnalysisSettings : public TObject
 {
 public:
-  vector<int> TestVector;
 
   // Waveform frame
-
-  int Channel, WaveformToPlot;
+  
+  int WaveformChannel, WaveformToPlot;
   bool RawWaveform, BSWaveform, ZSWaveform;
   int WaveformPolarity;
   
@@ -132,13 +131,13 @@ public:
   int MaxPeaks, Sigma, Floor;
   double Resolution;
   
-  bool PlotFloor, PlotPeakIntegratingRegion, PlotCrossings;
-
+  bool PlotFloor, PlotCrossings, PlotPeakIntegrationRegion;
+  
   bool UsePileupRejection;
-
-  bool PlotBaseline;
+  
+  bool PlotBaselineCalcRegion;
   int BaselineCalcMin, BaselineCalcMax;
-
+  
   bool PlotTrigger;
 
   
@@ -146,39 +145,40 @@ public:
 
   int WaveformsToHistogram;
   int SpectrumNumBins, SpectrumMinBin, SpectrumMaxBin;
-  bool SpectrumTypePHS, SpectrumTypePAS;
+  bool SpectrumTypePAS, SpectrumTypePHS;
   bool IntegrationTypeWholeWaveform, IntegrationTypePeakFinder;
 
   bool UseManualCalibration, UseEPCalibration;
   vector<TGraph *> CalibrationManager;
   vector<bool> UseCalibrationManager;
 
-  string ADAQRootFileName;
-  string DesplicedFileName;
-
   bool FindBackground;
   int BackgroundMinBin, BackgroundMaxBin;
   bool PlotWithBackground, PlotLessBackground;
-
-  bool FindIntegral, IntegralInCounts, UseGaussianFit, NormalizeToCurrent, OverplotSpectrumDerivative;
-
+  
+  bool SpectrumFindIntegral, SpectrumIntegralInCounts;
+  bool SpectrumUseGaussianFit, SpectrumNormalizeToCurrent;
+  bool SpectrumOverplotDerivative;
+  
 
   // Analysis
 
   bool PSDEnable;
   int PSDChannel, PSDWaveformsToDiscriminate;
-  int PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin;
   int PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin;
+  int PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin;
   int PSDThreshold, PSDTailOffset, PSDPeakOffset;
 
   int PSDPlotType;
   bool PSDPlotTailIntegrationRegion, EnableHistogramSlicing, PSDXSlice, PSDYSlice;
 
-  bool EnableFilterCreation, EnableFilterUse;
+  bool PSDEnableFilterCreation, PSDEnableFilterUse;
   int PSDFilterPolarity;
 
   vector<TGraph *> PSDFilterManager;
   vector<bool> UsePSDFilterManager;
+
+  double RFQPulseWidth, RFQRepRate, RFQWaveformToUse;
 
 
   // Graphics
@@ -210,13 +210,23 @@ public:
   int TotalDeuterons;
   
   int WaveformsToDesplice, DesplicedWaveformBuffer, DesplicedWaveformLength;
+  string DesplicedFileName;
 
 
   // Canvas
-  double XAxisMin, XAxisMax, YAxisMin, YAxisMax;
 
+  double XAxisMin, XAxisMax, XAxisPtr;
+  double YAxisMin, YAxisMax;
+
+  int WaveformSelector;
+  
   double SpectrumIntegrationMin, SpectrumIntegrationMax;
   
+  
+  // General
+  
+  string ADAQFileName;
+  string ACRONYMFileName;
   
   ClassDef(ADAQAnalysisSettings, 1);
 };

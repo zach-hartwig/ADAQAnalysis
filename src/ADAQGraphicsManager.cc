@@ -107,7 +107,7 @@ void ADAQGraphicsManager::PlotWaveform()
 {
   TH1F *Waveform_H = 0;
   
-  int Channel = ADAQSettings->Channel;
+  int Channel = ADAQSettings->WaveformChannel;
   int Waveform = ADAQSettings->WaveformToPlot;
   
   if(ADAQSettings->RawWaveform)
@@ -226,7 +226,7 @@ void ADAQGraphicsManager::PlotWaveform()
 			XMax,
 			AnalysisMgr->GetADAQMeasurementParameters()->TriggerThreshold[Channel]);
 
-  if(ADAQSettings->PlotBaseline and !ADAQSettings->ZSWaveform){
+  if(ADAQSettings->PlotBaselineCalcRegion and !ADAQSettings->ZSWaveform){
     double Baseline = AnalysisMgr->CalculateBaseline(Waveform_H);
     double BaselinePlotMinValue = Baseline - (0.04 * YAxisSize);
     double BaselinePlotMaxValue = Baseline + (0.04 * YAxisSize);
@@ -281,7 +281,7 @@ void ADAQGraphicsManager::PlotWaveform()
       }
 
 
-      if(ADAQSettings->PlotPeakIntegratingRegion){
+      if(ADAQSettings->PlotPeakIntegrationRegion){
 
 	LPeakDelimiter_L->DrawLine((*it).PeakLimit_Lower,
 				   YMin,
@@ -306,7 +306,7 @@ void ADAQGraphicsManager::PlotWaveform()
       
       
       if(ADAQSettings->PSDEnable and ADAQSettings->PSDPlotTailIntegrationRegion)
-	if(ADAQSettings->PSDChannel == ADAQSettings->Channel){
+	if(ADAQSettings->PSDChannel == ADAQSettings->WaveformChannel){
 	  
 	  int PeakOffset = ADAQSettings->PSDPeakOffset;
 	  int LowerPos = (*it).PeakPosX + PeakOffset;
@@ -483,12 +483,12 @@ void ADAQGraphicsManager::PlotSpectrum()
     SpectrumBackground_H->Draw("C SAME");
   }
 
-  if(ADAQSettings->FindIntegral){
+  if(ADAQSettings->SpectrumFindIntegral){
     TH1F *SpectrumIntegral_H = AnalysisMgr->GetSpectrumIntegral();
     SpectrumIntegral_H->Draw("B SAME");
     SpectrumIntegral_H->Draw("C SAME");
     
-    if(ADAQSettings->UseGaussianFit){
+    if(ADAQSettings->SpectrumUseGaussianFit){
       TF1 *SpectrumFit_F = AnalysisMgr->GetSpectrumFit();
       SpectrumFit_F->Draw("SAME");
     }
@@ -656,7 +656,7 @@ void ADAQGraphicsManager::PlotPSDHistogram()
     ColorPalette->Draw("SAME");
   }
   
-  if(ADAQSettings->EnableFilterCreation)
+  if(ADAQSettings->PSDEnableFilterCreation)
     {}//PlotPSDFilter();
 
   CanvasContentType = zPSDHistogram;

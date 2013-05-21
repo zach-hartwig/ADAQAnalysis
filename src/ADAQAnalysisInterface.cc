@@ -13,6 +13,7 @@
 #include <TGTab.h>
 #include <TGButtonGroup.h>
 #include <TGMsgBox.h>
+#include <TFile.h>
 
 // C++
 #include <iostream>
@@ -35,9 +36,11 @@ using namespace std;
 #include "ADAQAnalysisVersion.hh"
 
 
-ADAQAnalysisInterface::ADAQAnalysisInterface()
+ADAQAnalysisInterface::ADAQAnalysisInterface(string CmdLineArg)
   : TGMainFrame(gClient->GetRoot()),
     NumDataChannels(8), NumProcessors(boost::thread::hardware_concurrency()),
+    DataDirectory(getenv("PWD")), PrintDirectory(getenv("HOME")),
+    DesplicedDirectory(getenv("HOME")), HistogramDirectory(getenv("HOME")),
     ADAQFileLoaded(false), ACRONYMFileLoaded(false)
 {
   SetCleanup(kDeepCleanup);
@@ -48,6 +51,14 @@ ADAQAnalysisInterface::ADAQAnalysisInterface()
   
   AnalysisMgr = ADAQAnalysisManager::GetInstance();
   AnalysisMgr->SetProgressBarPointer(ProcessingProgress_PB);
+  
+  if(CmdLineArg != "Unspecified"){
+    ADAQFileLoaded = AnalysisMgr->LoadADAQRootFile(CmdLineArg);
+    if(ADAQFileLoaded)
+      UpdateForNewFile(CmdLineArg);
+    else
+      CreateMessageBox("The ADAQ ROOT file that you specified fail to load for some reason!\n","Stop");
+  }
   
   GraphicsMgr = ADAQGraphicsManager::GetInstance();
   GraphicsMgr->SetCanvasPointer(Canvas_EC->GetCanvas());
@@ -1606,11 +1617,11 @@ void ADAQAnalysisInterface::HandleMenu(int MenuID)
       Found = GraphicFileExtension.find_last_of("*");
       if(Found != string::npos)
 	GraphicFileExtension = GraphicFileExtension.substr(Found+1, GraphicFileExtension.size());
-
+      
       string GraphicFile = GraphicFileName+GraphicFileExtension;
       
-      //      Canvas_EC->GetCanvas()->Update();
-      //      Canvas_EC->GetCanvas()->Print(GraphicFile.c_str(), GraphicFileExtension.c_str());
+      Canvas_EC->GetCanvas()->Update();
+      Canvas_EC->GetCanvas()->Print(GraphicFile.c_str(), GraphicFileExtension.c_str());
       
       string SuccessMessage = "The canvas graphics have been successfully saved to the following file:\n" + GraphicFileName + GraphicFileExtension;
       CreateMessageBox(SuccessMessage,"Asterisk");
@@ -2710,14 +2721,14 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
 
   ADAQSettings = new ADAQAnalysisSettings;
 
-  TFile *WidgetValuesFile = 0;
-  if(SaveToFile)
-    {}//WidgetValuesFile = new TFile(WidgetValuesFileName.c_str(), "recreate");
-
+  TFile *ADAQSettingsFile = 0;
+  if(true)//SaveToFile)
+    ADAQSettingsFile = new TFile("/tmp/ADAQSettings.root", "recreate");
+  
   //////////////////////////////////////////
   // Values from the "Waveform" tabbed frame 
 
-  ADAQSettings->Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
+  ADAQSettings->WaveformChannel = ChannelSelector_CBL->GetComboBox()->GetSelected();
   ADAQSettings->WaveformToPlot = WaveformSelector_NEL->GetEntry()->GetIntNumber();
 
   ADAQSettings->RawWaveform = RawWaveform_RB->IsDown();
@@ -2740,11 +2751,11 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
 
   ADAQSettings->PlotFloor = PlotFloor_CB->IsDown();
   ADAQSettings->PlotCrossings = PlotCrossings_CB->IsDown();
-  ADAQSettings->PlotPeakIntegratingRegion = PlotPeakIntegratingRegion_CB->IsDown();
+  ADAQSettings->PlotPeakIntegrationRegion = PlotPeakIntegratingRegion_CB->IsDown();
 
   ADAQSettings->UsePileupRejection = UsePileupRejection_CB->IsDown();
 
-  ADAQSettings->PlotBaseline = PlotBaseline_CB->IsDown();
+  ADAQSettings->PlotBaselineCalcRegion = PlotBaseline_CB->IsDown();
   ADAQSettings->BaselineCalcMin = BaselineCalcMin_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->BaselineCalcMax = BaselineCalcMax_NEL->GetEntry()->GetIntNumber();
 
@@ -2770,11 +2781,11 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->PlotWithBackground = SpectrumWithBackground_RB->IsDown();
   ADAQSettings->PlotLessBackground = SpectrumLessBackground_RB->IsDown();
   
-  ADAQSettings->FindIntegral = SpectrumFindIntegral_CB->IsDown();
-  ADAQSettings->IntegralInCounts = SpectrumIntegralInCounts_CB->IsDown();
-  ADAQSettings->UseGaussianFit = SpectrumUseGaussianFit_CB->IsDown();
-  ADAQSettings->NormalizeToCurrent = SpectrumNormalizePeakToCurrent_CB->IsDown();
-  ADAQSettings->OverplotSpectrumDerivative = SpectrumOverplotDerivative_CB->IsDown();
+  ADAQSettings->SpectrumFindIntegral = SpectrumFindIntegral_CB->IsDown();
+  ADAQSettings->SpectrumIntegralInCounts = SpectrumIntegralInCounts_CB->IsDown();
+  ADAQSettings->SpectrumUseGaussianFit = SpectrumUseGaussianFit_CB->IsDown();
+  ADAQSettings->SpectrumNormalizeToCurrent = SpectrumNormalizePeakToCurrent_CB->IsDown();
+  ADAQSettings->SpectrumOverplotDerivative = SpectrumOverplotDerivative_CB->IsDown();
 
   
   //////////////////////////////////////////
@@ -2803,11 +2814,6 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
     ADAQSettings->PSDFilterPolarity = 1.0;
   else
     ADAQSettings->PSDFilterPolarity = -1.0;
-
-  ADAQSettings->WaveformsToDesplice = DesplicedWaveformNumber_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->DesplicedWaveformBuffer = DesplicedWaveformBuffer_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->DesplicedWaveformLength = DesplicedWaveformLength_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->DesplicedFileName = DesplicedFileName_TE->GetText();
 
 
   //////////////////////////////////////////
@@ -2877,6 +2883,11 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
 
   ADAQSettings->PlotPearsonIntegration = PlotPearsonIntegration_CB->IsDown();  
 
+  ADAQSettings->WaveformsToDesplice = DesplicedWaveformNumber_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->DesplicedWaveformBuffer = DesplicedWaveformBuffer_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->DesplicedWaveformLength = DesplicedWaveformLength_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->DesplicedFileName = DesplicedFileName_TE->GetText();
+
   
   /////////////////////////////////
   // Values from the "Canvas" frame
@@ -2900,7 +2911,7 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   // Miscellaneous values required for parallel processing
   
   // The ADAQ-formatted ROOT file name
-  ADAQSettings->ADAQRootFileName = CurrentFileName;
+  ADAQSettings->ADAQFileName = CurrentFileName;
 
   // The calibration maanager bool and array of TGraph *'s
   //ADAQSettings->UseCalibrationManager = false;//SpectrumCalibration_CB->IsDown();
@@ -2914,13 +2925,13 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   GraphicsMgr->SetADAQSettings(ADAQSettings);
 
   
-  if(SaveToFile){
+  if(true){//SaveToFile){
     ADAQSettings->Write("ADAQSettings");
-    WidgetValuesFile->Write();
-    WidgetValuesFile->Close();
+    ADAQSettingsFile->Write();
+    ADAQSettingsFile->Close();
   }
-
-  delete WidgetValuesFile;
+  
+  delete ADAQSettingsFile;
 }
 
 
@@ -2977,7 +2988,7 @@ void ADAQAnalysisInterface::UpdateForNewFile(string FileName)
   WaveformsToHistogram_NEL->GetEntry()->SetNumber(20000);//WaveformsInFile); ZSN
 
   FileName_TE->SetText(FileName.c_str());
-  Waveforms_NEL->SetNumber(1);
+  Waveforms_NEL->SetNumber(WaveformsInFile);
   RecordLength_NEL->SetNumber(RecordLength);
   
   BaselineCalcMin_NEL->GetEntry()->SetLimitValues(0,RecordLength-1);

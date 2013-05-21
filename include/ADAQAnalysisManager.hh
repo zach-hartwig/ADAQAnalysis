@@ -44,7 +44,7 @@ using namespace std;
 class ADAQAnalysisManager : public TObject
 {
 public:
-  ADAQAnalysisManager(bool);
+  ADAQAnalysisManager(string, bool);
   ~ADAQAnalysisManager();
 
   static ADAQAnalysisManager *GetInstance();
@@ -117,7 +117,10 @@ public:
 
 
   TGraph *CalculateSpectrumDerivative();
+
+  void IntegratePearsonWaveform(bool PlotPearsonIntegration=true);
   
+
 private:
   bool FileOpen;
 
@@ -155,7 +158,7 @@ private:
   // Methods for general waveform analysis
   void CalculateCountRate();
   bool ApplyPSDFilter(double,double);
-  void IntegratePearsonWaveform(bool PlotPearsonIntegration=true);
+  
 
   void CreatePSDFilter(int, int);
   void PlotPSDFilter();
