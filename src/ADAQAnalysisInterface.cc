@@ -201,10 +201,11 @@ void ADAQAnalysisInterface::FillWaveformFrame()
 				     new TGLayoutHints(kLHintsLeft, 0,5,0,5));
   RawWaveform_RB = new TGRadioButton(WaveformType_BG, "Raw voltage", RawWaveform_RB_ID);
   RawWaveform_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
-  RawWaveform_RB->SetState(kButtonDown);
+  //RawWaveform_RB->SetState(kButtonDown);
   
   BaselineSubtractedWaveform_RB = new TGRadioButton(WaveformType_BG, "Baseline-subtracted", BaselineSubtractedWaveform_RB_ID);
   BaselineSubtractedWaveform_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  BaselineSubtractedWaveform_RB->SetState(kButtonDown);
 
   ZeroSuppressionWaveform_RB = new TGRadioButton(WaveformType_BG, "Zero suppression", ZeroSuppressionWaveform_RB_ID);
   ZeroSuppressionWaveform_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
@@ -214,10 +215,11 @@ void ADAQAnalysisInterface::FillWaveformFrame()
   
   PositiveWaveform_RB = new TGRadioButton(WaveformPolarity_BG, "Positive", PositiveWaveform_RB_ID);
   PositiveWaveform_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
-  PositiveWaveform_RB->SetState(kButtonDown);
+  //PositiveWaveform_RB->SetState(kButtonDown);
   
   NegativeWaveform_RB = new TGRadioButton(WaveformPolarity_BG, "Negative", NegativeWaveform_RB_ID);
   NegativeWaveform_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  NegativeWaveform_RB->SetState(kButtonDown);
 
   // Zero suppression options
 
@@ -364,7 +366,7 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
 		       new TGLayoutHints(kLHintsLeft, 15,0,0,0));
   SpectrumMaxBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumMaxBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  SpectrumMaxBin_NEL->GetEntry()->SetNumber(2000);
+  SpectrumMaxBin_NEL->GetEntry()->SetNumber(22000);
 
   TGHorizontalFrame *SpectrumOptions_HF = new TGHorizontalFrame(SpectrumFrame_VF);
   SpectrumFrame_VF->AddFrame(SpectrumOptions_HF, new TGLayoutHints(kLHintsNormal, 15,0,0,0));
@@ -373,9 +375,10 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
   SpectrumOptions_HF->AddFrame(SpectrumType_BG = new TGButtonGroup(SpectrumOptions_HF, "Spectrum type", kVerticalFrame),
 			       new TGLayoutHints(kLHintsLeft, 0,5,0,0));
   SpectrumTypePAS_RB = new TGRadioButton(SpectrumType_BG, "Pulse area", -1);
+  SpectrumTypePAS_RB->SetState(kButtonDown);
   
   SpectrumTypePHS_RB = new TGRadioButton(SpectrumType_BG, "Pulse height", -1);
-  SpectrumTypePHS_RB->SetState(kButtonDown);
+  //SpectrumTypePHS_RB->SetState(kButtonDown);
 
   // Integration type radio buttons
   SpectrumOptions_HF->AddFrame(IntegrationType_BG = new TGButtonGroup(SpectrumOptions_HF, "Integration type", kVerticalFrame),
@@ -505,7 +508,7 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
   SpectrumResolution_NEL->GetEntry()->SetState(false);
   SpectrumResolution_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
   */
-
+  
   SpectrumAnalysis_GF->AddFrame(SpectrumFindBackground_CB = new TGCheckButton(SpectrumAnalysis_GF, "Find background", SpectrumFindBackground_CB_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,5,0));
   SpectrumFindBackground_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
@@ -1460,39 +1463,101 @@ void ADAQAnalysisInterface::HandleMenu(int MenuID)
     break;
   }
     
-  case MenuFileSaveSpectrum_ID:{
-    
-    if(AnalysisMgr->GetSpectrumExists()){
-      CreateMessageBox("No spectra have been created yet and, therefore, there is nothing to save!","Stop");
-      break;
-    }
-      
-    AnalysisMgr->SaveHistogramData("Spectrum");
-    break;
-  }
-
-  case MenuFileSaveSpectrumDerivative_ID:{
-
-    if(!AnalysisMgr->GetSpectrumDerivativeExists()){
-      CreateMessageBox("No spectrum derivatives have been created yet and, therefore, there is nothing to save!","Stop");
-      break;
-    }
-
-    AnalysisMgr->SaveHistogramData("SpectrumDerivative");
-    break;
-  }
-    
+  case MenuFileSaveSpectrum_ID:
+  case MenuFileSaveSpectrumDerivative_ID:
   case MenuFileSavePSDHistogramSlice_ID:{
-    
-    if(!AnalysisMgr->GetPSDHistogramExists()){
-      CreateMessageBox("No PSD histogram slices have been created yet and, therefore, there is nothing to save!","Stop");
-      break;
-    }
 
-    AnalysisMgr->SaveHistogramData("PSD");
+    // Create character arrays that enable file type selection (.dat
+    // files have data columns separated by spaces and .csv have data
+    // columns separated by commas)
+    const char *FileTypes[] = {"ASCII file",  "*.dat",
+			       "CSV file",    "*.csv",
+			       "ROOT file",   "*.root",
+			       0,             0};
+  
+    TGFileInfo FileInformation;
+    FileInformation.fFileTypes = FileTypes;
+    FileInformation.fIniDir = StrDup(HistogramDirectory.c_str());
+    
+    new TGFileDialog(gClient->GetRoot(), this, kFDSave, &FileInformation);
+    
+    if(FileInformation.fFilename==NULL)
+      CreateMessageBox("No file was selected! Nothing will be saved to file!","Stop");
+    else{
+      string FileName, FileExtension;
+      size_t Found = string::npos;
+      
+      // Get the file name for the output histogram data. Note that
+      // FileInformation.fFilename is the absolute path to the file.
+      FileName = FileInformation.fFilename;
+
+      // Strip the data file name off the absolute file path and set
+      // the path to the DataDirectory variable. Thus, the "current"
+      // directory from which a file was selected will become the new
+      // default directory that automically opens
+      size_t pos = FileName.find_last_of("/");
+      if(pos != string::npos)
+	HistogramDirectory  = FileName.substr(0,pos);
+
+      // Strip the file extension (the start of the file extension is
+      // assumed here to begin with the final period) to extract just
+      // the save file name.
+      Found = FileName.find_last_of(".");
+      if(Found != string::npos)
+	FileName = FileName.substr(0, Found);
+
+      // Extract only the "." with the file extension. Note that anove
+      // the "*" character precedes the file extension string when
+      // passed to the FileInformation class in order for files
+      // containing that expression to be displaced to the
+      // user. However, I strip the "*" such that the "." plus file
+      // extension can be used by the SaveSpectrumData() function to
+      // determine the format of spectrum save file.
+      FileExtension = FileInformation.fFileTypes[FileInformation.fFileTypeIdx+1];
+      Found = FileExtension.find_last_of("*");
+      
+      if(Found != string::npos)
+	FileExtension = FileExtension.substr(Found+1, FileExtension.size());
+      
+      bool Success = false;
+      
+      if(MenuID == MenuFileSaveSpectrum_ID){
+	if(!AnalysisMgr->GetSpectrumExists()){
+	  CreateMessageBox("No spectra have been created yet and, therefore, there is nothing to save!","Stop");
+	  break;
+	}
+	else
+	  Success = AnalysisMgr->SaveHistogramData("Spectrum", FileName, FileExtension);
+      }
+      
+      else if(MenuID == MenuFileSaveSpectrumDerivative_ID){
+	if(!AnalysisMgr->GetSpectrumDerivativeExists()){
+	  CreateMessageBox("No spectrum derivatives have been created yet and, therefore, there is nothing to save!","Stop");
+	  break;
+	}
+	else
+	  Success = AnalysisMgr->SaveHistogramData("SpectrumDerivative", FileName, FileExtension);
+      }
+      
+      else if (MenuID == MenuFileSavePSDHistogramSlice_ID){
+	CreateMessageBox("Saving the PSD histogram slice is not yet implemented!","Stop");
+	Success = false;	
+      }
+
+      if(Success){
+	if(FileExtension == ".dat")
+	  CreateMessageBox("The histogram was successfully saved to the .dat file","Asterisk");
+	else if(FileExtension == ".csv")
+	  CreateMessageBox("The histogram was successfully saved to the .csv file","Asterisk");
+	else if(FileExtension == ".root")
+	  CreateMessageBox("The histogram name 'Spectrum' was successfully saved to the .root file","Asterisk");
+      }
+      else
+	CreateMessageBox("The histogram failed to save to the file for unknown reasons!","Stop");
+    }
     break;
   }
-
+    
     // Acition that enables the user to print the currently displayed
     // canvas to a file of the user's choice. But really, it's not a
     // choice. Vector-based graphics are the only way to go. Do
@@ -1843,11 +1908,8 @@ void ADAQAnalysisInterface::HandleTextButtons()
     break;
     
   case PSDCalculate_TB_ID:
-    if(!AnalysisMgr->GetFileOpen())
-      return;
-    
     if(ProcessingSeq_RB->IsDown()){
-      //CreatePSDHistogram();
+      AnalysisMgr->CreatePSDHistogram();
       GraphicsMgr->PlotPSDHistogram();
     }
     else
@@ -1982,16 +2044,6 @@ void ADAQAnalysisInterface::HandleCheckButtons()
   switch(CheckButtonID){
     
   case FindPeaks_CB_ID:
-
-    // Delete the previoue TSpectrum PeakFinder object if it exists to
-    // prevent memory leaks
-    //    if(PeakFinder)
-    //      delete PeakFinder;
-    
-    // Create a TSpectrum PeakFinder using the appropriate widget to set 
-    // the maximum number of peaks that can be found
-    //    PeakFinder = new TSpectrum(MaxPeaks_NEL->GetEntry()->GetIntNumber());
-    
     GraphicsMgr->PlotWaveform();
     break;
 
@@ -2078,8 +2130,8 @@ void ADAQAnalysisInterface::HandleCheckButtons()
       SpectrumRangeMax_NEL->GetEntry()->SetState(true);
       SpectrumWithBackground_RB->SetState(kButtonUp);
       SpectrumLessBackground_RB->SetState(kButtonUp);
-
-      //CalculateSpectrumBackground(Spectrum_H);
+      
+      AnalysisMgr->CalculateSpectrumBackground();
       GraphicsMgr->PlotSpectrum();
     }
     else{
@@ -2095,20 +2147,17 @@ void ADAQAnalysisInterface::HandleCheckButtons()
   case SpectrumFindIntegral_CB_ID:
   case SpectrumIntegralInCounts_CB_ID:
   case SpectrumUseGaussianFit_CB_ID:
-    if(!AnalysisMgr->GetSpectrumExists())
-      break;
+  case SpectrumNormalizePeakToCurrent_CB_ID:
     
-    if(SpectrumFindIntegral_CB->IsDown())
-      {}//IntegrateSpectrum();
+    if(SpectrumFindIntegral_CB->IsDown()){
+      AnalysisMgr->IntegrateSpectrum();
+      GraphicsMgr->PlotSpectrum();
+      
+      SpectrumIntegral_NEFL->GetEntry()->SetNumber( AnalysisMgr->GetSpectrumIntegralValue() );
+      SpectrumIntegralError_NEFL->GetEntry()->SetNumber (AnalysisMgr->GetSpectrumIntegralError() );
+    }
     else
       GraphicsMgr->PlotSpectrum();
-    break;
-    
-  case SpectrumNormalizePeakToCurrent_CB_ID:
-    if(!AnalysisMgr->GetSpectrumExists())
-      break;
-    
-    //IntegrateSpectrum();
     break;
 
   case IntegratePearson_CB_ID:{
@@ -2287,8 +2336,6 @@ void ADAQAnalysisInterface::HandleDoubleSliders()
     
   case XAxisLimits_THS_ID:
   case YAxisLimits_DVS_ID:
-  case SpectrumIntegrationLimits_DHS_ID:
-    
     if(GraphicsMgr->GetCanvasContentType() == zWaveform)
       GraphicsMgr->PlotWaveform();
 
@@ -2303,6 +2350,15 @@ void ADAQAnalysisInterface::HandleDoubleSliders()
     
     else if(GraphicsMgr->GetCanvasContentType() == zPSDHistogram and AnalysisMgr->GetSpectrumExists())
       GraphicsMgr->PlotPSDHistogram();
+    
+    break;
+
+  case SpectrumIntegrationLimits_DHS_ID:
+    AnalysisMgr->IntegrateSpectrum();
+    GraphicsMgr->PlotSpectrum();
+    
+    SpectrumIntegral_NEFL->GetEntry()->SetNumber( AnalysisMgr->GetSpectrumIntegralValue() );
+    SpectrumIntegralError_NEFL->GetEntry()->SetNumber (AnalysisMgr->GetSpectrumIntegralError () );
     
     break;
   }
@@ -2404,10 +2460,10 @@ void ADAQAnalysisInterface::HandleNumberEntries()
 
   case SpectrumRangeMin_NEL_ID:
   case SpectrumRangeMax_NEL_ID:
-    //CalculateSpectrumBackground(Spectrum_H);
-    //    PlotSpectrum();
+    AnalysisMgr->CalculateSpectrumBackground();
+    GraphicsMgr->PlotSpectrum();
     break;
-
+    
   case XAxisSize_NEL_ID:
   case XAxisOffset_NEL_ID:
   case XAxisDivs_NEL_ID:
@@ -2447,9 +2503,9 @@ void ADAQAnalysisInterface::HandleRadioButtons()
 {
   TGRadioButton *ActiveRadioButton = (TGRadioButton *) gTQSender;
   int RadioButtonID = ActiveRadioButton->WidgetId();
-
+  
   SaveSettings();
-
+  
   if(!ADAQFileLoaded)
     return;
   
@@ -2519,14 +2575,16 @@ void ADAQAnalysisInterface::HandleRadioButtons()
   
   case SpectrumWithBackground_RB_ID:
     SpectrumLessBackground_RB->SetState(kButtonUp);
-    //CalculateSpectrumBackground(Spectrum_H);
-    //PlotSpectrum();
+    SaveSettings();
+    AnalysisMgr->CalculateSpectrumBackground();
+    GraphicsMgr->PlotSpectrum();
     break;
 
   case SpectrumLessBackground_RB_ID:
     SpectrumWithBackground_RB->SetState(kButtonUp);
-    //CalculateSpectrumBackground(Spectrum_H);
-    //PlotSpectrum();
+    SaveSettings();
+    AnalysisMgr->CalculateSpectrumBackground();
+    GraphicsMgr->PlotSpectrum();
     break;
     
   case IntegrateRawPearson_RB_ID:
@@ -2690,6 +2748,7 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->BaselineCalcMin = BaselineCalcMin_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->BaselineCalcMax = BaselineCalcMax_NEL->GetEntry()->GetIntNumber();
 
+  ADAQSettings->PlotTrigger = PlotTrigger_CB->IsDown();
 
   //////////////////////////////////////
   // Values from "Spectrum" tabbed frame
@@ -2704,6 +2763,18 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
 
   ADAQSettings->IntegrationTypeWholeWaveform = IntegrationTypeWholeWaveform_RB->IsDown();
   ADAQSettings->IntegrationTypePeakFinder = IntegrationTypePeakFinder_RB->IsDown();
+  
+  ADAQSettings->FindBackground = SpectrumFindBackground_CB->IsDown();
+  ADAQSettings->BackgroundMinBin = SpectrumRangeMin_NEL->GetEntry()->GetNumber();
+  ADAQSettings->BackgroundMaxBin = SpectrumRangeMax_NEL->GetEntry()->GetNumber();
+  ADAQSettings->PlotWithBackground = SpectrumWithBackground_RB->IsDown();
+  ADAQSettings->PlotLessBackground = SpectrumLessBackground_RB->IsDown();
+  
+  ADAQSettings->FindIntegral = SpectrumFindIntegral_CB->IsDown();
+  ADAQSettings->IntegralInCounts = SpectrumIntegralInCounts_CB->IsDown();
+  ADAQSettings->UseGaussianFit = SpectrumUseGaussianFit_CB->IsDown();
+  ADAQSettings->NormalizeToCurrent = SpectrumNormalizePeakToCurrent_CB->IsDown();
+  ADAQSettings->OverplotSpectrumDerivative = SpectrumOverplotDerivative_CB->IsDown();
 
   
   //////////////////////////////////////////
@@ -2742,12 +2813,6 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   //////////////////////////////////////////
   // Values from the "Graphics" tabbed frame
 
-  ADAQSettings->PlotVerticalAxisInLog = PlotVerticalAxisInLog_CB->IsDown();
-  ADAQSettings->PlotZeroSuppressionCeiling = PlotZeroSuppressionCeiling_CB->IsDown();
-  ADAQSettings->PlotTrigger = PlotTrigger_CB->IsDown();
-  ADAQSettings->PlotBaseline = PlotBaseline_CB->IsDown();
-  ADAQSettings->PlotYAxisWithAutoRange = AutoYAxisRange_CB->IsDown();
-
   ADAQSettings->WaveformCurve = DrawWaveformWithCurve_RB->IsDown();
   ADAQSettings->WaveformMarkers = DrawWaveformWithMarkers_RB->IsDown();
   ADAQSettings->WaveformBoth = DrawWaveformWithBoth_RB->IsDown();
@@ -2755,6 +2820,12 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->SpectrumCurve = DrawSpectrumWithCurve_RB->IsDown();
   ADAQSettings->SpectrumMarkers = DrawSpectrumWithMarkers_RB->IsDown();
   ADAQSettings->SpectrumBars = DrawSpectrumWithBars_RB->IsDown();
+
+  ADAQSettings->StatsOff = SetStatsOff_CB->IsDown();
+  ADAQSettings->PlotVerticalAxisInLog = PlotVerticalAxisInLog_CB->IsDown();
+  ADAQSettings->PlotSpectrumDerivativeError = PlotSpectrumDerivativeError_CB->IsDown();
+  ADAQSettings->PlotAbsValueSpectrumDerivative = PlotAbsValueSpectrumDerivative_CB->IsDown();
+  ADAQSettings->PlotYAxisWithAutoRange = AutoYAxisRange_CB->IsDown();
   
   ADAQSettings->OverrideGraphicalDefault = OverrideTitles_CB->IsDown();
 
@@ -2819,6 +2890,10 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   YAxisLimits_DVS->GetPosition(Min, Max);
   ADAQSettings->YAxisMin = Min;
   ADAQSettings->YAxisMax = Max;
+
+  SpectrumIntegrationLimits_DHS->GetPosition(Min, Max);
+  ADAQSettings->SpectrumIntegrationMin = Min;
+  ADAQSettings->SpectrumIntegrationMax = Max;
 
 
   ////////////////////////////////////////////////////////
@@ -2899,10 +2974,10 @@ void ADAQAnalysisInterface::UpdateForNewFile(string FileName)
   WaveformSelector_HS->SetRange(1, WaveformsInFile);
 
   WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
-  WaveformsToHistogram_NEL->GetEntry()->SetNumber(WaveformsInFile);
+  WaveformsToHistogram_NEL->GetEntry()->SetNumber(20000);//WaveformsInFile); ZSN
 
   FileName_TE->SetText(FileName.c_str());
-  Waveforms_NEL->SetNumber(WaveformsInFile);
+  Waveforms_NEL->SetNumber(1);
   RecordLength_NEL->SetNumber(RecordLength);
   
   BaselineCalcMin_NEL->GetEntry()->SetLimitValues(0,RecordLength-1);
@@ -2929,9 +3004,6 @@ void ADAQAnalysisInterface::UpdateForNewFile(string FileName)
   PSDWaveforms_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
   PSDWaveforms_NEL->GetEntry()->SetNumber(WaveformsInFile);
 }
-
-
-
 
 
 void ADAQAnalysisInterface::SetCalibrationWidgetState(bool WidgetState, EButtonState ButtonState)

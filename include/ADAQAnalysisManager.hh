@@ -17,6 +17,7 @@
 #include <TH1F.h>
 #include <TH2F.h>
 #include <TGraph.h>
+#include <TGraphErrors.h>
 #include <TBox.h>
 #include <TSpectrum.h>
 #include <TLine.h>
@@ -25,6 +26,7 @@
 #include <TRandom.h>
 #include <TColor.h>
 #include <TGProgressBar.h>
+#include <TF1.h>
 
 #include <string>
 #include <vector>
@@ -49,7 +51,7 @@ public:
   
   void SetFileOpen(bool FO) {FileOpen = FO;}
   bool GetFileOpen() {return FileOpen;}
-
+  
   void SetSpectrumExists(bool SE) {SpectrumExists = SE;}
   bool GetSpectrumExists() {return SpectrumExists;}
 
@@ -84,23 +86,48 @@ public:
   void FindPeakHeights();
 
   void CreateSpectrum();
+  void CalculateSpectrumBackground();
+  void IntegrateSpectrum();
 
   void UpdateProcessingProgress(int);
 
   TH1F *GetSpectrum() {return Spectrum_H;}
+  TH1F *GetSpectrumBackground() {return SpectrumBackground_H;}
+  TH1F *GetSpectrumWithoutBackground() {return SpectrumDeconvolved_H;}
+  
+  TH1F *GetSpectrumIntegral() { return Spectrum2Integrate_H; }
+  TF1 *GetSpectrumFit() { return SpectrumFit_F; }
+  double GetSpectrumIntegralValue() { return SpectrumIntegralValue; }
+  double GetSpectrumIntegralError() { return SpectrumIntegralError; }
+
   vector<PeakInfoStruct> GetPeakInfoVec() {return PeakInfoVec;}
 
   void CreateNewPeakFinder(int NumPeaks){
     if(PeakFinder) delete PeakFinder;
     PeakFinder = new TSpectrum(NumPeaks);
   }
-  
+
+  bool SaveHistogramData(string, string, string);
+
+  TH2F *GetPSDHistogram() { return PSDHistogram_H; }
+
+  TH2F *CreatePSDHistogram();
+  void CalculatePSDIntegrals(bool);
+  bool ApplyPSDFilter(double, double);
+
+
+  TGraph *CalculateSpectrumDerivative();
   
 private:
   bool FileOpen;
 
   TGHProgressBar *ProcessingProgressBar;
 
+  TH1F *Spectrum2Integrate_H;
+  TF1 *SpectrumFit_F;
+  double SpectrumIntegralValue, SpectrumIntegralError;
+
+  TGraph *SpectrumDerivative_G;
 
   /*
 
@@ -108,12 +135,12 @@ private:
   void RejectPileup(TH1F *);
 
   void FindSpectrumPeaks();
-  void IntegrateSpectrum();
+
 
   void CreateDesplicedFile();
-  void CreatePSDHistogram();
+
   
-  void CalculateSpectrumBackground(TH1F *);
+
   
   // Method to save a generic histogram to a data file
   void SaveHistogramData(TH1 *);
@@ -125,23 +152,13 @@ private:
   double* SumDoubleArrayToMaster(double*, size_t);
   double SumDoublesToMaster(double);
 
-  // Methods to individual waveforms and spectra
-  void PlotWaveform();
-  void PlotSpectrum();
-  void PlotSpectrumDerivative();
-  void PlotPSDHistogram();
-  void PlotPSDHistogramSlice(int, int);
-
   // Methods for general waveform analysis
   void CalculateCountRate();
-  void CalculatePSDIntegrals(bool);
   bool ApplyPSDFilter(double,double);
   void IntegratePearsonWaveform(bool PlotPearsonIntegration=true);
 
-
   void CreatePSDFilter(int, int);
   void PlotPSDFilter();
-  void SetCalibrationWidgetState(bool, EButtonState);
   */
 
 private:

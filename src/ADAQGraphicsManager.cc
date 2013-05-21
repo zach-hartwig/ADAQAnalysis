@@ -1,9 +1,12 @@
+#include <TStyle.h>
 #include <TMarker.h>
+#include <TPaletteAxis.h>
 
 #include "ADAQGraphicsManager.hh"
 
 
 #include <iostream>
+#include <cmath>
 using namespace std;
 
 
@@ -356,27 +359,22 @@ void ADAQGraphicsManager::PlotWaveform()
 
 void ADAQGraphicsManager::PlotSpectrum()
 {
-  TH1F *Spectrum_H = AnalysisMgr->GetSpectrum();
-
-  if(!Spectrum_H){
-    //CreateMessageBox("A valid Spectrum_H object was not found! Spectrum plotting will abort!","Stop");
-    return;
-  }
-
   //////////////////////////////////
   // Determine main spectrum to plot
 
-  //  TH1F *Spectrum2Plot_H = 0;
+  TH1F *Spectrum_H = 0;
   
-  //  if(SpectrumFindBackground_CB->IsDown() and SpectrumLessBackground_RB->IsDown())
-  //    Spectrum2Plot_H = (TH1F *)SpectrumDeconvolved_H->Clone();
-  //  else
-  //    Spectrum2Plot_H = (TH1F *)Spectrum_H->Clone();
+  if(ADAQSettings->FindBackground and ADAQSettings->PlotLessBackground)
+    Spectrum_H = AnalysisMgr->GetSpectrumWithoutBackground();
+  else
+    Spectrum_H = AnalysisMgr->GetSpectrum();
   
+  if(!Spectrum_H)
+    return;
 
   double XMin = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
   double XMax = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
-
+  
   Spectrum_H->GetXaxis()->SetRangeUser(XMin, XMax);
 
   double YMin, YMax;
@@ -477,21 +475,316 @@ void ADAQGraphicsManager::PlotSpectrum()
   }
   
   Spectrum_H->Draw(DrawString.c_str());
-
+  
   ////////////////////////////////////////////
   // Overlay the background spectra if desired
-  //  if(ADAQSettings->FindBackground and ADAQSettings->PlotWithBackground)
-  //    SpectrumBackground_H->Draw("C SAME");
+  if(ADAQSettings->FindBackground and ADAQSettings->PlotWithBackground){
+    TH1F *SpectrumBackground_H = AnalysisMgr->GetSpectrumBackground();
+    SpectrumBackground_H->Draw("C SAME");
+  }
 
-  if(ADAQSettings->FindIntegral)
-    {};//IntegrateSpectrum();
+  if(ADAQSettings->FindIntegral){
+    TH1F *SpectrumIntegral_H = AnalysisMgr->GetSpectrumIntegral();
+    SpectrumIntegral_H->Draw("B SAME");
+    SpectrumIntegral_H->Draw("C SAME");
+    
+    if(ADAQSettings->UseGaussianFit){
+      TF1 *SpectrumFit_F = AnalysisMgr->GetSpectrumFit();
+      SpectrumFit_F->Draw("SAME");
+    }
+  }
   
   // Update the canvas
   TheCanvas->Update();
-
+  
   // Set the class member int that tells the code what is currently
   // plotted on the embedded canvas. This is important for influencing
   // the behavior of the vertical and horizontal double sliders used
   // to "zoom" on the canvas contents
   CanvasContentType = zSpectrum;
+}
+
+
+// Method to extract the digitized data on the specified data channel
+// and store it into a TH1F object as a "raw" waveform. Note that the
+// baseline must be calculated in this method even though it is not
+// used to operate on the waveform
+void ADAQGraphicsManager::PlotPSDHistogram()
+{
+  TH2F *PSDHistogram_H = AnalysisMgr->GetPSDHistogram();
+  
+  // Check to ensure that the PSD histogram object exists!
+  if(!PSDHistogram_H){
+    //    CreateMessageBox("A valid PSDHistogram object was not found! PSD histogram plotting will abort!","Stop");
+    return;
+  }
+
+  // If the PSD histogram has zero events then alert the user and
+  // abort plotting. This can happen, for example, if the PSD channel
+  // was incorrectly set to an "empty" data channel
+  if(PSDHistogram_H->GetEntries() == 0){
+    //    CreateMessageBox("The PSD histogram had zero entries! Recheck PSD settings and take another whirl around the merry-go-round!","Stop");
+    return;
+  }
+  
+  //////////////////////
+  // X and Y axis ranges
+  
+  double XMin = PSDHistogram_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
+  double XMax = PSDHistogram_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
+  PSDHistogram_H->GetXaxis()->SetRangeUser(XMin, XMax);
+  
+  double YMin = PSDHistogram_H->GetYaxis()->GetXmax() * (1-ADAQSettings->YAxisMax);
+  double YMax = PSDHistogram_H->GetYaxis()->GetXmax() * (1-ADAQSettings->YAxisMin);
+  PSDHistogram_H->GetYaxis()->SetRangeUser(YMin, YMax);
+  
+  string Title, XTitle, YTitle, ZTitle, PaletteTitle;
+
+  if(ADAQSettings->OverrideGraphicalDefault){
+    Title = ADAQSettings->PlotTitle;
+    XTitle = ADAQSettings->XAxisTitle;
+    YTitle = ADAQSettings->YAxisTitle;
+    ZTitle = ADAQSettings->ZAxisTitle;
+    PaletteTitle = ADAQSettings->PaletteTitle;
+  }
+  else{
+    Title = "Pulse Shape Discrimination Integrals";
+    XTitle = "Waveform total integral [ADC]";
+    YTitle = "Waveform tail integral [ADC]";
+    ZTitle = "Number of waveforms";
+    PaletteTitle ="";
+  }
+
+  // Get the desired axes divisions
+  int XDivs = ADAQSettings->XDivs;
+  int YDivs = ADAQSettings->YDivs;
+  int ZDivs = ADAQSettings->ZDivs;
+
+  // Hack to make the X axis of the 2D PSD histogram actually look
+  // decent given the large numbers involved
+  if(ADAQSettings->OverrideGraphicalDefault)
+    XDivs = 505;
+  
+  if(ADAQSettings->StatsOff)
+    PSDHistogram_H->SetStats(false);
+  else
+    PSDHistogram_H->SetStats(true);
+  
+  TheCanvas->SetLeftMargin(0.13);
+  TheCanvas->SetBottomMargin(0.12);
+  TheCanvas->SetRightMargin(0.2);
+
+  ////////////////////////////////
+  // Axis and graphical attributes
+  
+  if(ADAQSettings->PlotVerticalAxisInLog)
+    gPad->SetLogz(true);
+  else
+    gPad->SetLogz(false);
+  
+  // The X and Y axes should never be plotted in log
+  gPad->SetLogx(false);
+  gPad->SetLogy(false);
+
+  PSDHistogram_H->SetTitle(Title.c_str());
+  
+  PSDHistogram_H->GetXaxis()->SetTitle(XTitle.c_str());
+  PSDHistogram_H->GetXaxis()->SetTitleSize(ADAQSettings->XSize);
+  PSDHistogram_H->GetXaxis()->SetLabelSize(ADAQSettings->XSize);
+  PSDHistogram_H->GetXaxis()->SetTitleOffset(ADAQSettings->XOffset);
+  PSDHistogram_H->GetXaxis()->CenterTitle();
+  PSDHistogram_H->GetXaxis()->SetNdivisions(XDivs, true);
+
+  PSDHistogram_H->GetYaxis()->SetTitle(YTitle.c_str());
+  PSDHistogram_H->GetYaxis()->SetTitleSize(ADAQSettings->YSize);
+  PSDHistogram_H->GetYaxis()->SetLabelSize(ADAQSettings->YSize);
+  PSDHistogram_H->GetYaxis()->SetTitleOffset(ADAQSettings->YOffset);
+  PSDHistogram_H->GetYaxis()->CenterTitle();
+  PSDHistogram_H->GetYaxis()->SetNdivisions(YDivs, true);
+
+  PSDHistogram_H->GetZaxis()->SetTitle(ZTitle.c_str());
+  PSDHistogram_H->GetZaxis()->SetTitleSize(ADAQSettings->ZSize);
+  PSDHistogram_H->GetZaxis()->SetLabelSize(ADAQSettings->ZSize);
+  PSDHistogram_H->GetZaxis()->SetTitleOffset(ADAQSettings->ZOffset);
+  PSDHistogram_H->GetZaxis()->CenterTitle();
+  PSDHistogram_H->GetZaxis()->SetNdivisions(ZDivs, true);
+
+  switch(ADAQSettings->PSDPlotType){
+
+  case 0:
+    PSDHistogram_H->Draw("COL Z");
+    break;
+
+  case 1:
+    PSDHistogram_H->Draw("LEGO2 0Z");
+    break;
+
+  case 2:
+    PSDHistogram_H->Draw("SURF3 Z");
+    break;
+
+  case 3:
+    PSDHistogram_H->SetFillColor(kOrange);
+    PSDHistogram_H->Draw("SURF4");
+    break;
+
+  case 4:
+    PSDHistogram_H->Draw("CONT Z");
+    break;
+  }
+
+
+  // Modify the histogram color palette only for the histograms that
+  // actually create a palette
+  if(ADAQSettings->PSDPlotType != 3){
+    
+    // The canvas must be updated before the TPaletteAxis is accessed
+    TheCanvas->Update();
+    
+    TPaletteAxis *ColorPalette = (TPaletteAxis *)PSDHistogram_H->GetListOfFunctions()->FindObject("palette");
+    ColorPalette->GetAxis()->SetTitle(PaletteTitle.c_str());
+    ColorPalette->GetAxis()->SetTitleSize(ADAQSettings->PaletteSize);
+    ColorPalette->GetAxis()->SetTitleOffset(ADAQSettings->PaletteOffset);
+    ColorPalette->GetAxis()->CenterTitle();
+    ColorPalette->GetAxis()->SetLabelSize(ADAQSettings->PaletteSize);
+    
+    ColorPalette->SetX1NDC(ADAQSettings->PaletteX1);
+    ColorPalette->SetX2NDC(ADAQSettings->PaletteX2);
+    ColorPalette->SetY1NDC(ADAQSettings->PaletteY1);
+    ColorPalette->SetY2NDC(ADAQSettings->PaletteY2);
+    
+    ColorPalette->Draw("SAME");
+  }
+  
+  if(ADAQSettings->EnableFilterCreation)
+    {}//PlotPSDFilter();
+
+  CanvasContentType = zPSDHistogram;
+  
+  TheCanvas->Update();
+}
+
+
+void ADAQGraphicsManager::PlotSpectrumDerivative()
+{
+  TGraph *SpectrumDerivative_G = AnalysisMgr->CalculateSpectrumDerivative();
+
+  string Title, XTitle, YTitle;
+
+  if(ADAQSettings->OverrideGraphicalDefault){
+    // Assign the titles to strings
+    Title = ADAQSettings->PlotTitle;
+    XTitle = ADAQSettings->XAxisTitle;
+    YTitle = ADAQSettings->YAxisTitle;
+  }
+  // ... otherwise use the default titles
+  else{
+    // Assign the default titles
+    Title = "Spectrum Derivative";
+    XTitle = "Pulse units [ADC]";
+    YTitle = "Counts";
+  }
+
+  // Get the desired axes divisions
+  int XDivs = ADAQSettings->XDivs;
+  int YDivs = ADAQSettings->YDivs;
+
+
+  /////////////////////
+  // Logarithmic Y axis
+  
+  if(ADAQSettings->PlotVerticalAxisInLog)
+    gPad->SetLogy(true);
+  else
+    gPad->SetLogy(false);
+
+  TheCanvas->SetLeftMargin(0.13);
+  TheCanvas->SetBottomMargin(0.12);
+  TheCanvas->SetRightMargin(0.05);
+
+
+  ///////////////////
+  // Create the graph
+
+  gStyle->SetEndErrorSize(0);
+
+
+
+  SpectrumDerivative_G->SetTitle(Title.c_str());
+
+  SpectrumDerivative_G->GetXaxis()->SetTitle(XTitle.c_str());
+  SpectrumDerivative_G->GetXaxis()->SetTitleSize(ADAQSettings->XSize);
+  SpectrumDerivative_G->GetXaxis()->SetLabelSize(ADAQSettings->XSize);
+  SpectrumDerivative_G->GetXaxis()->SetTitleOffset(ADAQSettings->XOffset);
+  SpectrumDerivative_G->GetXaxis()->CenterTitle();
+  SpectrumDerivative_G->GetXaxis()->SetNdivisions(XDivs, true);
+
+  SpectrumDerivative_G->GetYaxis()->SetTitle(YTitle.c_str());
+  SpectrumDerivative_G->GetYaxis()->SetTitleSize(ADAQSettings->YSize);
+  SpectrumDerivative_G->GetYaxis()->SetLabelSize(ADAQSettings->YSize);
+  SpectrumDerivative_G->GetYaxis()->SetTitleOffset(ADAQSettings->YOffset);
+  SpectrumDerivative_G->GetYaxis()->CenterTitle();
+  SpectrumDerivative_G->GetYaxis()->SetNdivisions(YDivs, true);
+  
+  SpectrumDerivative_G->SetLineColor(2);
+  SpectrumDerivative_G->SetLineWidth(2);
+  SpectrumDerivative_G->SetMarkerStyle(20);
+  SpectrumDerivative_G->SetMarkerSize(1.0);
+  SpectrumDerivative_G->SetMarkerColor(2);
+
+ 
+  //////////////////////
+  // X and Y axis limits
+  
+  double XMin = SpectrumDerivative_G->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
+  double XMax = SpectrumDerivative_G->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
+  SpectrumDerivative_G->GetXaxis()->SetRangeUser(XMin,XMax);
+  
+  // Calculates values that will allow the sliders to span the full
+  // range of the derivative that, unlike all the other plotted
+  // objects, typically has a substantial negative range
+  double MinValue = SpectrumDerivative_G->GetHistogram()->GetMinimum();
+  double MaxValue = SpectrumDerivative_G->GetHistogram()->GetMaximum();
+  double AbsValue = abs(MinValue) + abs(MaxValue);
+  
+  double YMin = MinValue + (AbsValue * (1-ADAQSettings->YAxisMax));
+  double YMax = MaxValue - (AbsValue * ADAQSettings->YAxisMin);
+  
+  SpectrumDerivative_G->GetYaxis()->SetRangeUser(YMin, YMax);
+    
+  if(ADAQSettings->PlotSpectrumDerivativeError){
+    SpectrumDerivative_G->SetLineColor(1);
+    SpectrumDerivative_G->Draw("AP");
+  }
+  else
+    SpectrumDerivative_G->Draw("ALP");
+  
+  // Set the class member int denoting that the canvas now contains
+  // only a spectrum derivative
+  CanvasContentType = zSpectrumDerivative;
+
+  /*
+  
+  // If the TH1F object that stores the spectrum derivative exists
+  // then delete/recreate it
+  if(SpectrumDerivative_H) delete SpectrumDerivative_H;
+  SpectrumDerivative_H = new TH1F("SpectrumDerivative_H","SpectrumDerivative_H", SpectrumNumBins, SpectrumMinBin, SpectrumMaxBin);
+  
+  // Iterate over the TGraph derivative points and assign them to the
+  // TH1F object. The main purpose for converting this to a TH1F is so
+  // that the generic/modular function SaveHistogramData() can be used
+  // to output the spectrum derivative data to a file. We also
+  // subtract off the vertical offset used for plotting to ensure the
+  // derivative is vertically centered at zero.
+
+  double x,y;
+  for(int bin=0; bin<SpectrumNumBins; bin++){
+    SpectrumDerivative_G->GetPoint(bin,x,y);
+    SpectrumDerivative_H->SetBinContent(bin, y-VerticalOffset);
+  }
+  
+  SpectrumDerivativeExists = true;
+  */
+  
+  TheCanvas->Update();
 }

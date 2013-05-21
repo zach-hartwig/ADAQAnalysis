@@ -1,5 +1,6 @@
 #include <TSystem.h>
 #include <TError.h>
+#include <TF1.h>
 
 #ifdef MPI_ENABLED
 #include <mpi.h>
@@ -13,6 +14,7 @@
 #include "ADAQAnalysisVersion.hh"
 
 #include <iostream>
+#include <fstream>
 using namespace std;
 
 
@@ -675,14 +677,10 @@ void ADAQAnalysisManager::CreateSpectrum()
   if(!ADAQParResultsLoaded)
     TotalDeuterons = 0.;
   
-  // Delete the previoue TSpectrum PeakFinder object if it exists to
-  // prevent memory leaks
-  if(PeakFinder)
-    delete PeakFinder;
-  
-  // Create a TSpectrum PeakFinder using the appropriate widget to set
-  // the maximum number of peaks that can be found
+  // Reboot the PeakFinder with up-to-date max peaks
+  if(PeakFinder) delete PeakFinder;
   PeakFinder = new TSpectrum(ADAQSettings->MaxPeaks);
+  
 
   // Assign the range of waveforms that will be analyzed to create a
   // histogram. Note that in sequential architecture if N waveforms
@@ -1080,4 +1078,646 @@ void ADAQAnalysisManager::UpdateProcessingProgress(int Waveform)
 	 << "       "
 	 << flush;
 #endif
+}
+
+
+// Method to compute a background of a TH1F object representing a
+// detector pulse height / energy spectrum.
+void ADAQAnalysisManager::CalculateSpectrumBackground()//TH1F *Spectrum_H)
+{
+  // raw = original spectrum for which background is calculated 
+  // background = background component of raw spectrum
+  // deconvolved = raw spectrum less background spectrum
+
+  // Clone the Spectrum_H object and give the clone a unique name
+  TH1F *SpectrumClone_H = (TH1F *)Spectrum_H->Clone("SpectrumClone_H");
+  
+  // Set the range of the Spectrum_H clone to correspond to the range
+  // that the user has specified to calculate the background over
+  SpectrumClone_H->GetXaxis()->SetRangeUser(ADAQSettings->BackgroundMinBin,
+					    ADAQSettings->BackgroundMaxBin);
+  
+  // Delete and recreate the TSpectrum peak finder object
+  if(PeakFinder) delete PeakFinder;
+  PeakFinder = new TSpectrum(5);
+  
+  // ZSH: This widget has been disabled for lack of use. Presently, I
+  //       have hardcoded a rather unimportant (Ha! This will come
+  //       back to bite you in the ass, I'm sure of it) "5" above in
+  //       place since it doesn't affect the backgroud calculation.
+  //
+  // PeakFinder = new TSpectrum(SpectrumNumPeaks_NEL->GetEntry()->GetIntNumber());
+
+  // Delete the TH1F object that holds a previous background histogram
+  if(SpectrumBackground_H) delete SpectrumBackground_H;
+
+  // Use the TSpectrum::Background() method to compute the spectrum
+  // background; Set the resulting TH1F objects graphic attributes
+  SpectrumBackground_H = (TH1F *)PeakFinder->Background(SpectrumClone_H, 15, "goff");
+  SpectrumBackground_H->SetLineColor(2);
+  SpectrumBackground_H->SetLineWidth(2);
+
+  // ZSH: The TSpectrum::Background() method sets the TH1F::Entries
+  // class member of the returned TH1F background object to the number
+  // of bins of the TH1F object for which the background is calculated
+  // NOT the actual integral of the resulting background histogram
+  // (including under/over flow bins). See TSpectrum.cxx Line 241 in
+  // the ROOT source code. Unclear if this is a bug or if this is done
+  // for statistical validity reasons. May post in ROOTTalk forum.
+  //
+  // Set the TH1F::Entries variable to equal the full integral of the
+  // background TH1F object
+  SpectrumBackground_H->SetEntries(SpectrumBackground_H->Integral(0, ADAQSettings->SpectrumNumBins+1));
+  
+  // Delete the TH1F object that holds a previous deconvolved TH1F
+  if(SpectrumDeconvolved_H)
+    delete SpectrumDeconvolved_H;
+
+  // Create a new deconvolved spectrum. Note that the bin number and
+  // range match those of the raw spectrum, whereas the background
+  // spectrum range is set by the user. This enables a background
+  // spectrum to be computed for whatever range the user desires and
+  // for resulting deconvolved spectrum to have the entire original
+  // raw spectrum with the background subtracted out.
+  SpectrumDeconvolved_H = new TH1F("Deconvolved spectrum", "Deconvolved spectrum", 
+				   ADAQSettings->SpectrumNumBins, 
+				   ADAQSettings->SpectrumMinBin, 
+				   ADAQSettings->SpectrumMaxBin);
+  SpectrumDeconvolved_H->SetLineColor(4);
+  SpectrumDeconvolved_H->SetLineWidth(2);
+
+  // Subtract the background spectrum from the raw spectrum
+  SpectrumDeconvolved_H->Add(SpectrumClone_H, SpectrumBackground_H, 1.0, -1.0);
+
+  // ZSH: The final TH1 statistics from two combined TH1's depend on
+  // the the operation: "adding" two histograms preserves statistics,
+  // but "subtracting" two histograms cannot preserve statistics in
+  // order to prevent violating statistical rules (See TH1.cxx, Lines
+  // 1062-1081) such as negative variances. Therefore, the
+  // TH1::Entries data member is NOT equal to the full integral of the
+  // TH1 object (including under/over flow bins); however, it is
+  // highly convenient for the TH1::Entries variable to **actually
+  // reflect the total content of the histogram**, either for viewing
+  // on the TH1 stats box or comparing to the calculated integral. 
+  //
+  // Set the TH1::Entries to equal the full integral of the TH1 object
+  SpectrumDeconvolved_H->SetEntries(SpectrumDeconvolved_H->Integral(ADAQSettings->SpectrumMinBin,
+								    ADAQSettings->SpectrumMaxBin+1));
+}
+
+
+// Method used to integrate a pulse / energy spectrum
+void ADAQAnalysisManager::IntegrateSpectrum()
+{
+  double XAxisMin = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
+  double XAxisMax = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
+
+  double LowerIntLimit = (ADAQSettings->SpectrumIntegrationMin * XAxisMax) + XAxisMin;
+  double UpperIntLimit = ADAQSettings->SpectrumIntegrationMax * XAxisMax;
+  
+  // Check to ensure that the lower limit line is always LESS than the
+  // upper limit line
+  if(UpperIntLimit < LowerIntLimit)
+    UpperIntLimit = LowerIntLimit+1;
+
+  // Clone the appropriate spectrum object depending on user's
+  // selection into a new TH1F object for integration
+  if(Spectrum2Integrate_H)
+    delete Spectrum2Integrate_H;
+
+  if(ADAQSettings->PlotLessBackground)
+    Spectrum2Integrate_H = (TH1F *)SpectrumDeconvolved_H->Clone("SpectrumToIntegrate_H");
+  else
+    Spectrum2Integrate_H = (TH1F *)Spectrum_H->Clone("SpectrumToIntegrate_H");
+  
+  // Set the integration TH1F object attributes and draw it
+  Spectrum2Integrate_H->SetLineColor(4);
+  Spectrum2Integrate_H->SetLineWidth(2);
+  Spectrum2Integrate_H->SetFillColor(2);
+  Spectrum2Integrate_H->SetFillStyle(3001);
+  Spectrum2Integrate_H->GetXaxis()->SetRangeUser(LowerIntLimit, UpperIntLimit);
+  
+  // Variable to hold the result of the spectrum integral
+  double Int = 0.;
+  
+  // Variable to hold the result of the error in the spectrum integral
+  // calculation. Integration error is simply the square root of the
+  // sum of the squares of the integration spectrum bin contents. The
+  // error is computed with a ROOT TH1 method for robustness.
+  double Err = 0.;
+  
+  string IntegralArg = "width";
+  if(ADAQSettings->IntegralInCounts)
+    IntegralArg.assign("");
+  
+  ///////////////////////////////
+  // Gaussian fitting/integration
+
+  if(ADAQSettings->UseGaussianFit){
+    // Create a gaussian fit between the lower/upper limits; fit the
+    // gaussian to the histogram and store the result of the fit in a
+    // new TH1F object for analysis
+    if(SpectrumFit_F)
+      delete SpectrumFit_F;
+    
+    SpectrumFit_F = new TF1("PeakFit", "gaus", LowerIntLimit, UpperIntLimit);
+    Spectrum2Integrate_H->Fit("PeakFit","R N");
+    TH1F *SpectrumFit_H = (TH1F *)SpectrumFit_F->GetHistogram();
+    
+    // Get the bin width. Note that bin width is constant for these
+    // histograms so getting the zeroth bin is acceptable
+    GaussianBinWidth = SpectrumFit_H->GetBinWidth(0);
+    
+    // Compute the integral and error between the lower/upper limits
+    // of the histogram that resulted from the gaussian fit
+    Int = SpectrumFit_H->IntegralAndError(SpectrumFit_H->FindBin(LowerIntLimit),
+					  SpectrumFit_H->FindBin(UpperIntLimit),
+					  Err,
+					  IntegralArg.c_str());
+    
+    if(ADAQSettings->IntegralInCounts){
+      Int *= (GaussianBinWidth/CountsBinWidth);
+      Err *= (GaussianBinWidth/CountsBinWidth);
+    }
+    
+    // Draw the gaussian peak fit
+    SpectrumFit_F->SetLineColor(kGreen+2);
+    SpectrumFit_F->SetLineWidth(3);
+  }
+  
+  ////////////////////////
+  // Histogram integration
+
+  else{
+    // Set the low and upper bin for the integration
+    int StartBin = Spectrum2Integrate_H->FindBin(LowerIntLimit);
+    int StopBin = Spectrum2Integrate_H->FindBin(UpperIntLimit);
+    
+    // Compute the integral and error
+    Int = Spectrum2Integrate_H->IntegralAndError(StartBin,
+						 StopBin,
+						 Err,
+						 IntegralArg.c_str());
+    
+    // Get the bin width of the histogram
+    CountsBinWidth = Spectrum2Integrate_H->GetBinWidth(0);
+  }
+  
+  // The spectrum integral and error may be normalized to the total
+  // computed RFQ current if desired by the user
+  if(ADAQSettings->NormalizeToCurrent){
+    if(TotalDeuterons == 0)
+      TotalDeuterons = 1.0;
+    else{
+      Int /= TotalDeuterons;
+      Err /= TotalDeuterons;
+    }
+  }
+  
+  SpectrumIntegralValue = Int;
+  SpectrumIntegralError = Err;
+}
+
+
+// Method used to output a generic TH1 object to a data text file in
+// the format column1 == bin center, column2 == bin content. Note that
+// the function accepts class types TH1 such that any derived class
+// (TH1F, TH1D ...) can be saved with this function
+bool ADAQAnalysisManager::SaveHistogramData(string Type, string FileName, string FileExtension)
+{
+  TH1F *HistogramToSave_H;
+  if(Type == "Spectrum")
+    HistogramToSave_H = Spectrum_H;
+  else if(Type == "SpectrumDerivative")
+    HistogramToSave_H = SpectrumDerivative_H;
+  else 
+    return false;
+  
+  if(FileExtension == ".dat" or FileExtension == ".csv"){
+    
+    string FullFileName = FileName + FileExtension;
+    
+    ofstream HistogramOutput(FullFileName.c_str(), ofstream::trunc);
+    
+    // Assign the data separator based on file extension
+    string separator;
+    if(FileExtension == ".dat")
+      separator = "\t";
+    else if(FileExtension == ".csv")
+      separator = ",";
+
+    int NumBins = HistogramToSave_H->GetNbinsX();
+    
+    for(int bin=0; bin<=NumBins; bin++)
+      HistogramOutput << HistogramToSave_H->GetBinCenter(bin) << separator
+		      << HistogramToSave_H->GetBinContent(bin)
+		      << endl;
+    
+    HistogramOutput.close();
+
+    return true;
+    
+    //    string SuccessMessage = "The histogram data has been successfully saved to the following file:\n" + FullFileName;
+    //    CreateMessageBox(SuccessMessage,"Asterisk");
+  }
+  else if(FileExtension == ".root"){
+    
+    string FullFileName = FileName + FileExtension;
+    
+    TFile *HistogramOutput = new TFile(FullFileName.c_str(), "recreate");
+    
+    HistogramToSave_H->Write("Spectrum");
+    HistogramOutput->Close();
+
+    return true;
+    
+    string SuccessMessage = "The TH1 * histogram named 'Spectrum' has been successfully saved to the following file:\n" + FullFileName;
+    //    CreateMessageBox(SuccessMessage,"Asterisk");
+  }
+  else{
+    return false;
+    //    CreateMessageBox("Unacceptable file extension for the spectrum data file! Valid extensions are '.dat', '.csv', and '.root'!","Stop");
+  }
+}
+
+
+
+TH2F *ADAQAnalysisManager::CreatePSDHistogram()
+{
+  if(PSDHistogram_H){
+    delete PSDHistogram_H;
+    PSDHistogramExists = false;
+  }
+  
+  if(SequentialArchitecture){
+    ProcessingProgressBar->Reset();
+    ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(41));
+    ProcessingProgressBar->SetForegroundColor(ColorManager->Number2Pixel(1));
+  }
+  
+  // Create a 2-dimensional histogram to store the PSD integrals
+  PSDHistogram_H = new TH2F("PSDHistogram_H","PSDHistogram_H", 
+			    ADAQSettings->PSDNumTotalBins, 
+			    ADAQSettings->PSDMinTotalBin,
+			    ADAQSettings->PSDMaxTotalBin,
+			    ADAQSettings->PSDNumTailBins,
+			    ADAQSettings->PSDMinTailBin,
+			    ADAQSettings->PSDMaxTailBin);
+
+  int PSDChannel = ADAQSettings->PSDChannel;
+  
+  // Reboot the PeakFinder with up-to-date max peaks
+  if(PeakFinder) delete PeakFinder;
+  PeakFinder = new TSpectrum(ADAQSettings->MaxPeaks);
+  
+  // See documention in either ::CreateSpectrum() or
+  // ::CreateDesplicedFile for parallel processing assignemnts
+  
+  WaveformStart = 0;
+  WaveformEnd = ADAQSettings->PSDWaveformsToDiscriminate;
+  
+#ifdef MPI_ENABLED
+
+  int SlaveEvents = int(PSDWaveformsToDiscriminate/MPI_Size);
+  
+  int MasterEvents = int(PSDWaveformsToDiscriminate-SlaveEvents*(MPI_Size-1));
+  
+  if(ParallelVerbose and IsMaster)
+    cout << "\nADAQAnalysis_MPI Node[0]: Waveforms allocated to slaves (node != 0) = " << SlaveEvents << "\n"
+	 <<   "                          Waveforms alloced to master (node == 0) =  " << MasterEvents
+	 << endl;
+  
+  // Assign each master/slave a range of the total waveforms to
+  // process based on the MPI rank. Note that WaveformEnd holds the
+  // waveform_ID that the loop runs up to but does NOT include
+  WaveformStart = (MPI_Rank * MasterEvents); // Start (include this waveform in the final histogram)
+  WaveformEnd =  (MPI_Rank * MasterEvents) + SlaveEvents; // End (Up to but NOT including this waveform)
+  
+  if(ParallelVerbose)
+    cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Handling waveforms " << WaveformStart << " to " << (WaveformEnd-1)
+	 << endl;
+#endif
+
+  bool PeaksFound = false;
+  
+  for(int waveform=WaveformStart; waveform<WaveformEnd; waveform++){
+    if(SequentialArchitecture)
+      gSystem->ProcessEvents();
+    
+    ADAQWaveformTree->GetEntry(waveform);
+
+    RawVoltage = *WaveformVecPtrs[PSDChannel];
+    
+    if(ADAQSettings->RawWaveform or ADAQSettings->BSWaveform)
+      CalculateBSWaveform(PSDChannel, waveform);
+    else if(ADAQSettings->ZSWaveform)
+      CalculateZSWaveform(PSDChannel, waveform);
+    
+    // Find the peaks and peak limits in the current waveform
+    PeaksFound = FindPeaks(Waveform_H[PSDChannel]);
+
+    cout << PeaksFound << endl;
+    
+    // If not peaks are present in the current waveform then continue
+    // onto the next waveform to optimize CPU $.
+    if(!PeaksFound)
+      continue;
+    
+    // Calculate the "total" and "tail" integrals of each
+    // peak. Because we want to create a PSD histogram, pass "true" to
+    // the function to indicate the results should be histogrammed
+    CalculatePSDIntegrals(true);
+    
+    // Update the user with progress
+    if(IsMaster)
+      if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
+	UpdateProcessingProgress(waveform);
+  }
+  
+  if(SequentialArchitecture){
+    ProcessingProgressBar->Increment(100);
+    ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(32));
+    ProcessingProgressBar->SetForegroundColor(ColorManager->Number2Pixel(0));
+    
+    //if(IntegratePearson)
+    //      {}//      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
+  }
+
+#ifdef MPI_ENABLED
+
+  if(ParallelVerbose)
+    cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Reached the end-of-processing MPI barrier!"
+	 << endl;
+
+  MPI::COMM_WORLD.Barrier();
+
+  // The PSDHistogram_H is a 2-dimensional array containing the total
+  // (on the "X-axis") and the tail (on the "Y-axis") integrals of
+  // each detector pulse. In order to create a single master TH2F
+  // object from all the TH2F objects on the nodes, the following
+  // procedure is followed:
+  //
+  // 0. Create a 2-D array of doubles using the X and Y sizes of the
+  //    PSDHistogram_H TH2F object
+  // 
+  // 1. Readout the first column of the PSDHistogram_H object into a
+  //    1-D vector (array)
+  //
+  // 2. Use the SumDoubleArrayToMaster() to sum the nodes's array to a
+  //    single array on the master node
+  //
+  // 3. Fill up the first column of the 2-D array with the reduced
+  //    values
+  //
+  // 3. Repeat #1 for the second column, Repeat...to the Nth column
+  //
+  // 4. Finally, create a new MasterPSDHistogram_H object on the
+  //    master and assign it the values from the 2-D reduced array
+  //    (which is essentially a "sum" of all the TH2F objects on the
+  //    nodes, just in 2-D array form) and write it to the parallel
+  //    processing file
+  //
+  // Note the total entries in all the nodes PSDHistogram_H objects
+  // are aggregated and assigned to the master object, and the
+  // deuterons are integrated as well.
+
+
+  // Create a 2-D array to represent the PSDHistogram_H in array form
+  const int ArraySizeX = PSDHistogram_H->GetNbinsX() + 2;
+  const int ArraySizeY = PSDHistogram_H->GetNbinsY() + 2;
+  double DoubleArray[ArraySizeX][ArraySizeY];
+
+  // Iterate over the PSDHistogram_H columns...
+  for(int i=0; i<ArraySizeX; i++){
+   
+    // A container for the PSDHistogram_H's present column
+    vector<double> ColumnVector(ArraySizeY, 0.);
+
+    // Assign the PSDHistogram_H's column to the vector
+    for(int j=0; j<ArraySizeY; j++)
+      ColumnVector[j] = PSDHistogram_H->GetBinContent(i,j);
+
+    // Reduce the array representing the column
+    double *ReturnArray = SumDoubleArrayToMaster(&ColumnVector[0], ArraySizeY);
+    
+    // Assign the array to the DoubleArray that represents the
+    // "master" or total PSDHistogram_H object
+    for(int j=0; j<ArraySizeY; j++)
+      DoubleArray[i][j] = ReturnArray[j];
+  }
+
+  // Aggregated the histogram entries from all nodes to the master
+  double Entries = PSDHistogram_H->GetEntries();
+  double ReturnDouble = SumDoublesToMaster(Entries);
+  
+  // Aggregated the total deuterons from all nodes to the master
+  TotalDeuterons = SumDoublesToMaster(TotalDeuterons);
+
+  if(IsMaster){
+    
+    if(ParallelVerbose)
+      cout << "\nADAQAnalysis_MPI Node[0] : Writing master PSD TH2F histogram to disk!\n"
+	   << endl;
+
+    // Create the master PSDHistogram_H object, i.e. the sum of all
+    // the PSDHistogram_H object values from the nodes
+    MasterPSDHistogram_H = new TH2F("MasterPSDHistogram_H","MasterPSDHistogram_H",
+				    PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin,
+				    PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin);
+    
+    
+    // Assign the content from the aggregated 2-D array to the new
+    // master histogram
+    for(int i=0; i<ArraySizeX; i++)
+      for(int j=0; j<ArraySizeY; j++)
+	MasterPSDHistogram_H->SetBinContent(i, j, DoubleArray[i][j]);
+    MasterPSDHistogram_H->SetEntries(ReturnDouble);
+    
+    // Open the TFile  and write all the necessary object to it
+    ParallelProcessingFile = new TFile(ParallelProcessingFName.c_str(), "update");
+    
+    MasterPSDHistogram_H->Write("MasterPSDHistogram");
+
+    TVectorD AggregatedDeuterons(1);
+    AggregatedDeuterons[0] = TotalDeuterons;
+    AggregatedDeuterons.Write("AggregatedDeuterons");
+
+    ParallelProcessingFile->Write();
+  }
+#endif
+ 
+  // Update the bool to alert the code that a valid PSDHistogram_H object exists.
+  PSDHistogramExists = true;
+
+  return PSDHistogram_H;
+}
+
+
+// Method to calculate the "tail" and "total" integrals of each of the
+// peaks located by the peak finding algorithm and stored in the class
+// member vector of PeakInfoStruct. Because calculating these
+// integrals are necessary for pulse shape discrimiation, this method
+// also (if specified by the user) applies a PSD filter to the
+// waveforms. Thus, this function is called anytime PSD filtering is
+// required (spectra creation, desplicing, etc), which may or may not
+// require histogramming the result of the PSD integrals. Hence, the
+// function argment boolean to provide flexibility
+void ADAQAnalysisManager::CalculatePSDIntegrals(bool FillPSDHistogram)
+{
+  // Iterate over each peak stored in the vector of PeakInfoStructs...
+  vector<PeakInfoStruct>::iterator it;
+  for(it=PeakInfoVec.begin(); it!=PeakInfoVec.end(); it++){
+    
+    // Assign the integration limits for the tail and total
+    // integrals. Note that peak limit and upper limit have the
+    // user-specified included to provide flexible integration
+    double LowerLimit = (*it).PeakLimit_Lower; // Left-most side of peak
+    double Peak = (*it).PeakPosX + ADAQSettings->PSDPeakOffset; // The peak location + offset
+    double UpperLimit = (*it).PeakLimit_Upper + ADAQSettings->PSDTailOffset; // Right-most side of peak + offset
+    
+    // Compute the total integral (lower to upper limit)
+    double TotalIntegral = Waveform_H[ADAQSettings->PSDChannel]->Integral(LowerLimit, UpperLimit);
+    
+    // Compute the tail integral (peak to upper limit)
+    double TailIntegral = Waveform_H[ADAQSettings->PSDChannel]->Integral(Peak, UpperLimit);
+    
+    if(Verbose)
+      cout << "PSD tail integral = " << TailIntegral << " (ADC)\n"
+	   << "PSD total integral = " << TotalIntegral << " (ADC)\n"
+	   << endl;
+    
+    // If the user has enabled a PSD filter ...
+    //if(UsePSDFilterManager[ADAQSettings->PSDChannel])
+      
+      // ... then apply the PSD filter to the waveform. If the
+      // waveform does not pass the filter, mark the flag indicating
+      // that it should be filtered out due to its pulse shap
+    //      if(ApplyPSDFilter(TailIntegral, TotalIntegral))
+    //	(*it).PSDFilterFlag = true;
+    
+    // The total integral of the waveform must exceed the PSDThreshold
+    // in order to be histogrammed. This allows the user flexibility
+    // in eliminating the large numbers of small waveform events.
+    if((TotalIntegral > ADAQSettings->PSDThreshold) and FillPSDHistogram)
+      if((*it).PSDFilterFlag == false)
+	PSDHistogram_H->Fill(TotalIntegral, TailIntegral);
+  }
+}
+
+
+// Analyze the tail and total PSD integrals to determine whether the
+// waveform should be filtered out depending on its pulse shape. The
+// comparison is made by determining if the value of tail integral
+// falls above/below the interpolated value of the total integral via
+// a TGraph created by the user (depending on "positive" or "negative"
+// filter polarity as selected by the user.). The following convention
+// - uniform throughout the code - is used for the return value:true =
+// waveform should be filtered; false = waveform should not be
+// filtered
+bool ADAQAnalysisManager::ApplyPSDFilter(double TailIntegral, double TotalIntegral)
+{
+  // The PSDFilter uses a TGraph created by the user in order to
+  // filter events out of the PSDHistogram_H. The events to be
+  // filtered must fall either above ("positive filter") or below
+  // ("negative filter) the line defined by the TGraph object. The
+  // tail integral of the pulse is compared to an interpolated
+  // value (using the total integral) to decide whether to filter.
+
+
+  // Waveform passed the criterion for a positive PSD filter (point in
+  // tail/total PSD integral space fell "above" the TGraph; therefore,
+  // it should not be filtered so return false
+  if(ADAQSettings->PSDFilterPolarity > 0 and 
+     TailIntegral >= PSDFilterManager[ADAQSettings->PSDChannel]->Eval(TotalIntegral))
+    return false;
+
+  // Waveform passed the criterion for a negative PSD filter (point in
+  // tail/total PSD integral space fell "below" the TGraph; therefore,
+  // it should not be filtered so return false
+  else if(ADAQSettings->PSDFilterPolarity < 0 and 
+	  TailIntegral <= PSDFilterManager[ADAQSettings->PSDChannel]->Eval(TotalIntegral))
+    return false;
+
+  // Waveform did not pass the PSD filter tests; therefore it should
+  // be filtered so return true
+  else
+    return true;
+}
+
+
+// Method to compute the derivative of the pulse spectrum
+TGraph *ADAQAnalysisManager::CalculateSpectrumDerivative()
+{
+  // The discrete spectrum derivative is simply defined as the
+  // difference between bin N_i and N_i-1 and then scaled down. The
+  // main purpose is more quantitatively examine spectra for peaks,
+  // edges, and other features.
+
+  // If the user has selected to plot the derivative on top of the
+  // spectrum, assign a vertical offset that will be used to plot the
+  // derivative vertically centered in the canvas window. Also, reduce
+  // the vertical scale of the total derivative such that it will
+  // appropriately fit within the spectrum canvas.
+  double VerticalOffset = 0;
+  double ScaleFactor = 1.;
+  if(ADAQSettings->OverplotSpectrumDerivative){
+    VerticalOffset = Spectrum2Plot_H->GetMaximum() / 2;
+    ScaleFactor = 1.3;
+  }
+  
+  const int NumBins = Spectrum_H->GetNbinsX();
+  
+  double BinCenters[NumBins], Differences[NumBins];  
+
+  double BinCenterErrors[NumBins], DifferenceErrors[NumBins];
+
+  // Iterate over the bins to assign the bin center and the difference
+  // between bins N_i and N_i-1 to the designed arrays
+  for(int bin = 0; bin<NumBins; bin++){
+    
+    // Set the bin center right in between the two bin centers used to
+    // calculate the spectrum derivative
+    BinCenters[bin] = (Spectrum_H->GetBinCenter(bin) + Spectrum_H->GetBinCenter(bin-1)) / 2;
+    
+    // Recall that TH1F bin 0 is the underfill bin; therfore, set the
+    // difference between bins 0/-1 and 0/1 to zero to account for
+    // bins that do not contain relevant content for the derivative
+    if(bin < 2){
+      Differences[bin] = VerticalOffset;
+      continue;
+    }
+    
+    double Previous = Spectrum_H->GetBinContent(bin-1);
+    double Current = Spectrum_H->GetBinContent(bin);
+
+    // Compute the "derivative", i.e. the difference between the
+    // current and previous bin contents
+    Differences[bin] = (ScaleFactor*(Current - Previous)) + VerticalOffset;
+    
+    if(ADAQSettings->PlotAbsValueSpectrumDerivative)
+      Differences[bin] = abs(Differences[bin]);
+    
+    // Assume that the error in the bin centers is zero
+    BinCenterErrors[bin] = 0.;
+    
+    // Compute the error in the "derivative" by adding the bin
+    // content in quadrature since bin content is uncorrelated. This
+    // is a more *accurate* measure of error
+    DifferenceErrors[bin] = sqrt(pow(sqrt(Current),2) + pow(sqrt(Previous),2));
+    
+    // Compute the error in the "derivative" by simply adding the
+    // error in the current and previous bins. This is a very
+    // *conservative* measure of error
+    // DifferenceErrors[bin] = sqrt(Current) + sqrt(Previous);
+  }
+  
+  if(SpectrumDerivative_G)
+    delete SpectrumDerivative_G;
+
+  if(ADAQSettings->PlotSpectrumDerivativeError)
+    SpectrumDerivative_G = new TGraphErrors(NumBins, BinCenters, Differences, BinCenterErrors, DifferenceErrors);
+  else
+    SpectrumDerivative_G = new TGraph(NumBins, BinCenters, Differences);
+
+  return SpectrumDerivative_G;
 }

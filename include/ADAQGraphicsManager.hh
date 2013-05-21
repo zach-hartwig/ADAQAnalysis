@@ -38,8 +38,8 @@ public:
 
   void PlotWaveform();
   void PlotSpectrum();
-  void PlotSpectrumDerivative(){;}
-  void PlotPSDHistogram(){;}
+  void PlotSpectrumDerivative();
+  void PlotPSDHistogram();
 
 
   

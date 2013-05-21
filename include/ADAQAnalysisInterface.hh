@@ -327,7 +327,7 @@ private:
 
   bool ADAQFileLoaded, ACRONYMFileLoaded;
 
-  string DataDirectory, PrintDirectory, DesplicedDirectory;
+  string DataDirectory, PrintDirectory, DesplicedDirectory, HistogramDirectory;
   string CurrentFileName;
 
   ADAQAnalysisSettings *ADAQSettings;

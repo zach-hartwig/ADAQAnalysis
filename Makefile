@@ -99,7 +99,7 @@ else
    ifeq ($(HOSTNAME),TheBlackArrow)
       CXX := clang++ -ferror-limit=5 -w
    else
-      CXX := g++
+      CXX := g++ -w
    endif
 
 endif

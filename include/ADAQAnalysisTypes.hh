@@ -171,7 +171,7 @@ public:
   int PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin;
   int PSDThreshold, PSDTailOffset, PSDPeakOffset;
 
-  string PSDPlotType;
+  int PSDPlotType;
   bool PSDPlotTailIntegrationRegion, EnableHistogramSlicing, PSDXSlice, PSDYSlice;
 
   bool EnableFilterCreation, EnableFilterUse;
@@ -186,7 +186,7 @@ public:
   bool WaveformCurve, WaveformMarkers, WaveformBoth;
   bool SpectrumCurve, SpectrumMarkers, SpectrumBars;
   bool StatsOff, PlotVerticalAxisInLog;
-  bool PlotSpectrumDerivativeError, PlotAbsvalueSpectrumDerivative, PlotYAxisWithAutoRange;
+  bool PlotSpectrumDerivativeError, PlotAbsValueSpectrumDerivative, PlotYAxisWithAutoRange;
   bool OverrideGraphicalDefault;
 
   string PlotTitle, XAxisTitle, YAxisTitle, ZAxisTitle, PaletteTitle;
@@ -214,6 +214,8 @@ public:
 
   // Canvas
   double XAxisMin, XAxisMax, YAxisMin, YAxisMax;
+
+  double SpectrumIntegrationMin, SpectrumIntegrationMax;
   
   
   ClassDef(ADAQAnalysisSettings, 1);
