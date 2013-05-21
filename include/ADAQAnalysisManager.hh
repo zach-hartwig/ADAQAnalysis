@@ -115,10 +115,19 @@ public:
   void CalculatePSDIntegrals(bool);
   bool ApplyPSDFilter(double, double);
 
+  string GetADAQFileName() { return ADAQFileName; }
+
 
   TGraph *CalculateSpectrumDerivative();
 
   void IntegratePearsonWaveform(bool PlotPearsonIntegration=true);
+  
+  double* SumDoubleArrayToMaster(double*, size_t);
+  double SumDoublesToMaster(double);
+
+  void ProcessWaveformsInParallel(string);
+
+  void RejectPileup(TH1F *);
   
 
 private:
@@ -135,7 +144,7 @@ private:
   /*
 
 
-  void RejectPileup(TH1F *);
+
 
   void FindSpectrumPeaks();
 
@@ -149,11 +158,10 @@ private:
   void SaveHistogramData(TH1 *);
   
   // Methods to handle the processing of waveforms in parallel
-  void ProcessWaveformsInParallel(string);
+
   void SaveParallelProcessingData();
   void LoadParallelProcessingData();
-  double* SumDoubleArrayToMaster(double*, size_t);
-  double SumDoublesToMaster(double);
+
 
   // Methods for general waveform analysis
   void CalculateCountRate();
@@ -173,7 +181,7 @@ private:
   // Objects for opening ADAQ ROOT files and accessing them
   ADAQRootMeasParams *ADAQMeasParams;
   TFile *ADAQRootFile;
-  string ADAQRootFileName;
+  string ADAQFileName;
   bool ADAQRootFileLoaded;
   TTree *ADAQWaveformTree;
   ADAQAnalysisParallelResults *ADAQParResults;

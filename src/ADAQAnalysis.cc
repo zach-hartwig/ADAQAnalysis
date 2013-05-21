@@ -82,7 +82,6 @@ int main(int argc, char *argv[])
   // Run ROOT in standalone mode
   TApplication *TheApplication = new TApplication("ADAQAnalysis", &argc, argv);
   
-
   // Create the singleton analysis manager
   ADAQAnalysisManager *TheAnalysis = new ADAQAnalysisManager(CmdLineArg, ParallelArchitecture);
   

@@ -1,6 +1,7 @@
 #include <TSystem.h>
 #include <TError.h>
 #include <TF1.h>
+#include <TVector.h>
 
 #ifdef MPI_ENABLED
 #include <mpi.h>
@@ -26,12 +27,12 @@ ADAQAnalysisManager *ADAQAnalysisManager::GetInstance()
 
 
 ADAQAnalysisManager::ADAQAnalysisManager(string CmdLineArg, bool PA)
-  : ADAQMeasParams(0), ADAQRootFile(0), ADAQRootFileName(""), ADAQRootFileLoaded(false), ADAQWaveformTree(0), 
+  : ADAQMeasParams(0), ADAQRootFile(0), ADAQFileName(""), ADAQRootFileLoaded(false), ADAQWaveformTree(0), 
     ADAQParResults(NULL), ADAQParResultsLoaded(false),
     Time(0), RawVoltage(0), RecordLength(0),
     PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelArchitecture(PA), SequentialArchitecture(!PA),
-    Verbose(false), ParallelVerbose(true),
+    Verbose(true), ParallelVerbose(true),
     Baseline(0.), PSDFilterPolarity(1.),
     V1720MaximumBit(4095), NumDataChannels(8),
     SpectrumExists(false), SpectrumDerivativeExists(false), PSDHistogramExists(false), PSDHistogramSliceExists(false),
@@ -82,10 +83,6 @@ ADAQAnalysisManager::ADAQAnalysisManager(string CmdLineArg, bool PA)
   // annoying warning from TSpectrum that the peak buffer is full)
   gErrorIgnoreLevel = kBreak;
   
-  // Use Boost's thread library to set the number of available
-  // processors/threads on the current machine
-  NumProcessors = boost::thread::hardware_concurrency();
-
   
   ///////////////////////////
   // Parallel architecture //
@@ -123,19 +120,27 @@ ADAQAnalysisManager::ADAQAnalysisManager(string CmdLineArg, bool PA)
     IsMaster = (MPI_Rank == 0);
     IsSlave = (MPI_Rank != 0);
 #endif
-
+    
     // Load the parameters required for processing from the ROOT file
     // generated from the sequential binary's ROOT widget settings
-    string ADAQSettingsFile = "/tmp/ADAQSettings.root";
+    string ADAQSettingsFile = "/tmp/ADAQSettings_" + USER + ".root";
     TFile *F = new TFile(ADAQSettingsFile.c_str(), "read");
-
-    ADAQSettings = (ADAQAnalysisSettings *)F->Get("ADAQSettings");
     
-    // Load the specified ADAQ ROOT file
-    LoadADAQRootFile(ADAQSettings->ADAQFileName);
+    ADAQSettings = (ADAQAnalysisSettings *)F->Get("ADAQSettings");
+    if(!ADAQSettings){
+      cout << "\nError! ADAQAnalysis_MPI could not find the ADAQSettings object!\n"
+	   << endl;
+      exit(-42);
+    }
+    else{
+      // Load the specified ADAQ ROOT file
+      LoadADAQRootFile(ADAQSettings->ADAQFileName);
+    }
+      
+    cout << "MPIRank[" << MPI_Rank << "] = " << ADAQSettings->ADAQFileName << endl;
     
     // Initiate the desired parallel waveform processing algorithm
-    
+
     // Histogram waveforms into a spectrum
     if(CmdLineArg == "histogramming")
       CreateSpectrum();
@@ -168,16 +173,18 @@ bool ADAQAnalysisManager::LoadADAQRootFile(string FileName)
   //////////////////////////////////
   // Open the specified ROOT file //
   //////////////////////////////////
-      
+
+  ADAQFileName = FileName;
+  
   // Open the specified ROOT file 
   TFile *ADAQRootFile = new TFile(FileName.c_str(), "read");
-      
+  
   // If a valid ADAQ ROOT file was NOT opened...
   if(!ADAQRootFile->IsOpen()){
     ADAQRootFileLoaded = false;
   }
   else{
-
+    
     /////////////////////////////////////
     // Extract data from the ROOT file //
     /////////////////////////////////////
@@ -635,8 +642,8 @@ void ADAQAnalysisManager::FindPeakLimits(TH1F *Histogram_H)
   // to determine whether or not the peak is part of a "piled-up"
   // peak. If so, the PeakInfoVec.PileupFlag is marked true to flag
   // the peak to any later analysis methods
-  //  if(UsePileupRejection)
-  //    RejectPileup(Histogram_H);
+  if(ADAQSettings->UsePileupRejection)
+    RejectPileup(Histogram_H);
 }
 
 
@@ -688,7 +695,7 @@ void ADAQAnalysisManager::CreateSpectrum()
   // final spectra 
   WaveformStart = 0; // Start (include this waveform in final histogram)
   WaveformEnd = ADAQSettings->WaveformsToHistogram; // End (Up to but NOT including this waveform)
-  /*
+
 #ifdef MPI_ENABLED
 
   // If the waveform processing is to be done in parallel then
@@ -698,11 +705,11 @@ void ADAQAnalysisManager::CreateSpectrum()
   // waveforms from the even division of labor to the slaves.
   
   // Assign the number of waveforms processed by each slave
-  int SlaveEvents = int(WaveformsToHistogram/MPI_Size);
+  int SlaveEvents = int(ADAQSettings->WaveformsToHistogram/MPI_Size);
 
   // Assign the number of waveforms processed by the master
-  int MasterEvents = int(WaveformsToHistogram-SlaveEvents*(MPI_Size-1));
-
+  int MasterEvents = int(ADAQSettings->WaveformsToHistogram-SlaveEvents*(MPI_Size-1));
+  
   if(ParallelVerbose and IsMaster)
     cout << "\nADAQAnalysis_MPI Node[0]: Waveforms allocated to slaves (node != 0) = " << SlaveEvents << "\n"
 	 <<   "                             Waveforms alloced to master (node == 0) =  " << MasterEvents
@@ -719,7 +726,7 @@ void ADAQAnalysisManager::CreateSpectrum()
 	 << endl;
 
 #endif
-  */
+
   bool PeaksFound = false;
 
   // Process the waveforms. 
@@ -731,6 +738,8 @@ void ADAQAnalysisManager::CreateSpectrum()
     
     // Get the data from the ADAQ TTree for the current waveform
     ADAQWaveformTree->GetEntry(waveform);
+
+    int Channel = ADAQSettings->WaveformChannel;
     
     // Assign the raw waveform voltage to a class member vector<int>
     RawVoltage = *WaveformVecPtrs[Channel];
@@ -872,9 +881,6 @@ void ADAQAnalysisManager::CreateSpectrum()
     //      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
   }
 
-
-  /*
-
   
 #ifdef MPI_ENABLED
   // Parallel waveform processing is complete at this point and it is
@@ -910,7 +916,7 @@ void ADAQAnalysisManager::CreateSpectrum()
   // bins in the TH1 object is 202 (content + under/overflow bins).
   
   // Set the size of the array for Spectrum_H readout
-  const int ArraySize = SpectrumNumBins + 2;
+  const int ArraySize = ADAQSettings->SpectrumNumBins + 2;
   
   // Create the array for Spectrum_H readout
   double SpectrumArray[ArraySize];
@@ -948,7 +954,10 @@ void ADAQAnalysisManager::CreateSpectrum()
     // Create the master TH1F histogram object. Note that the member
     // data for spectrum creation are used to ensure the correct
     // number of bins and bin aranges
-    MasterHistogram_H = new TH1F("MasterHistogram","MasterHistogram", SpectrumNumBins, SpectrumMinBin, SpectrumMaxBin);
+    MasterHistogram_H = new TH1F("MasterHistogram","MasterHistogram", 
+				 ADAQSettings->SpectrumNumBins,
+				 ADAQSettings->SpectrumMinBin, 
+				 ADAQSettings->SpectrumMaxBin);
     
     // Assign the bin content to the appropriate bins. Note that the
     // 'for loop' must include the TH1 overflow bin that exists at
@@ -980,7 +989,7 @@ void ADAQAnalysisManager::CreateSpectrum()
     ParallelProcessingFile->Write();
   }
 #endif
-*/  
+
   SpectrumExists = true;
 }
 
@@ -1030,8 +1039,8 @@ void ADAQAnalysisManager::FindPeakHeights()
     // If pileup rejection is begin used, examine the pileup flag
     // stored in each PeakInfoStruct to determine whether or not this
     // peak is part of a pileup events. If so, skip it...
-    //    if(UsePileupRejection and (*it).PileupFlag==true)
-    //      continue;
+    if(ADAQSettings->UsePileupRejection and (*it).PileupFlag==true)
+      continue;
 
     // If the PSD filter is desired, examine the PSD filter flag
     // stored in each PeakInfoStruct to determine whether or not this
@@ -1377,9 +1386,9 @@ TH2F *ADAQAnalysisManager::CreatePSDHistogram()
   
 #ifdef MPI_ENABLED
 
-  int SlaveEvents = int(PSDWaveformsToDiscriminate/MPI_Size);
+  int SlaveEvents = int(ADAQSettings->PSDWaveformsToDiscriminate/MPI_Size);
   
-  int MasterEvents = int(PSDWaveformsToDiscriminate-SlaveEvents*(MPI_Size-1));
+  int MasterEvents = int(ADAQSettings->PSDWaveformsToDiscriminate-SlaveEvents*(MPI_Size-1));
   
   if(ParallelVerbose and IsMaster)
     cout << "\nADAQAnalysis_MPI Node[0]: Waveforms allocated to slaves (node != 0) = " << SlaveEvents << "\n"
@@ -1521,10 +1530,13 @@ TH2F *ADAQAnalysisManager::CreatePSDHistogram()
     // Create the master PSDHistogram_H object, i.e. the sum of all
     // the PSDHistogram_H object values from the nodes
     MasterPSDHistogram_H = new TH2F("MasterPSDHistogram_H","MasterPSDHistogram_H",
-				    PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin,
-				    PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin);
-    
-    
+				    ADAQSettings->PSDNumTotalBins, 
+				    ADAQSettings->PSDMinTotalBin,
+				    ADAQSettings->PSDMaxTotalBin,
+				    ADAQSettings->PSDNumTailBins,
+				    ADAQSettings->PSDMinTailBin,
+				    ADAQSettings->PSDMaxTailBin);
+        
     // Assign the content from the aggregated 2-D array to the new
     // master histogram
     for(int i=0; i<ArraySizeX; i++)
@@ -1862,3 +1874,176 @@ void ADAQAnalysisManager::IntegratePearsonWaveform(bool PlotPearsonIntegration)
   */
 }
 
+
+// Method used to aggregate arrays of doubles on each node to a single
+// array on the MPI master node (master == node 0). A pointer to the
+// array on each node (*SlaveArray) as well as the size of the array
+// (ArraySize) must be passed as function arguments from each node.
+double *ADAQAnalysisManager::SumDoubleArrayToMaster(double *SlaveArray, size_t ArraySize)
+{
+  double *MasterSum = new double[ArraySize];
+#ifdef MPI_ENABLED
+  MPI::COMM_WORLD.Reduce(SlaveArray, MasterSum, ArraySize, MPI::DOUBLE, MPI::SUM, 0);
+#endif
+  return MasterSum;
+}
+
+
+// Method used to aggregate doubles on each node to a single double on
+// the MPI master node (master == node 0).
+double ADAQAnalysisManager::SumDoublesToMaster(double SlaveDouble)
+{
+  double MasterSum = 0;
+#ifdef MPI_ENABLED
+  MPI::COMM_WORLD.Reduce(&SlaveDouble, &MasterSum, 1, MPI::DOUBLE, MPI::SUM, 0);
+#endif
+  return MasterSum;
+}
+
+
+void ADAQAnalysisManager::ProcessWaveformsInParallel(string ProcessingType)
+{
+  /////////////////////////////////////
+  // Prepare for parallel processing //
+  /////////////////////////////////////
+  
+  // The following command (with the exception of the single command
+  // that launches the MPI parallel processing session) are all
+  // executed by the the sequential binary. In order to "transfer" the
+  // values required for processing (ROOT widget settings, calibration
+  // manager, etc) from the sequential binary to the parallel binaries
+  // (or nodes), a transient ROOT TFile is created in /tmp that acts
+  // as an exchange point between seq. and par. binaries. This TFile
+  // is also used to "tranfser" results created in parallel back to
+  // the sequential binary for further viewing, analysis, etc.
+  
+  if(ParallelVerbose)
+    cout << "\n\n"
+	 << "/////////////////////////////////////////////////////\n"
+	 << "//   Beginning parallel processing of waveforms!   //\n"
+	 << "//"
+	 << std::setw(15) << "     --> Mode: "
+	 << std::setw(34) << std::left << ProcessingType
+	 << "//\n"
+	 << "/////////////////////////////////////////////////////\n"
+	 << endl;
+  
+
+  // Create a shell command to launch the parallel binary of
+  // ADAQAnalysisGUI with the desired number of nodes
+  stringstream ss;
+  ss << "mpirun -np " << ADAQSettings->NumProcessors << " " << ParallelBinaryName << " " << ProcessingType;
+  string ParallelCommand = ss.str();
+  
+  if(Verbose)
+    cout << "Initializing MPI slaves for processing!\n" 
+	 << endl;
+  
+  //////////////////////////////////////
+  // Processing waveforms in parallel //
+  //////////////////////////////////////
+  system(ParallelCommand.c_str());
+
+  if(Verbose)
+    cout << "Parallel processing has concluded successfully!\n" 
+	 << endl;
+
+  
+  ///////////////////////////////////////////
+  // Absorb results into sequential binary //
+  ///////////////////////////////////////////
+  
+  // Open the parallel processing ROOT file to retrieve the results
+  // produced by the parallel processing session
+  ParallelProcessingFile = new TFile(ParallelProcessingFName.c_str(), "read");  
+  
+  if(ParallelProcessingFile->IsOpen()){
+    
+    ////////////////
+    // Histogramming
+
+    if(ProcessingType == "histogramming"){
+      // Obtain the "master" histogram, which is a TH1F object
+      // contains the result of MPI reducing all the TH1F objects
+      // calculated by the nodes in parallel. Set the master histogram
+      // to the Spectrum_H class data member and plot it.
+      Spectrum_H = (TH1F *)ParallelProcessingFile->Get("MasterHistogram");
+      SpectrumExists = true;
+
+      // Obtain the total number of deuterons integrated during
+      // histogram creation and update the ROOT widget
+      TVectorD *AggregatedDeuterons = (TVectorD *)ParallelProcessingFile->Get("AggregatedDeuterons");
+      TotalDeuterons = (*AggregatedDeuterons)[0];
+      //DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
+    }
+    
+    
+    /////////////
+    // Desplicing
+
+    else if(ProcessingType == "desplicing"){
+    }	  
+    
+
+    /////////////////////////////
+    // Pulse shape discriminating 
+    
+    else if(ProcessingType == "discriminating"){
+      PSDHistogram_H = (TH2F *)ParallelProcessingFile->Get("MasterPSDHistogram");
+      PSDHistogramExists = true;
+      
+      TVectorD *AggregatedDeuterons = (TVectorD *)ParallelProcessingFile->Get("AggregatedDeuterons");
+      TotalDeuterons = (*AggregatedDeuterons)[0];
+      //DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
+    }
+  }
+  else
+    {/* ErrorMessage */}
+  
+  
+  /////////////
+  // Cleanup //
+  /////////////
+
+  if(Verbose)
+    cout << "Removing depracated parallel processing files!\n"
+	 << endl;
+  
+  // Remove the parallel processing ROOT file since it is no longer
+  // needed now that we have extracted all the results produced by the
+  // parallel processing session and stored them in the seq. binary
+  
+  string RemoveFilesCommand;
+  RemoveFilesCommand = "rm " + ParallelProcessingFName + " -f";
+  system(RemoveFilesCommand.c_str()); 
+  
+  // Return to the ROOT TFile containing the waveforms
+  // ZSH : Causing segfaults...necessary?
+  //ADAQRootFile->cd();
+}
+
+
+void ADAQAnalysisManager::RejectPileup(TH1F *Histogram_H)
+{
+  vector<PeakInfoStruct>::iterator it1, it2;
+
+  for(it1=PeakInfoVec.begin(); it1!=PeakInfoVec.end(); it1++){
+    
+    int PileupCounter = 0;
+    vector<bool> PileupRejection(false, PeakLimits.size());
+    
+    for(it2=PeakInfoVec.begin(); it2!=PeakInfoVec.end(); it2++){
+      
+      if((*it1).PeakLimit_Lower == (*it2).PeakLimit_Lower){
+	PileupRejection[it2 - PeakInfoVec.begin()] = true;
+	PileupCounter++;
+      }
+      else
+	PileupRejection[it2 - PeakInfoVec.begin()] = false;
+    }
+    
+    if(PileupCounter != 1)
+      (*it1).PileupFlag = true;
+
+  }
+}

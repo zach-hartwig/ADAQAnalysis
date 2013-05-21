@@ -325,12 +325,16 @@ private:
   // Number of processors/threads available on current system
   const int NumProcessors;
 
-  bool ADAQFileLoaded, ACRONYMFileLoaded;
+  bool ADAQFileLoaded;
+  string ADAQFileName;
+
+  bool ACRONYMFileLoaded;
+  string ACRONYMFileName;
 
   string DataDirectory, PrintDirectory, DesplicedDirectory, HistogramDirectory;
-  string CurrentFileName;
 
   ADAQAnalysisSettings *ADAQSettings;
+  string ADAQSettingsFileName;
 
   TColor *ColorMgr;
   ADAQAnalysisManager *AnalysisMgr;

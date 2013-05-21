@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // name: ADAQAnalysisInterface.cc
-// date: 17 May 13
+// date: 21 May 13
 // auth: Zach Hartwig
 //
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -52,16 +52,22 @@ ADAQAnalysisInterface::ADAQAnalysisInterface(string CmdLineArg)
   AnalysisMgr = ADAQAnalysisManager::GetInstance();
   AnalysisMgr->SetProgressBarPointer(ProcessingProgress_PB);
   
+  GraphicsMgr = ADAQGraphicsManager::GetInstance();
+  GraphicsMgr->SetCanvasPointer(Canvas_EC->GetCanvas());
+
   if(CmdLineArg != "Unspecified"){
-    ADAQFileLoaded = AnalysisMgr->LoadADAQRootFile(CmdLineArg);
+    ADAQFileName = CmdLineArg;
+    
+    ADAQFileLoaded = AnalysisMgr->LoadADAQRootFile(ADAQFileName);
+    
     if(ADAQFileLoaded)
-      UpdateForNewFile(CmdLineArg);
+      UpdateForNewFile(ADAQFileName);
     else
       CreateMessageBox("The ADAQ ROOT file that you specified fail to load for some reason!\n","Stop");
   }
   
-  GraphicsMgr = ADAQGraphicsManager::GetInstance();
-  GraphicsMgr->SetCanvasPointer(Canvas_EC->GetCanvas());
+  string USER = getenv("USER");
+  ADAQSettingsFileName = "/tmp/ADAQSettings_" + USER + ".root";
 }
 
 
@@ -1153,7 +1159,7 @@ void ADAQAnalysisInterface::FillProcessingFrame()
 				 new TGLayoutHints(kLHintsNormal, 0,0,5,0));
   NumProcessors_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   NumProcessors_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
-  NumProcessors_NEL->GetEntry()->SetLimitValues(2,8);
+  NumProcessors_NEL->GetEntry()->SetLimitValues(1,NumProcessors);
   NumProcessors_NEL->GetEntry()->SetNumber(NumProcessors);
   
   ProcessingOptions_GF->AddFrame(UpdateFreq_NEL = new ADAQNumberEntryWithLabel(ProcessingOptions_GF, "Update freq (% done)", -1),
@@ -1465,6 +1471,7 @@ void ADAQAnalysisInterface::HandleMenu(int MenuID)
       
       // Load the ROOT file and set the bool depending on outcome
       ADAQFileLoaded = AnalysisMgr->LoadADAQRootFile(FileName);
+      ADAQFileName = FileName;
       
       if(ADAQFileLoaded)
 	UpdateForNewFile(FileName);
@@ -1607,7 +1614,7 @@ void ADAQAnalysisInterface::HandleMenu(int MenuID)
       // default directory that automically opens
       Found = GraphicFileName.find_last_of("/");
       if(Found != string::npos)
-	PrintDirectory  = CurrentFileName.substr(0,Found);
+	PrintDirectory  = GraphicFileName.substr(0,Found);
       
       Found = GraphicFileName.find_last_of(".");
       if(Found != string::npos)
@@ -1897,21 +1904,20 @@ void ADAQAnalysisInterface::HandleTextButtons()
 
     // Alert the user the filtering particles by PSD into the spectra
     // requires integration type peak finder to be used
-    //    if(UsePSDFilterManager[PSDChannel] and IntegrationTypeWholeWaveform)
+    //if(UsePSDFilterManager[PSDChannel] and IntegrationTypeWholeWaveform)
     //      CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
     
     // Create spectrum with sequential processing
-    if(ProcessingSeq_RB->IsDown()){
+    if(ProcessingSeq_RB->IsDown())
       AnalysisMgr->CreateSpectrum();
-      GraphicsMgr->PlotSpectrum();
-      
-      if(SpectrumOverplotDerivative_CB->IsDown())
-	GraphicsMgr->PlotSpectrumDerivative();
-    }
     
     // Create spectrum with parallel processing
-    else
-      {}//ProcessWaveformsInParallel("histogramming");
+    else{
+      SaveSettings(true);
+      AnalysisMgr->ProcessWaveformsInParallel("histogramming");
+    }
+
+    GraphicsMgr->PlotSpectrum();
     break;
     
   case CountRate_TB_ID:
@@ -1919,12 +1925,13 @@ void ADAQAnalysisInterface::HandleTextButtons()
     break;
     
   case PSDCalculate_TB_ID:
-    if(ProcessingSeq_RB->IsDown()){
+    if(ProcessingSeq_RB->IsDown())
       AnalysisMgr->CreatePSDHistogram();
-      GraphicsMgr->PlotPSDHistogram();
+    else{
+      SaveSettings(true);
+      AnalysisMgr->ProcessWaveformsInParallel("discriminating");
     }
-    else
-      {}//ProcessWaveformsInParallel("discriminating");
+    GraphicsMgr->PlotPSDHistogram();
     break;
     
   case DesplicedFileSelection_TB_ID:{
@@ -1939,9 +1946,9 @@ void ADAQAnalysisInterface::HandleTextButtons()
     // files with ".root" extension and despliced ADAQ ROOT files with
     // ".ds.root" extension. 
     string InitialFileName;
-    size_t Pos = CurrentFileName.find_last_of("/");
+    size_t Pos = ADAQFileName.find_last_of("/");
     if(Pos != string::npos){
-      string RawFileName = CurrentFileName.substr(Pos+1, CurrentFileName.size());
+      string RawFileName = ADAQFileName.substr(Pos+1, ADAQFileName.size());
 
       Pos = RawFileName.find_last_of(".");
       if(Pos != string::npos)
@@ -2718,12 +2725,12 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
 {
   if(ADAQSettings)
     delete ADAQSettings;
-
+  
   ADAQSettings = new ADAQAnalysisSettings;
-
+  
   TFile *ADAQSettingsFile = 0;
-  if(true)//SaveToFile)
-    ADAQSettingsFile = new TFile("/tmp/ADAQSettings.root", "recreate");
+  if(SaveToFile)
+    ADAQSettingsFile = new TFile(ADAQSettingsFileName.c_str(), "recreate");
   
   //////////////////////////////////////////
   // Values from the "Waveform" tabbed frame 
@@ -2864,6 +2871,7 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   ////////////////////////////////////////
   // Values from "Processing" tabbed frame
 
+  ADAQSettings->NumProcessors = NumProcessors_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->UpdateFreq = UpdateFreq_NEL->GetEntry()->GetIntNumber();
 
   ADAQSettings->IntegratePearson = IntegratePearson_CB->IsDown();
@@ -2910,22 +2918,25 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   ////////////////////////////////////////////////////////
   // Miscellaneous values required for parallel processing
   
-  // The ADAQ-formatted ROOT file name
-  ADAQSettings->ADAQFileName = CurrentFileName;
+  ADAQSettings->ADAQFileName = ADAQFileName;
 
-  // The calibration maanager bool and array of TGraph *'s
-  //ADAQSettings->UseCalibrationManager = false;//SpectrumCalibration_CB->IsDown();
-  //  ADAQSettings->CalibrationManager = 0;// CalibrationManager; ZSH
+
+
+  // Spectrum calibration objects
+  //ADAQSettings->UseCalibrationManager = SpectrumCalibration_CB->IsDown();
+  //ADAQSettings->CalibrationManager = CalibrationManager; 
   
-  // The PSD filter
-  //  ADAQSettings->UsePSDFilterManager = PSDEnableFilter_CB->IsDown();
-  //  ADAQSettings->PSDFilterManager = 0; // PSDFilterManager; ZSH
+  // PSD filter objects
+  //    ADAQSettings->UsePSDFilterManager = PSDEnableFilter_CB->IsDown();
+  //  ADAQSettings->PSDFilterManager = PSDFilterManager;
+  
 
+  // Update the settings object pointer in the manager classes
   AnalysisMgr->SetADAQSettings(ADAQSettings);
   GraphicsMgr->SetADAQSettings(ADAQSettings);
 
-  
-  if(true){//SaveToFile){
+  // Write the ADAQSettings object to a ROOT file for parallel access
+  if(SaveToFile){
     ADAQSettings->Write("ADAQSettings");
     ADAQSettingsFile->Write();
     ADAQSettingsFile->Close();
@@ -3028,3 +3039,5 @@ void ADAQAnalysisInterface::SetCalibrationWidgetState(bool WidgetState, EButtonS
   SpectrumCalibrationPlot_TB->SetState(ButtonState);
   SpectrumCalibrationReset_TB->SetState(ButtonState);
 }
+
+
