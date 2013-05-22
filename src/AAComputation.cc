@@ -68,12 +68,6 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     ADAQChannelCalibrationData Init;
     CalibrationData.push_back(Init);
   }
-  
-  // Assign the location of the ADAQAnalysisInterface parallel binary
-  // (depends on whether the presently executed binary is a develpment
-  // or production version of the code)
-  ADAQHOME = getenv("ADAQHOME");
-  USER = getenv("USER");
 
   // Set ROOT to print only break messages and above (to suppress the
   // annoying warning from TSpectrum that the peak buffer is full)
@@ -114,6 +108,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
 
     // Load the parameters required for processing from the ROOT file
     // generated from the sequential binary's ROOT widget settings
+    string USER = getenv("USER");
     string ADAQSettingsFile = "/tmp/ADAQSettings_" + USER + ".root";
     TFile *F = new TFile(ADAQSettingsFile.c_str(), "read");
     
@@ -837,8 +832,8 @@ void AAComputation::CreateSpectrum()
       
       // Calculate the PSD integrals and determine if they pass
       // the pulse-shape filterthrough the pulse-shape filter
-      //      if(UsePSDFilters[PSDChannel])
-      //	CalculatePSDIntegrals(false);
+      if(ADAQSettings->UsePSDFilters[ADAQSettings->PSDChannel])
+      	CalculatePSDIntegrals(false);
       
       // If a PAS is to be created ...
       if(ADAQSettings->SpectrumTypePAS)
@@ -995,13 +990,13 @@ void AAComputation::IntegratePeaks()
     //if(UsePileupRejection_CB->IsDown() and (*it).PileupFlag==true)
     if(ADAQSettings->UsePileupRejection and (*it).PileupFlag==true)
       continue;
-
+    
     // If the PSD filter is desired, examine the PSD filter flag
     // stored in each PeakInfoStruct to determine whether or not this
     // peak should be filtered out of the spectrum.
-    //    if(UsePSDFilters[PSDChannel] and (*it).PSDFilterFlag==true)
-    //      continue;
-
+    if(ADAQSettings->UsePSDFilters[ADAQSettings->PSDChannel] and (*it).PSDFilterFlag==true)
+      continue;
+    
     // ...and use the lower and upper peak limits to calculate the
     // integral under each waveform peak that has passed all criterion
     double PeakIntegral = Waveform_H[ADAQSettings->WaveformChannel]->Integral((*it).PeakLimit_Lower,
@@ -1034,14 +1029,14 @@ void AAComputation::FindPeakHeights()
     // If the PSD filter is desired, examine the PSD filter flag
     // stored in each PeakInfoStruct to determine whether or not this
     // peak should be filtered out of the spectrum.
-    if(UsePSDFilters[ADAQSettings->PSDChannel] and (*it).PSDFilterFlag==true)
+    if(ADAQSettings->UsePSDFilters[ADAQSettings->PSDChannel] and (*it).PSDFilterFlag==true)
       continue;
     
     // Initialize the peak height for each peak region
     double PeakHeight = 0.;
 
     int Channel = ADAQSettings->WaveformChannel;
-    
+
     // Iterate over the samples between lower and upper integration
     // limits to determine the maximum peak height
     for(int sample=(*it).PeakLimit_Lower; sample<(*it).PeakLimit_Upper; sample++){
@@ -1585,13 +1580,13 @@ void AAComputation::CalculatePSDIntegrals(bool FillPSDHistogram)
 	   << endl;
     
     // If the user has enabled a PSD filter ...
-    //if(UsePSDFilters[ADAQSettings->PSDChannel])
+    if(ADAQSettings->UsePSDFilters[ADAQSettings->PSDChannel])
       
       // ... then apply the PSD filter to the waveform. If the
       // waveform does not pass the filter, mark the flag indicating
       // that it should be filtered out due to its pulse shap
-    //      if(ApplyPSDFilter(TailIntegral, TotalIntegral))
-    //	(*it).PSDFilterFlag = true;
+      if(ApplyPSDFilter(TailIntegral, TotalIntegral))
+	(*it).PSDFilterFlag = true;
     
     // The total integral of the waveform must exceed the PSDThreshold
     // in order to be histogrammed. This allows the user flexibility
@@ -1626,14 +1621,14 @@ bool AAComputation::ApplyPSDFilter(double TailIntegral, double TotalIntegral)
   // tail/total PSD integral space fell "above" the TGraph; therefore,
   // it should not be filtered so return false
   if(ADAQSettings->PSDFilterPolarity > 0 and 
-     TailIntegral >= PSDFilters[ADAQSettings->PSDChannel]->Eval(TotalIntegral))
+     TailIntegral >= ADAQSettings->PSDFilters[ADAQSettings->PSDChannel]->Eval(TotalIntegral))
     return false;
 
   // Waveform passed the criterion for a negative PSD filter (point in
   // tail/total PSD integral space fell "below" the TGraph; therefore,
   // it should not be filtered so return false
   else if(ADAQSettings->PSDFilterPolarity < 0 and 
-	  TailIntegral <= PSDFilters[ADAQSettings->PSDChannel]->Eval(TotalIntegral))
+	  TailIntegral <= ADAQSettings->PSDFilters[ADAQSettings->PSDChannel]->Eval(TotalIntegral))
     return false;
 
   // Waveform did not pass the PSD filter tests; therefore it should
@@ -2142,9 +2137,6 @@ void AAComputation::CreatePSDFilter(int XPixel, int YPixel)
   double XPos = gPad->PixeltoX(XPixel);
   double YPos = gPad->PixeltoY(YPixel) + abs(CanvasStart_YPos) + abs(CanvasEnd_YPos);
 
-
-  cout << XPos << "\t" << YPos << endl;
-
   // Increment the number of points to be used with the TGraph
   PSDNumFilterPoints++;
     
@@ -2156,6 +2148,8 @@ void AAComputation::CreatePSDFilter(int XPixel, int YPixel)
   // Recreate the TGraph representing the "PSDFilter" 
   if(PSDFilters[ADAQSettings->PSDChannel]) delete PSDFilters[ADAQSettings->PSDChannel];
   PSDFilters[ADAQSettings->PSDChannel] = new TGraph(PSDNumFilterPoints, &PSDFilterXPoints[0], &PSDFilterYPoints[0]);
+  
+  UsePSDFilters[ADAQSettings->PSDChannel] = true;
 }
 
 
@@ -2164,10 +2158,10 @@ void AAComputation::ClearPSDFilter(int Channel)
   PSDNumFilterPoints = 0;
   PSDFilterXPoints.clear();
   PSDFilterYPoints.clear();
-
+  
   if(PSDFilters[ADAQSettings->PSDChannel]) delete PSDFilters[ADAQSettings->PSDChannel];
   PSDFilters[ADAQSettings->PSDChannel] = new TGraph;
-
+  
   UsePSDFilters[ADAQSettings->PSDChannel] = false;
 }
 

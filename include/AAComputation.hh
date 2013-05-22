@@ -254,8 +254,6 @@ private:
   int MPI_Size, MPI_Rank;
   bool IsMaster, IsSlave;
 
-    // Strings for specifying binaries and ROOT files
-  string ADAQHOME, USER;
   bool ParallelVerbose;
   TFile *ParallelFile;
 
