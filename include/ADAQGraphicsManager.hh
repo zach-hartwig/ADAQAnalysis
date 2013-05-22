@@ -37,9 +37,14 @@ public:
   CanvasContentTypes GetCanvasContentType() {return CanvasContentType;}
 
   void PlotWaveform();
+
   void PlotSpectrum();
   void PlotSpectrumDerivative();
+
   void PlotPSDHistogram();
+  void PlotPSDHistogramSlice(int, int);
+  void PlotPSDFilter();
+
   void PlotCalibration(int);
   void PlotCalibrationLine(double, double, double);
   

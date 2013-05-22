@@ -43,6 +43,7 @@ using namespace std;
 // ADAQ
 #include "ADAQRootGUIClasses.hh"
 #include "ADAQAnalysisTypes.hh"
+#include "ADAQAnalysisSettings.hh"
 #include "ADAQAnalysisManager.hh"
 #include "ADAQGraphicsManager.hh"
 

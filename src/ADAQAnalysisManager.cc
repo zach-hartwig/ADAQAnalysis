@@ -32,7 +32,7 @@ ADAQAnalysisManager::ADAQAnalysisManager(string CmdLineArg, bool PA)
     Time(0), RawVoltage(0), RecordLength(0),
     PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelArchitecture(PA), SequentialArchitecture(!PA),
-    Verbose(true), ParallelVerbose(true),
+    Verbose(false), ParallelVerbose(true),
     Baseline(0.), PSDFilterPolarity(1.),
     V1720MaximumBit(4095), NumDataChannels(8),
     SpectrumExists(false), SpectrumDerivativeExists(false), PSDHistogramExists(false), PSDHistogramSliceExists(false),
@@ -1423,8 +1423,6 @@ TH2F *ADAQAnalysisManager::CreatePSDHistogram()
     
     // Find the peaks and peak limits in the current waveform
     PeaksFound = FindPeaks(Waveform_H[PSDChannel]);
-
-    cout << PeaksFound << endl;
     
     // If not peaks are present in the current waveform then continue
     // onto the next waveform to optimize CPU $.
@@ -2147,3 +2145,653 @@ bool ADAQAnalysisManager::ClearCalibration(int Channel)
   return true;
 }
 
+
+
+// Method to create a pulse shape discrimination (PSD) filter, which
+// is a TGraph composed of points defined by the user clicking on the
+// active canvas to define a line used to delinate regions. This
+// function is called by ::HandleCanvas() each time that the user
+// clicks on the active pad, passing the x- and y-pixel click
+// location to the function
+void ADAQAnalysisManager::CreatePSDFilter(int XPixel, int YPixel)
+{
+  // Pixel coordinates: (x,y) = (0,0) at the top left of the canvas
+  // User coordinates: (x,y) at any point on the canvas corresponds to
+  //                   that point's location on the plotted TGraph or
+  //                   TH1/TH2
+
+  // For some reason, it is necessary to correct the pixel-to-user Y
+  // coordinate returned by ROOT; the X value seems slightly off as
+  // well but only by a very small amount so it will be ignored.
+
+  // Get the start and end positions of the TCanvas object in user
+  // coordinates (the very bottom and top y extent values)
+  double CanvasStart_YPos = gPad->GetY1();
+  double CanvasEnd_YPos = gPad->GetY2();
+    
+  // Convert the clicked position in the pad pixel coordinates
+  // (point on the pad in screen pixels starting in the top-left
+  // corner) to data coordinates (point on the pad in coordinates
+  // corresponding to the X and Y axis ranges of whatever is
+  // currently plotted/histogrammed in the pad . Note that the Y
+  // conversion requires obtaining the start and end vertical
+  // positions of canvas and using them to get the exact number if
+  // data coordinates. 
+  double XPos = gPad->PixeltoX(XPixel);
+  double YPos = gPad->PixeltoY(YPixel) + abs(CanvasStart_YPos) + abs(CanvasEnd_YPos);
+
+
+  cout << XPos << "\t" << YPos << endl;
+
+  // Increment the number of points to be used with the TGraph
+  PSDNumFilterPoints++;
+    
+  // Add the X and Y position in data coordinates to the vectors to
+  // be used with the TGraph
+  PSDFilterXPoints.push_back(XPos);
+  PSDFilterYPoints.push_back(YPos);
+  
+  // Recreate the TGraph representing the "PSDFilter" 
+  if(PSDFilterManager[ADAQSettings->PSDChannel]) delete PSDFilterManager[ADAQSettings->PSDChannel];
+  PSDFilterManager[ADAQSettings->PSDChannel] = new TGraph(PSDNumFilterPoints, &PSDFilterXPoints[0], &PSDFilterYPoints[0]);
+}
+
+
+void ADAQAnalysisManager::ClearPSDFilter(int Channel)
+{
+  PSDNumFilterPoints = 0;
+  PSDFilterXPoints.clear();
+  PSDFilterYPoints.clear();
+
+  if(PSDFilterManager[ADAQSettings->PSDChannel]) delete PSDFilterManager[ADAQSettings->PSDChannel];
+  PSDFilterManager[ADAQSettings->PSDChannel] = new TGraph;
+
+  UsePSDFilterManager[ADAQSettings->PSDChannel] = false;
+}
+
+
+void ADAQAnalysisManager::CreateDesplicedFile()
+{
+  ////////////////////////////
+  // Prepare for processing //
+  ////////////////////////////
+  
+  // Reset the progres bar if binary is sequential architecture
+
+  if(SequentialArchitecture){
+    ProcessingProgressBar->Reset();
+    ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(41));
+    ProcessingProgressBar->SetForegroundColor(ColorManager->Number2Pixel(1));
+  }
+  
+  
+  if(PeakFinder) delete PeakFinder;
+  PeakFinder = new TSpectrum(ADAQSettings->MaxPeaks);
+  
+  // Variable to aggregate the integrated RFQ current. Presently this
+  // feature is NOT implemented. 
+  TotalDeuterons = 0.;
+
+  ////////////////////////////////////
+  // Assign waveform processing ranges
+  
+  // Set the range of waveforms that will be processed. Note that in
+  // sequential architecture if N waveforms are to be histogrammed,
+  // waveforms from waveform_ID == 0 to waveform_ID ==
+  // (WaveformsToDesplice-1) will be included in the despliced file
+  WaveformStart = 0; // Start (and include this waveform in despliced file)
+  WaveformEnd = ADAQSettings->WaveformsToDesplice; // End (Up to but NOT including this waveform)
+  
+#ifdef MPI_ENABLED
+  
+  // If the waveform processing is to be done in parallel then
+  // distribute the events as evenly as possible between the master
+  // (rank == 0) and the slaves (rank != 0) to maximize computational
+  // efficiency. Note that the master will carry the small leftover
+  // waveforms from the even division of labor to the slaves.
+  
+  // Assign the number of waveforms processed by each slave
+  int SlaveEvents = int(ADAQSettings->WaveformsToDesplice/MPI_Size);
+  
+  // Assign the number of waveforms processed by the master
+  int MasterEvents = int(ADAQSettings->WaveformsToDesplice-SlaveEvents*(MPI_Size-1));
+  
+  if(ParallelVerbose and IsMaster)
+    cout << "\nADAQAnalysis_MPI Node[0] : Waveforms allocated to slaves (node != 0) = " << SlaveEvents << "\n"
+	 <<   "                           Waveforms alloced to master (node == 0) =  " << MasterEvents
+	 << endl;
+  
+  // Assign each master/slave a range of the total waveforms to be
+  // process based on each nodes MPI rank
+  WaveformStart = (MPI_Rank * MasterEvents); // Start (and include this waveform in despliced file)
+  WaveformEnd =  (MPI_Rank * MasterEvents) + SlaveEvents; // End (up to but NOT including this waveform)
+  
+  if(ParallelVerbose)
+    cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Handling waveforms " << WaveformStart << " to " << (WaveformEnd-1)
+	 << endl;
+#endif
+
+
+  /////////////////////////////////////////////////
+  // Create required objects for new despliced file
+
+  // Create a new TFile for the despliced waveforms and associated
+  // objects. In sequential arch, the TFile is created directly with
+  // the name and location specified by the user in the desplicing
+  // widgets; in parallel arch, a series of TFiles (one for each node)
+  // is first created in the /tmp directory with the suffix
+  // ".node<MPI_Rank>". After the desplicing algorithm is complete,
+  // the master node is responsible for aggregating the series of
+  // paralle TFiles into a single TFile with the name and location
+  // specified by the user in the desplicing widgets.
+
+  // The ROOT TFile
+  TFile *F;
+
+  // Sequential architecture
+  if(SequentialArchitecture)
+    F = new TFile(ADAQSettings->DesplicedFileName.c_str(), "recreate");
+
+  // Parallel architecture
+  else{
+    stringstream ss;
+    ss << "/tmp/DesplicedWaveforms.root" << ".node" << MPI_Rank;
+    string DesplicedFileNameTMP = ss.str();
+    F = new TFile(DesplicedFileNameTMP.c_str(), "recreate");
+  }
+  
+  // Create a new TTree to hold the despliced waveforms. It is
+  // important that the TTree is named "WaveformTree" (as in the
+  // original ADAQ ROOT file) such that ADAQAnalysisGUI can correctly
+  // import the TTree from the TFile for analysis
+  TTree *T = new TTree("WaveformTree", "A TTree to store despliced waveforms");
+
+  // Create the vector object that holds the data channel voltages
+  // and will be assigned to the TTree branches
+  vector< vector<int> > VoltageInADC_AllChannels;
+  VoltageInADC_AllChannels.resize(NumDataChannels);
+
+  // Assign the data channel voltage vector object to the TTree
+  // branches with the correct branch names
+  stringstream ss1;
+  for(int channel=0; channel<NumDataChannels; channel++){
+    ss1 << "VoltageInADC_Ch" << channel;
+    string BranchName = ss1.str();
+    ss1.str("");
+    
+    T->Branch(BranchName.c_str(),
+	      &VoltageInADC_AllChannels.at(channel));
+  }
+
+  // Create a new ADAQRootMeasParams object based on the original. The
+  // RecordLength data member is modified to accomodate the new size
+  // of the despliced waveforms (much much shorter than the original
+  // waveforms in most cases...). Note that the "dynamic" TTree stores
+  // despliced waveforms of arbitrary and different lengths (i.e. the
+  // despliced waveform sample length is NOT fixed as it is in data
+  // acquisition with ADAQRootGUI); therefore, the RecordLength
+  // associated with the despliced waveform TFile must be sufficiently
+  // long to accomodate the longest despliced waveform. This new
+  // RecordLength value is mainly updated to allow viewing of the
+  // waveform by ADAQAnalysisGUI during future analysis sessions.
+  ADAQRootMeasParams *MP = ADAQMeasParams;
+  MP->RecordLength = ADAQSettings->DesplicedWaveformLength;
+  
+  // Create a new TObjString object representing the measurement
+  // commend. This feature is currently unimplemented.
+  TObjString *MC = new TObjString("");
+
+  // Create a new class that will store the results calculated in
+  // parallel persistently in the new despliced ROOT file
+  ADAQAnalysisParallelResults *PR = new ADAQAnalysisParallelResults;
+  
+  // When the new despliced TFile object(s) that will RECEIVE the
+  // despliced waveforms was(were) created above, that(those) TFile(s)
+  // became the current TFile (or "directory") for ROOT. In order to
+  // desplice the original waveforms, we must move back to the TFile
+  // (or "directory) that contains the original waveforms UPON WHICH
+  // we want to operate. Recall that TFiles should be though of as
+  // unix-like directories that we can move to/from...it's a bit
+  // confusing but that's ROOT.
+  ADAQRootFile->cd();
+
+
+  ///////////////////////
+  // Process waveforms //
+  ///////////////////////
+
+  bool PeaksFound = false;
+
+  int Channel = ADAQSettings->WaveformChannel;
+  
+  for(int waveform=WaveformStart; waveform<WaveformEnd; waveform++){
+
+    // Run sequential desplicing in a separate thread to allow full
+    // control of the ADAQAnalysisGUI while processing
+    if(SequentialArchitecture)
+      gSystem->ProcessEvents();
+    
+
+    /////////////////////////////////////////
+    // Calculate the Waveform_H member object
+    
+    // Get a set of data channal voltages from the TTree
+    ADAQWaveformTree->GetEntry(waveform);
+
+    // Assign the current data channel's voltage to RawVoltage
+    RawVoltage = *WaveformVecPtrs[Channel];
+
+    // Select the type of Waveform_H object to create
+    if(ADAQSettings->RawWaveform or ADAQSettings->BSWaveform)
+      CalculateBSWaveform(Channel, waveform);
+    else if(ADAQSettings->ZSWaveform)
+      CalculateZSWaveform(Channel, waveform);
+    
+    // If specified by the user then calculate the RFQ current
+    // integral for each waveform and aggregate the total (into the
+    // 'TotalDeuterons' class data member) for persistent storage in the
+    // despliced TFile. The 'false' argument specifies not to plot
+    // integration results on the canvas.
+    if(ADAQSettings->IntegratePearson)
+      IntegratePearsonWaveform(false);
+    
+
+    ///////////////////////////
+    // Find peaks and peak data
+    
+    // Find the peaks (and peak data) in the current waveform.
+    // Function returns "true" ("false) if peaks are found (not found).
+    PeaksFound = FindPeaks(Waveform_H[Channel]);
+    
+    // If no peaks found, continue to next waveform to save CPU $
+    if(!PeaksFound)
+      continue;
+    
+    // Calculate the PSD integrals and determine if they pass through
+    // the pulse-shape filter 
+    if(UsePSDFilterManager[ADAQSettings->PSDChannel])
+      CalculatePSDIntegrals(false);
+    
+
+    ////////////////////////////////////////
+    // Iterate over the peak info structures
+
+    // Operate on each of the peaks found in the Waveform_H object
+    vector<PeakInfoStruct>::iterator peak_iter;
+    for(peak_iter=PeakInfoVec.begin(); peak_iter!=PeakInfoVec.end(); peak_iter++){
+
+      // Clear the TTree voltage variable for each new peak
+      VoltageInADC_AllChannels[0].clear();
+      
+
+      //////////////////////////////////
+      // Perform the waveform desplicing
+      
+      // Desplice each peak from the full waveform by taking the
+      // samples (in time) corresponding to the lower and upper peak
+      // limits and using them to assign the bounded voltage values to
+      // the TTree variable from the Waveform_H object
+      int index = 0;
+
+      for(int sample=(*peak_iter).PeakLimit_Lower; sample<(*peak_iter).PeakLimit_Upper; sample++){
+	VoltageInADC_AllChannels[0].push_back(Waveform_H[Channel]->GetBinContent(sample));;
+	index++;
+      }
+      
+      // Add a buffer (of length DesplicedWaveformBuffer in [samples]) of
+      // zeros to the beginning and end of the despliced waveform to
+      // aid future waveform processing
+      
+      VoltageInADC_AllChannels[0].insert(VoltageInADC_AllChannels[0].begin(),
+					 ADAQSettings->DesplicedWaveformBuffer,
+					 0);
+      
+      VoltageInADC_AllChannels[0].insert(VoltageInADC_AllChannels[0].end(),
+					 ADAQSettings->DesplicedWaveformBuffer,
+					 0);
+      
+      // Fill the TTree with this despliced waveform provided that the
+      // current peak is not flagged as a piled up pulse nor flagged
+      // as a pulse to be filtered out by pulse shape
+      if((*peak_iter).PileupFlag == false and (*peak_iter).PSDFilterFlag == false)
+	T->Fill();
+    }
+    
+    // Update the user with progress
+    if(IsMaster)
+      if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
+	UpdateProcessingProgress(waveform);
+  }
+  
+  // Make final updates to the progress bar, ensuring that it reaches
+  // 100% and changes color to acknoqledge that processing is complete
+  if(SequentialArchitecture){
+    ProcessingProgressBar->Increment(100);
+    ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(32));
+    ProcessingProgressBar->SetForegroundColor(ColorManager->Number2Pixel(0));
+  }
+  
+#ifdef MPI_ENABLED
+  
+  if(ParallelVerbose)
+    cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Reached the end-of-processing MPI barrier!"
+	 << endl;
+
+  MPI::COMM_WORLD.Barrier();
+  
+#endif
+  
+  if(IsMaster)
+    cout << "\nADAQAnalysis_MPI Node[0] : Waveform processing complete!\n"
+	 << endl;
+  
+  ///////////////////////////////////////////////////////
+  // Finish processing and creation of the despliced file
+
+  // Store the values calculated in parallel into the class for
+  // persistent storage in the despliced ROOT file
+  
+  PR->TotalDeuterons = TotalDeuterons;
+  
+  // Now that we are finished processing waveforms from the original
+  // ADAQ ROOT file we want to switch the current TFile (or
+  // "directory") to the despliced TFile such that we can store the
+  // appropriate despliced objects in it and write it to disk
+  F->cd();
+
+  // Write the objects to the ROOT file. In parallel architecture, a
+  // number of temporary, despliced ROOT files will be created in the
+  // /tmp directory for later aggregation; in sequential architecture,
+  // the final despliced ROOT will be created with the specified fle
+  // name and file path
+  T->Write();
+  MP->Write("MeasParams");
+  MC->Write("MeasComment");
+  PR->Write("ParResults");
+  F->Close();
+
+  // Switch back to the ADAQRootFile TFile directory
+  ADAQRootFile->cd();
+  
+  // Note: if in parallel architecture then at this point a series of
+  // despliced TFiles now exists in the /tmp directory with each TFile
+  // containing despliced waveforms for the range of original
+  // waveforms allocated to each node.
+
+#ifdef MPI_ENABLED
+
+  /////////////////////////////////////////////////
+  // Aggregrate parallel TFiles into a single TFile
+
+  // Aggregate the total integrated RFQ current (if enabled) on each
+  // of the parallal nodes to a single double value on the master
+  double AggregatedCurrent = SumDoublesToMaster(TotalDeuterons);
+
+  // Ensure all nodes are at the same point before aggregating files
+  MPI::COMM_WORLD.Barrier();
+
+  // If the present node is the master then use a TChain object to
+  // merge the despliced waveform TTrees contained in each of the
+  // TFiles created by each node 
+  if(IsMaster){
+
+  if(IsMaster and ParallelVerbose)
+    cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Beginning aggregation of ROOT TFiles ..."
+	 << endl;
+    
+    // Create the TChain
+    TChain *WaveformTreeChain = new TChain("WaveformTree");
+
+    // Create each node's TFile name and add the TFile to the TChain
+    for(int node=0; node<MPI_Size; node++){
+      // Create the name
+      stringstream ss;
+      ss << "/tmp/DesplicedWaveforms.root.node" << node;
+      string FName = ss.str();
+
+      // Add TFile to TChain
+      WaveformTreeChain->Add(FName.c_str());
+    }
+
+    // Using the TChain to merge all the TTrees in all the TFiles into
+    // a single TTree contained in a TFile of the provided name. Note
+    // that the name and location of this TFile correspond to the
+    // values set by the user in the despliced widgets.
+    WaveformTreeChain->Merge(DesplicedFileName.c_str());
+    
+    // Store the aggregated RFQ current value on the master into the
+    // persistent parallel results class for writing to the ROOT file
+    PR->TotalDeuterons = AggregatedCurrent;
+
+    // Open the final despliced TFile, write the measurement
+    // parameters and comment objects to it, and close the TFile.
+    TFile *F_Final = new TFile(DesplicedFileName.c_str(), "update");
+    MP->Write("MeasParams");
+    MC->Write("MeasComment");
+    PR->Write("ParResults");
+    F_Final->Close();
+    
+    cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Finished aggregation of ROOT TFiles!"
+	 << endl;  
+    
+    cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Finished production of despliced file!\n"
+	 << endl;  
+  }
+#endif
+}
+
+
+// Method to compute the instantaneous (within the RFQ deuteron pulse)
+// and time-averaged (in real time) detector count rate. Note that the
+// count rate can only be calculated using sequential
+// architecture. Because only a few thousand waveforms needs to be
+// processed to compute the count rates, it is not presently foreseen
+// that this feature will be implemented in parallel. Note also that
+// count rates can only be calculated for RFQ triggered acquisition
+// windows with a known pulse width and rep. rate.
+void ADAQAnalysisManager::CalculateCountRate()
+{
+  // If the TSPectrum PeakFinder object exists then delete it and
+  // recreate it to account for changes to the MaxPeaks variable
+  if(PeakFinder) delete PeakFinder;
+  PeakFinder = new TSpectrum(ADAQSettings->MaxPeaks);
+  
+  // Reset the total number of identified peaks to zero
+  TotalPeaks = 0;
+  
+  // Get the number of waveforms to process in the calculation
+  int NumWaveforms = ADAQSettings->RFQCountRateWaveforms;
+
+  int Channel = ADAQSettings->WaveformChannel;
+
+  for(int waveform = 0; waveform<NumWaveforms; waveform++){
+    // Process in a separate thread to allow the user to retain
+    // control of the ROOT widgets
+    gSystem->ProcessEvents();
+
+    // Get a waveform
+    ADAQWaveformTree->GetEntry(waveform);
+
+    // Get the raw waveform voltage
+    RawVoltage = *WaveformVecPtrs[Channel];
+
+    // Calculate either a baseline subtracted waveform or a zero
+    // suppression waveform
+    if(ADAQSettings->RawWaveform or ADAQSettings->BSWaveform)
+      CalculateBSWaveform(Channel, waveform);
+    else if(ADAQSettings->ZSWaveform)
+      CalculateZSWaveform(Channel, waveform);
+  
+    // Find the peaks in the waveform. Note that this function is
+    // responsible for incrementing the 'TotalPeaks' member data
+    FindPeaks(Waveform_H[Channel]);
+
+    // Update the waveform processing progress bar
+    if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
+      UpdateProcessingProgress(waveform);
+  }
+  
+  // At this point, the 'TotalPeaks' variable contains the total
+  // number of identified peaks after processing the number of
+  // waveforms specified by the 'NumWaveforms' variable
+
+  // Compute the time (in seconds) that the RFQ beam was 'on'
+  double TotalTime = ADAQSettings->RFQPulseWidth * us2s * NumWaveforms;
+
+  // Compute the instantaneous count rate, i.e. the detector count
+  // rate only when the RFQ beam is on
+  double InstCountRate = TotalPeaks * 1.0 / TotalTime;
+  //InstCountRate_NEFL->GetEntry()->SetNumber(InstCountRate);
+  
+  // Compute the average count rate, i.e. the detector count rate in
+  // real time, which requires a knowledge of the RFQ rep rate.
+  double AvgCountRate = InstCountRate * (ADAQSettings->RFQPulseWidth * us2s * ADAQSettings->RFQRepRate);
+  //  AvgCountRate_NEFL->GetEntry()->SetNumber(AvgCountRate);
+}
+
+
+
+
+// Method used to find peaks in a pulse / energy spectrum
+void ADAQAnalysisManager::FindSpectrumPeaks()
+{
+  /*
+  int SpectrumNumPeaks = SpectrumNumPeaks_NEL->GetEntry()->GetIntNumber();
+  int SpectrumSigma = SpectrumSigma_NEL->GetEntry()->GetIntNumber();
+  int SpectrumResolution = SpectrumResolution_NEL->GetEntry()->GetNumber();
+  
+  TSpectrum *SpectrumPeakFinder = new TSpectrum(SpectrumNumPeaks);
+
+  int SpectrumPeaks = SpectrumPeakFinder->Search(Spectrum_H, SpectrumSigma, "goff", SpectrumResolution);
+  float *PeakPosX = SpectrumPeakFinder->GetPositionX();
+  float *PeakPosY = SpectrumPeakFinder->GetPositionY();
+  
+  for(int peak=0; peak<SpectrumPeaks; peak++){
+    TMarker *PeakMarker = new TMarker(PeakPosX[peak],
+				      PeakPosY[peak]+50,
+				      peak);
+    PeakMarker->SetMarkerColor(2);
+    PeakMarker->SetMarkerStyle(23);
+    PeakMarker->SetMarkerSize(2.0);
+    PeakMarker->Draw();
+  }
+  Canvas_EC->GetCanvas()->Update();
+  */
+}
+
+
+void ADAQAnalysisManager::CreatePSDHistogramSlice(int XPixel, int YPixel)
+{
+  // pixel coordinates: refers to an (X,Y) position on the canvas
+  //                    using X and Y pixel IDs. The (0,0) pixel is in
+  //                    the upper-left hand corner of the canvas
+  //
+  // user coordinates: refers to a position on the canvas using the X
+  //                   and Y axes of the plotted object to assign a
+  //                   X and Y value to a particular pixel
+  
+  // Get the cursor position in user coordinates
+  double XPos = gPad->AbsPixeltoX(XPixel);
+  double YPos = gPad->AbsPixeltoY(YPixel);
+
+  // Get the min/max x values in user coordinates
+  double XMin = gPad->GetUxmin();
+  double XMax = gPad->GetUxmax();
+
+  // Get the min/max y values in user coordinates
+  double YMin = gPad->GetUymin();
+  double YMax = gPad->GetUymax();
+
+  // Compute the min/max x values in pixel coordinates
+  double PixelXMin = gPad->XtoAbsPixel(XMin);
+  double PixelXMax = gPad->XtoAbsPixel(XMax);
+
+  // Compute the min/max y values in pixel coodinates
+  double PixelYMin = gPad->YtoAbsPixel(YMin);
+  double PixelYMax = gPad->YtoAbsPixel(YMax);
+  
+  // Enable the canvas feedback mode to help in smoothly plotting a
+  // line representing the user's desired value
+  gPad->GetCanvas()->FeedbackMode(kTRUE);
+  
+  ////////////////////////////////////////
+  // Draw a line representing the slice //
+  ////////////////////////////////////////
+  // A line will be drawn along the X or Y slice depending on the
+  // user's selection and current position on the canvas object. Note
+  // that the unique pad ID is used to prevent having to redraw the
+  // TH2F PSDHistogram_H object each time the user moves the cursor
+
+  if(ADAQSettings->PSDXSlice){
+    int XPixelOld = gPad->GetUniqueID();
+    
+    gVirtualX->DrawLine(XPixelOld, PixelYMin, XPixelOld, PixelYMax);
+    gVirtualX->DrawLine(XPixel, PixelYMin, XPixel, PixelYMax);
+    
+    gPad->SetUniqueID(XPixel);
+  }
+  else if(ADAQSettings->PSDYSlice){
+
+    int YPixelOld = gPad->GetUniqueID();
+  
+    gVirtualX->DrawLine(PixelXMin, YPixelOld, PixelXMax, YPixelOld);
+
+    gVirtualX->DrawLine(PixelXMin, YPixel, PixelXMax, YPixel);
+    
+    gPad->SetUniqueID(YPixel);
+  }
+
+  
+  ////////////////////////////////////////
+  // Draw the TH1D PSDHistogram_H slice //
+  ////////////////////////////////////////
+  // A 1D histogram representing the slice along X (or Y) at the value
+  // specified by the cursor position on the canvas will be drawn in a
+  // separate canvas to enable continual selection of slices. The PSD
+  // histogram slice canvas is kept open until the user turns off
+  // histogram slicing to enable smooth plotting
+
+
+  // An integer to determine which bin in the TH2F PSDHistogram_H
+  // object should be sliced
+  int PSDSliceBin = -1;
+
+  // The 1D histogram slice object
+  TH1D *PSDSlice_H = 0;
+
+  string HistogramTitle, XAxisTitle;
+
+  // Create a slice at a specific "X" (total pulse integral) value,
+  // i.e. create a 1D histogram of the "Y" (tail pulse integrals)
+  // values at a specific value of "X" (total pulse integral).
+  if(ADAQSettings->PSDXSlice){
+    PSDSliceBin = PSDHistogram_H->GetXaxis()->FindBin(gPad->PadtoX(XPos));
+    PSDSlice_H = PSDHistogram_H->ProjectionY("",PSDSliceBin,PSDSliceBin);
+    
+    stringstream ss;
+    ss << "PSDHistogram X slice at " << XPos << " ADC";
+    HistogramTitle = ss.str();
+    
+    XAxisTitle = PSDHistogram_H->GetYaxis()->GetTitle();
+  }
+  
+  // Create a slice at a specific "Y" (tail pulse integral) value,
+  // i.e. create a 1D histogram of the "X" (total pulse integrals)
+  // values at a specific value of "Y" (tail pulse integral).
+  else{
+    PSDSliceBin = PSDHistogram_H->GetYaxis()->FindBin(gPad->PadtoY(YPos));
+    PSDSlice_H = PSDHistogram_H->ProjectionX("",PSDSliceBin,PSDSliceBin);
+
+    stringstream ss;
+    ss << "PSDHistogram Y slice at " << YPos << " ADC";
+    HistogramTitle = ss.str();
+    
+    XAxisTitle = PSDHistogram_H->GetXaxis()->GetTitle();
+  }
+
+  // Save the histogram  to a class member TH1F object
+  //if(PSDHistogramSlice_H) delete PSDHistogramSlice_H;
+  //  PSDHistogramSlice_H = (TH1D *)PSDSlice_H->Clone("PSDHistogramSlice_H");
+  PSDHistogramSliceExists = true;
+
+}

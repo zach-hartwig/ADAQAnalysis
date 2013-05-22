@@ -1,14 +1,15 @@
+#include <TROOT.h>
 #include <TStyle.h>
 #include <TMarker.h>
 #include <TPaletteAxis.h>
-
-#include "ADAQGraphicsManager.hh"
 
 
 #include <iostream>
 #include <cmath>
 #include <sstream>
 using namespace std;
+
+#include "ADAQGraphicsManager.hh"
 
 
 ADAQGraphicsManager *ADAQGraphicsManager::TheGraphicsManager = 0;
@@ -805,4 +806,94 @@ void ADAQGraphicsManager::PlotCalibration(int Channel)
 void ADAQGraphicsManager::PlotCalibrationLine(double XPos, double YMin, double YMax)
 {
   Calibration_L->DrawLine(XPos, YMin, XPos, YMax);
+}
+
+
+void ADAQGraphicsManager::PlotPSDFilter()
+{
+  vector<TGraph *> PSDFilter = AnalysisMgr->GetPSDFilterManager();
+
+  int PSDChannel = ADAQSettings->PSDChannel;
+
+  PSDFilter[PSDChannel]->SetLineColor(2);
+  PSDFilter[PSDChannel]->SetLineWidth(2);
+  PSDFilter[PSDChannel]->SetMarkerStyle(20);
+  PSDFilter[PSDChannel]->SetMarkerColor(2);
+  PSDFilter[PSDChannel]->Draw("LP SAME");
+  
+  TheCanvas->Update();
+}
+
+
+void ADAQGraphicsManager::PlotPSDHistogramSlice(int XPixel, int YPixel)
+{
+  TH1D *PSDHistogramSlice_H = AnalysisMgr->GetPSDHistogramSlice();
+
+  ////////////////////
+  // Canvas assignment
+
+  string SliceCanvasName = "PSDSlice_C";
+  string SliceHistogramName = "PSDSlice_H";
+
+  // Get the list of current canvas objects
+  TCanvas *PSDSlice_C = (TCanvas *)gROOT->GetListOfCanvases()->FindObject(SliceCanvasName.c_str());
+
+  // If the canvas then delete the contents to prevent memory leaks
+  if(PSDSlice_C)
+    delete PSDSlice_C->GetPrimitive(SliceHistogramName.c_str());
+  
+  // ... otherwise, create a new canvas
+  else{
+    PSDSlice_C = new TCanvas(SliceCanvasName.c_str(), "PSD Histogram Slice", 700, 500, 600, 400);
+    PSDSlice_C->SetGrid(true);
+    PSDSlice_C->SetLeftMargin(0.13);
+    PSDSlice_C->SetBottomMargin(0.13);
+  }
+  
+  // Ensure the PSD slice canvas is the active canvas
+  PSDSlice_C->cd();
+
+  string Title, XTitle;
+  stringstream ss;
+    
+  if(ADAQSettings->PSDXSlice){
+    ss << "PSDHistogram X slice at " << gPad->AbsPixeltoX(XPixel) << " ADC";
+    Title = ss.str();
+    XTitle = "PSD Tail Integral [ADC]";
+  }
+  else if(ADAQSettings->PSDYSlice){
+    ss << "PSDHistogram Y slice at " << gPad->AbsPixeltoY(YPixel) << " ADC";
+    Title == ss.str();
+    XTitle = "PSD Total Integral [ADC]";
+  }
+
+  
+  /////////////////////////////////
+  // Set slice histogram attributes
+  
+  PSDHistogramSlice_H->SetName(SliceHistogramName.c_str());
+  PSDHistogramSlice_H->SetTitle(Title.c_str());
+
+  PSDHistogramSlice_H->GetXaxis()->SetTitle(XTitle.c_str());
+  PSDHistogramSlice_H->GetXaxis()->SetTitleSize(0.05);
+  PSDHistogramSlice_H->GetXaxis()->SetTitleOffset(1.1);
+  PSDHistogramSlice_H->GetXaxis()->SetLabelSize(0.05);
+  PSDHistogramSlice_H->GetXaxis()->CenterTitle();
+  
+  PSDHistogramSlice_H->GetYaxis()->SetTitle("Counts");
+  PSDHistogramSlice_H->GetYaxis()->SetTitleSize(0.05);
+  PSDHistogramSlice_H->GetYaxis()->SetTitleOffset(1.1);
+  PSDHistogramSlice_H->GetYaxis()->SetLabelSize(0.05);
+  PSDHistogramSlice_H->GetYaxis()->CenterTitle();
+  
+  PSDHistogramSlice_H->SetFillColor(4);
+  PSDHistogramSlice_H->Draw("B");
+  
+  // Update the standalone canvas
+  PSDSlice_C->Update();
+
+  gPad->GetCanvas()->FeedbackMode(kFALSE);
+  
+  // Reset the main embedded canvas to active
+  TheCanvas->cd();
 }

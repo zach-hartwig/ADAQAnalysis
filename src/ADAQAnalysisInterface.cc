@@ -1944,32 +1944,25 @@ void ADAQAnalysisInterface::HandleTextButtons()
 
     break;
 
-
-  case PSDClearFilter_TB_ID:
-    /*
-    PSDNumFilterPoints = 0;
-    PSDFilterXPoints.clear();
-    PSDFilterYPoints.clear();
-
-    if(PSDFilterManager[PSDChannel]) delete PSDFilterManager[PSDChannel];
-    PSDFilterManager[Channel] = new TGraph();
     
+  case PSDClearFilter_TB_ID:
+    AnalysisMgr->ClearPSDFilter(ChannelSelector_CBL->GetComboBox()->GetSelected());
     PSDEnableFilter_CB->SetState(kButtonUp);
 
-    switch(CanvasContents){
+    switch(GraphicsMgr->GetCanvasContentType()){
     case zWaveform:
-      PlotWaveform();
+      GraphicsMgr->PlotWaveform();
       break;
       
     case zSpectrum:
-      PlotSpectrum();
+      GraphicsMgr->PlotSpectrum();
       break;
 
     case zPSDHistogram:
-      PlotPSDHistogram();
+      GraphicsMgr->PlotPSDHistogram();
       break;
     }
-    */
+
     break;
   }
 }
@@ -2618,13 +2611,14 @@ void ADAQAnalysisInterface::HandleComboBox(int ComboBoxID, int SelectedID)
 
 void ADAQAnalysisInterface::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *Selected)
 {
-  /*
   // If the user has enabled the creation of a PSD filter and the
   // canvas event is equal to "1" (which represents a down-click
   // somewhere on the canvas pad) then send the pixel coordinates of
   // the down-click to the PSD filter creation function
-  if(PSDEnableFilterCreation_CB->IsDown() and EventID == 1)
-    CreatePSDFilter(XPixel, YPixel);
+  if(PSDEnableFilterCreation_CB->IsDown() and EventID == 1){
+    AnalysisMgr->CreatePSDFilter(XPixel, YPixel);
+    GraphicsMgr->PlotPSDFilter();
+  }
   
   if(PSDEnableHistogramSlicing_CB->IsDown()){
     
@@ -2635,10 +2629,11 @@ void ADAQAnalysisInterface::HandleCanvas(int EventID, int XPixel, int YPixel, TO
       PSDEnableHistogramSlicing_CB->SetState(kButtonUp);
       return;
     }
-    else
-      PlotPSDHistogramSlice(XPixel, YPixel);
+    else{
+      AnalysisMgr->CreatePSDHistogramSlice(XPixel, YPixel);
+      GraphicsMgr->PlotPSDHistogramSlice(XPixel, YPixel);
+    }
   }
-  */
 }
 
 
@@ -2747,6 +2742,13 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   else
     ADAQSettings->PSDFilterPolarity = -1.0;
 
+  ADAQSettings->PSDXSlice = PSDHistogramSliceX_RB->IsDown();
+  ADAQSettings->PSDYSlice = PSDHistogramSliceY_RB->IsDown();
+
+  ADAQSettings->RFQPulseWidth = RFQPulseWidth_NEL->GetEntry()->GetNumber();
+  ADAQSettings->RFQRepRate = RFQRepRate_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->RFQCountRateWaveforms = CountRateWaveforms_NEL->GetEntry()->GetIntNumber();
+
 
   //////////////////////////////////////////
   // Values from the "Graphics" tabbed frame
@@ -2844,7 +2846,7 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   // Miscellaneous values required for parallel processing
   
   ADAQSettings->ADAQFileName = ADAQFileName;
-
+  
   // Spectrum calibration objects
   ADAQSettings->UseCalibrationManager = AnalysisMgr->GetUseCalibrationManager();
   ADAQSettings->CalibrationManager = AnalysisMgr->GetCalibrationManager();

@@ -33,6 +33,8 @@
 using namespace std;
 
 #include "ADAQRootGUIClasses.hh"
+#include "ADAQAnalysisSettings.hh"
+#include "ADAQAnalysisParallelResults.hh"
 #include "ADAQAnalysisTypes.hh"
 
 #ifndef __CINT__
@@ -110,10 +112,14 @@ public:
   bool SaveHistogramData(string, string, string);
 
   TH2F *GetPSDHistogram() { return PSDHistogram_H; }
+  TH1D *GetPSDHistogramSlice() { return PSDHistogramSlice_H; }
 
   TH2F *CreatePSDHistogram();
   void CalculatePSDIntegrals(bool);
   bool ApplyPSDFilter(double, double);
+  void CreatePSDFilter(int, int);
+  void ClearPSDFilter(int);
+  void CreatePSDHistogramSlice(int, int);
 
   string GetADAQFileName() { return ADAQFileName; }
 
@@ -139,6 +145,19 @@ public:
 
   vector<TGraph *> GetPSDFilterManager() { return PSDFilterManager; }
   vector<bool> GetUsePSDFilterManager() { return UsePSDFilterManager; }
+
+  void CreateDesplicedFile();
+
+  void FindSpectrumPeaks();
+
+
+
+
+  
+  // Methods for general waveform analysis
+  void CalculateCountRate();
+
+
   
   
 private:
@@ -151,28 +170,7 @@ private:
   double SpectrumIntegralValue, SpectrumIntegralError;
 
   TGraph *SpectrumDerivative_G;
-
-  /*
-
-
-
-
-  void FindSpectrumPeaks();
-
-
-  void CreateDesplicedFile();
-
   
-  // Methods for general waveform analysis
-  void CalculateCountRate();
-  bool ApplyPSDFilter(double,double);
-  
-
-  void CreatePSDFilter(int, int);
-
-  */
-
-private:
   
   static ADAQAnalysisManager *TheAnalysisManager;
 

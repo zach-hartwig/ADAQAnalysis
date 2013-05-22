@@ -1,12 +1,10 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // name: ADAQAnalysisTypes.hh
-// date: 23 Jan 13 (Last updated)
+// date: 22 May 13
 // auth: Zach Hartwig
 // 
-// desc: This header file contains several structures and classes that
-//       are used for various purposes in ADAQAnalysisGUI. Descriptions 
-//       of each can be found below
+// desc: 
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -15,8 +13,8 @@
 
 #include <TGraph.h>
 
-#include <string>
 #include <vector>
+#include <string>
 using namespace std;
 
 // Structure that contains information on a single peak found by the
@@ -56,179 +54,6 @@ struct ADAQChannelCalibrationData{
   vector<int> PointID; // Unique integer ID of the calibration point
   vector<double> Energy; // Energy of calibration peak set by user [desired energy unit]
   vector<double> PulseUnit; // Pulse unit of calibration peak set by user [ADC]
-};
-
-
-// Class derived from ROOT TObject that is used to store variables
-// from the sequential binary for use in waveform processing by the
-// parallel binaries. Class is derived from TObject class to provide
-// easy, persistant storage in a ROOT TFile
-class ADAQAnalysisParallelParameters : public TObject
-{
-public:
-  vector<int> TestVector;
-
-  string ADAQRootFileName;
-
-  string DesplicedFileName;
-  
-  int Channel, WaveformsToHistogram;
-  int SpectrumNumBins, SpectrumMinBin, SpectrumMaxBin;
-  int MaxPeaks, ZeroSuppressionCeiling, Floor;
-  int BaselineCalcMin, BaselineCalcMax;
-  int UpdateFreq;
-  bool PlotFloor, PlotPeakIntegratingRegion, PlotCrossings, UsePileupRejection;
-  bool RawWaveform, BaselineSubtractedWaveform, ZeroSuppressionWaveform;
-  bool IntegrationTypeWholeWaveform, IntegrationTypePeakFinder;
-  bool SpectrumTypePHS, SpectrumTypePAS;
-  double Sigma, Resolution;
-  double WaveformPolarity, PearsonPolarity;
-
-  int PSDChannel, PSDWaveformsToDiscriminate;
-  int PSDThreshold, PSDTailOffset, PSDPeakOffset;
-  int PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin;
-  int PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin;
-  int PSDFilterPolarity;
-    
-  int PearsonChannel;
-  bool PlotPearsonIntegration, IntegratePearson, IntegrateRawPearson, IntegrateFitToPearson;
-  int PearsonLowerLimit, PearsonMiddleLimit, PearsonUpperLimit;
-
-  int TotalDeuterons;
-  
-  int WaveformsToDesplice, DesplicedWaveformBuffer, DesplicedWaveformLength;
-
-  vector<TGraph *> CalibrationManager, PSDFilterManager;
-  vector<bool> UseCalibrationManager, UsePSDFilterManager;
-  
-  ClassDef(ADAQAnalysisParallelParameters,1);
-};
-
-
-class ADAQAnalysisParallelResults : public TObject
-{
-public:
-  double TotalDeuterons;
-
-  ClassDef(ADAQAnalysisParallelResults,1);
-};
-
-
-class ADAQAnalysisSettings : public TObject
-{
-public:
-
-  // Waveform frame
-  
-  int WaveformChannel, WaveformToPlot;
-  bool RawWaveform, BSWaveform, ZSWaveform;
-  int WaveformPolarity;
-  
-  bool PlotZeroSuppressionCeiling;
-  int ZeroSuppressionCeiling;
-
-  bool FindPeaks;
-  int MaxPeaks, Sigma, Floor;
-  double Resolution;
-  
-  bool PlotFloor, PlotCrossings, PlotPeakIntegrationRegion;
-  
-  bool UsePileupRejection;
-  
-  bool PlotBaselineCalcRegion;
-  int BaselineCalcMin, BaselineCalcMax;
-  
-  bool PlotTrigger;
-
-  
-  // Spectrum frame
-
-  int WaveformsToHistogram;
-  int SpectrumNumBins, SpectrumMinBin, SpectrumMaxBin;
-  bool SpectrumTypePAS, SpectrumTypePHS;
-  bool IntegrationTypeWholeWaveform, IntegrationTypePeakFinder;
-
-  bool UseManualCalibration, UseEPCalibration;
-  vector<TGraph *> CalibrationManager;
-  vector<bool> UseCalibrationManager;
-
-  bool FindBackground;
-  int BackgroundMinBin, BackgroundMaxBin;
-  bool PlotWithBackground, PlotLessBackground;
-  
-  bool SpectrumFindIntegral, SpectrumIntegralInCounts;
-  bool SpectrumUseGaussianFit, SpectrumNormalizeToCurrent;
-  bool SpectrumOverplotDerivative;
-  
-
-  // Analysis
-
-  bool PSDEnable;
-  int PSDChannel, PSDWaveformsToDiscriminate;
-  int PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin;
-  int PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin;
-  int PSDThreshold, PSDTailOffset, PSDPeakOffset;
-
-  int PSDPlotType;
-  bool PSDPlotTailIntegrationRegion, EnableHistogramSlicing, PSDXSlice, PSDYSlice;
-
-  bool PSDEnableFilterCreation, PSDEnableFilterUse;
-  int PSDFilterPolarity;
-
-  vector<TGraph *> PSDFilterManager;
-  vector<bool> UsePSDFilterManager;
-
-  double RFQPulseWidth, RFQRepRate, RFQWaveformToUse;
-
-
-  // Graphics
-  
-  bool WaveformCurve, WaveformMarkers, WaveformBoth;
-  bool SpectrumCurve, SpectrumMarkers, SpectrumBars;
-  bool StatsOff, PlotVerticalAxisInLog;
-  bool PlotSpectrumDerivativeError, PlotAbsValueSpectrumDerivative, PlotYAxisWithAutoRange;
-  bool OverrideGraphicalDefault;
-
-  string PlotTitle, XAxisTitle, YAxisTitle, ZAxisTitle, PaletteTitle;
-  double XSize, YSize, ZSize, PaletteSize;
-  double XOffset, YOffset, ZOffset, PaletteOffset;
-  int XDivs, YDivs, ZDivs;
-  double PaletteX1, PaletteX2, PaletteY1, PaletteY2;
-
-
-  // Processing
-
-  bool SequentialProcessing, ParallelProcessing;
-  int NumProcessors, UpdateFreq;
-
-  bool IntegratePearson;
-  int PearsonChannel, PearsonPolarity;
-  bool IntegrateRawPearson, IntegrateFitToPearson;
-  int PearsonLowerLimit, PearsonMiddleLimit, PearsonUpperLimit;
-  bool PlotPearsonIntegration;
-
-  int TotalDeuterons;
-  
-  int WaveformsToDesplice, DesplicedWaveformBuffer, DesplicedWaveformLength;
-  string DesplicedFileName;
-
-
-  // Canvas
-
-  double XAxisMin, XAxisMax, XAxisPtr;
-  double YAxisMin, YAxisMax;
-
-  int WaveformSelector;
-  
-  double SpectrumIntegrationMin, SpectrumIntegrationMax;
-  
-  
-  // General
-  
-  string ADAQFileName;
-  string ACRONYMFileName;
-  
-  ClassDef(ADAQAnalysisSettings, 1);
 };
 
 
