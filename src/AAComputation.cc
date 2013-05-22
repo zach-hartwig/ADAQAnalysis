@@ -1795,7 +1795,7 @@ void AAComputation::IntegratePearsonWaveform(int Waveform)
 			   ADAQSettings->PearsonLowerLimit, 
 			   ADAQSettings->PearsonMiddleLimit);
     Waveform_H[Channel]->Fit("RiseFit","R N Q C");
-    PearsonRiseFit_H = (TH1F *)RiseFit->GetHistogram();
+    PearsonRiseFit_H = (TH1F *)RiseFit->GetHistogram()->Clone("PearsonRiseFit_H");
     
     // Create a TF1 object for long "flat top" region of the current
     // trace a TH1F for potential plotting
@@ -1803,7 +1803,7 @@ void AAComputation::IntegratePearsonWaveform(int Waveform)
 			      ADAQSettings->PearsonMiddleLimit, 
 			      ADAQSettings->PearsonUpperLimit);
     Waveform_H[Channel]->Fit("PlateauFit","R N Q C");
-    PearsonPlateauFit_H = (TH1F *)PlateauFit->GetHistogram();
+    PearsonPlateauFit_H = (TH1F *)PlateauFit->GetHistogram()->Clone("PearsonPlateauFit_H");
     
     // Compute the integrals. Note the "width" argument is passed to
     // the integration to specify that the histogram results should be

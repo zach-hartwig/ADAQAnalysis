@@ -358,7 +358,6 @@ void AAGraphics::PlotPearsonIntegration()
     PearsonIntegration_H->Draw("BC SAME");
   }
   else if(ADAQSettings->IntegrateFitToPearson){
-    /*
     TH1F *PearsonRiseFit_H = ComputationMgr->GetPearsonRiseFit();
     PearsonRiseFit_H->SetLineColor(kGreen+2);
     PearsonRiseFit_H->SetFillColor(kGreen+2);
@@ -370,7 +369,6 @@ void AAGraphics::PlotPearsonIntegration()
     PearsonPlateauFit_H->SetFillColor(kBlue);
     PearsonPlateauFit_H->SetFillStyle(3001);
     PearsonPlateauFit_H->Draw("BC SAME");
-    */
   }
 }
 
