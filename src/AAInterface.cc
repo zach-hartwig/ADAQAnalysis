@@ -1665,8 +1665,6 @@ void AAInterface::HandleTextButtons()
     break;
 
   case ResetXAxisLimits_TB_ID:
-    if(!ComputationMgr->GetFileOpen())
-      return;
 
     // Reset the XAxis double slider and member data
     //    XAxisLimits_THS->SetPosition(0, RecordLength);
@@ -1676,10 +1674,7 @@ void AAInterface::HandleTextButtons()
     GraphicsMgr->PlotWaveform();
     break;
 
-  case ResetYAxisLimits_TB_ID:
-    if(!ComputationMgr->GetFileOpen())
-      return;
-    
+  case ResetYAxisLimits_TB_ID:    
     // Reset the YAxis double slider and member data
     //    YAxisLimits_DVS->SetPosition(0, V1720MaximumBit);
     //    YAxisMin = 0;
@@ -1925,13 +1920,11 @@ void AAInterface::HandleTextButtons()
     
   case DesplicedFileCreation_TB_ID:
     
-    if(!ComputationMgr->GetFileOpen())
-      return;
     
     // Alert the user the filtering particles by PSD into the spectra
     // requires integration type peak finder to be used
     //if(UsePSDFilterManager[PSDChannel] and IntegrationTypeWholeWaveform)
-    //      CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
+      CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
     
     // Desplice waveforms sequentially
     if(ProcessingSeq_RB->IsDown())
@@ -2847,12 +2840,12 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->ADAQFileName = ADAQFileName;
   
   // Spectrum calibration objects
-  ADAQSettings->UseCalibrationManager = ComputationMgr->GetUseCalibrationManager();
-  ADAQSettings->CalibrationManager = ComputationMgr->GetCalibrationManager();
+  ADAQSettings->UseSpectraCalibrations = ComputationMgr->GetUseSpectraCalibrations();
+  ADAQSettings->SpectraCalibrations = ComputationMgr->GetSpectraCalibrations();
   
   // PSD filter objects
-  ADAQSettings->UsePSDFilterManager = ComputationMgr->GetUsePSDFilterManager();
-  ADAQSettings->PSDFilterManager = ComputationMgr->GetPSDFilterManager();
+  ADAQSettings->UsePSDFilters = ComputationMgr->GetUsePSDFilters();
+  ADAQSettings->PSDFilters = ComputationMgr->GetPSDFilters();
 
   // Update the settings object pointer in the manager classes
   ComputationMgr->SetADAQSettings(ADAQSettings);

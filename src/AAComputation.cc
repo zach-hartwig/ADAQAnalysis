@@ -19,29 +19,34 @@
 using namespace std;
 
 
-AAComputation *AAComputation::TheAnalysisManager = 0;
+AAComputation *AAComputation::TheComputationManager = 0;
 
 
 AAComputation *AAComputation::GetInstance()
-{ return TheAnalysisManager; }
+{ return TheComputationManager; }
 
 
 AAComputation::AAComputation(string CmdLineArg, bool PA)
-  : ADAQMeasParams(0), ADAQRootFile(0), ADAQFileName(""), ADAQRootFileLoaded(false), ADAQWaveformTree(0), 
+  : SequentialArchitecture(!PA), ParallelArchitecture(PA),
+    ADAQFileLoaded(false), ACRONYMFileLoaded(false), 
     ADAQParResults(NULL), ADAQParResultsLoaded(false),
     Time(0), RawVoltage(0), RecordLength(0),
-    PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
-    MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelArchitecture(PA), SequentialArchitecture(!PA),
+    PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), 
+    PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
+    WaveformStart(0), WaveformEnd(0),
+    MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), 
     Verbose(false), ParallelVerbose(true),
     Baseline(0.), PSDFilterPolarity(1.),
     V1720MaximumBit(4095), NumDataChannels(8),
     SpectrumExists(false), SpectrumDerivativeExists(false), PSDHistogramExists(false), PSDHistogramSliceExists(false),
-    SpectrumMaxPeaks(0), TotalPeaks(0), TotalDeuterons(0),
+    TotalPeaks(0), TotalDeuterons(0),
     GaussianBinWidth(1.), CountsBinWidth(1.)
 {
-  if(TheAnalysisManager)
-    cout << "\nERROR! TheAnalysisManager was constructed twice!\n" << endl;
-  TheAnalysisManager = this;
+  if(TheComputationManager){
+    cout << "\nERROR! TheComputationManager was constructed twice!\n" << endl;
+    exit(-42);
+  }
+  TheComputationManager = this;
 
   // Initialize the objects used in the calibration and pulse shape
   // discrimination (PSD) scheme. A set of 8 calibration and 8 PSD
@@ -50,13 +55,13 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
   // not that channel's "manager" should be used is initialized. 
   for(int ch=0; ch<NumDataChannels; ch++){
     // All 8 channel's managers are set "off" by default
-    UseCalibrationManager.push_back(false);
-    UsePSDFilterManager.push_back(false);
+    UseSpectraCalibrations.push_back(false);
+    UsePSDFilters.push_back(false);
     
     // Store empty TGraph pointers in std::vectors to hold space and
     // prevent seg. faults later when we test/delete unused objects
-    CalibrationManager.push_back(new TGraph);
-    PSDFilterManager.push_back(new TGraph);
+    SpectraCalibrations.push_back(new TGraph);
+    PSDFilters.push_back(new TGraph);
     
     // Assign a blank initial structure for channel calibration data
     ADAQChannelCalibrationData Init;
@@ -147,7 +152,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     
     // Desplice (or "uncouple") waveforms into a new ADAQ ROOT file
     else if(CmdLineArg == "desplicing")
-      {}//CreateDesplicedFile();
+      CreateDesplicedFile();
     
     else if(CmdLineArg == "discriminating")
       CreatePSDHistogram();
@@ -181,7 +186,7 @@ bool AAComputation::LoadADAQRootFile(string FileName)
   
   // If a valid ADAQ ROOT file was NOT opened...
   if(!ADAQRootFile->IsOpen()){
-    ADAQRootFileLoaded = false;
+    ADAQFileLoaded = false;
   }
   else{
     
@@ -288,9 +293,9 @@ bool AAComputation::LoadADAQRootFile(string FileName)
 	     << endl;
     }
     // Update the bool that determines if a valid ROOT file is loaded
-    ADAQRootFileLoaded = true;
+    ADAQFileLoaded = true;
   }
-  return ADAQRootFileLoaded;
+  return ADAQFileLoaded;
 }
 
     
@@ -775,8 +780,8 @@ void AAComputation::CreateSpectrum()
 	// If the calibration manager is to be used to convert the
 	// value from pulse units [ADC] to energy units [keV, MeV,
 	// ...] then do so
-	if(ADAQSettings->UseCalibrationManager[Channel])
-	  PulseHeight = ADAQSettings->CalibrationManager[Channel]->Eval(PulseHeight);
+	if(ADAQSettings->UseSpectraCalibrations[Channel])
+	  PulseHeight = ADAQSettings->SpectraCalibrations[Channel]->Eval(PulseHeight);
 	
 	// Add the pulse height to the spectrum histogram	
 	Spectrum_H->Fill(PulseHeight);
@@ -810,8 +815,8 @@ void AAComputation::CreateSpectrum()
 	// If the calibration manager is to be used to convert the
 	// value from pulse units [ADC] to energy units [keV, MeV,
 	// ...] then do so
-	if(ADAQSettings->UseCalibrationManager[Channel])
-	  PulseArea = ADAQSettings->CalibrationManager[Channel]->Eval(PulseArea);
+	if(ADAQSettings->UseSpectraCalibrations[Channel])
+	  PulseArea = ADAQSettings->SpectraCalibrations[Channel]->Eval(PulseArea);
 	
 	// Add the pulse area to the spectrum histogram
 	Spectrum_H->Fill(PulseArea);
@@ -848,7 +853,7 @@ void AAComputation::CreateSpectrum()
       
       // Calculate the PSD integrals and determine if they pass
       // the pulse-shape filterthrough the pulse-shape filter
-      //      if(UsePSDFilterManager[PSDChannel])
+      //      if(UsePSDFilters[PSDChannel])
       //	CalculatePSDIntegrals(false);
       
       // If a PAS is to be created ...
@@ -1010,7 +1015,7 @@ void AAComputation::IntegratePeaks()
     // If the PSD filter is desired, examine the PSD filter flag
     // stored in each PeakInfoStruct to determine whether or not this
     // peak should be filtered out of the spectrum.
-    //    if(UsePSDFilterManager[PSDChannel] and (*it).PSDFilterFlag==true)
+    //    if(UsePSDFilters[PSDChannel] and (*it).PSDFilterFlag==true)
     //      continue;
 
     // ...and use the lower and upper peak limits to calculate the
@@ -1020,8 +1025,8 @@ void AAComputation::IntegratePeaks()
     
     // If the user has calibrated the spectrum, then transform the
     // peak integral in pulse units [ADC] to energy units
-    if(ADAQSettings->UseCalibrationManager[ADAQSettings->WaveformChannel])
-      PeakIntegral = ADAQSettings->CalibrationManager[ADAQSettings->WaveformChannel]->Eval(PeakIntegral);
+    if(ADAQSettings->UseSpectraCalibrations[ADAQSettings->WaveformChannel])
+      PeakIntegral = ADAQSettings->SpectraCalibrations[ADAQSettings->WaveformChannel]->Eval(PeakIntegral);
     
     // Add the peak integral to the PAS 
     Spectrum_H->Fill(PeakIntegral);
@@ -1045,7 +1050,7 @@ void AAComputation::FindPeakHeights()
     // If the PSD filter is desired, examine the PSD filter flag
     // stored in each PeakInfoStruct to determine whether or not this
     // peak should be filtered out of the spectrum.
-    if(UsePSDFilterManager[ADAQSettings->PSDChannel] and (*it).PSDFilterFlag==true)
+    if(UsePSDFilters[ADAQSettings->PSDChannel] and (*it).PSDFilterFlag==true)
       continue;
     
     // Initialize the peak height for each peak region
@@ -1062,8 +1067,8 @@ void AAComputation::FindPeakHeights()
 
     // If the user has calibrated the spectrum then transform the peak
     // heights in pulse units [ADC] to energy
-    if(UseCalibrationManager[Channel])
-      PeakHeight = CalibrationManager[Channel]->Eval(PeakHeight);
+    if(UseSpectraCalibrations[Channel])
+      PeakHeight = SpectraCalibrations[Channel]->Eval(PeakHeight);
     
     // Add the detector pulse peak height to the spectrum histogram
     Spectrum_H->Fill(PeakHeight);
@@ -1190,20 +1195,20 @@ void AAComputation::IntegrateSpectrum()
 
   // Clone the appropriate spectrum object depending on user's
   // selection into a new TH1F object for integration
-  if(Spectrum2Integrate_H)
-    delete Spectrum2Integrate_H;
+  if(SpectrumIntegral_H)
+    delete SpectrumIntegral_H;
 
   if(ADAQSettings->PlotLessBackground)
-    Spectrum2Integrate_H = (TH1F *)SpectrumDeconvolved_H->Clone("SpectrumToIntegrate_H");
+    SpectrumIntegral_H = (TH1F *)SpectrumDeconvolved_H->Clone("SpectrumToIntegrate_H");
   else
-    Spectrum2Integrate_H = (TH1F *)Spectrum_H->Clone("SpectrumToIntegrate_H");
+    SpectrumIntegral_H = (TH1F *)Spectrum_H->Clone("SpectrumToIntegrate_H");
   
   // Set the integration TH1F object attributes and draw it
-  Spectrum2Integrate_H->SetLineColor(4);
-  Spectrum2Integrate_H->SetLineWidth(2);
-  Spectrum2Integrate_H->SetFillColor(2);
-  Spectrum2Integrate_H->SetFillStyle(3001);
-  Spectrum2Integrate_H->GetXaxis()->SetRangeUser(LowerIntLimit, UpperIntLimit);
+  SpectrumIntegral_H->SetLineColor(4);
+  SpectrumIntegral_H->SetLineWidth(2);
+  SpectrumIntegral_H->SetFillColor(2);
+  SpectrumIntegral_H->SetFillStyle(3001);
+  SpectrumIntegral_H->GetXaxis()->SetRangeUser(LowerIntLimit, UpperIntLimit);
   
   // Variable to hold the result of the spectrum integral
   double Int = 0.;
@@ -1229,7 +1234,7 @@ void AAComputation::IntegrateSpectrum()
       delete SpectrumFit_F;
     
     SpectrumFit_F = new TF1("PeakFit", "gaus", LowerIntLimit, UpperIntLimit);
-    Spectrum2Integrate_H->Fit("PeakFit","R N");
+    SpectrumIntegral_H->Fit("PeakFit","R N");
     TH1F *SpectrumFit_H = (TH1F *)SpectrumFit_F->GetHistogram();
     
     // Get the bin width. Note that bin width is constant for these
@@ -1258,17 +1263,17 @@ void AAComputation::IntegrateSpectrum()
 
   else{
     // Set the low and upper bin for the integration
-    int StartBin = Spectrum2Integrate_H->FindBin(LowerIntLimit);
-    int StopBin = Spectrum2Integrate_H->FindBin(UpperIntLimit);
+    int StartBin = SpectrumIntegral_H->FindBin(LowerIntLimit);
+    int StopBin = SpectrumIntegral_H->FindBin(UpperIntLimit);
     
     // Compute the integral and error
-    Int = Spectrum2Integrate_H->IntegralAndError(StartBin,
+    Int = SpectrumIntegral_H->IntegralAndError(StartBin,
 						 StopBin,
 						 Err,
 						 IntegralArg.c_str());
     
     // Get the bin width of the histogram
-    CountsBinWidth = Spectrum2Integrate_H->GetBinWidth(0);
+    CountsBinWidth = SpectrumIntegral_H->GetBinWidth(0);
   }
   
   // The spectrum integral and error may be normalized to the total
@@ -1596,7 +1601,7 @@ void AAComputation::CalculatePSDIntegrals(bool FillPSDHistogram)
 	   << endl;
     
     // If the user has enabled a PSD filter ...
-    //if(UsePSDFilterManager[ADAQSettings->PSDChannel])
+    //if(UsePSDFilters[ADAQSettings->PSDChannel])
       
       // ... then apply the PSD filter to the waveform. If the
       // waveform does not pass the filter, mark the flag indicating
@@ -1637,14 +1642,14 @@ bool AAComputation::ApplyPSDFilter(double TailIntegral, double TotalIntegral)
   // tail/total PSD integral space fell "above" the TGraph; therefore,
   // it should not be filtered so return false
   if(ADAQSettings->PSDFilterPolarity > 0 and 
-     TailIntegral >= PSDFilterManager[ADAQSettings->PSDChannel]->Eval(TotalIntegral))
+     TailIntegral >= PSDFilters[ADAQSettings->PSDChannel]->Eval(TotalIntegral))
     return false;
 
   // Waveform passed the criterion for a negative PSD filter (point in
   // tail/total PSD integral space fell "below" the TGraph; therefore,
   // it should not be filtered so return false
   else if(ADAQSettings->PSDFilterPolarity < 0 and 
-	  TailIntegral <= PSDFilterManager[ADAQSettings->PSDChannel]->Eval(TotalIntegral))
+	  TailIntegral <= PSDFilters[ADAQSettings->PSDChannel]->Eval(TotalIntegral))
     return false;
 
   // Waveform did not pass the PSD filter tests; therefore it should
@@ -1670,7 +1675,7 @@ TGraph *AAComputation::CalculateSpectrumDerivative()
   double VerticalOffset = 0;
   double ScaleFactor = 1.;
   if(ADAQSettings->SpectrumOverplotDerivative){
-    VerticalOffset = Spectrum2Plot_H->GetMaximum() / 2;
+    VerticalOffset = Spectrum_H->GetMaximum() / 2;
     ScaleFactor = 1.3;
   }
   
@@ -2102,8 +2107,8 @@ bool AAComputation::SetCalibration(int Channel)
     // current channel's calibration data set
     int NumCalibrationPoints = CalibrationData[Channel].PointID.size();
     
-    // Create a new "CalibrationManager" TGraph object.
-    CalibrationManager[Channel] = new TGraph(NumCalibrationPoints,
+    // Create a new "SpectraCalibrations" TGraph object.
+    SpectraCalibrations[Channel] = new TGraph(NumCalibrationPoints,
 						    &CalibrationData[Channel].PulseUnit[0],
 						    &CalibrationData[Channel].Energy[0]);
     
@@ -2111,7 +2116,7 @@ bool AAComputation::SetCalibration(int Channel)
     // indicating that the current channel will convert pulse units
     // to energy within the acquisition loop before histogramming
     // the result into the channel's spectrum
-    UseCalibrationManager[Channel] = true;
+    UseSpectraCalibrations[Channel] = true;
 
     return true;
   }
@@ -2131,16 +2136,16 @@ bool AAComputation::ClearCalibration(int Channel)
   // Delete the current channel's depracated calibration manager
   // TGraph object to prevent memory leaks but reallocat the TGraph
   // object to prevent seg. faults when writing the
-  // CalibrationManager to the ROOT parallel processing file
-  if(UseCalibrationManager[Channel]){
-    delete CalibrationManager[Channel];
-    CalibrationManager[Channel] = new TGraph;
+  // SpectraCalibrations to the ROOT parallel processing file
+  if(UseSpectraCalibrations[Channel]){
+    delete SpectraCalibrations[Channel];
+    SpectraCalibrations[Channel] = new TGraph;
   }
   
   // Set the current channel's calibration boolean to false,
   // indicating that the calibration manager will NOT be used within
   // the acquisition loop
-  UseCalibrationManager[Channel] = false;
+  UseSpectraCalibrations[Channel] = false;
 
   return true;
 }
@@ -2192,8 +2197,8 @@ void AAComputation::CreatePSDFilter(int XPixel, int YPixel)
   PSDFilterYPoints.push_back(YPos);
   
   // Recreate the TGraph representing the "PSDFilter" 
-  if(PSDFilterManager[ADAQSettings->PSDChannel]) delete PSDFilterManager[ADAQSettings->PSDChannel];
-  PSDFilterManager[ADAQSettings->PSDChannel] = new TGraph(PSDNumFilterPoints, &PSDFilterXPoints[0], &PSDFilterYPoints[0]);
+  if(PSDFilters[ADAQSettings->PSDChannel]) delete PSDFilters[ADAQSettings->PSDChannel];
+  PSDFilters[ADAQSettings->PSDChannel] = new TGraph(PSDNumFilterPoints, &PSDFilterXPoints[0], &PSDFilterYPoints[0]);
 }
 
 
@@ -2203,10 +2208,10 @@ void AAComputation::ClearPSDFilter(int Channel)
   PSDFilterXPoints.clear();
   PSDFilterYPoints.clear();
 
-  if(PSDFilterManager[ADAQSettings->PSDChannel]) delete PSDFilterManager[ADAQSettings->PSDChannel];
-  PSDFilterManager[ADAQSettings->PSDChannel] = new TGraph;
+  if(PSDFilters[ADAQSettings->PSDChannel]) delete PSDFilters[ADAQSettings->PSDChannel];
+  PSDFilters[ADAQSettings->PSDChannel] = new TGraph;
 
-  UsePSDFilterManager[ADAQSettings->PSDChannel] = false;
+  UsePSDFilters[ADAQSettings->PSDChannel] = false;
 }
 
 
@@ -2409,7 +2414,7 @@ void AAComputation::CreateDesplicedFile()
     
     // Calculate the PSD integrals and determine if they pass through
     // the pulse-shape filter 
-    if(UsePSDFilterManager[ADAQSettings->PSDChannel])
+    if(UsePSDFilters[ADAQSettings->PSDChannel])
       CalculatePSDIntegrals(false);
     
 
@@ -2790,8 +2795,8 @@ void AAComputation::CreatePSDHistogramSlice(int XPixel, int YPixel)
   }
 
   // Save the histogram  to a class member TH1F object
-  //if(PSDHistogramSlice_H) delete PSDHistogramSlice_H;
-  //  PSDHistogramSlice_H = (TH1D *)PSDSlice_H->Clone("PSDHistogramSlice_H");
+  if(PSDHistogramSlice_H) delete PSDHistogramSlice_H;
+  PSDHistogramSlice_H = (TH1D *)PSDSlice_H->Clone("PSDHistogramSlice_H");
   PSDHistogramSliceExists = true;
 
 }

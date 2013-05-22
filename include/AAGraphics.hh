@@ -64,7 +64,6 @@ private:
   TBox *IntegrationRegion_B;
   TLine *PearsonLowerLimit_L, *PearsonMiddleLimit_L, *PearsonUpperLimit_L;
   TLine *PSDPeakOffset_L, *PSDTailOffset_L;
-  TLine *LowerLimit_L, *UpperLimit_L;
   TLine *DerivativeReference_L;
   TBox *Baseline_B, *PSDTailIntegral_B;
   

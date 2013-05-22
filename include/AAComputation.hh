@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // name: AAComputation.cc
-// date: 21 May 13
+// date: 22 May 13
 // auth: Zach Hartwig
 //
 // desc: 
@@ -50,70 +50,52 @@ public:
   ~AAComputation();
 
   static AAComputation *GetInstance();
-  
-  void SetFileOpen(bool FO) {FileOpen = FO;}
-  bool GetFileOpen() {return FileOpen;}
-  
-  void SetSpectrumExists(bool SE) {SpectrumExists = SE;}
-  bool GetSpectrumExists() {return SpectrumExists;}
 
-  void SetSpectrumDerivativeExists(bool SDE) {SpectrumDerivativeExists = SDE;}
-  bool GetSpectrumDerivativeExists() {return SpectrumDerivativeExists;}
-
-  void SetPSDHistogramExists(bool PHE) {PSDHistogramExists = PHE;}
-  bool GetPSDHistogramExists() {return PSDHistogramExists;}
-
-  bool LoadADAQRootFile(string);
-  bool LoadACRONYMRootFile(string);
-
-  int GetADAQNumberOfWaveforms() {return ADAQWaveformTree->GetEntries();}
-  ADAQRootMeasParams *GetADAQMeasurementParameters() {return ADAQMeasParams;}
-
-
+  // Pointer set methods
   void SetProgressBarPointer(TGHProgressBar *PB) { ProcessingProgressBar = PB; }
-
   void SetADAQSettings(ADAQAnalysisSettings *AAS) { ADAQSettings = AAS; }
 
-  void SaveHistogramData(string){;}
+  
+  ///////////////////////////
+  // Data computation methods
+  
+  // File I/O methods
+  bool LoadADAQRootFile(string);
+  bool LoadACRONYMRootFile(string);
+  bool SaveHistogramData(string, string, string);
+  void CreateDesplicedFile();
 
+  // Waveform creation
   TH1F *CalculateRawWaveform(int, int);
   TH1F *CalculateBSWaveform(int, int, bool CurrentWaveform=false);
   TH1F *CalculateZSWaveform(int, int, bool CurrentWaveform=false);
   double CalculateBaseline(vector<int> *);  
   double CalculateBaseline(TH1F *);
 
+  // Waveform processing 
   bool FindPeaks(TH1F *);
   void FindPeakLimits(TH1F *);
   void IntegratePeaks();
   void FindPeakHeights();
+  void RejectPileup(TH1F *);
+  void IntegratePearsonWaveform(bool PlotPearsonIntegration=true);
+  void CalculateCountRate();
 
+  // Spectrum creation
   void CreateSpectrum();
   void CalculateSpectrumBackground();
+
+  // Spectrum processing
+  void FindSpectrumPeaks();
   void IntegrateSpectrum();
+  TGraph *CalculateSpectrumDerivative();
 
-  void UpdateProcessingProgress(int);
+  // Spectrum calibration
+  bool SetCalibrationPoint(int, int, double, double);
+  bool SetCalibration(int);
+  bool ClearCalibration(int);
 
-  TH1F *GetSpectrum() {return Spectrum_H;}
-  TH1F *GetSpectrumBackground() {return SpectrumBackground_H;}
-  TH1F *GetSpectrumWithoutBackground() {return SpectrumDeconvolved_H;}
-  
-  TH1F *GetSpectrumIntegral() { return Spectrum2Integrate_H; }
-  TF1 *GetSpectrumFit() { return SpectrumFit_F; }
-  double GetSpectrumIntegralValue() { return SpectrumIntegralValue; }
-  double GetSpectrumIntegralError() { return SpectrumIntegralError; }
-
-  vector<PeakInfoStruct> GetPeakInfoVec() {return PeakInfoVec;}
-
-  void CreateNewPeakFinder(int NumPeaks){
-    if(PeakFinder) delete PeakFinder;
-    PeakFinder = new TSpectrum(NumPeaks);
-  }
-
-  bool SaveHistogramData(string, string, string);
-
-  TH2F *GetPSDHistogram() { return PSDHistogram_H; }
-  TH1D *GetPSDHistogramSlice() { return PSDHistogramSlice_H; }
-
+  // Pulse shape discrimination processing
   TH2F *CreatePSDHistogram();
   void CalculatePSDIntegrals(bool);
   bool ApplyPSDFilter(double, double);
@@ -121,161 +103,182 @@ public:
   void ClearPSDFilter(int);
   void CreatePSDHistogramSlice(int, int);
 
-  string GetADAQFileName() { return ADAQFileName; }
-
-
-  TGraph *CalculateSpectrumDerivative();
-
-  void IntegratePearsonWaveform(bool PlotPearsonIntegration=true);
-  
+  // Processing methods
+  void UpdateProcessingProgress(int);
+  void ProcessWaveformsInParallel(string);
   double* SumDoubleArrayToMaster(double*, size_t);
   double SumDoublesToMaster(double);
 
-  void ProcessWaveformsInParallel(string);
 
-  void RejectPileup(TH1F *);
+  ////////////////////////////////////////
+  // Public access methods for member data
 
+  // Waveform peak data
+  vector<PeakInfoStruct> GetPeakInfoVec() {return PeakInfoVec;}
 
+  // Spectra
+  TH1F *GetSpectrum() {return Spectrum_H;}
+  TH1F *GetSpectrumBackground() {return SpectrumBackground_H;}
+  TH1F *GetSpectrumWithoutBackground() {return SpectrumDeconvolved_H;}
+
+  // Spectra calibrations
+  vector<TGraph *> GetSpectraCalibrations() { return SpectraCalibrations; }
+  vector<bool> GetUseSpectraCalibrations() { return UseSpectraCalibrations; }
   
-  bool SetCalibrationPoint(int, int, double, double);
-  bool SetCalibration(int);
-  bool ClearCalibration(int);
-  vector<TGraph *> GetCalibrationManager() { return CalibrationManager; }
-  vector<bool> GetUseCalibrationManager() { return UseCalibrationManager; }
+  // Spectra analysis
+  TH1F *GetSpectrumIntegral() { return SpectrumIntegral_H; }
+  TF1 *GetSpectrumFit() { return SpectrumFit_F; }
+  double GetSpectrumIntegralValue() { return SpectrumIntegralValue; }
+  double GetSpectrumIntegralError() { return SpectrumIntegralError; }
 
-  vector<TGraph *> GetPSDFilterManager() { return PSDFilterManager; }
-  vector<bool> GetUsePSDFilterManager() { return UsePSDFilterManager; }
+  // Pulse shape discrimination histograms
+  TH2F *GetPSDHistogram() { return PSDHistogram_H; }
+  TH1D *GetPSDHistogramSlice() { return PSDHistogramSlice_H; }
 
-  void CreateDesplicedFile();
+  // Pulse shape discrimination filters
+  vector<TGraph *> GetPSDFilters() { return PSDFilters; }
+  vector<bool> GetUsePSDFilters() { return UsePSDFilters; }
 
-  void FindSpectrumPeaks();
+  // ADAQ file data
+  string GetADAQFileName() { return ADAQFileName; }
+  int GetADAQNumberOfWaveforms() {return ADAQWaveformTree->GetEntries();}
+  ADAQRootMeasParams *GetADAQMeasurementParameters() {return ADAQMeasParams;}
+
+  // ACRONYM file data
+  string GetACRONYMFileName() { return ACRONYMFileName; }
+
+  // Booleans
+  bool GetADAQFileLoaded() { return ADAQFileLoaded; }
+  bool GetACRONYMFileLoaded() { return ACRONYMFileLoaded; }
+  bool GetSpectrumExists() { return SpectrumExists; }
+  bool GetSpectrumDerivativeExists() { return SpectrumDerivativeExists; }
+  bool GetPSDHistogramExists() { return PSDHistogramExists; }
+  bool GetPSDHIstogramSliceExists() { return PSDHistogramSliceExists; }
 
 
+  ////////////////
+  // Miscellaneous
 
-
-  
-  // Methods for general waveform analysis
-  void CalculateCountRate();
-
-
+  void CreateNewPeakFinder(int NumPeaks){
+    if(PeakFinder) delete PeakFinder;
+    PeakFinder = new TSpectrum(NumPeaks);
+  }
   
   
 private:
-  bool FileOpen;
+
+  static AAComputation *TheComputationManager;
 
   TGHProgressBar *ProcessingProgressBar;
-
-  TH1F *Spectrum2Integrate_H;
-  TF1 *SpectrumFit_F;
-  double SpectrumIntegralValue, SpectrumIntegralError;
-
-  TGraph *SpectrumDerivative_G;
-  
-  
-  static AAComputation *TheAnalysisManager;
-
   ADAQAnalysisSettings *ADAQSettings;
 
-  // Objects for opening ADAQ ROOT files and accessing them
+  // Bools to specify architecture type
+  bool SequentialArchitecture, ParallelArchitecture;
+
+
+  ///////////
+  // File I/O
+
   ADAQRootMeasParams *ADAQMeasParams;
-  TFile *ADAQRootFile;
-  string ADAQFileName;
-  bool ADAQRootFileLoaded;
   TTree *ADAQWaveformTree;
+  TFile *ADAQRootFile, *ACRONYMRootFile;
+  string ADAQFileName, ACRONYMFileName;
+  bool ADAQFileLoaded, ACRONYMFileLoaded;
   ADAQAnalysisParallelResults *ADAQParResults;
   bool ADAQParResultsLoaded;
-  
-  // Strings used to store the current directory for various files
-  string DataDirectory, SaveSpectrumDirectory, SaveHistogramDirectory;;
-  string PrintCanvasDirectory, DesplicedDirectory;
-  
-  // Vectors and variables for extracting waveforms from the TTree in
-  // the ADAQ ROOT file and storing the information in vector format
+
+
+  //////////////////////
+  // Waveforms variables
+
+  TH1F *Waveform_H[8];
+
+  // Readout for ADAQ waveforms 
   vector<int> *WaveformVecPtrs[8];
   vector<int> Time, RawVoltage;
   int RecordLength;
 
-  // String objects for storing the file name and extension of graphic
-  // files that will receive the contents of the embedded canvas
-  string GraphicFileName, GraphicFileExtension;  
-  
-  // ROOT TH1F histograms for storing the waveform and pulse spectrum
-  TH1F *Waveform_H[8], *Spectrum_H, *SpectrumBackground_H, *SpectrumDeconvolved_H;
-
-  TH1F *Spectrum2Plot_H;
-
-  TH1F *SpectrumDerivative_H;
-  TH1D *PSDHistogramSlice_H;
-  
-  // ROOT TSpectrum peak-finding object that operates on TH1F
+  // Peak finding machinery
   TSpectrum *PeakFinder;
-
-  // Variables to specify the range of waveforms for processing
-  int WaveformStart, WaveformEnd;
-
-  // Variables and objects that hold peak information. Note that
-  // anything that uses Boost must be protected from ROOT's C++
-  // interpretor in order to successfully compile
   int NumPeaks;
   vector<PeakInfoStruct> PeakInfoVec;
   vector<int> PeakIntegral_LowerLimit, PeakIntegral_UpperLimit;
 #ifndef __CINT__
   vector< boost::array<int,2> > PeakLimits;
 #endif
+
+  // Waveform processing range
+  int WaveformStart, WaveformEnd;
+  
+
+  /////////////////////
+  // Spectrum variables
+
+  TH1F *Spectrum_H;
+  TH1F *SpectrumDerivative_H;
+  TGraph *SpectrumDerivative_G;
+  TH1F *SpectrumBackground_H, *SpectrumDeconvolved_H;
+  TH1F *SpectrumIntegral_H;
+  TF1 *SpectrumFit_F;
+  double SpectrumIntegralValue, SpectrumIntegralError;
+
   
   // Objects that are used in energy calibration of the pulse spectra
-  vector<TGraph *> CalibrationManager;
-  vector<bool> UseCalibrationManager;
+  vector<TGraph *> SpectraCalibrations;
+  vector<bool> UseSpectraCalibrations;
   vector<ADAQChannelCalibrationData> CalibrationData;
-  
-  // Variables used in parallel architecture
+
+
+  ////////////////
+  // PSD variables
+
+
+  // Variables for PSD histograms and filter
+  TH2F *PSDHistogram_H, *MasterPSDHistogram_H;
+  TH1D *PSDHistogramSlice_H;
+
+  double PSDFilterPolarity;
+  vector<TGraph *> PSDFilters;
+  vector<bool> UsePSDFilters;
+  int PSDNumFilterPoints;
+  vector<int> PSDFilterXPoints, PSDFilterYPoints;
+
+
+  ///////////
+  // Booleans
+  bool SpectrumExists, SpectrumDerivativeExists;
+  bool PSDHistogramExists, PSDHistogramSliceExists;
+
+
+  ///////////
+  // Parallel
+
   int MPI_Size, MPI_Rank;
   bool IsMaster, IsSlave;
 
-  // Bools to specify architecture type
-  bool ParallelArchitecture, SequentialArchitecture;
-
-  // Variables used to specify whether to print to stdout
-  bool Verbose, ParallelVerbose;
-  
-  // Strings for specifying binaries and ROOT files
+    // Strings for specifying binaries and ROOT files
   string ADAQHOME, USER;
   string ParallelBinaryName;
   string ParallelProcessingFName;
   string ParallelProgressFName;
-  
+  bool ParallelVerbose;
   // ROOT TFile to hold values need for parallel processing
   TFile *ParallelProcessingFile;
+
+  // Variables used to specify whether to print to stdout
+  bool Verbose;
 
   // ROOT TH1F to hold aggregated spectra from parallel processing
   TH1F *MasterHistogram_H;
 
-  // Number of processors/threads available on current system
-  int NumProcessors;
-
   // Variables to hold waveform processing values
   double Baseline;
-
-  // Variables for PSD histograms and filter
-  TH2F *PSDHistogram_H, *MasterPSDHistogram_H;
-  double PSDFilterPolarity;
-  vector<TGraph *> PSDFilterManager;
-  vector<bool> UsePSDFilterManager;
-  int PSDNumFilterPoints;
-  vector<int> PSDFilterXPoints, PSDFilterYPoints;
 
   // Maximum bit value of CAEN X720 digitizer family (4095)
   int V1720MaximumBit;
 
   // Number of data channels in the ADAQ ROOT files
   int NumDataChannels;
-
-  // Bool to determine what graphical objects exist
-  bool SpectrumExists, SpectrumDerivativeExists;
-  bool PSDHistogramExists, PSDHistogramSliceExists;
-
-  // Max number of peaks expected for TSpectrum on spectra
-  int SpectrumMaxPeaks;
 
   // Aggregated total waveform peaks found during processing
   int TotalPeaks;

@@ -44,8 +44,8 @@ public:
   bool IntegrationTypeWholeWaveform, IntegrationTypePeakFinder;
 
   bool UseManualCalibration, UseEPCalibration;
-  vector<TGraph *> CalibrationManager;
-  vector<bool> UseCalibrationManager;
+  vector<TGraph *> SpectraCalibrations;
+  vector<bool> UseSpectraCalibrations;
 
   bool FindBackground;
   int BackgroundMinBin, BackgroundMaxBin;
@@ -70,8 +70,8 @@ public:
   bool PSDEnableFilterCreation, PSDEnableFilterUse;
   int PSDFilterPolarity;
 
-  vector<TGraph *> PSDFilterManager;
-  vector<bool> UsePSDFilterManager;
+  vector<TGraph *> PSDFilters;
+  vector<bool> UsePSDFilters;
 
   double RFQPulseWidth, RFQRepRate;
   int RFQCountRateWaveforms;
@@ -117,7 +117,6 @@ public:
   int WaveformSelector;
   
   double SpectrumIntegrationMin, SpectrumIntegrationMax;
-  
   
   // General
   

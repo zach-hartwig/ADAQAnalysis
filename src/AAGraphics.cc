@@ -23,8 +23,7 @@ AAGraphics::AAGraphics()
   : Trigger_L(new TLine), Floor_L(new TLine), Baseline_B(new TBox), ZSCeiling_L(new TLine),
     LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine), IntegrationRegion_B(new TBox), Calibration_L(new TLine),
     PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
-    PSDPeakOffset_L(new TLine), PSDTailOffset_L(new TLine), PSDTailIntegral_B(new TBox),
-    LowerLimit_L(new TLine), UpperLimit_L(new TLine), DerivativeReference_L(new TLine)
+    PSDPeakOffset_L(new TLine), PSDTailOffset_L(new TLine), PSDTailIntegral_B(new TBox), DerivativeReference_L(new TLine)
 {
   if(TheGraphicsManager)
     cout << "\nERROR! TheGraphicsManager was constructed twice\n" << endl;
@@ -82,14 +81,6 @@ AAGraphics::AAGraphics()
 
   PSDTailIntegral_B->SetFillStyle(3003);
   PSDTailIntegral_B->SetFillColor(kMagenta+2);
-
-  LowerLimit_L->SetLineStyle(7);
-  LowerLimit_L->SetLineColor(2);
-  LowerLimit_L->SetLineWidth(2);
-
-  UpperLimit_L->SetLineStyle(7);
-  UpperLimit_L->SetLineColor(2);
-  UpperLimit_L->SetLineWidth(2);
 
   DerivativeReference_L->SetLineStyle(7);
   DerivativeReference_L->SetLineColor(2);
@@ -771,32 +762,32 @@ void AAGraphics::PlotSpectrumDerivative()
 
 void AAGraphics::PlotCalibration(int Channel)
 {
-  vector<TGraph *> CalibrationManager = ComputationMgr->GetCalibrationManager();
+  vector<TGraph *> SpectraCalibrations = ComputationMgr->GetSpectraCalibrations();
   
   stringstream ss;
-  ss << "CalibrationManager TGraph for Channel[" << Channel << "]";
+  ss << "Spectrum calibration TGraph for channel[" << Channel << "]";
   string Title = ss.str();
   
-  CalibrationManager[Channel]->SetTitle(Title.c_str());
+  SpectraCalibrations[Channel]->SetTitle(Title.c_str());
   
-  CalibrationManager[Channel]->GetXaxis()->SetTitle("Pulse unit [ADC]");
-  CalibrationManager[Channel]->GetXaxis()->SetTitleSize(0.05);
-  CalibrationManager[Channel]->GetXaxis()->SetTitleOffset(1.2);
-  CalibrationManager[Channel]->GetXaxis()->CenterTitle();
-  CalibrationManager[Channel]->GetXaxis()->SetLabelSize(0.05);
+  SpectraCalibrations[Channel]->GetXaxis()->SetTitle("Pulse unit [ADC]");
+  SpectraCalibrations[Channel]->GetXaxis()->SetTitleSize(0.05);
+  SpectraCalibrations[Channel]->GetXaxis()->SetTitleOffset(1.2);
+  SpectraCalibrations[Channel]->GetXaxis()->CenterTitle();
+  SpectraCalibrations[Channel]->GetXaxis()->SetLabelSize(0.05);
   
-  CalibrationManager[Channel]->GetYaxis()->SetTitle("Energy");
-  CalibrationManager[Channel]->GetYaxis()->SetTitleSize(0.05);
-  CalibrationManager[Channel]->GetYaxis()->SetTitleOffset(1.2);
-  CalibrationManager[Channel]->GetYaxis()->CenterTitle();
-  CalibrationManager[Channel]->GetYaxis()->SetLabelSize(0.05);
+  SpectraCalibrations[Channel]->GetYaxis()->SetTitle("Energy");
+  SpectraCalibrations[Channel]->GetYaxis()->SetTitleSize(0.05);
+  SpectraCalibrations[Channel]->GetYaxis()->SetTitleOffset(1.2);
+  SpectraCalibrations[Channel]->GetYaxis()->CenterTitle();
+  SpectraCalibrations[Channel]->GetYaxis()->SetLabelSize(0.05);
   
-  CalibrationManager[Channel]->SetMarkerSize(2);
-  CalibrationManager[Channel]->SetMarkerStyle(23);
-  CalibrationManager[Channel]->SetMarkerColor(1);
-  CalibrationManager[Channel]->SetLineWidth(2);
-  CalibrationManager[Channel]->SetLineColor(1);
-  CalibrationManager[Channel]->Draw("ALP");
+  SpectraCalibrations[Channel]->SetMarkerSize(2);
+  SpectraCalibrations[Channel]->SetMarkerStyle(23);
+  SpectraCalibrations[Channel]->SetMarkerColor(1);
+  SpectraCalibrations[Channel]->SetLineWidth(2);
+  SpectraCalibrations[Channel]->SetLineColor(1);
+  SpectraCalibrations[Channel]->Draw("ALP");
   
   TheCanvas->Update();
 
@@ -811,15 +802,15 @@ void AAGraphics::PlotCalibrationLine(double XPos, double YMin, double YMax)
 
 void AAGraphics::PlotPSDFilter()
 {
-  vector<TGraph *> PSDFilter = ComputationMgr->GetPSDFilterManager();
+  vector<TGraph *> PSDFilters = ComputationMgr->GetPSDFilters();
 
   int PSDChannel = ADAQSettings->PSDChannel;
 
-  PSDFilter[PSDChannel]->SetLineColor(2);
-  PSDFilter[PSDChannel]->SetLineWidth(2);
-  PSDFilter[PSDChannel]->SetMarkerStyle(20);
-  PSDFilter[PSDChannel]->SetMarkerColor(2);
-  PSDFilter[PSDChannel]->Draw("LP SAME");
+  PSDFilters[PSDChannel]->SetLineColor(2);
+  PSDFilters[PSDChannel]->SetLineWidth(2);
+  PSDFilters[PSDChannel]->SetMarkerStyle(20);
+  PSDFilters[PSDChannel]->SetMarkerColor(2);
+  PSDFilters[PSDChannel]->Draw("LP SAME");
   
   TheCanvas->Update();
 }
