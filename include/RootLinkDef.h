@@ -7,6 +7,7 @@
 #pragma link C++ class AAInterface+;
 #pragma link C++ class AAComputation+;
 #pragma link C++ class AAGraphics+;
+#pragma link C++ class AAParallel+;
 #pragma link C++ class ADAQRootMeasParams+;
 #pragma link C++ class ADAQAnalysisSettings+;
 #pragma link C++ class ADAQAnalysisParallelResults+;

@@ -19,6 +19,7 @@
 
 #include "AAInterface.hh"
 #include "AAComputation.hh"
+#include "AAParallel.hh"
 #include "AAGraphics.hh"
 
 int main(int argc, char *argv[])
@@ -33,6 +34,11 @@ int main(int argc, char *argv[])
   bool ParallelArchitecture = false;
 #ifdef MPI_ENABLED
   ParallelArchitecture = true;
+  
+  AAParallel *TheParallel = new AAParallel;
+  TheParallel->Initialize(argc, argv);
+  
+
 #endif
   
   // A word on the use of the first cmd line arg: the first cmd line
