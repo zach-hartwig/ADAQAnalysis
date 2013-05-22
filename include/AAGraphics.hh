@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
-// name: ADAQAnalysisInterface.hh
+// name: AAGraphics.hh
 // date: 17 May 13
 // auth: Zach Hartwig
 //
@@ -8,8 +8,9 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __ADAQGraphicsManager_hh__
-#define __ADAQGraphicsManager_hh__ 1
+#ifndef __AAGraphics_hh__
+#define __AAGraphics_hh__ 1
+
 
 #include <TObject.h>
 #include <TCanvas.h>
@@ -19,16 +20,18 @@
 #include <TBox.h>
 #include <TLine.h>
 
-#include "ADAQAnalysisManager.hh"
-#include "ADAQAnalysisTypes.hh"
 
-class ADAQGraphicsManager : public TObject
+#include "AAComputation.hh"
+#include "ADAQAnalysisSettings.hh"
+
+
+class AAGraphics : public TObject
 {
 public:
-  ADAQGraphicsManager();
-  ~ADAQGraphicsManager();
+  AAGraphics();
+  ~AAGraphics();
 
-  static ADAQGraphicsManager *GetInstance();
+  static AAGraphics *GetInstance();
 
   void SetCanvasPointer(TCanvas *C) { TheCanvas = C; }
 
@@ -50,7 +53,7 @@ public:
   
 private:
   
-  static ADAQGraphicsManager *TheGraphicsManager;
+  static AAGraphics *TheGraphicsManager;
 
   ADAQAnalysisSettings *ADAQSettings;
 
@@ -64,12 +67,12 @@ private:
   TLine *LowerLimit_L, *UpperLimit_L;
   TLine *DerivativeReference_L;
   TBox *Baseline_B, *PSDTailIntegral_B;
-
-  ADAQAnalysisManager *AnalysisMgr;
-
+  
+  AAComputation *ComputationMgr;
+  
   CanvasContentTypes CanvasContentType;
 
-  ClassDef(ADAQGraphicsManager, 1)
+  ClassDef(AAGraphics, 1)
 };
 
 #endif

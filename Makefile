@@ -1,6 +1,6 @@
 #********************************************************************
 #  name: Makefile                  
-#  date: 17 May 13
+#  date: 22 May 13
 #  auth: Zach Hartwig              
 #
 #  desc: GNUmakefile for building ADAQAnalysis code in seqential and
@@ -11,7 +11,6 @@
 #  dpnd: The build system depends on the following:
 #  -- ROOT (mandatory)
 #  -- ADAQ libraries (mandatory)
-#  -- CAEN -Comm, -VME, -Digitizer (mandatory)
 #  -- Boost, including Boost thread libraries (mandatory)
 #  -- Open MPI (optional; code will compiles without)
 # 
@@ -126,15 +125,15 @@ $(BUILDDIR)/ADAQAnalysis.o : $(SRCDIR)/ADAQAnalysis.cc
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(BUILDDIR)/ADAQAnalysisInterface.o : $(SRCDIR)/ADAQAnalysisInterface.cc $(INCLDIR)/ADAQAnalysisInterface.hh
+$(BUILDDIR)/AAInterface.o : $(SRCDIR)/AAInterface.cc $(INCLDIR)/AAInterface.hh
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(BUILDDIR)/ADAQAnalysisManager.o : $(SRCDIR)/ADAQAnalysisManager.cc $(INCLDIR)/ADAQAnalysisManager.hh
+$(BUILDDIR)/AAComputation.o : $(SRCDIR)/AAComputation.cc $(INCLDIR)/AAComputation.hh
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(BUILDDIR)/ADAQGraphicsManager.o : $(SRCDIR)/ADAQGraphicsManager.cc $(INCLDIR)/ADAQGraphicsManager.hh
+$(BUILDDIR)/AAGraphics.o : $(SRCDIR)/AAGraphics.cc $(INCLDIR)/AAGraphics.hh
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
@@ -150,15 +149,15 @@ $(BUILDDIR)/ADAQAnalysis_MPI.o : $(SRCDIR)/ADAQAnalysis.cc
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(BUILDDIR)/ADAQAnalysisInterface_MPI.o : $(SRCDIR)/ADAQAnalysisInterface.cc $(INCLDIR)/ADAQAnalysisInterface.hh
+$(BUILDDIR)/AAInterface_MPI.o : $(SRCDIR)/AAInterface.cc $(INCLDIR)/AAInterface.hh
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(BUILDDIR)/ADAQAnalysisManager_MPI.o : $(SRCDIR)/ADAQAnalysisManager.cc $(INCLDIR)/ADAQAnalysisManager.hh
+$(BUILDDIR)/AAComputation_MPI.o : $(SRCDIR)/AAComputation.cc $(INCLDIR)/AAComputation.hh
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(BUILDDIR)/ADAQGraphicsManager_MPI.o : $(SRCDIR)/ADAQGraphicsManager.cc $(INCLDIR)/ADAQGraphicsManager.hh
+$(BUILDDIR)/AAGraphics_MPI.o : $(SRCDIR)/AAGraphics.cc $(INCLDIR)/AAGraphics.hh
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 

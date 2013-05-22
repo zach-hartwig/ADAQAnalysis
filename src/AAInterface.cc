@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
-// name: ADAQAnalysisInterface.cc
+// name: AAInterface.cc
 // date: 21 May 13
 // auth: Zach Hartwig
 //
@@ -30,13 +30,12 @@ using namespace std;
 #endif
 
 // ADAQ
-#include "ADAQAnalysisInterface.hh"
-#include "ADAQAnalysisManager.hh"
+#include "AAInterface.hh"
 #include "ADAQAnalysisConstants.hh"
 #include "ADAQAnalysisVersion.hh"
 
 
-ADAQAnalysisInterface::ADAQAnalysisInterface(string CmdLineArg)
+AAInterface::AAInterface(string CmdLineArg)
   : TGMainFrame(gClient->GetRoot()),
     NumDataChannels(8), NumProcessors(boost::thread::hardware_concurrency()),
     DataDirectory(getenv("PWD")), PrintDirectory(getenv("HOME")),
@@ -49,16 +48,16 @@ ADAQAnalysisInterface::ADAQAnalysisInterface(string CmdLineArg)
 
   ColorMgr = new TColor;
   
-  AnalysisMgr = ADAQAnalysisManager::GetInstance();
-  AnalysisMgr->SetProgressBarPointer(ProcessingProgress_PB);
+  ComputationMgr = AAComputation::GetInstance();
+  ComputationMgr->SetProgressBarPointer(ProcessingProgress_PB);
   
-  GraphicsMgr = ADAQGraphicsManager::GetInstance();
+  GraphicsMgr = AAGraphics::GetInstance();
   GraphicsMgr->SetCanvasPointer(Canvas_EC->GetCanvas());
 
   if(CmdLineArg != "Unspecified"){
     ADAQFileName = CmdLineArg;
     
-    ADAQFileLoaded = AnalysisMgr->LoadADAQRootFile(ADAQFileName);
+    ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(ADAQFileName);
     
     if(ADAQFileLoaded)
       UpdateForNewFile(ADAQFileName);
@@ -71,11 +70,11 @@ ADAQAnalysisInterface::ADAQAnalysisInterface(string CmdLineArg)
 }
 
 
-ADAQAnalysisInterface::~ADAQAnalysisInterface()
+AAInterface::~AAInterface()
 {;}
 
 
-void ADAQAnalysisInterface::CreateTheMainFrames()
+void AAInterface::CreateTheMainFrames()
 {
   /////////////////////////
   // Create the menu bar //
@@ -91,7 +90,7 @@ void ADAQAnalysisInterface::CreateTheMainFrames()
   MenuFile->AddEntry("&Print canvas ...", MenuFilePrint_ID);
   MenuFile->AddSeparator();
   MenuFile->AddEntry("E&xit", MenuFileExit_ID);
-  MenuFile->Connect("Activated(int)", "ADAQAnalysisInterface", this, "HandleMenu(int)");
+  MenuFile->Connect("Activated(int)", "AAInterface", this, "HandleMenu(int)");
 
   TGMenuBar *MenuBar = new TGMenuBar(MenuFrame, 100, 20, kHorizontalFrame);
   MenuBar->AddPopup("&File", MenuFile, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0,0,0,0));
@@ -181,7 +180,7 @@ void ADAQAnalysisInterface::CreateTheMainFrames()
 }
 
 
-void ADAQAnalysisInterface::FillWaveformFrame()
+void AAInterface::FillWaveformFrame()
 {
   /////////////////////////////////////////
   // Fill the waveform options tabbed frame
@@ -207,7 +206,7 @@ void ADAQAnalysisInterface::FillWaveformFrame()
 				 new TGLayoutHints(kLHintsLeft, 5,5,5,5));
   WaveformSelector_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   WaveformSelector_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
-  WaveformSelector_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  WaveformSelector_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
   
   // Waveform specification (type and polarity)
 
@@ -217,100 +216,100 @@ void ADAQAnalysisInterface::FillWaveformFrame()
   WaveformSpecification_HF->AddFrame(WaveformType_BG = new TGButtonGroup(WaveformSpecification_HF, "Type", kVerticalFrame),
 				     new TGLayoutHints(kLHintsLeft, 0,5,0,5));
   RawWaveform_RB = new TGRadioButton(WaveformType_BG, "Raw voltage", RawWaveform_RB_ID);
-  RawWaveform_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  RawWaveform_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   //RawWaveform_RB->SetState(kButtonDown);
   
   BaselineSubtractedWaveform_RB = new TGRadioButton(WaveformType_BG, "Baseline-subtracted", BaselineSubtractedWaveform_RB_ID);
-  BaselineSubtractedWaveform_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  BaselineSubtractedWaveform_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   BaselineSubtractedWaveform_RB->SetState(kButtonDown);
 
   ZeroSuppressionWaveform_RB = new TGRadioButton(WaveformType_BG, "Zero suppression", ZeroSuppressionWaveform_RB_ID);
-  ZeroSuppressionWaveform_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  ZeroSuppressionWaveform_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
 
   WaveformSpecification_HF->AddFrame(WaveformPolarity_BG = new TGButtonGroup(WaveformSpecification_HF, "Polarity", kVerticalFrame),
 				     new TGLayoutHints(kLHintsLeft, 5,5,0,5));
   
   PositiveWaveform_RB = new TGRadioButton(WaveformPolarity_BG, "Positive", PositiveWaveform_RB_ID);
-  PositiveWaveform_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  PositiveWaveform_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   //PositiveWaveform_RB->SetState(kButtonDown);
   
   NegativeWaveform_RB = new TGRadioButton(WaveformPolarity_BG, "Negative", NegativeWaveform_RB_ID);
-  NegativeWaveform_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  NegativeWaveform_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   NegativeWaveform_RB->SetState(kButtonDown);
 
   // Zero suppression options
 
   WaveformOptions_CF->AddFrame(PlotZeroSuppressionCeiling_CB = new TGCheckButton(WaveformOptions_CF, "Plot zero suppression ceiling", PlotZeroSuppressionCeiling_CB_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
-  PlotZeroSuppressionCeiling_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  PlotZeroSuppressionCeiling_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
   WaveformOptions_CF->AddFrame(ZeroSuppressionCeiling_NEL = new ADAQNumberEntryWithLabel(WaveformOptions_CF, "Zero suppression ceiling", ZeroSuppressionCeiling_NEL_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,0,5));
   ZeroSuppressionCeiling_NEL->GetEntry()->SetNumber(15);
-  ZeroSuppressionCeiling_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  ZeroSuppressionCeiling_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   // Peak finding (ROOT TSpectrum) options
 
   WaveformOptions_CF->AddFrame(FindPeaks_CB = new TGCheckButton(WaveformOptions_CF, "Find peaks", FindPeaks_CB_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
   FindPeaks_CB->SetState(kButtonDisabled);
-  FindPeaks_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  FindPeaks_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   WaveformOptions_CF->AddFrame(MaxPeaks_NEL = new ADAQNumberEntryWithLabel(WaveformOptions_CF, "Maximum peaks", MaxPeaks_NEL_ID),
 		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
   MaxPeaks_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   MaxPeaks_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   MaxPeaks_NEL->GetEntry()->SetNumber(15);
-  MaxPeaks_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  MaxPeaks_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   WaveformOptions_CF->AddFrame(Sigma_NEL = new ADAQNumberEntryWithLabel(WaveformOptions_CF, "Sigma", Sigma_NEL_ID),
 		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
   Sigma_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   Sigma_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   Sigma_NEL->GetEntry()->SetNumber(15);
-  Sigma_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  Sigma_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   WaveformOptions_CF->AddFrame(Resolution_NEL = new ADAQNumberEntryWithLabel(WaveformOptions_CF, "Resolution", Resolution_NEL_ID),
 		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
   Resolution_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   Resolution_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   Resolution_NEL->GetEntry()->SetNumber(0.005);
-  Resolution_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  Resolution_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   WaveformOptions_CF->AddFrame(Floor_NEL = new ADAQNumberEntryWithLabel(WaveformOptions_CF, "Floor", Floor_NEL_ID),
 		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
   Floor_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   Floor_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   Floor_NEL->GetEntry()->SetNumber(50);
-  Floor_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  Floor_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
   
   TGGroupFrame *PeakPlottingOptions_GF = new TGGroupFrame(WaveformOptions_CF, "Peak finding plotting options", kHorizontalFrame);
   WaveformOptions_CF->AddFrame(PeakPlottingOptions_GF, new TGLayoutHints(kLHintsLeft, 15,5,0,5));
 
   PeakPlottingOptions_GF->AddFrame(PlotFloor_CB = new TGCheckButton(PeakPlottingOptions_GF, "Floor", PlotFloor_CB_ID),
 				   new TGLayoutHints(kLHintsLeft, 0,0,5,0));
-  PlotFloor_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  PlotFloor_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
   PeakPlottingOptions_GF->AddFrame(PlotCrossings_CB = new TGCheckButton(PeakPlottingOptions_GF, "Crossings", PlotCrossings_CB_ID),
 				   new TGLayoutHints(kLHintsLeft, 5,0,5,0));
-  PlotCrossings_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  PlotCrossings_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
   PeakPlottingOptions_GF->AddFrame(PlotPeakIntegratingRegion_CB = new TGCheckButton(PeakPlottingOptions_GF, "Int. region", PlotPeakIntegratingRegion_CB_ID),
 		       new TGLayoutHints(kLHintsLeft, 5,0,5,0));
-  PlotPeakIntegratingRegion_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  PlotPeakIntegratingRegion_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   // Pileup options
   
   WaveformOptions_CF->AddFrame(UsePileupRejection_CB = new TGCheckButton(WaveformOptions_CF, "Use pileup rejection", UsePileupRejection_CB_ID),
 			       new TGLayoutHints(kLHintsNormal, 15,5,5,5));
-  UsePileupRejection_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  UsePileupRejection_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   UsePileupRejection_CB->SetState(kButtonDown);
 			       
   // Baseline calculation options
   
   WaveformOptions_CF->AddFrame(PlotBaseline_CB = new TGCheckButton(WaveformOptions_CF, "Plot baseline calc. region.", PlotBaseline_CB_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
-  PlotBaseline_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  PlotBaseline_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
   TGHorizontalFrame *BaselineRegion_HF = new TGHorizontalFrame(WaveformOptions_CF);
   WaveformOptions_CF->AddFrame(BaselineRegion_HF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
@@ -322,7 +321,7 @@ void ADAQAnalysisInterface::FillWaveformFrame()
   BaselineCalcMin_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   BaselineCalcMin_NEL->GetEntry()->SetLimitValues(0,1); // Set when ADAQRootFile loaded
   BaselineCalcMin_NEL->GetEntry()->SetNumber(0); // Set when ADAQRootFile loaded
-  BaselineCalcMin_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  BaselineCalcMin_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
   
   BaselineRegion_HF->AddFrame(BaselineCalcMax_NEL = new ADAQNumberEntryWithLabel(BaselineRegion_HF, "Max.", BaselineCalcMax_NEL_ID),
 			      new TGLayoutHints(kLHintsLeft, 0,5,0,5)); 
@@ -331,17 +330,17 @@ void ADAQAnalysisInterface::FillWaveformFrame()
   BaselineCalcMax_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   BaselineCalcMax_NEL->GetEntry()->SetLimitValues(1,2); // Set When ADAQRootFile loaded
   BaselineCalcMax_NEL->GetEntry()->SetNumber(1); // Set when ADAQRootFile loaded
-  BaselineCalcMax_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  BaselineCalcMax_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   // Trigger
 
   WaveformOptions_CF->AddFrame(PlotTrigger_CB = new TGCheckButton(WaveformOptions_CF, "Plot trigger", PlotTrigger_CB_ID),
 		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
-  PlotTrigger_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  PlotTrigger_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 }
 
 
-void ADAQAnalysisInterface::FillSpectrumFrame()
+void AAInterface::FillSpectrumFrame()
 {
   /////////////////////////////////////////
   // Fill the spectrum options tabbed frame
@@ -412,7 +411,7 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
   // Energy calibration 
   SpectrumCalibration_GF->AddFrame(SpectrumCalibration_CB = new TGCheckButton(SpectrumCalibration_GF, "Make it so", SpectrumCalibration_CB_ID),
 				   new TGLayoutHints(kLHintsLeft, 0,0,0,5));
-  SpectrumCalibration_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  SpectrumCalibration_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   SpectrumCalibration_CB->SetState(kButtonUp);
 
   TGHorizontalFrame *SpectrumCalibrationType_HF = new TGHorizontalFrame(SpectrumCalibration_GF);
@@ -422,12 +421,12 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
 				       new TGLayoutHints(kLHintsNormal, 0,15,0,5));
   SpectrumCalibrationManual_RB->SetState(kButtonDown);
   SpectrumCalibrationManual_RB->SetState(kButtonDisabled);
-  SpectrumCalibrationManual_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  SpectrumCalibrationManual_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   
   SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationFixedEP_RB = new TGRadioButton(SpectrumCalibrationType_HF, "EP detector", SpectrumCalibrationFixedEP_RB_ID),
 				       new TGLayoutHints(kLHintsNormal, 0,0,0,5));
   SpectrumCalibrationFixedEP_RB->SetState(kButtonDisabled);
-  SpectrumCalibrationFixedEP_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  SpectrumCalibrationFixedEP_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   
   
   SpectrumCalibration_GF->AddFrame(SpectrumCalibrationPoint_CBL = new ADAQComboBoxWithLabel(SpectrumCalibration_GF, "", SpectrumCalibrationPoint_CBL_ID),
@@ -456,7 +455,7 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
   // Set point text button
   SpectrumCalibration_HF1->AddFrame(SpectrumCalibrationSetPoint_TB = new TGTextButton(SpectrumCalibration_HF1, "Set Pt.", SpectrumCalibrationSetPoint_TB_ID),
 				    new TGLayoutHints(kLHintsNormal, 5,0,5,5));
-  SpectrumCalibrationSetPoint_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  SpectrumCalibrationSetPoint_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   SpectrumCalibrationSetPoint_TB->Resize(100,25);
   SpectrumCalibrationSetPoint_TB->ChangeOptions(SpectrumCalibrationSetPoint_TB->GetOptions() | kFixedSize);
   SpectrumCalibrationSetPoint_TB->SetState(kButtonDisabled);
@@ -464,7 +463,7 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
   // Calibrate text button
   SpectrumCalibration_HF1->AddFrame(SpectrumCalibrationCalibrate_TB = new TGTextButton(SpectrumCalibration_HF1, "Calibrate", SpectrumCalibrationCalibrate_TB_ID),
 				    new TGLayoutHints(kLHintsNormal, 0,0,5,5));
-  SpectrumCalibrationCalibrate_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  SpectrumCalibrationCalibrate_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   SpectrumCalibrationCalibrate_TB->Resize(100,25);
   SpectrumCalibrationCalibrate_TB->ChangeOptions(SpectrumCalibrationCalibrate_TB->GetOptions() | kFixedSize);
   SpectrumCalibrationCalibrate_TB->SetState(kButtonDisabled);
@@ -475,7 +474,7 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
   // Plot text button
   SpectrumCalibration_HF2->AddFrame(SpectrumCalibrationPlot_TB = new TGTextButton(SpectrumCalibration_HF2, "Plot", SpectrumCalibrationPlot_TB_ID),
 				    new TGLayoutHints(kLHintsNormal, 5,0,5,5));
-  SpectrumCalibrationPlot_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  SpectrumCalibrationPlot_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   SpectrumCalibrationPlot_TB->Resize(100,25);
   SpectrumCalibrationPlot_TB->ChangeOptions(SpectrumCalibrationPlot_TB->GetOptions() | kFixedSize);
   SpectrumCalibrationPlot_TB->SetState(kButtonDisabled);
@@ -483,7 +482,7 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
   // Reset text button
   SpectrumCalibration_HF2->AddFrame(SpectrumCalibrationReset_TB = new TGTextButton(SpectrumCalibration_HF2, "Reset", SpectrumCalibrationReset_TB_ID),
 					  new TGLayoutHints(kLHintsNormal, 0,0,5,5));
-  SpectrumCalibrationReset_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  SpectrumCalibrationReset_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   SpectrumCalibrationReset_TB->Resize(100,25);
   SpectrumCalibrationReset_TB->ChangeOptions(SpectrumCalibrationReset_TB->GetOptions() | kFixedSize);
   SpectrumCalibrationReset_TB->SetState(kButtonDisabled);
@@ -496,7 +495,7 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
   /*
   SpectrumAnalysis_GF->AddFrame(SpectrumFindPeaks_CB = new TGCheckButton(SpectrumAnalysis_GF, "Find peaks", SpectrumFindPeaks_CB_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,5,0));
-  SpectrumFindPeaks_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  SpectrumFindPeaks_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   SpectrumAnalysis_GF->AddFrame(SpectrumNumPeaks_NEL = new ADAQNumberEntryWithLabel(SpectrumAnalysis_GF, "Num. peaks", SpectrumNumPeaks_NEL_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
@@ -505,7 +504,7 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
   SpectrumNumPeaks_NEL->GetEntry()->SetNumber(1);
   SpectrumNumPeaks_NEL->GetEntry()->Resize(75,20);
   SpectrumNumPeaks_NEL->GetEntry()->SetState(false);
-  SpectrumNumPeaks_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  SpectrumNumPeaks_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
     
   SpectrumAnalysis_GF->AddFrame(SpectrumSigma_NEL = new ADAQNumberEntryWithLabel(SpectrumAnalysis_GF, "Sigma", SpectrumSigma_NEL_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
@@ -514,7 +513,7 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
   SpectrumSigma_NEL->GetEntry()->SetNumber(2);
   SpectrumSigma_NEL->GetEntry()->Resize(75,20);
   SpectrumSigma_NEL->GetEntry()->SetState(false);
-  SpectrumSigma_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  SpectrumSigma_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
   
   SpectrumAnalysis_GF->AddFrame(SpectrumResolution_NEL = new ADAQNumberEntryWithLabel(SpectrumAnalysis_GF, "Resolution", SpectrumResolution_NEL_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,0,5));
@@ -523,12 +522,12 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
   SpectrumResolution_NEL->GetEntry()->SetNumber(0.05);
   SpectrumResolution_NEL->GetEntry()->Resize(75,20);
   SpectrumResolution_NEL->GetEntry()->SetState(false);
-  SpectrumResolution_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  SpectrumResolution_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
   */
   
   SpectrumAnalysis_GF->AddFrame(SpectrumFindBackground_CB = new TGCheckButton(SpectrumAnalysis_GF, "Find background", SpectrumFindBackground_CB_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,5,0));
-  SpectrumFindBackground_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  SpectrumFindBackground_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   TGHorizontalFrame *SpectrumBackgroundRange_HF = new TGHorizontalFrame(SpectrumAnalysis_GF);
   SpectrumAnalysis_GF->AddFrame(SpectrumBackgroundRange_HF);
@@ -540,7 +539,7 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
   SpectrumRangeMin_NEL->GetEntry()->SetNumber(0);
   SpectrumRangeMin_NEL->GetEntry()->Resize(75,20);
   SpectrumRangeMin_NEL->GetEntry()->SetState(false);
-  SpectrumRangeMin_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  SpectrumRangeMin_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   SpectrumBackgroundRange_HF->AddFrame(SpectrumRangeMax_NEL = new ADAQNumberEntryWithLabel(SpectrumBackgroundRange_HF, "Max.", SpectrumRangeMax_NEL_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
@@ -549,7 +548,7 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
   SpectrumRangeMax_NEL->GetEntry()->SetNumber(2000);
   SpectrumRangeMax_NEL->GetEntry()->Resize(75,20);
   SpectrumRangeMax_NEL->GetEntry()->SetState(false);
-  SpectrumRangeMax_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  SpectrumRangeMax_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   TGHorizontalFrame *BackgroundPlotting_HF = new TGHorizontalFrame(SpectrumAnalysis_GF);
   SpectrumAnalysis_GF->AddFrame(BackgroundPlotting_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
@@ -558,28 +557,28 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
 				  new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumWithBackground_RB->SetState(kButtonDown);
   SpectrumWithBackground_RB->SetState(kButtonDisabled);
-  SpectrumWithBackground_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  SpectrumWithBackground_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   
   BackgroundPlotting_HF->AddFrame(SpectrumLessBackground_RB = new TGRadioButton(BackgroundPlotting_HF, "Plot less bckgnd", SpectrumLessBackground_RB_ID),
 				  new TGLayoutHints(kLHintsNormal, 5,5,0,5));
   SpectrumLessBackground_RB->SetState(kButtonDisabled);
-  SpectrumLessBackground_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  SpectrumLessBackground_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
 
   SpectrumAnalysis_GF->AddFrame(SpectrumFindIntegral_CB = new TGCheckButton(SpectrumAnalysis_GF, "Find integral", SpectrumFindIntegral_CB_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,5,0));
-  SpectrumFindIntegral_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  SpectrumFindIntegral_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
   SpectrumAnalysis_GF->AddFrame(SpectrumIntegralInCounts_CB = new TGCheckButton(SpectrumAnalysis_GF, "Integral in counts", SpectrumIntegralInCounts_CB_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  SpectrumIntegralInCounts_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  SpectrumIntegralInCounts_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
   SpectrumAnalysis_GF->AddFrame(SpectrumUseGaussianFit_CB = new TGCheckButton(SpectrumAnalysis_GF, "Use gaussian fit", SpectrumUseGaussianFit_CB_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  SpectrumUseGaussianFit_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  SpectrumUseGaussianFit_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   SpectrumAnalysis_GF->AddFrame(SpectrumNormalizePeakToCurrent_CB = new TGCheckButton(SpectrumAnalysis_GF, "Normalize peak to current", SpectrumNormalizePeakToCurrent_CB_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  SpectrumNormalizePeakToCurrent_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  SpectrumNormalizePeakToCurrent_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   SpectrumAnalysis_GF->AddFrame(SpectrumIntegral_NEFL = new ADAQNumberEntryFieldWithLabel(SpectrumAnalysis_GF, "Integral", -1),
 				new TGLayoutHints(kLHintsNormal, 5,5,5,0));
@@ -595,7 +594,7 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
 
   SpectrumAnalysis_GF->AddFrame(SpectrumOverplotDerivative_CB = new TGCheckButton(SpectrumAnalysis_GF, "Overplot spectrum derivative", SpectrumOverplotDerivative_CB_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,5,0));
-  SpectrumOverplotDerivative_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  SpectrumOverplotDerivative_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   SpectrumFrame_VF->AddFrame(CreateSpectrum_TB = new TGTextButton(SpectrumFrame_VF, "Create spectrum", CreateSpectrum_TB_ID),
 		       new TGLayoutHints(kLHintsCenterX | kLHintsTop, 5,5,0,0));
@@ -603,11 +602,11 @@ void ADAQAnalysisInterface::FillSpectrumFrame()
   CreateSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   CreateSpectrum_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   CreateSpectrum_TB->ChangeOptions(CreateSpectrum_TB->GetOptions() | kFixedSize);
-  CreateSpectrum_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  CreateSpectrum_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
 }
 
 
-void ADAQAnalysisInterface::FillAnalysisFrame()
+void AAInterface::FillAnalysisFrame()
 {
   /////////////////////////////////////////
   // Fill the analysis options tabbed frame
@@ -625,7 +624,7 @@ void ADAQAnalysisInterface::FillAnalysisFrame()
   
   PSDAnalysis_GF->AddFrame(PSDEnable_CB = new TGCheckButton(PSDAnalysis_GF, "Discriminate pulse shapes", PSDEnable_CB_ID),
                            new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PSDEnable_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  PSDEnable_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   PSDAnalysis_GF->AddFrame(PSDChannel_CBL = new ADAQComboBoxWithLabel(PSDAnalysis_GF, "", -1),
                            new TGLayoutHints(kLHintsNormal, 0,5,0,0));
@@ -711,14 +710,14 @@ void ADAQAnalysisInterface::FillAnalysisFrame()
   PSDPeakOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDPeakOffset_NEL->GetEntry()->SetNumber(7);
   PSDPeakOffset_NEL->GetEntry()->SetState(false);
-  PSDPeakOffset_NEL->GetEntry()->Connect("ValueSet(long", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  PSDPeakOffset_NEL->GetEntry()->Connect("ValueSet(long", "AAInterface", this, "HandleNumberEntries()");
 
   PSDAnalysis_GF->AddFrame(PSDTailOffset_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Tail offset (sample)", PSDTailOffset_NEL_ID),
                            new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDTailOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDTailOffset_NEL->GetEntry()->SetNumber(29);
   PSDTailOffset_NEL->GetEntry()->SetState(false);
-  PSDTailOffset_NEL->GetEntry()->Connect("ValueSet(long", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  PSDTailOffset_NEL->GetEntry()->Connect("ValueSet(long", "AAInterface", this, "HandleNumberEntries()");
   
   PSDAnalysis_GF->AddFrame(PSDPlotType_CBL = new ADAQComboBoxWithLabel(PSDAnalysis_GF, "Plot type", PSDPlotType_CBL_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,5));
@@ -728,41 +727,41 @@ void ADAQAnalysisInterface::FillAnalysisFrame()
   PSDPlotType_CBL->GetComboBox()->AddEntry("SURF4",3);
   PSDPlotType_CBL->GetComboBox()->AddEntry("CONT",4);
   PSDPlotType_CBL->GetComboBox()->Select(0);
-  PSDPlotType_CBL->GetComboBox()->Connect("Selected(int,int)", "ADAQAnalysisInterface", this, "HandleComboBox(int,int)");
+  PSDPlotType_CBL->GetComboBox()->Connect("Selected(int,int)", "AAInterface", this, "HandleComboBox(int,int)");
   PSDPlotType_CBL->GetComboBox()->SetEnabled(false);
 
   PSDAnalysis_GF->AddFrame(PSDPlotTailIntegration_CB = new TGCheckButton(PSDAnalysis_GF, "Plot tail integration region", PSDPlotTailIntegration_CB_ID),
                            new TGLayoutHints(kLHintsNormal, 0,5,0,5));
-  PSDPlotTailIntegration_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  PSDPlotTailIntegration_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   PSDPlotTailIntegration_CB->SetState(kButtonDisabled);
   
   PSDAnalysis_GF->AddFrame(PSDEnableHistogramSlicing_CB = new TGCheckButton(PSDAnalysis_GF, "Enable histogram slicing", PSDEnableHistogramSlicing_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PSDEnableHistogramSlicing_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  PSDEnableHistogramSlicing_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   TGHorizontalFrame *PSDHistogramSlicing_HF = new TGHorizontalFrame(PSDAnalysis_GF);
   PSDAnalysis_GF->AddFrame(PSDHistogramSlicing_HF, new TGLayoutHints(kLHintsCenterX, 0,5,0,5));
   
   PSDHistogramSlicing_HF->AddFrame(PSDHistogramSliceX_RB = new TGRadioButton(PSDHistogramSlicing_HF, "X slice", PSDHistogramSliceX_RB_ID),
 				   new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  PSDHistogramSliceX_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  PSDHistogramSliceX_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   PSDHistogramSliceX_RB->SetState(kButtonDown);
   PSDHistogramSliceX_RB->SetState(kButtonDisabled);
 
   PSDHistogramSlicing_HF->AddFrame(PSDHistogramSliceY_RB = new TGRadioButton(PSDHistogramSlicing_HF, "Y slice", PSDHistogramSliceY_RB_ID),
 				   new TGLayoutHints(kLHintsNormal, 20,0,0,0));
-  PSDHistogramSliceY_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  PSDHistogramSliceY_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   PSDHistogramSliceY_RB->SetState(kButtonDisabled);
   
   PSDAnalysis_GF->AddFrame(PSDEnableFilterCreation_CB = new TGCheckButton(PSDAnalysis_GF, "Enable filter creation", PSDEnableFilterCreation_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PSDEnableFilterCreation_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  PSDEnableFilterCreation_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   PSDEnableFilterCreation_CB->SetState(kButtonDisabled);
 
   
   PSDAnalysis_GF->AddFrame(PSDEnableFilter_CB = new TGCheckButton(PSDAnalysis_GF, "Enable filter use", PSDEnableFilter_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PSDEnableFilter_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  PSDEnableFilter_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   PSDEnableFilter_CB->SetState(kButtonDisabled);
 
   TGHorizontalFrame *PSDFilterPolarity_HF = new TGHorizontalFrame(PSDAnalysis_GF);
@@ -770,13 +769,13 @@ void ADAQAnalysisInterface::FillAnalysisFrame()
 
   PSDFilterPolarity_HF->AddFrame(PSDPositiveFilter_RB = new TGRadioButton(PSDFilterPolarity_HF, "Positive  ", PSDPositiveFilter_RB_ID),
 				 new TGLayoutHints(kLHintsNormal, 5,5,0,5));
-  PSDPositiveFilter_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  PSDPositiveFilter_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   PSDPositiveFilter_RB->SetState(kButtonDown);
   PSDPositiveFilter_RB->SetState(kButtonDisabled);
 
   PSDFilterPolarity_HF->AddFrame(PSDNegativeFilter_RB = new TGRadioButton(PSDFilterPolarity_HF, "Negative", PSDNegativeFilter_RB_ID),
 				 new TGLayoutHints(kLHintsNormal, 5,5,0,5));
-  PSDNegativeFilter_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  PSDNegativeFilter_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   PSDNegativeFilter_RB->SetState(kButtonDisabled);
 
   
@@ -784,7 +783,7 @@ void ADAQAnalysisInterface::FillAnalysisFrame()
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,5));
   PSDClearFilter_TB->Resize(200,30);
   PSDClearFilter_TB->ChangeOptions(PSDClearFilter_TB->GetOptions() | kFixedSize);
-  PSDClearFilter_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  PSDClearFilter_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   PSDClearFilter_TB->SetState(kButtonDisabled);
   
   PSDAnalysis_GF->AddFrame(PSDCalculate_TB = new TGTextButton(PSDAnalysis_GF, "Create PSD histogram", PSDCalculate_TB_ID),
@@ -793,7 +792,7 @@ void ADAQAnalysisInterface::FillAnalysisFrame()
   PSDCalculate_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   PSDCalculate_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   PSDCalculate_TB->ChangeOptions(PSDCalculate_TB->GetOptions() | kFixedSize);
-  PSDCalculate_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  PSDCalculate_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   PSDCalculate_TB->SetState(kButtonDisabled);
 
   // Count rate
@@ -828,7 +827,7 @@ void ADAQAnalysisInterface::FillAnalysisFrame()
   CalculateCountRate_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   CalculateCountRate_TB->Resize(200,30);
   CalculateCountRate_TB->ChangeOptions(CalculateCountRate_TB->GetOptions() | kFixedSize);
-  CalculateCountRate_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  CalculateCountRate_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
 
   CountRate_GF->AddFrame(InstCountRate_NEFL = new ADAQNumberEntryFieldWithLabel(CountRate_GF, "Inst. count rate [1/s]", -1),
                          new TGLayoutHints(kLHintsNormal, 5,5,5,0));
@@ -848,7 +847,7 @@ void ADAQAnalysisInterface::FillAnalysisFrame()
 }
 
 
-void ADAQAnalysisInterface::FillGraphicsFrame()
+void AAInterface::FillGraphicsFrame()
 {
   /////////////////////////////////////////
   // Fill the graphics options tabbed frame
@@ -863,43 +862,43 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
 			      new TGLayoutHints(kLHintsNormal, 5,5,5,5));
   
   DrawWaveformWithCurve_RB = new TGRadioButton(WaveformDrawOptions_BG, "Smooth curve   ", DrawWaveformWithCurve_RB_ID);
-  DrawWaveformWithCurve_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  DrawWaveformWithCurve_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   DrawWaveformWithCurve_RB->SetState(kButtonDown);
   
   DrawWaveformWithMarkers_RB = new TGRadioButton(WaveformDrawOptions_BG, "Markers   ", DrawWaveformWithMarkers_RB_ID);
-  DrawWaveformWithMarkers_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  DrawWaveformWithMarkers_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   
   DrawWaveformWithBoth_RB = new TGRadioButton(WaveformDrawOptions_BG, "Both", DrawWaveformWithBoth_RB_ID);
-  DrawWaveformWithBoth_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  DrawWaveformWithBoth_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   
   GraphicsFrame_VF->AddFrame(SpectrumDrawOptions_BG = new TGButtonGroup(GraphicsFrame_VF, "Spectrum draw options", kHorizontalFrame),
 			      new TGLayoutHints(kLHintsNormal, 5,5,5,5));
   
   DrawSpectrumWithCurve_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Smooth curve   ", DrawSpectrumWithCurve_RB_ID);
-  DrawSpectrumWithCurve_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  DrawSpectrumWithCurve_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   DrawSpectrumWithCurve_RB->SetState(kButtonDown);
   
   DrawSpectrumWithMarkers_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Markers   ", DrawSpectrumWithMarkers_RB_ID);
-  DrawSpectrumWithMarkers_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  DrawSpectrumWithMarkers_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
 
   DrawSpectrumWithBars_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Bars", DrawSpectrumWithBars_RB_ID);
-  DrawSpectrumWithBars_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  DrawSpectrumWithBars_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
 
   GraphicsFrame_VF->AddFrame(SetStatsOff_CB = new TGCheckButton(GraphicsFrame_VF, "Set statistics off", SetStatsOff_CB_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
-  SetStatsOff_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  SetStatsOff_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
   GraphicsFrame_VF->AddFrame(PlotVerticalAxisInLog_CB = new TGCheckButton(GraphicsFrame_VF, "Vertical axis in log.", PlotVerticalAxisInLog_CB_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
-  PlotVerticalAxisInLog_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  PlotVerticalAxisInLog_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   GraphicsFrame_VF->AddFrame(PlotSpectrumDerivativeError_CB = new TGCheckButton(GraphicsFrame_VF, "Plot spectrum derivative error", PlotSpectrumDerivativeError_CB_ID),
 			     new TGLayoutHints(kLHintsNormal, 15,5,0,0));
-  PlotSpectrumDerivativeError_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  PlotSpectrumDerivativeError_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
   GraphicsFrame_VF->AddFrame(PlotAbsValueSpectrumDerivative_CB = new TGCheckButton(GraphicsFrame_VF, "Plot abs. value of spectrum derivative ", PlotAbsValueSpectrumDerivative_CB_ID),
 			     new TGLayoutHints(kLHintsNormal, 15,5,0,0));
-  PlotAbsValueSpectrumDerivative_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  PlotAbsValueSpectrumDerivative_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
   GraphicsFrame_VF->AddFrame(AutoYAxisRange_CB = new TGCheckButton(GraphicsFrame_VF, "Auto. Y Axis Range (waveform only)", -1),
 			       new TGLayoutHints(kLHintsLeft, 15,5,0,5));
@@ -910,12 +909,12 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   ResetAxesLimits_HF->AddFrame(ResetXAxisLimits_TB = new TGTextButton(ResetAxesLimits_HF, "Reset X Axis", ResetXAxisLimits_TB_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
   ResetXAxisLimits_TB->Resize(175, 40);
-  ResetXAxisLimits_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  ResetXAxisLimits_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   
   ResetAxesLimits_HF->AddFrame(ResetYAxisLimits_TB = new TGTextButton(ResetAxesLimits_HF, "Reset Y Axis", ResetYAxisLimits_TB_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,0,5));
   ResetYAxisLimits_TB->Resize(175, 40);
-  ResetYAxisLimits_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  ResetYAxisLimits_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   
   GraphicsFrame_VF->AddFrame(ReplotWaveform_TB = new TGTextButton(GraphicsFrame_VF, "Replot waveform", ReplotWaveform_TB_ID),
 			       new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
@@ -923,7 +922,7 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   ReplotWaveform_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   ReplotWaveform_TB->Resize(200,30);
   ReplotWaveform_TB->ChangeOptions(ReplotWaveform_TB->GetOptions() | kFixedSize);
-  ReplotWaveform_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  ReplotWaveform_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
 
   GraphicsFrame_VF->AddFrame(ReplotSpectrum_TB = new TGTextButton(GraphicsFrame_VF, "Replot spectrum", ReplotSpectrum_TB_ID),
 			     new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
@@ -931,7 +930,7 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   ReplotSpectrum_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   ReplotSpectrum_TB->Resize(200,30);
   ReplotSpectrum_TB->ChangeOptions(ReplotSpectrum_TB->GetOptions() | kFixedSize);
-  ReplotSpectrum_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  ReplotSpectrum_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   
   GraphicsFrame_VF->AddFrame(ReplotSpectrumDerivative_TB = new TGTextButton(GraphicsFrame_VF, "Replot spectrum derivative", ReplotSpectrumDerivative_TB_ID),
 			     new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
@@ -939,7 +938,7 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   ReplotSpectrumDerivative_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   ReplotSpectrumDerivative_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   ReplotSpectrumDerivative_TB->ChangeOptions(ReplotSpectrumDerivative_TB->GetOptions() | kFixedSize);
-  ReplotSpectrumDerivative_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  ReplotSpectrumDerivative_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
 
   GraphicsFrame_VF->AddFrame(ReplotPSDHistogram_TB = new TGTextButton(GraphicsFrame_VF, "Replot PSD histogram", ReplotPSDHistogram_TB_ID),
 			       new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
@@ -947,12 +946,12 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   ReplotPSDHistogram_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   ReplotPSDHistogram_TB->Resize(200,30);
   ReplotPSDHistogram_TB->ChangeOptions(ReplotPSDHistogram_TB->GetOptions() | kFixedSize);
-  ReplotPSDHistogram_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  ReplotPSDHistogram_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
 
   // Override default plot options
   GraphicsFrame_VF->AddFrame(OverrideTitles_CB = new TGCheckButton(GraphicsFrame_VF, "Override default graphical options", OverrideTitles_CB_ID),
 			       new TGLayoutHints(kLHintsNormal, 5,5,5,5));
-  OverrideTitles_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  OverrideTitles_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   // Plot title text entry
   GraphicsFrame_VF->AddFrame(Title_TEL = new ADAQTextEntryWithLabel(GraphicsFrame_VF, "Plot title", Title_TEL_ID),
@@ -975,7 +974,7 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   XAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   XAxisSize_NEL->GetEntry()->SetNumber(0.04);
   XAxisSize_NEL->GetEntry()->Resize(50, 20);
-  XAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  XAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
   
   XAxisTitleOptions_HF->AddFrame(XAxisOffset_NEL = new ADAQNumberEntryWithLabel(XAxisTitleOptions_HF, "Offset", XAxisOffset_NEL_ID),		
 				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
@@ -983,7 +982,7 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   XAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   XAxisOffset_NEL->GetEntry()->SetNumber(1.5);
   XAxisOffset_NEL->GetEntry()->Resize(50, 20);
-  XAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  XAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   XAxis_GF->AddFrame(XAxisDivs_NEL = new ADAQNumberEntryWithLabel(XAxis_GF, "Divisions", XAxisDivs_NEL_ID),		
 		     new TGLayoutHints(kLHintsNormal, 0,0,0,0));
@@ -991,7 +990,7 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   XAxisDivs_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   XAxisDivs_NEL->GetEntry()->SetNumber(510);
   XAxisDivs_NEL->GetEntry()->Resize(50, 20);
-  XAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  XAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   // Y-axis title options
 
@@ -1010,7 +1009,7 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   YAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   YAxisSize_NEL->GetEntry()->SetNumber(0.04);
   YAxisSize_NEL->GetEntry()->Resize(50, 20);
-  YAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  YAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
   
   YAxisTitleOptions_HF->AddFrame(YAxisOffset_NEL = new ADAQNumberEntryWithLabel(YAxisTitleOptions_HF, "Offset", YAxisOffset_NEL_ID),		
 				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
@@ -1018,7 +1017,7 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   YAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   YAxisOffset_NEL->GetEntry()->SetNumber(1.5);
   YAxisOffset_NEL->GetEntry()->Resize(50, 20);
-  YAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  YAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   YAxis_GF->AddFrame(YAxisDivs_NEL = new ADAQNumberEntryWithLabel(YAxis_GF, "Divisions", YAxisDivs_NEL_ID),		
 		     new TGLayoutHints(kLHintsNormal, 0,0,0,0));
@@ -1026,7 +1025,7 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   YAxisDivs_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   YAxisDivs_NEL->GetEntry()->SetNumber(510);
   YAxisDivs_NEL->GetEntry()->Resize(50, 20);
-  YAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  YAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   // Z-axis options
 
@@ -1045,7 +1044,7 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   ZAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   ZAxisSize_NEL->GetEntry()->SetNumber(0.04);
   ZAxisSize_NEL->GetEntry()->Resize(50, 20);
-  ZAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  ZAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
   
   ZAxisTitleOptions_HF->AddFrame(ZAxisOffset_NEL = new ADAQNumberEntryWithLabel(ZAxisTitleOptions_HF, "Offset", ZAxisOffset_NEL_ID),		
 				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
@@ -1053,7 +1052,7 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   ZAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   ZAxisOffset_NEL->GetEntry()->SetNumber(1.5);
   ZAxisOffset_NEL->GetEntry()->Resize(50, 20);
-  ZAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  ZAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   ZAxis_GF->AddFrame(ZAxisDivs_NEL = new ADAQNumberEntryWithLabel(ZAxis_GF, "Divisions", ZAxisDivs_NEL_ID),		
 		     new TGLayoutHints(kLHintsNormal, 0,0,0,0));
@@ -1061,7 +1060,7 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   ZAxisDivs_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   ZAxisDivs_NEL->GetEntry()->SetNumber(510);
   ZAxisDivs_NEL->GetEntry()->Resize(50, 20);
-  ZAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  ZAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   // Color palette options
 
@@ -1081,7 +1080,7 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   PaletteAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PaletteAxisSize_NEL->GetEntry()->SetNumber(0.04);
   PaletteAxisSize_NEL->GetEntry()->Resize(50, 20);
-  PaletteAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  PaletteAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
   
   PaletteAxisTitleOptions_HF->AddFrame(PaletteAxisOffset_NEL = new ADAQNumberEntryWithLabel(PaletteAxisTitleOptions_HF, "Offset", PaletteAxisOffset_NEL_ID),		
 				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
@@ -1089,7 +1088,7 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
   PaletteAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PaletteAxisOffset_NEL->GetEntry()->SetNumber(1.1);
   PaletteAxisOffset_NEL->GetEntry()->Resize(50, 20);
-  PaletteAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  PaletteAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   TGHorizontalFrame *PaletteAxisPositions_HF1 = new TGHorizontalFrame(PaletteAxis_GF);
   PaletteAxis_GF->AddFrame(PaletteAxisPositions_HF1, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
@@ -1127,7 +1126,7 @@ void ADAQAnalysisInterface::FillGraphicsFrame()
 }
 
 
-void ADAQAnalysisInterface::FillProcessingFrame()
+void AAInterface::FillProcessingFrame()
 {
   ///////////////////////////////////
   // Fill the processing widget frame
@@ -1143,11 +1142,11 @@ void ADAQAnalysisInterface::FillProcessingFrame()
   ProcessingFrame_VF->AddFrame(ProcessingType_BG = new TGButtonGroup(ProcessingFrame_VF, "Waveform processing type", kHorizontalFrame),
 			       new TGLayoutHints(kLHintsNormal, 15,5,5,5));
   ProcessingSeq_RB = new TGRadioButton(ProcessingType_BG, "Sequential    ", ProcessingSeq_RB_ID);
-  ProcessingSeq_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  ProcessingSeq_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   ProcessingSeq_RB->SetState(kButtonDown);
   
   ProcessingPar_RB = new TGRadioButton(ProcessingType_BG, "Parallel", ProcessingPar_RB_ID);
-  ProcessingPar_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  ProcessingPar_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   //ProcessingPar_RB->SetState(kButtonDown);
   
   // Processing processing options
@@ -1174,7 +1173,7 @@ void ADAQAnalysisInterface::FillProcessingFrame()
   
   PearsonAnalysis_GF->AddFrame(IntegratePearson_CB = new TGCheckButton(PearsonAnalysis_GF, "Integrate signal", IntegratePearson_CB_ID),
 			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  IntegratePearson_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  IntegratePearson_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
   PearsonAnalysis_GF->AddFrame(PearsonChannel_CBL = new ADAQComboBoxWithLabel(PearsonAnalysis_GF, "Contains signal", -1),
 			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
@@ -1197,24 +1196,24 @@ void ADAQAnalysisInterface::FillProcessingFrame()
 			       new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PearsonPolarityPositive_RB->SetState(kButtonDown);
   PearsonPolarityPositive_RB->SetState(kButtonDisabled);
-  PearsonPolarityPositive_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  PearsonPolarityPositive_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
 
   PearsonPolarity_HF->AddFrame(PearsonPolarityNegative_RB = new TGRadioButton(PearsonPolarity_HF, "Negative", PearsonPolarityNegative_RB_ID),
 			       new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PearsonPolarityNegative_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  PearsonPolarityNegative_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
 
   TGHorizontalFrame *PearsonIntegrationType_HF = new TGHorizontalFrame(PearsonAnalysis_GF);
   PearsonAnalysis_GF->AddFrame(PearsonIntegrationType_HF, new TGLayoutHints(kLHintsNormal));
 
   PearsonIntegrationType_HF->AddFrame(IntegrateRawPearson_RB = new TGRadioButton(PearsonIntegrationType_HF, "Integrate raw", IntegrateRawPearson_RB_ID),
 				      new TGLayoutHints(kLHintsLeft, 0,5,5,0));
-  IntegrateRawPearson_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  IntegrateRawPearson_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   IntegrateRawPearson_RB->SetState(kButtonDown);
   IntegrateRawPearson_RB->SetState(kButtonDisabled);
 
   PearsonIntegrationType_HF->AddFrame(IntegrateFitToPearson_RB = new TGRadioButton(PearsonIntegrationType_HF, "Integrate fit", IntegrateFitToPearson_RB_ID),
 				      new TGLayoutHints(kLHintsLeft, 10,5,5,0));
-  IntegrateFitToPearson_RB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleRadioButtons()");
+  IntegrateFitToPearson_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   IntegrateFitToPearson_RB->SetState(kButtonDisabled);
   
   PearsonAnalysis_GF->AddFrame(PearsonLowerLimit_NEL = new ADAQNumberEntryWithLabel(PearsonAnalysis_GF, "Lower limit (sample)", PearsonLowerLimit_NEL_ID),
@@ -1223,7 +1222,7 @@ void ADAQAnalysisInterface::FillProcessingFrame()
   PearsonLowerLimit_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   PearsonLowerLimit_NEL->GetEntry()->SetLimitValues(0,1); // Updated when ADAQ ROOT file loaded
   PearsonLowerLimit_NEL->GetEntry()->SetNumber(0); // Updated when ADAQ ROOT file loaded
-  PearsonLowerLimit_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  PearsonLowerLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
   PearsonLowerLimit_NEL->GetEntry()->SetState(false);
   
   PearsonAnalysis_GF->AddFrame(PearsonMiddleLimit_NEL = new ADAQNumberEntryWithLabel(PearsonAnalysis_GF, "Middle limit (sample)", PearsonMiddleLimit_NEL_ID),
@@ -1232,7 +1231,7 @@ void ADAQAnalysisInterface::FillProcessingFrame()
   PearsonMiddleLimit_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   PearsonMiddleLimit_NEL->GetEntry()->SetLimitValues(0,1); // Updated when ADAQ ROOT file loaded
   PearsonMiddleLimit_NEL->GetEntry()->SetNumber(0); // Updated when ADAQ ROOT file loaded
-  PearsonMiddleLimit_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  PearsonMiddleLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
   PearsonMiddleLimit_NEL->GetEntry()->SetState(false);
   
   PearsonAnalysis_GF->AddFrame(PearsonUpperLimit_NEL = new ADAQNumberEntryWithLabel(PearsonAnalysis_GF, "Upper limit (sample))", PearsonUpperLimit_NEL_ID),
@@ -1241,13 +1240,13 @@ void ADAQAnalysisInterface::FillProcessingFrame()
   PearsonUpperLimit_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   PearsonUpperLimit_NEL->GetEntry()->SetLimitValues(0,1); // Updated when ADAQ ROOT file loaded
   PearsonUpperLimit_NEL->GetEntry()->SetNumber(0); // Updated when ADAQ ROOT file loaded
-  PearsonUpperLimit_NEL->GetEntry()->Connect("ValueSet(long)", "ADAQAnalysisInterface", this, "HandleNumberEntries()");
+  PearsonUpperLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
   PearsonUpperLimit_NEL->GetEntry()->SetState(false);
   
   PearsonAnalysis_GF->AddFrame(PlotPearsonIntegration_CB = new TGCheckButton(PearsonAnalysis_GF, "Plot integration", PlotPearsonIntegration_CB_ID),
 			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
   PlotPearsonIntegration_CB->SetState(kButtonDisabled);
-  PlotPearsonIntegration_CB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleCheckButtons()");
+  PlotPearsonIntegration_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   PearsonAnalysis_GF->AddFrame(DeuteronsInWaveform_NEFL = new ADAQNumberEntryFieldWithLabel(PearsonAnalysis_GF, "D+ in waveform", -1),
 			       new TGLayoutHints(kLHintsNormal, 0,5,0,0));
@@ -1293,7 +1292,7 @@ void ADAQAnalysisInterface::FillProcessingFrame()
   DesplicedFileSelection_TB->Resize(60,25);
   DesplicedFileSelection_TB->SetBackgroundColor(ColorMgr->Number2Pixel(18));
   DesplicedFileSelection_TB->ChangeOptions(DesplicedFileSelection_TB->GetOptions() | kFixedSize);
-  DesplicedFileSelection_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  DesplicedFileSelection_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   
   WaveformDesplicerName_HF->AddFrame(DesplicedFileName_TE = new TGTextEntry(WaveformDesplicerName_HF, "<No file currently selected>", -1),
 				     new TGLayoutHints(kLHintsLeft, 5,0,5,5));
@@ -1308,11 +1307,11 @@ void ADAQAnalysisInterface::FillProcessingFrame()
   DesplicedFileCreation_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   DesplicedFileCreation_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   DesplicedFileCreation_TB->ChangeOptions(DesplicedFileCreation_TB->GetOptions() | kFixedSize);
-  DesplicedFileCreation_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTextButtons()");
+  DesplicedFileCreation_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
 }
 
 
-void ADAQAnalysisInterface::FillCanvasFrame()
+void AAInterface::FillCanvasFrame()
 {
   /////////////////////////////////////
   // Canvas and associated widget frame
@@ -1377,7 +1376,7 @@ void ADAQAnalysisInterface::FillCanvasFrame()
 		      new TGLayoutHints(kLHintsTop));
   YAxisLimits_DVS->SetRange(0,1);
   YAxisLimits_DVS->SetPosition(0,1);
-  YAxisLimits_DVS->Connect("PositionChanged()", "ADAQAnalysisInterface", this, "HandleDoubleSliders()");
+  YAxisLimits_DVS->Connect("PositionChanged()", "AAInterface", this, "HandleDoubleSliders()");
   
   Canvas_HF->AddFrame(Canvas_EC = new TRootEmbeddedCanvas("TheCanvas_EC", Canvas_HF, 700, 500),
 		      new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
@@ -1388,15 +1387,15 @@ void ADAQAnalysisInterface::FillCanvasFrame()
   Canvas_EC->GetCanvas()->SetLeftMargin(0.13);
   Canvas_EC->GetCanvas()->SetBottomMargin(0.12);
   Canvas_EC->GetCanvas()->SetRightMargin(0.05);
-  Canvas_EC->GetCanvas()->Connect("ProcessedEvent(int, int, int, TObject *)", "ADAQAnalysisInterface", this, "HandleCanvas(int, int, int, TObject *)");
+  Canvas_EC->GetCanvas()->Connect("ProcessedEvent(int, int, int, TObject *)", "AAInterface", this, "HandleCanvas(int, int, int, TObject *)");
 
   Canvas_VF->AddFrame(XAxisLimits_THS = new TGTripleHSlider(Canvas_VF, 700, kDoubleScaleBoth, XAxisLimits_THS_ID),
 		      new TGLayoutHints(kLHintsRight));
   XAxisLimits_THS->SetRange(0,1);
   XAxisLimits_THS->SetPosition(0,1);
   XAxisLimits_THS->SetPointerPosition(0.5);
-  XAxisLimits_THS->Connect("PositionChanged()", "ADAQAnalysisInterface", this, "HandleDoubleSliders()");
-  XAxisLimits_THS->Connect("PointerPositionChanged()", "ADAQAnalysisInterface", this, "HandleTripleSliderPointer()");
+  XAxisLimits_THS->Connect("PositionChanged()", "AAInterface", this, "HandleDoubleSliders()");
+  XAxisLimits_THS->Connect("PointerPositionChanged()", "AAInterface", this, "HandleTripleSliderPointer()");
     
   Canvas_VF->AddFrame(new TGLabel(Canvas_VF, "  Waveform selector  "),
 		      new TGLayoutHints(kLHintsCenterX, 5,5,15,0));
@@ -1405,7 +1404,7 @@ void ADAQAnalysisInterface::FillCanvasFrame()
 		      new TGLayoutHints(kLHintsRight));
   WaveformSelector_HS->SetRange(1,100);
   WaveformSelector_HS->SetPosition(1);
-  WaveformSelector_HS->Connect("PositionChanged(int)", "ADAQAnalysisInterface", this, "HandleSliders(int)");
+  WaveformSelector_HS->Connect("PositionChanged(int)", "AAInterface", this, "HandleSliders(int)");
 
   Canvas_VF->AddFrame(new TGLabel(Canvas_VF, "  Spectrum integration limits  "),
 		      new TGLayoutHints(kLHintsCenterX, 5,5,15,0));
@@ -1414,7 +1413,7 @@ void ADAQAnalysisInterface::FillCanvasFrame()
 		      new TGLayoutHints(kLHintsRight));
   SpectrumIntegrationLimits_DHS->SetRange(0,1);
   SpectrumIntegrationLimits_DHS->SetPosition(0,1);
-  SpectrumIntegrationLimits_DHS->Connect("PositionChanged()", "ADAQAnalysisInterface", this, "HandleDoubleSliders()");
+  SpectrumIntegrationLimits_DHS->Connect("PositionChanged()", "AAInterface", this, "HandleDoubleSliders()");
 		      
   TGHorizontalFrame *SubCanvas_HF = new TGHorizontalFrame(Canvas_VF);
   SubCanvas_HF->SetBackgroundColor(ColorMgr->Number2Pixel(16));
@@ -1431,11 +1430,11 @@ void ADAQAnalysisInterface::FillCanvasFrame()
   Quit_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   Quit_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   Quit_TB->ChangeOptions(Quit_TB->GetOptions() | kFixedSize);
-  Quit_TB->Connect("Clicked()", "ADAQAnalysisInterface", this, "HandleTerminate()");
+  Quit_TB->Connect("Clicked()", "AAInterface", this, "HandleTerminate()");
 }
 
 
-void ADAQAnalysisInterface::HandleMenu(int MenuID)
+void AAInterface::HandleMenu(int MenuID)
 {
   switch(MenuID){
     
@@ -1470,7 +1469,7 @@ void ADAQAnalysisInterface::HandleMenu(int MenuID)
 	DataDirectory  = FileName.substr(0,pos);
       
       // Load the ROOT file and set the bool depending on outcome
-      ADAQFileLoaded = AnalysisMgr->LoadADAQRootFile(FileName);
+      ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(FileName);
       ADAQFileName = FileName;
       
       if(ADAQFileLoaded)
@@ -1540,21 +1539,21 @@ void ADAQAnalysisInterface::HandleMenu(int MenuID)
       bool Success = false;
       
       if(MenuID == MenuFileSaveSpectrum_ID){
-	if(!AnalysisMgr->GetSpectrumExists()){
+	if(!ComputationMgr->GetSpectrumExists()){
 	  CreateMessageBox("No spectra have been created yet and, therefore, there is nothing to save!","Stop");
 	  break;
 	}
 	else
-	  Success = AnalysisMgr->SaveHistogramData("Spectrum", FileName, FileExtension);
+	  Success = ComputationMgr->SaveHistogramData("Spectrum", FileName, FileExtension);
       }
       
       else if(MenuID == MenuFileSaveSpectrumDerivative_ID){
-	if(!AnalysisMgr->GetSpectrumDerivativeExists()){
+	if(!ComputationMgr->GetSpectrumDerivativeExists()){
 	  CreateMessageBox("No spectrum derivatives have been created yet and, therefore, there is nothing to save!","Stop");
 	  break;
 	}
 	else
-	  Success = AnalysisMgr->SaveHistogramData("SpectrumDerivative", FileName, FileExtension);
+	  Success = ComputationMgr->SaveHistogramData("SpectrumDerivative", FileName, FileExtension);
       }
       
       else if (MenuID == MenuFileSavePSDHistogramSlice_ID){
@@ -1647,7 +1646,7 @@ void ADAQAnalysisInterface::HandleMenu(int MenuID)
 }
 
 
-void ADAQAnalysisInterface::HandleTextButtons()
+void AAInterface::HandleTextButtons()
 {
   if(!ADAQFileLoaded)
     return;
@@ -1666,7 +1665,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
     break;
 
   case ResetXAxisLimits_TB_ID:
-    if(!AnalysisMgr->GetFileOpen())
+    if(!ComputationMgr->GetFileOpen())
       return;
 
     // Reset the XAxis double slider and member data
@@ -1678,7 +1677,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
     break;
 
   case ResetYAxisLimits_TB_ID:
-    if(!AnalysisMgr->GetFileOpen())
+    if(!ComputationMgr->GetFileOpen())
       return;
     
     // Reset the YAxis double slider and member data
@@ -1707,7 +1706,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
     // Get the current channel being histogrammed in DGScope
     int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
 
-    bool NewPoint = AnalysisMgr->SetCalibrationPoint(Channel, SetPoint, Energy, PulseUnit);
+    bool NewPoint = ComputationMgr->SetCalibrationPoint(Channel, SetPoint, Energy, PulseUnit);
     
     if(NewPoint){
       // Add a new point to the number of calibration points in case
@@ -1745,7 +1744,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
     // Get the current channel being histogrammed in 
     int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
 
-    bool Success = AnalysisMgr->SetCalibration(Channel);
+    bool Success = ComputationMgr->SetCalibration(Channel);
 
     if(!Success)
       CreateMessageBox("The calibration could not be set!","Stop");
@@ -1773,7 +1772,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
     // Get the current channel being histogrammed in 
     int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
     
-    bool Success = AnalysisMgr->ClearCalibration(Channel);
+    bool Success = ComputationMgr->ClearCalibration(Channel);
 
     // Reset the calibration widgets
     if(Success){
@@ -1798,7 +1797,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
     
   case ReplotSpectrum_TB_ID:
     
-    if(AnalysisMgr->GetSpectrumExists())
+    if(ComputationMgr->GetSpectrumExists())
       GraphicsMgr->PlotSpectrum();
     else
       CreateMessageBox("A valid spectrum does not yet exist; therefore, it is difficult to replot it!","Stop");
@@ -1809,7 +1808,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
     
   case ReplotSpectrumDerivative_TB_ID:
     
-    if(AnalysisMgr->GetSpectrumExists()){
+    if(ComputationMgr->GetSpectrumExists()){
       SpectrumOverplotDerivative_CB->SetState(kButtonUp);
       GraphicsMgr->PlotSpectrumDerivative();
     }
@@ -1822,7 +1821,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
     
   case ReplotPSDHistogram_TB_ID:
     
-    if(AnalysisMgr->GetPSDHistogramExists())
+    if(ComputationMgr->GetPSDHistogramExists())
       GraphicsMgr->PlotPSDHistogram();
     else
       CreateMessageBox("A valid PSD histogram does not yet exist; therefore, replotting cannot be achieved!","Stop");
@@ -1837,12 +1836,12 @@ void ADAQAnalysisInterface::HandleTextButtons()
     
     // Create spectrum with sequential processing
     if(ProcessingSeq_RB->IsDown())
-      AnalysisMgr->CreateSpectrum();
+      ComputationMgr->CreateSpectrum();
     
     // Create spectrum with parallel processing
     else{
       SaveSettings(true);
-      AnalysisMgr->ProcessWaveformsInParallel("histogramming");
+      ComputationMgr->ProcessWaveformsInParallel("histogramming");
     }
 
     GraphicsMgr->PlotSpectrum();
@@ -1854,10 +1853,10 @@ void ADAQAnalysisInterface::HandleTextButtons()
     
   case PSDCalculate_TB_ID:
     if(ProcessingSeq_RB->IsDown())
-      AnalysisMgr->CreatePSDHistogram();
+      ComputationMgr->CreatePSDHistogram();
     else{
       SaveSettings(true);
-      AnalysisMgr->ProcessWaveformsInParallel("discriminating");
+      ComputationMgr->ProcessWaveformsInParallel("discriminating");
     }
     GraphicsMgr->PlotPSDHistogram();
     break;
@@ -1926,7 +1925,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
     
   case DesplicedFileCreation_TB_ID:
     
-    if(!AnalysisMgr->GetFileOpen())
+    if(!ComputationMgr->GetFileOpen())
       return;
     
     // Alert the user the filtering particles by PSD into the spectra
@@ -1946,7 +1945,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
 
     
   case PSDClearFilter_TB_ID:
-    AnalysisMgr->ClearPSDFilter(ChannelSelector_CBL->GetComboBox()->GetSelected());
+    ComputationMgr->ClearPSDFilter(ChannelSelector_CBL->GetComboBox()->GetSelected());
     PSDEnableFilter_CB->SetState(kButtonUp);
 
     switch(GraphicsMgr->GetCanvasContentType()){
@@ -1968,7 +1967,7 @@ void ADAQAnalysisInterface::HandleTextButtons()
 }
 
 
-void ADAQAnalysisInterface::HandleCheckButtons()
+void AAInterface::HandleCheckButtons()
 {
   // Get the currently active widget and its ID, i.e. the widget from
   // which the user has just sent a signal...
@@ -2043,7 +2042,7 @@ void ADAQAnalysisInterface::HandleCheckButtons()
   }
     
   case SpectrumFindPeaks_CB_ID:
-    if(!AnalysisMgr->GetSpectrumExists())
+    if(!ComputationMgr->GetSpectrumExists())
       break;
     
     if(SpectrumFindPeaks_CB->IsDown()){
@@ -2063,7 +2062,7 @@ void ADAQAnalysisInterface::HandleCheckButtons()
     break;
     
   case SpectrumFindBackground_CB_ID:
-    if(!AnalysisMgr->GetSpectrumExists())
+    if(!ComputationMgr->GetSpectrumExists())
       break;
     
     if(SpectrumFindBackground_CB->IsDown()){
@@ -2072,7 +2071,7 @@ void ADAQAnalysisInterface::HandleCheckButtons()
       SpectrumWithBackground_RB->SetState(kButtonUp);
       SpectrumLessBackground_RB->SetState(kButtonUp);
       
-      AnalysisMgr->CalculateSpectrumBackground();
+      ComputationMgr->CalculateSpectrumBackground();
       GraphicsMgr->PlotSpectrum();
     }
     else{
@@ -2091,11 +2090,11 @@ void ADAQAnalysisInterface::HandleCheckButtons()
   case SpectrumNormalizePeakToCurrent_CB_ID:
     
     if(SpectrumFindIntegral_CB->IsDown()){
-      AnalysisMgr->IntegrateSpectrum();
+      ComputationMgr->IntegrateSpectrum();
       GraphicsMgr->PlotSpectrum();
       
-      SpectrumIntegral_NEFL->GetEntry()->SetNumber( AnalysisMgr->GetSpectrumIntegralValue() );
-      SpectrumIntegralError_NEFL->GetEntry()->SetNumber (AnalysisMgr->GetSpectrumIntegralError() );
+      SpectrumIntegral_NEFL->GetEntry()->SetNumber( ComputationMgr->GetSpectrumIntegralValue() );
+      SpectrumIntegralError_NEFL->GetEntry()->SetNumber (ComputationMgr->GetSpectrumIntegralError() );
     }
     else
       GraphicsMgr->PlotSpectrum();
@@ -2223,7 +2222,7 @@ void ADAQAnalysisInterface::HandleCheckButtons()
   case PlotSpectrumDerivativeError_CB_ID:
   case PlotAbsValueSpectrumDerivative_CB_ID:
   case SpectrumOverplotDerivative_CB_ID:{
-    if(!AnalysisMgr->GetSpectrumExists()){
+    if(!ComputationMgr->GetSpectrumExists()){
       CreateMessageBox("A valid spectrum does not yet exists! The calculation of a spectrum derivative is, therefore, moot!", "Stop");
       break;
     }
@@ -2248,7 +2247,7 @@ void ADAQAnalysisInterface::HandleCheckButtons()
 }
 
 
-void ADAQAnalysisInterface::HandleSliders(int SliderPosition)
+void AAInterface::HandleSliders(int SliderPosition)
 {
   if(!ADAQFileLoaded)
     return;
@@ -2261,7 +2260,7 @@ void ADAQAnalysisInterface::HandleSliders(int SliderPosition)
 }
 
 
-void ADAQAnalysisInterface::HandleDoubleSliders()
+void AAInterface::HandleDoubleSliders()
 {
   if(!ADAQFileLoaded)
     return;
@@ -2280,33 +2279,33 @@ void ADAQAnalysisInterface::HandleDoubleSliders()
     if(GraphicsMgr->GetCanvasContentType() == zWaveform)
       GraphicsMgr->PlotWaveform();
 
-    else if(GraphicsMgr->GetCanvasContentType() == zSpectrum and AnalysisMgr->GetSpectrumExists()){
+    else if(GraphicsMgr->GetCanvasContentType() == zSpectrum and ComputationMgr->GetSpectrumExists()){
       GraphicsMgr->PlotSpectrum();
       if(SpectrumOverplotDerivative_CB->IsDown())
 	GraphicsMgr->PlotSpectrumDerivative();
     }
     
-    else if(GraphicsMgr->GetCanvasContentType() == zSpectrumDerivative and AnalysisMgr->GetSpectrumExists())
+    else if(GraphicsMgr->GetCanvasContentType() == zSpectrumDerivative and ComputationMgr->GetSpectrumExists())
       GraphicsMgr->PlotSpectrumDerivative();
     
-    else if(GraphicsMgr->GetCanvasContentType() == zPSDHistogram and AnalysisMgr->GetSpectrumExists())
+    else if(GraphicsMgr->GetCanvasContentType() == zPSDHistogram and ComputationMgr->GetSpectrumExists())
       GraphicsMgr->PlotPSDHistogram();
     
     break;
 
   case SpectrumIntegrationLimits_DHS_ID:
-    AnalysisMgr->IntegrateSpectrum();
+    ComputationMgr->IntegrateSpectrum();
     GraphicsMgr->PlotSpectrum();
     
-    SpectrumIntegral_NEFL->GetEntry()->SetNumber( AnalysisMgr->GetSpectrumIntegralValue() );
-    SpectrumIntegralError_NEFL->GetEntry()->SetNumber (AnalysisMgr->GetSpectrumIntegralError () );
+    SpectrumIntegral_NEFL->GetEntry()->SetNumber( ComputationMgr->GetSpectrumIntegralValue() );
+    SpectrumIntegralError_NEFL->GetEntry()->SetNumber (ComputationMgr->GetSpectrumIntegralError () );
     
     break;
   }
 }
 
 
-void ADAQAnalysisInterface::HandleTripleSliderPointer()
+void AAInterface::HandleTripleSliderPointer()
 {
   // To enable easy spectra calibration, the user has the options of
   // dragging the pointer of the X-axis horizontal slider just below
@@ -2319,9 +2318,9 @@ void ADAQAnalysisInterface::HandleTripleSliderPointer()
 
   // If the pulse spectrum object (Spectrum_H) exists and the user has
   // selected calibration mode via the appropriate check button ...
-  if(AnalysisMgr->GetSpectrumExists() and SpectrumCalibration_CB->IsDown() and GraphicsMgr->GetCanvasContentType() == zSpectrum){
+  if(ComputationMgr->GetSpectrumExists() and SpectrumCalibration_CB->IsDown() and GraphicsMgr->GetCanvasContentType() == zSpectrum){
 
-    TH1F *Spectrum_H = AnalysisMgr->GetSpectrum();
+    TH1F *Spectrum_H = ComputationMgr->GetSpectrum();
         
     // Calculate the position along the X-axis of the pulse spectrum
     // (the "area" or "height" in ADC units) based on the current
@@ -2348,7 +2347,7 @@ void ADAQAnalysisInterface::HandleTripleSliderPointer()
 }
 
 
-void ADAQAnalysisInterface::HandleNumberEntries()
+void AAInterface::HandleNumberEntries()
 { 
   // Get the "active" widget object/ID from which a signal has been sent
   TGNumberEntry *ActiveNumberEntry = (TGNumberEntry *) gTQSender;
@@ -2370,7 +2369,7 @@ void ADAQAnalysisInterface::HandleNumberEntries()
     break;
     
   case MaxPeaks_NEL_ID:
-    AnalysisMgr->CreateNewPeakFinder(ADAQSettings->MaxPeaks);
+    ComputationMgr->CreateNewPeakFinder(ADAQSettings->MaxPeaks);
     GraphicsMgr->PlotWaveform();
     break;
 
@@ -2396,7 +2395,7 @@ void ADAQAnalysisInterface::HandleNumberEntries()
 
   case SpectrumRangeMin_NEL_ID:
   case SpectrumRangeMax_NEL_ID:
-    AnalysisMgr->CalculateSpectrumBackground();
+    ComputationMgr->CalculateSpectrumBackground();
     GraphicsMgr->PlotSpectrum();
     break;
     
@@ -2435,7 +2434,7 @@ void ADAQAnalysisInterface::HandleNumberEntries()
 }
 
 
-void ADAQAnalysisInterface::HandleRadioButtons()
+void AAInterface::HandleRadioButtons()
 {
   TGRadioButton *ActiveRadioButton = (TGRadioButton *) gTQSender;
   int RadioButtonID = ActiveRadioButton->WidgetId();
@@ -2512,14 +2511,14 @@ void ADAQAnalysisInterface::HandleRadioButtons()
   case SpectrumWithBackground_RB_ID:
     SpectrumLessBackground_RB->SetState(kButtonUp);
     SaveSettings();
-    AnalysisMgr->CalculateSpectrumBackground();
+    ComputationMgr->CalculateSpectrumBackground();
     GraphicsMgr->PlotSpectrum();
     break;
 
   case SpectrumLessBackground_RB_ID:
     SpectrumWithBackground_RB->SetState(kButtonUp);
     SaveSettings();
-    AnalysisMgr->CalculateSpectrumBackground();
+    ComputationMgr->CalculateSpectrumBackground();
     GraphicsMgr->PlotSpectrum();
     break;
     
@@ -2597,26 +2596,26 @@ void ADAQAnalysisInterface::HandleRadioButtons()
 }
 
 
-void ADAQAnalysisInterface::HandleComboBox(int ComboBoxID, int SelectedID)
+void AAInterface::HandleComboBox(int ComboBoxID, int SelectedID)
 {
   switch(ComboBoxID){
     
   case PSDPlotType_CBL_ID:
-    if(AnalysisMgr->GetPSDHistogramExists())
+    if(ComputationMgr->GetPSDHistogramExists())
       {}//PlotPSDHistogram();
     break;
   }
 }
 
 
-void ADAQAnalysisInterface::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *Selected)
+void AAInterface::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *Selected)
 {
   // If the user has enabled the creation of a PSD filter and the
   // canvas event is equal to "1" (which represents a down-click
   // somewhere on the canvas pad) then send the pixel coordinates of
   // the down-click to the PSD filter creation function
   if(PSDEnableFilterCreation_CB->IsDown() and EventID == 1){
-    AnalysisMgr->CreatePSDFilter(XPixel, YPixel);
+    ComputationMgr->CreatePSDFilter(XPixel, YPixel);
     GraphicsMgr->PlotPSDFilter();
   }
   
@@ -2630,18 +2629,18 @@ void ADAQAnalysisInterface::HandleCanvas(int EventID, int XPixel, int YPixel, TO
       return;
     }
     else{
-      AnalysisMgr->CreatePSDHistogramSlice(XPixel, YPixel);
+      ComputationMgr->CreatePSDHistogramSlice(XPixel, YPixel);
       GraphicsMgr->PlotPSDHistogramSlice(XPixel, YPixel);
     }
   }
 }
 
 
-void ADAQAnalysisInterface::HandleTerminate()
+void AAInterface::HandleTerminate()
 { gApplication->Terminate(); }
 
 
-void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
+void AAInterface::SaveSettings(bool SaveToFile)
 {
   if(ADAQSettings)
     delete ADAQSettings;
@@ -2848,15 +2847,15 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->ADAQFileName = ADAQFileName;
   
   // Spectrum calibration objects
-  ADAQSettings->UseCalibrationManager = AnalysisMgr->GetUseCalibrationManager();
-  ADAQSettings->CalibrationManager = AnalysisMgr->GetCalibrationManager();
+  ADAQSettings->UseCalibrationManager = ComputationMgr->GetUseCalibrationManager();
+  ADAQSettings->CalibrationManager = ComputationMgr->GetCalibrationManager();
   
   // PSD filter objects
-  ADAQSettings->UsePSDFilterManager = AnalysisMgr->GetUsePSDFilterManager();
-  ADAQSettings->PSDFilterManager = AnalysisMgr->GetPSDFilterManager();
+  ADAQSettings->UsePSDFilterManager = ComputationMgr->GetUsePSDFilterManager();
+  ADAQSettings->PSDFilterManager = ComputationMgr->GetPSDFilterManager();
 
   // Update the settings object pointer in the manager classes
-  AnalysisMgr->SetADAQSettings(ADAQSettings);
+  ComputationMgr->SetADAQSettings(ADAQSettings);
   GraphicsMgr->SetADAQSettings(ADAQSettings);
 
   // Write the ADAQSettings object to a ROOT file for parallel access
@@ -2872,7 +2871,7 @@ void ADAQAnalysisInterface::SaveSettings(bool SaveToFile)
 
 // Creates a separate pop-up box with a message for the user. Function
 // is modular to allow flexibility in use.
-void ADAQAnalysisInterface::CreateMessageBox(string Message, string IconName)
+void AAInterface::CreateMessageBox(string Message, string IconName)
 {
   // Choose either a "stop" icon or an "asterisk" icon
   EMsgBoxIcon IconType = kMBIconStop;
@@ -2911,10 +2910,10 @@ void ADAQAnalysisInterface::CreateMessageBox(string Message, string IconName)
 }
 
 
-void ADAQAnalysisInterface::UpdateForNewFile(string FileName)
+void AAInterface::UpdateForNewFile(string FileName)
 {
-  int WaveformsInFile = AnalysisMgr->GetADAQNumberOfWaveforms();
-  ADAQRootMeasParams *AMP = AnalysisMgr->GetADAQMeasurementParameters();
+  int WaveformsInFile = ComputationMgr->GetADAQNumberOfWaveforms();
+  ADAQRootMeasParams *AMP = ComputationMgr->GetADAQMeasurementParameters();
   int RecordLength = AMP->RecordLength;
   
   WaveformSelector_HS->SetRange(1, WaveformsInFile);
@@ -2952,7 +2951,7 @@ void ADAQAnalysisInterface::UpdateForNewFile(string FileName)
 }
 
 
-void ADAQAnalysisInterface::SetCalibrationWidgetState(bool WidgetState, EButtonState ButtonState)
+void AAInterface::SetCalibrationWidgetState(bool WidgetState, EButtonState ButtonState)
 {
   // Set the widget states based on above variable set results
   SpectrumCalibrationPoint_CBL->GetComboBox()->SetEnabled(WidgetState);

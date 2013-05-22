@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
-// name: ADAQAnalysisInterface.hh
+// name: AAComputation.cc
 // date: 21 May 13
 // auth: Zach Hartwig
 //
@@ -8,8 +8,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __ADAQAnalysisManager_hh__
-#define __ADAQAnalysisManager_hh__ 1
+#ifndef __AAComputation_hh__
+#define __AAComputation_hh__ 1
 
 #include <TObject.h>
 #include <TRootEmbeddedCanvas.h>
@@ -43,13 +43,13 @@ using namespace std;
 
 
 
-class ADAQAnalysisManager : public TObject
+class AAComputation : public TObject
 {
 public:
-  ADAQAnalysisManager(string, bool);
-  ~ADAQAnalysisManager();
+  AAComputation(string, bool);
+  ~AAComputation();
 
-  static ADAQAnalysisManager *GetInstance();
+  static AAComputation *GetInstance();
   
   void SetFileOpen(bool FO) {FileOpen = FO;}
   bool GetFileOpen() {return FileOpen;}
@@ -172,7 +172,7 @@ private:
   TGraph *SpectrumDerivative_G;
   
   
-  static ADAQAnalysisManager *TheAnalysisManager;
+  static AAComputation *TheAnalysisManager;
 
   ADAQAnalysisSettings *ADAQSettings;
 
@@ -293,7 +293,7 @@ private:
   TRandom *RNG;
 
   // Define the class to ROOT
-  ClassDef(ADAQAnalysisManager, 1)
+  ClassDef(AAComputation, 1)
 };
 
 #endif

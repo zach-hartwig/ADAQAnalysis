@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
-// name: ADAQAnalysisInterface.hh
+// name: AAInterface.hh
 // date: 17 May 13
 // auth: Zach Hartwig
 //
@@ -8,8 +8,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __ADAQAnalysisInterface_hh__
-#define __ADAQAnalysisInterface_hh__ 1
+#ifndef __AAInterface_hh__
+#define __AAInterface_hh__ 1
 
 // ROOT
 #include <TROOT.h>
@@ -44,17 +44,17 @@ using namespace std;
 #include "ADAQRootGUIClasses.hh"
 #include "ADAQAnalysisTypes.hh"
 #include "ADAQAnalysisSettings.hh"
-#include "ADAQAnalysisManager.hh"
-#include "ADAQGraphicsManager.hh"
+#include "AAComputation.hh"
+#include "AAGraphics.hh"
 
-class ADAQAnalysisInterface : public TGMainFrame
+class AAInterface : public TGMainFrame
 {
 
 public:
 
   // Constructor/destructor
-  ADAQAnalysisInterface(string);
-  ~ADAQAnalysisInterface();
+  AAInterface(string);
+  ~AAInterface();
 
   // Create the ROOT graphical interface
   void CreateTheMainFrames();
@@ -337,11 +337,11 @@ private:
 
   // The managers 
   TColor *ColorMgr;
-  ADAQAnalysisManager *AnalysisMgr;
-  ADAQGraphicsManager *GraphicsMgr;
+  AAComputation *ComputationMgr;
+  AAGraphics *GraphicsMgr;
   
   // Define the class to ROOT
-  ClassDef(ADAQAnalysisInterface, 1);
+  ClassDef(AAInterface, 1);
 };
 
 #endif

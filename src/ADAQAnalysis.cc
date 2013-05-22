@@ -17,9 +17,9 @@
 #include <mpi.h>
 #endif
 
-#include "ADAQAnalysisInterface.hh"
-#include "ADAQAnalysisManager.hh"
-#include "ADAQGraphicsManager.hh"
+#include "AAInterface.hh"
+#include "AAComputation.hh"
+#include "AAGraphics.hh"
 
 int main(int argc, char *argv[])
 {
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
   
   // If only 1 cmd line arg was specified then assign it to
   // corresponding string that will be passed to the
-  // ADAQAnalysisManager class constructor for use
+  // ADAQComputation class constructor for use
   else if(argc==2)
     CmdLineArg = argv[1];
 
@@ -83,15 +83,15 @@ int main(int argc, char *argv[])
   TApplication *TheApplication = new TApplication("ADAQAnalysis", &argc, argv);
   
   // Create the singleton analysis manager
-  ADAQAnalysisManager *TheAnalysis = new ADAQAnalysisManager(CmdLineArg, ParallelArchitecture);
+  AAComputation *TheComputation = new AAComputation(CmdLineArg, ParallelArchitecture);
   
   if(!ParallelArchitecture){
     // Create the singleton graphics manager
-    ADAQGraphicsManager *TheGraphics = new ADAQGraphicsManager;
-
+    AAGraphics *TheGraphics = new AAGraphics;
+    
     // Create the graphical user interface
-    ADAQAnalysisInterface *TheInterface = new ADAQAnalysisInterface(CmdLineArg);
-    TheInterface->Connect("CloseWindow()", "ADAQAnalysisInterface", TheInterface, "HandleTerminate()");
+    AAInterface *TheInterface = new AAInterface(CmdLineArg);
+    TheInterface->Connect("CloseWindow()", "ADAQInterface", TheInterface, "HandleTerminate()");
     
     // Run the application
     TheApplication->Run();
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     delete TheInterface;
   }
 
-  delete TheAnalysis;
+  delete TheComputation;
 
   delete TheApplication;
   

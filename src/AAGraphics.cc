@@ -9,17 +9,17 @@
 #include <sstream>
 using namespace std;
 
-#include "ADAQGraphicsManager.hh"
+#include "AAGraphics.hh"
 
 
-ADAQGraphicsManager *ADAQGraphicsManager::TheGraphicsManager = 0;
+AAGraphics *AAGraphics::TheGraphicsManager = 0;
 
 
-ADAQGraphicsManager *ADAQGraphicsManager::GetInstance()
+AAGraphics *AAGraphics::GetInstance()
 { return TheGraphicsManager; }
 
 
-ADAQGraphicsManager::ADAQGraphicsManager()
+AAGraphics::AAGraphics()
   : Trigger_L(new TLine), Floor_L(new TLine), Baseline_B(new TBox), ZSCeiling_L(new TLine),
     LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine), IntegrationRegion_B(new TBox), Calibration_L(new TLine),
     PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
@@ -95,17 +95,17 @@ ADAQGraphicsManager::ADAQGraphicsManager()
   DerivativeReference_L->SetLineColor(2);
   DerivativeReference_L->SetLineWidth(2);
 
-  AnalysisMgr = ADAQAnalysisManager::GetInstance();
+  ComputationMgr = AAComputation::GetInstance();
 }
 
 
-ADAQGraphicsManager::~ADAQGraphicsManager()
+AAGraphics::~AAGraphics()
 {
   delete TheGraphicsManager;
 }
 
 
-void ADAQGraphicsManager::PlotWaveform()
+void AAGraphics::PlotWaveform()
 {
   TH1F *Waveform_H = 0;
   
@@ -113,13 +113,13 @@ void ADAQGraphicsManager::PlotWaveform()
   int Waveform = ADAQSettings->WaveformToPlot;
   
   if(ADAQSettings->RawWaveform)
-    Waveform_H = AnalysisMgr->CalculateRawWaveform(Channel, Waveform);
+    Waveform_H = ComputationMgr->CalculateRawWaveform(Channel, Waveform);
 
   else if(ADAQSettings->BSWaveform)
-    Waveform_H = AnalysisMgr->CalculateBSWaveform(Channel, Waveform);
+    Waveform_H = ComputationMgr->CalculateBSWaveform(Channel, Waveform);
 
   else if(ADAQSettings->ZSWaveform)
-    Waveform_H = AnalysisMgr->CalculateZSWaveform(Channel, Waveform);
+    Waveform_H = ComputationMgr->CalculateZSWaveform(Channel, Waveform);
 
 
   // Determine the X-axis size and min/max values
@@ -224,12 +224,12 @@ void ADAQGraphicsManager::PlotWaveform()
 
   if(ADAQSettings->PlotTrigger)
     Trigger_L->DrawLine(XMin,
-			AnalysisMgr->GetADAQMeasurementParameters()->TriggerThreshold[Channel], 
+			ComputationMgr->GetADAQMeasurementParameters()->TriggerThreshold[Channel], 
 			XMax,
-			AnalysisMgr->GetADAQMeasurementParameters()->TriggerThreshold[Channel]);
+			ComputationMgr->GetADAQMeasurementParameters()->TriggerThreshold[Channel]);
 
   if(ADAQSettings->PlotBaselineCalcRegion and !ADAQSettings->ZSWaveform){
-    double Baseline = AnalysisMgr->CalculateBaseline(Waveform_H);
+    double Baseline = ComputationMgr->CalculateBaseline(Waveform_H);
     double BaselinePlotMinValue = Baseline - (0.04 * YAxisSize);
     double BaselinePlotMaxValue = Baseline + (0.04 * YAxisSize);
     
@@ -247,9 +247,9 @@ void ADAQGraphicsManager::PlotWaveform()
     Floor_L->DrawLine(XMin, ADAQSettings->Floor, XMax, ADAQSettings->Floor);
 
   if(ADAQSettings->FindPeaks){
-    AnalysisMgr->FindPeaks(Waveform_H);
+    ComputationMgr->FindPeaks(Waveform_H);
     
-    vector<PeakInfoStruct> PeakInfoVec = AnalysisMgr->GetPeakInfoVec();
+    vector<PeakInfoStruct> PeakInfoVec = ComputationMgr->GetPeakInfoVec();
     
     vector<PeakInfoStruct>::iterator it;
     for(it = PeakInfoVec.begin(); it != PeakInfoVec.end(); it++){
@@ -359,7 +359,7 @@ void ADAQGraphicsManager::PlotWaveform()
 }
 
 
-void ADAQGraphicsManager::PlotSpectrum()
+void AAGraphics::PlotSpectrum()
 {
   //////////////////////////////////
   // Determine main spectrum to plot
@@ -367,9 +367,9 @@ void ADAQGraphicsManager::PlotSpectrum()
   TH1F *Spectrum_H = 0;
   
   if(ADAQSettings->FindBackground and ADAQSettings->PlotLessBackground)
-    Spectrum_H = AnalysisMgr->GetSpectrumWithoutBackground();
+    Spectrum_H = ComputationMgr->GetSpectrumWithoutBackground();
   else
-    Spectrum_H = AnalysisMgr->GetSpectrum();
+    Spectrum_H = ComputationMgr->GetSpectrum();
   
   if(!Spectrum_H)
     return;
@@ -481,17 +481,17 @@ void ADAQGraphicsManager::PlotSpectrum()
   ////////////////////////////////////////////
   // Overlay the background spectra if desired
   if(ADAQSettings->FindBackground and ADAQSettings->PlotWithBackground){
-    TH1F *SpectrumBackground_H = AnalysisMgr->GetSpectrumBackground();
+    TH1F *SpectrumBackground_H = ComputationMgr->GetSpectrumBackground();
     SpectrumBackground_H->Draw("C SAME");
   }
 
   if(ADAQSettings->SpectrumFindIntegral){
-    TH1F *SpectrumIntegral_H = AnalysisMgr->GetSpectrumIntegral();
+    TH1F *SpectrumIntegral_H = ComputationMgr->GetSpectrumIntegral();
     SpectrumIntegral_H->Draw("B SAME");
     SpectrumIntegral_H->Draw("C SAME");
     
     if(ADAQSettings->SpectrumUseGaussianFit){
-      TF1 *SpectrumFit_F = AnalysisMgr->GetSpectrumFit();
+      TF1 *SpectrumFit_F = ComputationMgr->GetSpectrumFit();
       SpectrumFit_F->Draw("SAME");
     }
   }
@@ -511,9 +511,9 @@ void ADAQGraphicsManager::PlotSpectrum()
 // and store it into a TH1F object as a "raw" waveform. Note that the
 // baseline must be calculated in this method even though it is not
 // used to operate on the waveform
-void ADAQGraphicsManager::PlotPSDHistogram()
+void AAGraphics::PlotPSDHistogram()
 {
-  TH2F *PSDHistogram_H = AnalysisMgr->GetPSDHistogram();
+  TH2F *PSDHistogram_H = ComputationMgr->GetPSDHistogram();
   
   // Check to ensure that the PSD histogram object exists!
   if(!PSDHistogram_H){
@@ -667,9 +667,9 @@ void ADAQGraphicsManager::PlotPSDHistogram()
 }
 
 
-void ADAQGraphicsManager::PlotSpectrumDerivative()
+void AAGraphics::PlotSpectrumDerivative()
 {
-  TGraph *SpectrumDerivative_G = AnalysisMgr->CalculateSpectrumDerivative();
+  TGraph *SpectrumDerivative_G = ComputationMgr->CalculateSpectrumDerivative();
 
   string Title, XTitle, YTitle;
 
@@ -769,9 +769,9 @@ void ADAQGraphicsManager::PlotSpectrumDerivative()
 }
 
 
-void ADAQGraphicsManager::PlotCalibration(int Channel)
+void AAGraphics::PlotCalibration(int Channel)
 {
-  vector<TGraph *> CalibrationManager = AnalysisMgr->GetCalibrationManager();
+  vector<TGraph *> CalibrationManager = ComputationMgr->GetCalibrationManager();
   
   stringstream ss;
   ss << "CalibrationManager TGraph for Channel[" << Channel << "]";
@@ -803,15 +803,15 @@ void ADAQGraphicsManager::PlotCalibration(int Channel)
 }
 
 
-void ADAQGraphicsManager::PlotCalibrationLine(double XPos, double YMin, double YMax)
+void AAGraphics::PlotCalibrationLine(double XPos, double YMin, double YMax)
 {
   Calibration_L->DrawLine(XPos, YMin, XPos, YMax);
 }
 
 
-void ADAQGraphicsManager::PlotPSDFilter()
+void AAGraphics::PlotPSDFilter()
 {
-  vector<TGraph *> PSDFilter = AnalysisMgr->GetPSDFilterManager();
+  vector<TGraph *> PSDFilter = ComputationMgr->GetPSDFilterManager();
 
   int PSDChannel = ADAQSettings->PSDChannel;
 
@@ -825,9 +825,9 @@ void ADAQGraphicsManager::PlotPSDFilter()
 }
 
 
-void ADAQGraphicsManager::PlotPSDHistogramSlice(int XPixel, int YPixel)
+void AAGraphics::PlotPSDHistogramSlice(int XPixel, int YPixel)
 {
-  TH1D *PSDHistogramSlice_H = AnalysisMgr->GetPSDHistogramSlice();
+  TH1D *PSDHistogramSlice_H = ComputationMgr->GetPSDHistogramSlice();
 
   ////////////////////
   // Canvas assignment

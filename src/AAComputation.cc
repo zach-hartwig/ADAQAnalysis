@@ -10,7 +10,7 @@
 #include <boost/array.hpp>
 #include <boost/thread.hpp>
 
-#include "ADAQAnalysisManager.hh"
+#include "AAComputation.hh"
 #include "ADAQAnalysisConstants.hh"
 #include "ADAQAnalysisVersion.hh"
 
@@ -19,14 +19,14 @@
 using namespace std;
 
 
-ADAQAnalysisManager *ADAQAnalysisManager::TheAnalysisManager = 0;
+AAComputation *AAComputation::TheAnalysisManager = 0;
 
 
-ADAQAnalysisManager *ADAQAnalysisManager::GetInstance()
+AAComputation *AAComputation::GetInstance()
 { return TheAnalysisManager; }
 
 
-ADAQAnalysisManager::ADAQAnalysisManager(string CmdLineArg, bool PA)
+AAComputation::AAComputation(string CmdLineArg, bool PA)
   : ADAQMeasParams(0), ADAQRootFile(0), ADAQFileName(""), ADAQRootFileLoaded(false), ADAQWaveformTree(0), 
     ADAQParResults(NULL), ADAQParResultsLoaded(false),
     Time(0), RawVoltage(0), RecordLength(0),
@@ -164,11 +164,11 @@ ADAQAnalysisManager::ADAQAnalysisManager(string CmdLineArg, bool PA)
 }
 
 
-ADAQAnalysisManager::~ADAQAnalysisManager()
+AAComputation::~AAComputation()
 {;}
 
 
-bool ADAQAnalysisManager::LoadADAQRootFile(string FileName)
+bool AAComputation::LoadADAQRootFile(string FileName)
 {
   //////////////////////////////////
   // Open the specified ROOT file //
@@ -294,11 +294,11 @@ bool ADAQAnalysisManager::LoadADAQRootFile(string FileName)
 }
 
     
-bool ADAQAnalysisManager::LoadACRONYMRootFile(string)
+bool AAComputation::LoadACRONYMRootFile(string)
 {return false;}
 
 
-TH1F *ADAQAnalysisManager::CalculateRawWaveform(int Channel, int Waveform)
+TH1F *AAComputation::CalculateRawWaveform(int Channel, int Waveform)
 {
   ADAQWaveformTree->GetEntry(Waveform);
 
@@ -324,7 +324,7 @@ TH1F *ADAQAnalysisManager::CalculateRawWaveform(int Channel, int Waveform)
 // the waveform baseline. Note that the function argument bool is used
 // to determine which polarity (a standard (detector) waveform or a
 // Pearson (RFQ current) waveform) should be used in processing
-TH1F* ADAQAnalysisManager::CalculateBSWaveform(int Channel, int Waveform, bool CurrentWaveform)
+TH1F* AAComputation::CalculateBSWaveform(int Channel, int Waveform, bool CurrentWaveform)
 {
   ADAQWaveformTree->GetEntry(Waveform);
   
@@ -355,7 +355,7 @@ TH1F* ADAQAnalysisManager::CalculateBSWaveform(int Channel, int Waveform, bool C
 // member for later use.  Note that the function argument bool is used
 // to determine which polarity (a standard (detector) waveform or a
 // Pearson (RFQ current) waveform) should be used in processing
-TH1F *ADAQAnalysisManager::CalculateZSWaveform(int Channel, int Waveform, bool CurrentWaveform)
+TH1F *AAComputation::CalculateZSWaveform(int Channel, int Waveform, bool CurrentWaveform)
 {
   ADAQWaveformTree->GetEntry(Waveform);
   
@@ -398,7 +398,7 @@ TH1F *ADAQAnalysisManager::CalculateZSWaveform(int Channel, int Waveform, bool C
 // Method to calculate the baseline of a waveform. The "baseline" is
 // simply the average of the waveform voltage taken over the specified
 // range in time (in units of samples)
-double ADAQAnalysisManager::CalculateBaseline(vector<int> *Waveform)
+double AAComputation::CalculateBaseline(vector<int> *Waveform)
 {
   int BaselineCalcLength = ADAQSettings->BaselineCalcMax - ADAQSettings->BaselineCalcMin;
   double Baseline = 0.;
@@ -409,7 +409,7 @@ double ADAQAnalysisManager::CalculateBaseline(vector<int> *Waveform)
 }
 
 
-double ADAQAnalysisManager::CalculateBaseline(TH1F *Waveform)
+double AAComputation::CalculateBaseline(TH1F *Waveform)
 {
   int BaselineCalcLength = ADAQSettings->BaselineCalcMax - ADAQSettings->BaselineCalcMin;
   double Baseline = 0.;
@@ -421,7 +421,7 @@ double ADAQAnalysisManager::CalculateBaseline(TH1F *Waveform)
 
 
 // Method used to find peaks in any TH1F object.  
-bool ADAQAnalysisManager::FindPeaks(TH1F *Histogram_H)
+bool AAComputation::FindPeaks(TH1F *Histogram_H)
 {
   // Use the PeakFinder to determine the number of potential peaks in
   // the waveform and return the total number of peaks that the
@@ -494,7 +494,7 @@ bool ADAQAnalysisManager::FindPeaks(TH1F *Histogram_H)
 
 
 // Method to find the lower/upper peak limits in any histogram.
-void ADAQAnalysisManager::FindPeakLimits(TH1F *Histogram_H)
+void AAComputation::FindPeakLimits(TH1F *Histogram_H)
 {
   // Vector that will hold the sample number after which the floor was
   // crossed from the low (below the floor) to the high (above the
@@ -647,7 +647,7 @@ void ADAQAnalysisManager::FindPeakLimits(TH1F *Histogram_H)
 }
 
 
-void ADAQAnalysisManager::CreateSpectrum()
+void AAComputation::CreateSpectrum()
 {
   // Delete the previous Spectrum_H TH1F object if it exists to
   // prevent memory leaks
@@ -994,7 +994,7 @@ void ADAQAnalysisManager::CreateSpectrum()
 }
 
 
-void ADAQAnalysisManager::IntegratePeaks()
+void AAComputation::IntegratePeaks()
 {
   // Iterate over each peak stored in the vector of PeakInfoStructs...
   vector<PeakInfoStruct>::iterator it;
@@ -1030,7 +1030,7 @@ void ADAQAnalysisManager::IntegratePeaks()
 }
 
 
-void ADAQAnalysisManager::FindPeakHeights()
+void AAComputation::FindPeakHeights()
 {
   // Iterate over each peak stored in the vector of PeakInfoStructs...
   vector<PeakInfoStruct>::iterator it;
@@ -1071,7 +1071,7 @@ void ADAQAnalysisManager::FindPeakHeights()
 }
 
 
-void ADAQAnalysisManager::UpdateProcessingProgress(int Waveform)
+void AAComputation::UpdateProcessingProgress(int Waveform)
 {
 #ifndef MPI_ENABLED
   if(Waveform > 0)
@@ -1091,7 +1091,7 @@ void ADAQAnalysisManager::UpdateProcessingProgress(int Waveform)
 
 // Method to compute a background of a TH1F object representing a
 // detector pulse height / energy spectrum.
-void ADAQAnalysisManager::CalculateSpectrumBackground()//TH1F *Spectrum_H)
+void AAComputation::CalculateSpectrumBackground()//TH1F *Spectrum_H)
 {
   // raw = original spectrum for which background is calculated 
   // background = background component of raw spectrum
@@ -1175,7 +1175,7 @@ void ADAQAnalysisManager::CalculateSpectrumBackground()//TH1F *Spectrum_H)
 
 
 // Method used to integrate a pulse / energy spectrum
-void ADAQAnalysisManager::IntegrateSpectrum()
+void AAComputation::IntegrateSpectrum()
 {
   double XAxisMin = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
   double XAxisMax = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
@@ -1291,7 +1291,7 @@ void ADAQAnalysisManager::IntegrateSpectrum()
 // the format column1 == bin center, column2 == bin content. Note that
 // the function accepts class types TH1 such that any derived class
 // (TH1F, TH1D ...) can be saved with this function
-bool ADAQAnalysisManager::SaveHistogramData(string Type, string FileName, string FileExtension)
+bool AAComputation::SaveHistogramData(string Type, string FileName, string FileExtension)
 {
   TH1F *HistogramToSave_H;
   if(Type == "Spectrum")
@@ -1350,7 +1350,7 @@ bool ADAQAnalysisManager::SaveHistogramData(string Type, string FileName, string
 
 
 
-TH2F *ADAQAnalysisManager::CreatePSDHistogram()
+TH2F *AAComputation::CreatePSDHistogram()
 {
   if(PSDHistogram_H){
     delete PSDHistogram_H;
@@ -1571,7 +1571,7 @@ TH2F *ADAQAnalysisManager::CreatePSDHistogram()
 // required (spectra creation, desplicing, etc), which may or may not
 // require histogramming the result of the PSD integrals. Hence, the
 // function argment boolean to provide flexibility
-void ADAQAnalysisManager::CalculatePSDIntegrals(bool FillPSDHistogram)
+void AAComputation::CalculatePSDIntegrals(bool FillPSDHistogram)
 {
   // Iterate over each peak stored in the vector of PeakInfoStructs...
   vector<PeakInfoStruct>::iterator it;
@@ -1623,7 +1623,7 @@ void ADAQAnalysisManager::CalculatePSDIntegrals(bool FillPSDHistogram)
 // - uniform throughout the code - is used for the return value:true =
 // waveform should be filtered; false = waveform should not be
 // filtered
-bool ADAQAnalysisManager::ApplyPSDFilter(double TailIntegral, double TotalIntegral)
+bool AAComputation::ApplyPSDFilter(double TailIntegral, double TotalIntegral)
 {
   // The PSDFilter uses a TGraph created by the user in order to
   // filter events out of the PSDHistogram_H. The events to be
@@ -1655,7 +1655,7 @@ bool ADAQAnalysisManager::ApplyPSDFilter(double TailIntegral, double TotalIntegr
 
 
 // Method to compute the derivative of the pulse spectrum
-TGraph *ADAQAnalysisManager::CalculateSpectrumDerivative()
+TGraph *AAComputation::CalculateSpectrumDerivative()
 {
   // The discrete spectrum derivative is simply defined as the
   // difference between bin N_i and N_i-1 and then scaled down. The
@@ -1763,7 +1763,7 @@ TGraph *ADAQAnalysisManager::CalculateSpectrumDerivative()
 // delivered during a single waveform. The deuterons/waveform are
 // aggregated into a class member that stores total deuterons for all
 // waveforms processed.
-void ADAQAnalysisManager::IntegratePearsonWaveform(bool PlotPearsonIntegration)
+void AAComputation::IntegratePearsonWaveform(bool PlotPearsonIntegration)
 {
   /*
   // The total deutorons delivered for all waveforms in the presently
@@ -1902,7 +1902,7 @@ void ADAQAnalysisManager::IntegratePearsonWaveform(bool PlotPearsonIntegration)
 // array on the MPI master node (master == node 0). A pointer to the
 // array on each node (*SlaveArray) as well as the size of the array
 // (ArraySize) must be passed as function arguments from each node.
-double *ADAQAnalysisManager::SumDoubleArrayToMaster(double *SlaveArray, size_t ArraySize)
+double *AAComputation::SumDoubleArrayToMaster(double *SlaveArray, size_t ArraySize)
 {
   double *MasterSum = new double[ArraySize];
 #ifdef MPI_ENABLED
@@ -1914,7 +1914,7 @@ double *ADAQAnalysisManager::SumDoubleArrayToMaster(double *SlaveArray, size_t A
 
 // Method used to aggregate doubles on each node to a single double on
 // the MPI master node (master == node 0).
-double ADAQAnalysisManager::SumDoublesToMaster(double SlaveDouble)
+double AAComputation::SumDoublesToMaster(double SlaveDouble)
 {
   double MasterSum = 0;
 #ifdef MPI_ENABLED
@@ -1924,7 +1924,7 @@ double ADAQAnalysisManager::SumDoublesToMaster(double SlaveDouble)
 }
 
 
-void ADAQAnalysisManager::ProcessWaveformsInParallel(string ProcessingType)
+void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
 {
   /////////////////////////////////////
   // Prepare for parallel processing //
@@ -2046,7 +2046,7 @@ void ADAQAnalysisManager::ProcessWaveformsInParallel(string ProcessingType)
 }
 
 
-void ADAQAnalysisManager::RejectPileup(TH1F *Histogram_H)
+void AAComputation::RejectPileup(TH1F *Histogram_H)
 {
   vector<PeakInfoStruct>::iterator it1, it2;
 
@@ -2072,7 +2072,7 @@ void ADAQAnalysisManager::RejectPileup(TH1F *Histogram_H)
 }
 
 
-bool ADAQAnalysisManager::SetCalibrationPoint(int Channel, int SetPoint,
+bool AAComputation::SetCalibrationPoint(int Channel, int SetPoint,
 					      double Energy, double PulseUnit)
 {
   // Add a new point to the calibration
@@ -2095,7 +2095,7 @@ bool ADAQAnalysisManager::SetCalibrationPoint(int Channel, int SetPoint,
 
 
 
-bool ADAQAnalysisManager::SetCalibration(int Channel)
+bool AAComputation::SetCalibration(int Channel)
 {
   if(CalibrationData[Channel].PointID.size() >= 2){
     // Determine the total number of calibration points in the
@@ -2121,7 +2121,7 @@ bool ADAQAnalysisManager::SetCalibration(int Channel)
 
 
 
-bool ADAQAnalysisManager::ClearCalibration(int Channel)
+bool AAComputation::ClearCalibration(int Channel)
 {
   // Clear the channel calibration vectors for the current channel
   CalibrationData[Channel].PointID.clear();
@@ -2153,7 +2153,7 @@ bool ADAQAnalysisManager::ClearCalibration(int Channel)
 // function is called by ::HandleCanvas() each time that the user
 // clicks on the active pad, passing the x- and y-pixel click
 // location to the function
-void ADAQAnalysisManager::CreatePSDFilter(int XPixel, int YPixel)
+void AAComputation::CreatePSDFilter(int XPixel, int YPixel)
 {
   // Pixel coordinates: (x,y) = (0,0) at the top left of the canvas
   // User coordinates: (x,y) at any point on the canvas corresponds to
@@ -2197,7 +2197,7 @@ void ADAQAnalysisManager::CreatePSDFilter(int XPixel, int YPixel)
 }
 
 
-void ADAQAnalysisManager::ClearPSDFilter(int Channel)
+void AAComputation::ClearPSDFilter(int Channel)
 {
   PSDNumFilterPoints = 0;
   PSDFilterXPoints.clear();
@@ -2210,7 +2210,7 @@ void ADAQAnalysisManager::ClearPSDFilter(int Channel)
 }
 
 
-void ADAQAnalysisManager::CreateDesplicedFile()
+void AAComputation::CreateDesplicedFile()
 {
   ////////////////////////////
   // Prepare for processing //
@@ -2589,7 +2589,7 @@ void ADAQAnalysisManager::CreateDesplicedFile()
 // that this feature will be implemented in parallel. Note also that
 // count rates can only be calculated for RFQ triggered acquisition
 // windows with a known pulse width and rep. rate.
-void ADAQAnalysisManager::CalculateCountRate()
+void AAComputation::CalculateCountRate()
 {
   // If the TSPectrum PeakFinder object exists then delete it and
   // recreate it to account for changes to the MaxPeaks variable
@@ -2653,7 +2653,7 @@ void ADAQAnalysisManager::CalculateCountRate()
 
 
 // Method used to find peaks in a pulse / energy spectrum
-void ADAQAnalysisManager::FindSpectrumPeaks()
+void AAComputation::FindSpectrumPeaks()
 {
   /*
   int SpectrumNumPeaks = SpectrumNumPeaks_NEL->GetEntry()->GetIntNumber();
@@ -2680,7 +2680,7 @@ void ADAQAnalysisManager::FindSpectrumPeaks()
 }
 
 
-void ADAQAnalysisManager::CreatePSDHistogramSlice(int XPixel, int YPixel)
+void AAComputation::CreatePSDHistogramSlice(int XPixel, int YPixel)
 {
   // pixel coordinates: refers to an (X,Y) position on the canvas
   //                    using X and Y pixel IDs. The (0,0) pixel is in
