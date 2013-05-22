@@ -8,7 +8,7 @@
 #include <cstdlib>
 using namespace std;
 
-#include "ADAQAnalysisVersion.hh"
+#include "AAVersion.hh"
 
 AAParallel *AAParallel::TheParallelManager = 0;
 

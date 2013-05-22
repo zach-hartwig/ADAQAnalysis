@@ -1,5 +1,5 @@
-#ifndef __ADAQAnalysisConstants_hh__
-#define __ADAQAnalysisConstants_hh__ 1
+#ifndef __AAConstants_hh__
+#define __AAConstants_hh__ 1
 
 namespace{
   const double DynamicRange_V1720 = 2.; // [V]

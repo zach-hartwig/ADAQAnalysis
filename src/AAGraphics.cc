@@ -313,9 +313,17 @@ void AAGraphics::PlotWaveform()
 	}
     }
   }
-
+    
+  // Set the class member int that tells the code what is currently
+  // plotted on the embedded canvas. This is important for influencing
+  // the behavior of the vertical and horizontal double sliders used
+  // to "zoom" on the canvas contents
+  CanvasContentType = zWaveform;
   
   if(ADAQSettings->PlotPearsonIntegration){
+    ComputationMgr->IntegratePearsonWaveform(ADAQSettings->WaveformToPlot);
+    PlotPearsonIntegration();
+    
     PearsonLowerLimit_L->DrawLine(ADAQSettings->PearsonLowerLimit,
 				  YMin,
 				  ADAQSettings->PearsonLowerLimit,
@@ -332,23 +340,39 @@ void AAGraphics::PlotWaveform()
 				  ADAQSettings->PearsonUpperLimit,
 				  YMax);
   }
-
-  
-
-
-  
-  // Set the class member int that tells the code what is currently
-  // plotted on the embedded canvas. This is important for influencing
-  // the behavior of the vertical and horizontal double sliders used
-  // to "zoom" on the canvas contents
-  CanvasContentType = zWaveform;
-  
-  //  if(ADAQSettings->PlotPearsonIntegration)
-  //    IntegratePearsonWaveform(true);
-  
   TheCanvas->Update();
 }
 
+
+void AAGraphics::PlotPearsonIntegration()
+{
+  if(ADAQSettings->IntegrateRawPearson){
+    TH1F *PearsonIntegration_H = ComputationMgr->GetPearsonRawIntegration();
+    
+    // Plot the integration region of the histogram waveform
+    PearsonIntegration_H->SetFillColor(4);
+    PearsonIntegration_H->SetLineColor(2);
+    PearsonIntegration_H->SetFillStyle(3001);
+    PearsonIntegration_H->GetXaxis()->SetRangeUser(ADAQSettings->PearsonLowerLimit, 
+						   ADAQSettings->PearsonUpperLimit);
+    PearsonIntegration_H->Draw("BC SAME");
+  }
+  else if(ADAQSettings->IntegrateFitToPearson){
+    /*
+    TH1F *PearsonRiseFit_H = ComputationMgr->GetPearsonRiseFit();
+    PearsonRiseFit_H->SetLineColor(kGreen+2);
+    PearsonRiseFit_H->SetFillColor(kGreen+2);
+    PearsonRiseFit_H->SetFillStyle(3001);
+    PearsonRiseFit_H->Draw("BC SAME");
+
+    TH1F *PearsonPlateauFit_H = ComputationMgr->GetPearsonPlateauFit();
+    PearsonPlateauFit_H->SetLineColor(kBlue);
+    PearsonPlateauFit_H->SetFillColor(kBlue);
+    PearsonPlateauFit_H->SetFillStyle(3001);
+    PearsonPlateauFit_H->Draw("BC SAME");
+    */
+  }
+}
 
 void AAGraphics::PlotSpectrum()
 {

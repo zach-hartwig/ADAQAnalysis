@@ -31,8 +31,8 @@ using namespace std;
 
 // ADAQ
 #include "AAInterface.hh"
-#include "ADAQAnalysisConstants.hh"
-#include "ADAQAnalysisVersion.hh"
+#include "AAConstants.hh"
+#include "AAVersion.hh"
 
 
 AAInterface::AAInterface(string CmdLineArg)
@@ -2486,18 +2486,6 @@ void AAInterface::HandleRadioButtons()
       SetCalibrationWidgetState(false, kButtonDisabled);
     }
     
-
-    //    int CurrentChannel = ChannelSelector_CBL->GetComboBox()->GetSelected();
-    
-    //      if(UseCalibrationManager[CurrentChannel])
-    //	delete CalibrationManager[CurrentChannel];
-    
-    //    CalibrationManager[CurrentChannel] = new TGraph(NumCalibrationPoints_FixedEP,
-    //						    PulseUnitPoints_FixedEP,
-    //						    EnergyPoints_FixedEP);
-    
-    //    UseCalibrationManager[CurrentChannel] = true;
-    
     break;
   }
   
@@ -2518,23 +2506,23 @@ void AAInterface::HandleRadioButtons()
   case IntegrateRawPearson_RB_ID:
     IntegrateFitToPearson_RB->SetState(kButtonUp);
     PearsonMiddleLimit_NEL->GetEntry()->SetState(false);
-    //PlotWaveform();
+    GraphicsMgr->PlotWaveform();
     break;
 
   case IntegrateFitToPearson_RB_ID:
     IntegrateRawPearson_RB->SetState(kButtonUp);
     PearsonMiddleLimit_NEL->GetEntry()->SetState(true);
-    //    PlotWaveform();
+    GraphicsMgr->PlotWaveform();
     break;
 
   case PearsonPolarityPositive_RB_ID:
     PearsonPolarityNegative_RB->SetState(kButtonUp);
-    //PlotWaveform();
+    GraphicsMgr->PlotWaveform();
     break;
 
   case PearsonPolarityNegative_RB_ID:
     PearsonPolarityPositive_RB->SetState(kButtonUp);
-    //PlotWaveform();
+    GraphicsMgr->PlotWaveform();
     break;
 
   case ProcessingSeq_RB_ID:

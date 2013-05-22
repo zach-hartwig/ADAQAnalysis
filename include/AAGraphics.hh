@@ -38,9 +38,10 @@ public:
   void SetADAQSettings(ADAQAnalysisSettings *AAS) { ADAQSettings = AAS; }
 
   CanvasContentTypes GetCanvasContentType() {return CanvasContentType;}
-
+  
   void PlotWaveform();
-
+  void PlotPearsonIntegration();
+  
   void PlotSpectrum();
   void PlotSpectrumDerivative();
 

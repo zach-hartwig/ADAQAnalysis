@@ -13,7 +13,7 @@
 
 #include "AAComputation.hh"
 #include "AAParallel.hh"
-#include "ADAQAnalysisConstants.hh"
+#include "AAConstants.hh"
 
 #include <iostream>
 #include <fstream>
@@ -32,7 +32,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     ADAQFileLoaded(false), ACRONYMFileLoaded(false), 
     ADAQParResults(NULL), ADAQParResultsLoaded(false),
     Time(0), RawVoltage(0), RecordLength(0),
-    PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), 
+    PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PearsonIntegralValue(0),
     PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
     WaveformStart(0), WaveformEnd(0),
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), 
@@ -739,8 +739,8 @@ void AAComputation::CreateSpectrum()
     
     // Calculate the total RFQ current for this waveform.
     if(ADAQSettings->IntegratePearson)
-      {}//IntegratePearsonWaveform(false);
-    
+      IntegratePearsonWaveform(waveform);
+
     
     ///////////////////////////////
     // Whole waveform processing //
@@ -861,7 +861,7 @@ void AAComputation::CreateSpectrum()
     
     // Update the number entry field in the "Analysis" tab to display
     // the total number of deuterons
-    //    if(IntegratePearson)
+    //if(IntegratePearson)
     //      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
   }
 
@@ -1743,9 +1743,8 @@ TGraph *AAComputation::CalculateSpectrumDerivative()
 // delivered during a single waveform. The deuterons/waveform are
 // aggregated into a class member that stores total deuterons for all
 // waveforms processed.
-void AAComputation::IntegratePearsonWaveform(bool PlotPearsonIntegration)
+void AAComputation::IntegratePearsonWaveform(int Waveform)
 {
-  /*
   // The total deutorons delivered for all waveforms in the presently
   // loaed ADAQ-formatted ROOT file may be stored in the ROOT file
   // itself if that ROOT file was created during parallel processing.
@@ -1755,10 +1754,10 @@ void AAComputation::IntegratePearsonWaveform(bool PlotPearsonIntegration)
     return;
 
   // Get the V1720/data channel containing the output of the Pearson
-  int Channel = PearsonChannel;
+  int Channel = ADAQSettings->PearsonChannel;
   
   // Compute the baseline subtracted Pearson waveform
-  CalculateBSWaveform(PearsonChannel, true);
+  CalculateBSWaveform(Channel, Waveform, true);
   
   // There are two integration options for the Pearson waveform:
   // simply integrating the waveform from a lower limit to an upper
@@ -1769,112 +1768,71 @@ void AAComputation::IntegratePearsonWaveform(bool PlotPearsonIntegration)
   // second options is more CPU expensive but necessary for very noise
   // Pearson waveforms;
   
-  if(IntegrateRawPearson){
+  if(ADAQSettings->IntegrateRawPearson){
     
     // Integrate the current waveform between the lower/upper limits. 
-    double Integral = Waveform_H[Channel]->Integral(Waveform_H[Channel]->FindBin(PearsonLowerLimit),
-						    Waveform_H[Channel]->FindBin(PearsonUpperLimit));
+    PearsonIntegralValue = Waveform_H[Channel]->Integral(Waveform_H[Channel]->FindBin(ADAQSettings->PearsonLowerLimit),
+							 Waveform_H[Channel]->FindBin(ADAQSettings->PearsonUpperLimit));
     
     // Compute the total number of deuterons in this waveform by
     // converting the result of the integral from units of V / ADC
     // with the appropriate factors.
-    double Deuterons = Integral * adc2volts_V1720 * sample2seconds_V1720;
+    double Deuterons = PearsonIntegralValue * adc2volts_V1720 * sample2seconds_V1720;
     Deuterons *= (volts2amps_Pearson / amplification_Pearson / electron_charge);
     
     if(Deuterons > 0)
       TotalDeuterons += Deuterons;
-	
+    
     if(Verbose)
       cout << "Total number of deuterons: " << "\t" << TotalDeuterons << endl;
     
-    // Options to plot the results of the integration on the canvas
-    // for the user's inspection purposess
-    if(PlotPearsonIntegration){
-
-      DeuteronsInWaveform_NEFL->GetEntry()->SetNumber(Deuterons);
-      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
-      
-      TH1F *Pearson2Integrate_H = (TH1F *)Waveform_H[Channel]->Clone("Pearson2Integrate_H");
-
-      // Plot the integration region of the histogram waveform
-      Pearson2Integrate_H->SetFillColor(4);
-      Pearson2Integrate_H->SetLineColor(2);
-      Pearson2Integrate_H->SetFillStyle(3001);
-      Pearson2Integrate_H->GetXaxis()->SetRangeUser(PearsonLowerLimit, PearsonUpperLimit);
-      Pearson2Integrate_H->Draw("B SAME");
-
-      // Overplot the line representing raw RFQ current waveform
-      Waveform_H[Channel]->SetLineColor(2);
-      Waveform_H[Channel]->SetLineWidth(2);
-      Waveform_H[Channel]->Draw("C SAME");      
-      
-      Canvas_EC->GetCanvas()->Update();
-    }
+    PearsonRawIntegration_H = (TH1F *)Waveform_H[Channel]->Clone("PearsonRawIntegration_H");
   }
-  else if(IntegrateFitToPearson){
+  else if(ADAQSettings->IntegrateFitToPearson){
     // Create a TF1 object for the initial rise region of the current
     // trace; place the result into a TH1F for potential plotting
-    TF1 *RiseFit = new TF1("RiseFit", "pol1", PearsonLowerLimit, PearsonMiddleLimit);
+    TF1 *RiseFit = new TF1("RiseFit", "pol1", 
+			   ADAQSettings->PearsonLowerLimit, 
+			   ADAQSettings->PearsonMiddleLimit);
     Waveform_H[Channel]->Fit("RiseFit","R N Q C");
-    TH1F *RiseFit_H = (TH1F *)RiseFit->GetHistogram();
-
+    PearsonRiseFit_H = (TH1F *)RiseFit->GetHistogram();
+    
     // Create a TF1 object for long "flat top" region of the current
     // trace a TH1F for potential plotting
-    TF1 *PlateauFit = new TF1("PlateauFit", "pol1", PearsonMiddleLimit, PearsonUpperLimit);
+    TF1 *PlateauFit = new TF1("PlateauFit", "pol1", 
+			      ADAQSettings->PearsonMiddleLimit, 
+			      ADAQSettings->PearsonUpperLimit);
     Waveform_H[Channel]->Fit("PlateauFit","R N Q C");
-    TH1F *PlateauFit_H = (TH1F *)PlateauFit->GetHistogram();
-
+    PearsonPlateauFit_H = (TH1F *)PlateauFit->GetHistogram();
+    
     // Compute the integrals. Note the "width" argument is passed to
     // the integration to specify that the histogram results should be
     // multiplied by the bin width.
-    double Integral = RiseFit_H->Integral(RiseFit_H->FindBin(PearsonLowerLimit), 
-					  RiseFit_H->FindBin(PearsonUpperLimit),
-					  "width");
+    PearsonIntegralValue = PearsonRiseFit_H->Integral(PearsonRiseFit_H->FindBin(ADAQSettings->PearsonLowerLimit), 
+						      PearsonRiseFit_H->FindBin(ADAQSettings->PearsonUpperLimit),
+						      "width");
     
-    Integral += PlateauFit_H->Integral(PlateauFit_H->FindBin(PearsonMiddleLimit),
-				       PlateauFit_H->FindBin(PearsonUpperLimit),
-				       "width");
-
-        
+    PearsonIntegralValue += PearsonPlateauFit_H->Integral(PearsonPlateauFit_H->FindBin(ADAQSettings->PearsonMiddleLimit),
+							  PearsonPlateauFit_H->FindBin(ADAQSettings->PearsonUpperLimit),
+							  "width");
+    
+    
     // Compute the total number of deuterons in this waveform by
     // converting the result of the integrals from units of V / ADC
     // with the appropriate factors.
-    double Deuterons = Integral * adc2volts_V1720 * sample2seconds_V1720;
+    double Deuterons = PearsonIntegralValue * adc2volts_V1720 * sample2seconds_V1720;
     Deuterons *= (volts2amps_Pearson / amplification_Pearson / electron_charge);
-
+    
     if(Deuterons > 0)
       TotalDeuterons += Deuterons;
 
     if(Verbose)
       cout << "Total number of deuterons: " << "\t" << TotalDeuterons << endl;
     
-    if(PlotPearsonIntegration){
-      
-      DeuteronsInWaveform_NEFL->GetEntry()->SetNumber(Deuterons);
-      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
-	
-      Waveform_H[Channel]->SetLineColor(2);
-      Waveform_H[Channel]->SetLineWidth(2);
-      Waveform_H[Channel]->Draw("C SAME");
-      
-      RiseFit_H->SetLineColor(8);
-      RiseFit_H->SetFillColor(8);
-      RiseFit_H->SetFillStyle(3001);
-      RiseFit_H->Draw("SAME");
-
-      PlateauFit_H->SetLineColor(4);
-      PlateauFit_H->SetFillColor(4);
-      PlateauFit_H->SetFillStyle(3001);
-      PlateauFit_H->Draw("SAME");
-      
-      Canvas_EC->GetCanvas()->Update();
-    }
-
     // Delete the TF1 objects to prevent bleeding memory
     delete RiseFit;
     delete PlateauFit;
   }
-  */
 }
 
 

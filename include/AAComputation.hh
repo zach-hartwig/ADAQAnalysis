@@ -78,7 +78,7 @@ public:
   void IntegratePeaks();
   void FindPeakHeights();
   void RejectPileup(TH1F *);
-  void IntegratePearsonWaveform(bool PlotPearsonIntegration=true);
+  void IntegratePearsonWaveform(int);
   void CalculateCountRate();
 
   // Spectrum creation
@@ -113,6 +113,11 @@ public:
 
   // Waveform peak data
   vector<PeakInfoStruct> GetPeakInfoVec() {return PeakInfoVec;}
+  
+  TH1F *GetPearsonRawIntegration() {return PearsonRawIntegration_H;}
+  TH1F *GetPearsonRiseFit() {return PearsonRiseFit_H;}
+  TH1F *GetPearsonPlateauFit() {return PearsonPlateauFit_H;}
+  double GetPearsonIntegralValue() {return PearsonIntegralValue;}
 
   // Spectra
   TH1F *GetSpectrum() {return Spectrum_H;}
@@ -191,6 +196,9 @@ private:
 
   TH1F *Waveform_H[8];
 
+  TH1F *PearsonRawIntegration_H, *PearsonRiseFit_H, *PearsonPlateauFit_H;
+  double PearsonIntegralValue;
+  
   // Readout for ADAQ waveforms 
   vector<int> *WaveformVecPtrs[8];
   vector<int> Time, RawVoltage;
