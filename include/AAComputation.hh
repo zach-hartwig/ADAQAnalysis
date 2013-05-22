@@ -106,8 +106,6 @@ public:
   // Processing methods
   void UpdateProcessingProgress(int);
   void ProcessWaveformsInParallel(string);
-  double* SumDoubleArrayToMaster(double*, size_t);
-  double SumDoublesToMaster(double);
 
 
   ////////////////////////////////////////
@@ -258,12 +256,8 @@ private:
 
     // Strings for specifying binaries and ROOT files
   string ADAQHOME, USER;
-  string ParallelBinaryName;
-  string ParallelProcessingFName;
-  string ParallelProgressFName;
   bool ParallelVerbose;
-  // ROOT TFile to hold values need for parallel processing
-  TFile *ParallelProcessingFile;
+  TFile *ParallelFile;
 
   // Variables used to specify whether to print to stdout
   bool Verbose;

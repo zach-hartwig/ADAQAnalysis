@@ -2,6 +2,7 @@
 #include <TError.h>
 #include <TF1.h>
 #include <TVector.h>
+#include <TChain.h>
 
 #ifdef MPI_ENABLED
 #include <mpi.h>
@@ -11,8 +12,8 @@
 #include <boost/thread.hpp>
 
 #include "AAComputation.hh"
+#include "AAParallel.hh"
 #include "ADAQAnalysisConstants.hh"
-#include "ADAQAnalysisVersion.hh"
 
 #include <iostream>
 #include <fstream>
@@ -73,16 +74,6 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
   // or production version of the code)
   ADAQHOME = getenv("ADAQHOME");
   USER = getenv("USER");
-  
-  if(VersionString == "Development")
-    ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysisGUI/trunk/bin/ADAQAnalysis_MPI";
-  else
-    ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysisGUI/versions/" + VersionString + "/bin/ADAQAnalysis_MPI";
-
-  // Assign the locatino of the temporary parallel processing ROOT
-  // file, which is used to transmit data computed in parallel
-  // architecture back to sequential architecture
-  ParallelProcessingFName = "/tmp/ParallelProcessing_" + USER + ".root";
 
   // Set ROOT to print only break messages and above (to suppress the
   // annoying warning from TSpectrum that the peak buffer is full)
@@ -113,19 +104,14 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
   // during, and after the waveforms are being processing in parallel.
  
   if(ParallelArchitecture){
-    
-#ifdef MPI_ENABLED
-    // Get the total number of processors 
-    MPI_Size = MPI::COMM_WORLD.Get_size();
-    
-    // Get the node ID of the present node
-    MPI_Rank = MPI::COMM_WORLD.Get_rank();
-    
-    // Set present node status (master (node 0) or a slave (!node 0)
-    IsMaster = (MPI_Rank == 0);
-    IsSlave = (MPI_Rank != 0);
-#endif
-    
+
+    AAParallel *ParallelMgr = AAParallel::GetInstance();
+
+    MPI_Rank = ParallelMgr->GetRank();
+    MPI_Size = ParallelMgr->GetSize();
+    IsMaster = ParallelMgr->GetIsMaster();
+    IsSlave = !IsMaster;
+
     // Load the parameters required for processing from the ROOT file
     // generated from the sequential binary's ROOT widget settings
     string ADAQSettingsFile = "/tmp/ADAQSettings_" + USER + ".root";
@@ -141,8 +127,6 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
       // Load the specified ADAQ ROOT file
       LoadADAQRootFile(ADAQSettings->ADAQFileName);
     }
-      
-    cout << "MPIRank[" << MPI_Rank << "] = " << ADAQSettings->ADAQFileName << endl;
     
     // Initiate the desired parallel waveform processing algorithm
 
@@ -717,7 +701,7 @@ void AAComputation::CreateSpectrum()
   
   if(ParallelVerbose and IsMaster)
     cout << "\nADAQAnalysis_MPI Node[0]: Waveforms allocated to slaves (node != 0) = " << SlaveEvents << "\n"
-	 <<   "                             Waveforms alloced to master (node == 0) =  " << MasterEvents
+	 <<   "                          Waveforms alloced to master (node == 0) =  " << MasterEvents
 	 << endl;
   
   // Assign each master/slave a range of the total waveforms to
@@ -939,15 +923,15 @@ void AAComputation::CreateSpectrum()
   // Use MPI::Reduce function to aggregate the arrays on each node
   // (which representing the Spectrum_H histogram) to a single array
   // on the master node.
-  double *ReturnArray = SumDoubleArrayToMaster(SpectrumArray, ArraySize);
+  double *ReturnArray = AAParallel::GetInstance()->SumDoubleArrayToMaster(SpectrumArray, ArraySize);
 
   // Use the MPI::Reduce function to aggregate the total number of
   // entries on each node to a single double on the master
-  double ReturnDouble = SumDoublesToMaster(Entries);
+  double ReturnDouble = AAParallel::GetInstance()->SumDoublesToMaster(Entries);
 
   // Aggregate the total calculated RFQ current (if enabled) from all
   // nodes to the master node
-  TotalDeuterons = SumDoublesToMaster(TotalDeuterons);
+  TotalDeuterons = AAParallel::GetInstance()->SumDoublesToMaster(TotalDeuterons);
   
   // The master should output the array to a text file, which will be
   // read in by the running sequential binary of ADAQAnalysisGUI
@@ -980,7 +964,7 @@ void AAComputation::CreateSpectrum()
     
     // Open the ROOT file that stores all the parallel processing data
     // in "update" mode such that we can append the master histogram
-    ParallelProcessingFile = new TFile(ParallelProcessingFName.c_str(), "update");
+    ParallelFile = new TFile(AAParallel::GetInstance()->GetParallelFileName().c_str(), "update");
     
     // Write the master histogram object to the ROOT file ...
     MasterHistogram_H->Write();
@@ -991,7 +975,7 @@ void AAComputation::CreateSpectrum()
     AggregatedDeuterons.Write("AggregatedDeuterons");
     
     // ... and write the ROOT file to disk
-    ParallelProcessingFile->Write();
+    ParallelFile->Write();
   }
 #endif
 
@@ -1509,7 +1493,7 @@ TH2F *AAComputation::CreatePSDHistogram()
       ColumnVector[j] = PSDHistogram_H->GetBinContent(i,j);
 
     // Reduce the array representing the column
-    double *ReturnArray = SumDoubleArrayToMaster(&ColumnVector[0], ArraySizeY);
+    double *ReturnArray = AAParallel::GetInstance()->SumDoubleArrayToMaster(&ColumnVector[0], ArraySizeY);
     
     // Assign the array to the DoubleArray that represents the
     // "master" or total PSDHistogram_H object
@@ -1519,10 +1503,10 @@ TH2F *AAComputation::CreatePSDHistogram()
 
   // Aggregated the histogram entries from all nodes to the master
   double Entries = PSDHistogram_H->GetEntries();
-  double ReturnDouble = SumDoublesToMaster(Entries);
+  double ReturnDouble = AAParallel::GetInstance()->SumDoublesToMaster(Entries);
   
   // Aggregated the total deuterons from all nodes to the master
-  TotalDeuterons = SumDoublesToMaster(TotalDeuterons);
+  TotalDeuterons = AAParallel::GetInstance()->SumDoublesToMaster(TotalDeuterons);
 
   if(IsMaster){
     
@@ -1548,7 +1532,7 @@ TH2F *AAComputation::CreatePSDHistogram()
     MasterPSDHistogram_H->SetEntries(ReturnDouble);
     
     // Open the TFile  and write all the necessary object to it
-    ParallelProcessingFile = new TFile(ParallelProcessingFName.c_str(), "update");
+    ParallelFile = new TFile(AAParallel::GetInstance()->GetParallelFileName().c_str(), "update");
     
     MasterPSDHistogram_H->Write("MasterPSDHistogram");
 
@@ -1556,7 +1540,7 @@ TH2F *AAComputation::CreatePSDHistogram()
     AggregatedDeuterons[0] = TotalDeuterons;
     AggregatedDeuterons.Write("AggregatedDeuterons");
 
-    ParallelProcessingFile->Write();
+    ParallelFile->Write();
   }
 #endif
  
@@ -1754,10 +1738,6 @@ TGraph *AAComputation::CalculateSpectrumDerivative()
   
   SpectrumDerivativeExists = true;
 
-
-
-
-
   return SpectrumDerivative_G;
 }
 
@@ -1903,32 +1883,6 @@ void AAComputation::IntegratePearsonWaveform(bool PlotPearsonIntegration)
 }
 
 
-// Method used to aggregate arrays of doubles on each node to a single
-// array on the MPI master node (master == node 0). A pointer to the
-// array on each node (*SlaveArray) as well as the size of the array
-// (ArraySize) must be passed as function arguments from each node.
-double *AAComputation::SumDoubleArrayToMaster(double *SlaveArray, size_t ArraySize)
-{
-  double *MasterSum = new double[ArraySize];
-#ifdef MPI_ENABLED
-  MPI::COMM_WORLD.Reduce(SlaveArray, MasterSum, ArraySize, MPI::DOUBLE, MPI::SUM, 0);
-#endif
-  return MasterSum;
-}
-
-
-// Method used to aggregate doubles on each node to a single double on
-// the MPI master node (master == node 0).
-double AAComputation::SumDoublesToMaster(double SlaveDouble)
-{
-  double MasterSum = 0;
-#ifdef MPI_ENABLED
-  MPI::COMM_WORLD.Reduce(&SlaveDouble, &MasterSum, 1, MPI::DOUBLE, MPI::SUM, 0);
-#endif
-  return MasterSum;
-}
-
-
 void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
 {
   /////////////////////////////////////
@@ -1956,11 +1910,12 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
 	 << "/////////////////////////////////////////////////////\n"
 	 << endl;
   
-
+  string Binary = AAParallel::GetInstance()->GetParallelBinaryName();
+  
   // Create a shell command to launch the parallel binary of
   // ADAQAnalysisGUI with the desired number of nodes
   stringstream ss;
-  ss << "mpirun -np " << ADAQSettings->NumProcessors << " " << ParallelBinaryName << " " << ProcessingType;
+  ss << "mpirun -np " << ADAQSettings->NumProcessors << " " << Binary << " " << ProcessingType;
   string ParallelCommand = ss.str();
   
   if(Verbose)
@@ -1980,12 +1935,14 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
   ///////////////////////////////////////////
   // Absorb results into sequential binary //
   ///////////////////////////////////////////
+
+  string FileName = AAParallel::GetInstance()->GetParallelFileName();
   
   // Open the parallel processing ROOT file to retrieve the results
   // produced by the parallel processing session
-  ParallelProcessingFile = new TFile(ParallelProcessingFName.c_str(), "read");  
+  ParallelFile = new TFile(FileName.c_str(), "read");  
   
-  if(ParallelProcessingFile->IsOpen()){
+  if(ParallelFile->IsOpen()){
     
     ////////////////
     // Histogramming
@@ -1995,12 +1952,12 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
       // contains the result of MPI reducing all the TH1F objects
       // calculated by the nodes in parallel. Set the master histogram
       // to the Spectrum_H class data member and plot it.
-      Spectrum_H = (TH1F *)ParallelProcessingFile->Get("MasterHistogram");
+      Spectrum_H = (TH1F *)ParallelFile->Get("MasterHistogram");
       SpectrumExists = true;
 
       // Obtain the total number of deuterons integrated during
       // histogram creation and update the ROOT widget
-      TVectorD *AggregatedDeuterons = (TVectorD *)ParallelProcessingFile->Get("AggregatedDeuterons");
+      TVectorD *AggregatedDeuterons = (TVectorD *)ParallelFile->Get("AggregatedDeuterons");
       TotalDeuterons = (*AggregatedDeuterons)[0];
       //DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
     }
@@ -2017,10 +1974,10 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
     // Pulse shape discriminating 
     
     else if(ProcessingType == "discriminating"){
-      PSDHistogram_H = (TH2F *)ParallelProcessingFile->Get("MasterPSDHistogram");
+      PSDHistogram_H = (TH2F *)ParallelFile->Get("MasterPSDHistogram");
       PSDHistogramExists = true;
       
-      TVectorD *AggregatedDeuterons = (TVectorD *)ParallelProcessingFile->Get("AggregatedDeuterons");
+      TVectorD *AggregatedDeuterons = (TVectorD *)ParallelFile->Get("AggregatedDeuterons");
       TotalDeuterons = (*AggregatedDeuterons)[0];
       //DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
     }
@@ -2042,7 +1999,7 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
   // parallel processing session and stored them in the seq. binary
   
   string RemoveFilesCommand;
-  RemoveFilesCommand = "rm " + ParallelProcessingFName + " -f";
+  RemoveFilesCommand = "rm " + FileName + " -f";
   system(RemoveFilesCommand.c_str()); 
   
   // Return to the ROOT TFile containing the waveforms
@@ -2530,7 +2487,7 @@ void AAComputation::CreateDesplicedFile()
 
   // Aggregate the total integrated RFQ current (if enabled) on each
   // of the parallal nodes to a single double value on the master
-  double AggregatedCurrent = SumDoublesToMaster(TotalDeuterons);
+  double AggregatedCurrent = AAParallel::GetInstance()->SumDoublesToMaster(TotalDeuterons);
 
   // Ensure all nodes are at the same point before aggregating files
   MPI::COMM_WORLD.Barrier();
@@ -2562,7 +2519,7 @@ void AAComputation::CreateDesplicedFile()
     // a single TTree contained in a TFile of the provided name. Note
     // that the name and location of this TFile correspond to the
     // values set by the user in the despliced widgets.
-    WaveformTreeChain->Merge(DesplicedFileName.c_str());
+    WaveformTreeChain->Merge(ADAQSettings->DesplicedFileName.c_str());
     
     // Store the aggregated RFQ current value on the master into the
     // persistent parallel results class for writing to the ROOT file
@@ -2570,7 +2527,7 @@ void AAComputation::CreateDesplicedFile()
 
     // Open the final despliced TFile, write the measurement
     // parameters and comment objects to it, and close the TFile.
-    TFile *F_Final = new TFile(DesplicedFileName.c_str(), "update");
+    TFile *F_Final = new TFile(ADAQSettings->DesplicedFileName.c_str(), "update");
     MP->Write("MeasParams");
     MC->Write("MeasComment");
     PR->Write("ParResults");

@@ -24,21 +24,17 @@
 
 int main(int argc, char *argv[])
 {
-  // Initialize the MPI session
-#ifdef MPI_ENABLED
-  MPI::Init_thread(argc, argv, MPI::THREAD_SERIALIZED);
-#endif
-  
   // Assign the binary architecture (sequential or parallel) to a bool
   // that will be used frequently in the code to determine arch. type
   bool ParallelArchitecture = false;
-#ifdef MPI_ENABLED
-  ParallelArchitecture = true;
-  
-  AAParallel *TheParallel = new AAParallel;
-  TheParallel->Initialize(argc, argv);
-  
 
+  // Create a manager to handle parallel processing
+  AAParallel *TheParallel = new AAParallel;
+
+#ifdef MPI_ENABLED
+  // Initialize the MPI session
+  TheParallel->Initialize(argc, argv);
+  ParallelArchitecture = true;
 #endif
   
   // A word on the use of the first cmd line arg: the first cmd line
@@ -112,8 +108,10 @@ int main(int argc, char *argv[])
   
   // Finalize the MPI session
 #ifdef MPI_ENABLED
-  MPI::Finalize();
-#endif
+  TheParallel->Finalize();
+#endif  
+
+  delete TheParallel;
   
   return 0;
 }

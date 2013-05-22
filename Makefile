@@ -165,6 +165,10 @@ $(BUILDDIR)/AAGraphics_MPI.o : $(SRCDIR)/AAGraphics.cc $(INCLDIR)/AAGraphics.hh
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
+$(BUILDDIR)/AAParallel_MPI.o : $(SRCDIR)/AAParallel.cc $(INCLDIR)/AAParallel.hh
+	@echo -e "\nBuilding $@ ..."
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
 $(BUILDDIR)/ADAQAnalysisDict_MPI.o : $(BUILDDIR)/ADAQAnalysisDict.cc
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
