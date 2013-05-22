@@ -278,8 +278,39 @@ bool AAComputation::LoadADAQRootFile(string FileName)
 }
 
     
-bool AAComputation::LoadACRONYMRootFile(string)
-{return false;}
+bool AAComputation::LoadACRONYMRootFile(string FileName)
+{
+  ACRONYMFileName = FileName;
+
+  TFile *ACRONYMRootFile = new TFile(FileName.c_str(), "read");
+
+  if(!ACRONYMRootFile->IsOpen()){
+    ACRONYMFileLoaded = false;
+  }
+  else{
+
+    if(LSDetectorTree) delete LSDetectorTree;
+    LSDetectorTree = dynamic_cast<TTree *>(ACRONYMRootFile->Get("LSDetectorTree"));
+    
+    if(!LSDetectorTree){
+      cout << "\nERROR! Could not find the LSDetectorTree in the ACRONYM ROOT file!\n"
+	   << endl;
+    }
+
+    if(ESDetectorTree) delete ESDetectorTree;
+    ESDetectorTree = dynamic_cast<TTree *>(ACRONYMRootFile->Get("ESDetectorTree"));
+    
+    if(!ESDetectorTree){
+      cout << "\nERROR! Could not find the ESDetectorTree in the ACRONYM ROOT file!\n"
+	   << endl;
+    }
+    ACRONYMFileLoaded = true;
+  }
+  
+  cout << "\nACRONYM file has been loaded!\n" << endl;
+  
+  return ACRONYMFileLoaded;
+}
 
 
 TH1F *AAComputation::CalculateRawWaveform(int Channel, int Waveform)
@@ -2708,4 +2739,51 @@ void AAComputation::CreatePSDHistogramSlice(int XPixel, int YPixel)
   PSDHistogramSlice_H = (TH1D *)PSDSlice_H->Clone("PSDHistogramSlice_H");
   PSDHistogramSliceExists = true;
 
+}
+
+
+void AAComputation::CreateACRONYMSpectrum()
+{
+  /*
+  if(!Spectrum_H){
+    delete Spectrum_H;
+    SpectrumExists = false;
+  }
+  
+  Spectrum_H = new TH1F("Spectrum_H", "ACRONYM spectrum",
+			ADAQSettings->SpectrumNumBins,
+			ADAQSettings->SpectrumMinBin,
+			ADAQSettings->SpectrumMaxBin);
+  
+  TTree *TheTree = 0;
+  TString TheBranchAddress;
+  
+  if(ADAQSettings->LSDetectorSpectrum){
+    TheTree = LSDetectorTree;
+    TheBranchAddress = "LSDetectorEvents";
+  }
+  else if(ADAQSettings->ESDetectorSpectrum){
+    TheTree = ESDetectorTree;
+    TheBranchAddress = "ESDetectorEvents";
+  }
+  
+  acroEvent *TheEvent = new acroEvent;
+  TheTree->SetBranchAddress(TheBranchAddress, &TheEvent);
+  
+
+  for(int entry=0; entry<TheTree->GetEntries(); entry++){
+
+    TheTree->GetEvent(entry);
+    
+    if(ADAQSettings->ESRecoilEnergy)
+      Spectrum_H->Fill(TheEvent->recoilEnergyDep);
+    else if(ADAQSettings->ESScintPhotonsCreated)
+      Spectrum_H->Fill(TheEvent->scintPhotonsCreated);
+    else if(ADAQSettings->ESScintPhotonsCounted)
+      Spectrum_H->Fill(TheEvent->scintPhotonsCounted);
+  }
+  
+  delete TheTree;
+  delete TheEvent;
+  */
 }

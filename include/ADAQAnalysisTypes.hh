@@ -68,7 +68,8 @@ enum{
   ////////////////////////////
   // Values for the menu frame
 
-  MenuFileOpen_ID,
+  MenuFileOpenADAQ_ID,
+  MenuFileOpenACRONYM_ID,
   MenuFileSaveSpectrum_ID,
   MenuFileSaveSpectrumDerivative_ID,
   MenuFileSavePSDHistogramSlice_ID,

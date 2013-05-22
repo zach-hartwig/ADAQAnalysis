@@ -60,7 +60,7 @@ AAInterface::AAInterface(string CmdLineArg)
     ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(ADAQFileName);
     
     if(ADAQFileLoaded)
-      UpdateForNewFile(ADAQFileName);
+      UpdateForADAQFile();
     else
       CreateMessageBox("The ADAQ ROOT file that you specified fail to load for some reason!\n","Stop");
   }
@@ -83,7 +83,8 @@ void AAInterface::CreateTheMainFrames()
   TGHorizontalFrame *MenuFrame = new TGHorizontalFrame(this); 
 
   TGPopupMenu *MenuFile = new TGPopupMenu(gClient->GetRoot());
-  MenuFile->AddEntry("&Open ADAQ ROOT file ...", MenuFileOpen_ID);
+  MenuFile->AddEntry("Open ADAQ ROOT file ...", MenuFileOpenADAQ_ID);
+  MenuFile->AddEntry("Open ACRONYM ROOT file ...", MenuFileOpenACRONYM_ID);
   MenuFile->AddEntry("&Save spectrum to file ...", MenuFileSaveSpectrum_ID);
   MenuFile->AddEntry("Save spectrum &derivative to file ...", MenuFileSaveSpectrumDerivative_ID);
   MenuFile->AddEntry("Save PSD &histogram slice to file ...", MenuFileSavePSDHistogramSlice_ID);
@@ -351,9 +352,14 @@ void AAInterface::FillSpectrumFrame()
   TGVerticalFrame *SpectrumFrame_VF = new TGVerticalFrame(SpectrumFrame_C->GetViewPort(), 320, 705);
   SpectrumFrame_C->SetContainer(SpectrumFrame_VF);
   
+  
+  TGHorizontalFrame *WaveformAndBins_HF = new TGHorizontalFrame(SpectrumFrame_VF);
+  SpectrumFrame_VF->AddFrame(WaveformAndBins_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+
+
   // Number of waveforms to bin in the histogram
-  SpectrumFrame_VF->AddFrame(WaveformsToHistogram_NEL = new ADAQNumberEntryWithLabel(SpectrumFrame_VF, "Waveforms to histogram", WaveformsToHistogram_NEL_ID),
-			     new TGLayoutHints(kLHintsLeft, 15,5,10,5));
+  WaveformAndBins_HF->AddFrame(WaveformsToHistogram_NEL = new ADAQNumberEntryWithLabel(WaveformAndBins_HF, "Waveforms", WaveformsToHistogram_NEL_ID),
+			       new TGLayoutHints(kLHintsLeft, 15,5,8,5));
   WaveformsToHistogram_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   WaveformsToHistogram_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   WaveformsToHistogram_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
@@ -361,12 +367,12 @@ void AAInterface::FillSpectrumFrame()
   WaveformsToHistogram_NEL->GetEntry()->SetNumber(0);
   
   // Number of spectrum bins number entry
-  SpectrumFrame_VF->AddFrame(SpectrumNumBins_NEL = new ADAQNumberEntryWithLabel(SpectrumFrame_VF, "Number of bins", SpectrumNumBins_NEL_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
+  WaveformAndBins_HF->AddFrame(SpectrumNumBins_NEL = new ADAQNumberEntryWithLabel(WaveformAndBins_HF, "Num. bins", SpectrumNumBins_NEL_ID),
+			       new TGLayoutHints(kLHintsLeft, 15,5,8,5));
   SpectrumNumBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   SpectrumNumBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
   SpectrumNumBins_NEL->GetEntry()->SetNumber(200);
-
+  
   TGHorizontalFrame *SpectrumBinning_HF = new TGHorizontalFrame(SpectrumFrame_VF);
   SpectrumFrame_VF->AddFrame(SpectrumBinning_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
 
@@ -379,7 +385,7 @@ void AAInterface::FillSpectrumFrame()
 
   // Maximum spectrum bin number entry
   SpectrumBinning_HF->AddFrame(SpectrumMaxBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Max. bin", SpectrumMaxBin_NEL_ID),
-		       new TGLayoutHints(kLHintsLeft, 15,0,0,0));
+		       new TGLayoutHints(kLHintsLeft, 36,0,0,0));
   SpectrumMaxBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumMaxBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   SpectrumMaxBin_NEL->GetEntry()->SetNumber(22000);
@@ -564,28 +570,35 @@ void AAInterface::FillSpectrumFrame()
   SpectrumLessBackground_RB->SetState(kButtonDisabled);
   SpectrumLessBackground_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
 
-  SpectrumAnalysis_GF->AddFrame(SpectrumFindIntegral_CB = new TGCheckButton(SpectrumAnalysis_GF, "Find integral", SpectrumFindIntegral_CB_ID),
-				new TGLayoutHints(kLHintsNormal, 5,5,5,0));
+  TGHorizontalFrame *Horizontal1_HF = new TGHorizontalFrame(SpectrumAnalysis_GF);
+  SpectrumAnalysis_GF->AddFrame(Horizontal1_HF, new TGLayoutHints(kLHintsNormal, 0,0,5,5));
+  
+  Horizontal1_HF->AddFrame(SpectrumFindIntegral_CB = new TGCheckButton(Horizontal1_HF, "Find integral", SpectrumFindIntegral_CB_ID),
+			   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumFindIntegral_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
-  SpectrumAnalysis_GF->AddFrame(SpectrumIntegralInCounts_CB = new TGCheckButton(SpectrumAnalysis_GF, "Integral in counts", SpectrumIntegralInCounts_CB_ID),
-				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
+  Horizontal1_HF->AddFrame(SpectrumIntegralInCounts_CB = new TGCheckButton(Horizontal1_HF, "Integral in counts", SpectrumIntegralInCounts_CB_ID),
+			   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumIntegralInCounts_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
-  SpectrumAnalysis_GF->AddFrame(SpectrumUseGaussianFit_CB = new TGCheckButton(SpectrumAnalysis_GF, "Use gaussian fit", SpectrumUseGaussianFit_CB_ID),
-				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
+
+  TGHorizontalFrame *Horizontal2_HF = new TGHorizontalFrame(SpectrumAnalysis_GF);
+  SpectrumAnalysis_GF->AddFrame(Horizontal2_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,5));
+
+  Horizontal2_HF->AddFrame(SpectrumUseGaussianFit_CB = new TGCheckButton(Horizontal2_HF, "Gaussian fit", SpectrumUseGaussianFit_CB_ID),
+			   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumUseGaussianFit_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
-  SpectrumAnalysis_GF->AddFrame(SpectrumNormalizePeakToCurrent_CB = new TGCheckButton(SpectrumAnalysis_GF, "Normalize peak to current", SpectrumNormalizePeakToCurrent_CB_ID),
-				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
+  Horizontal2_HF->AddFrame(SpectrumNormalizePeakToCurrent_CB = new TGCheckButton(Horizontal2_HF, "Normalize to current", SpectrumNormalizePeakToCurrent_CB_ID),
+			   new TGLayoutHints(kLHintsNormal, 10,5,0,0));
   SpectrumNormalizePeakToCurrent_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   SpectrumAnalysis_GF->AddFrame(SpectrumIntegral_NEFL = new ADAQNumberEntryFieldWithLabel(SpectrumAnalysis_GF, "Integral", -1),
-				new TGLayoutHints(kLHintsNormal, 5,5,5,0));
+				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumIntegral_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal, TGNumberFormat::kNEANonNegative);
   SpectrumIntegral_NEFL->GetEntry()->Resize(100,20);
   SpectrumIntegral_NEFL->GetEntry()->SetState(false);
-
+  
   SpectrumAnalysis_GF->AddFrame(SpectrumIntegralError_NEFL = new ADAQNumberEntryFieldWithLabel(SpectrumAnalysis_GF, "Error", -1),
 				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumIntegralError_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal, TGNumberFormat::kNEANonNegative);
@@ -1441,10 +1454,13 @@ void AAInterface::HandleMenu(int MenuID)
     // Action that enables the user to select a ROOT file with
     // waveforms using the nicely prebuilt ROOT interface for file
     // selection. Only ROOT files are displayed in the dialog.
-  case MenuFileOpen_ID:{
-    const char *FileTypes[] = {"ADAQ-formatted ROOT file", "*.root",
-			       "All files",                 "*",
-			       0,                           0};
+  case MenuFileOpenADAQ_ID:
+  case MenuFileOpenACRONYM_ID:{
+    
+    const char *FileTypes[] = {"ADAQ-formatted ROOT file",     "*.root",
+			       "ACRONYM-formatted ROOT file",  "*.root",
+			       "All files",                    "*",
+			       0,                              0};
     
     // Use the ROOT prebuilt file dialog machinery
     TGFileInfo FileInformation;
@@ -1454,7 +1470,7 @@ void AAInterface::HandleMenu(int MenuID)
     
     // If the selected file is not found...
     if(FileInformation.fFilename==NULL)
-      CreateMessageBox("No valid ADAQ ROOT file was selected so there's nothing to load!\nPlease select a valid file!","Stop");
+      CreateMessageBox("No valid ROOT file was selected so there's nothing to load!\nPlease select a valid file!","Stop");
     else{
       // Note that the FileInformation.fFilename variable storeds the
       // absolute path to the data file selected by the user
@@ -1469,13 +1485,29 @@ void AAInterface::HandleMenu(int MenuID)
 	DataDirectory  = FileName.substr(0,pos);
       
       // Load the ROOT file and set the bool depending on outcome
-      ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(FileName);
-      ADAQFileName = FileName;
-      
-      if(ADAQFileLoaded)
-	UpdateForNewFile(FileName);
-      else
-	CreateMessageBox("The ADAQ ROOT file that you specified fail to load for some reason!\n","Stop");
+      if(MenuID == MenuFileOpenADAQ_ID){
+	ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(FileName);
+	ADAQFileName = FileName;
+
+	ACRONYMFileLoaded = false;
+	
+	if(ADAQFileLoaded)
+	  UpdateForADAQFile();
+	else
+	  CreateMessageBox("The ADAQ ROOT file that you specified fail to load for some reason!\n","Stop");
+      }
+      else if (MenuID == MenuFileOpenACRONYM_ID){
+
+	ACRONYMFileLoaded = ComputationMgr->LoadACRONYMRootFile(FileName);
+	ACRONYMFileName = FileName;
+	
+	ADAQFileLoaded = false;
+	
+	if(ACRONYMFileLoaded)
+	  UpdateForACRONYMFile();
+	else
+	  CreateMessageBox("The ACRONYM ROOT file that you specified fail to load for some reason!\n","Stop");
+      }
     }
     break;
   }
@@ -2891,7 +2923,7 @@ void AAInterface::CreateMessageBox(string Message, string IconName)
 }
 
 
-void AAInterface::UpdateForNewFile(string FileName)
+void AAInterface::UpdateForADAQFile()
 {
   int WaveformsInFile = ComputationMgr->GetADAQNumberOfWaveforms();
   ADAQRootMeasParams *AMP = ComputationMgr->GetADAQMeasurementParameters();
@@ -2900,9 +2932,9 @@ void AAInterface::UpdateForNewFile(string FileName)
   WaveformSelector_HS->SetRange(1, WaveformsInFile);
 
   WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
-  WaveformsToHistogram_NEL->GetEntry()->SetNumber(20000);//WaveformsInFile); ZSN
+  WaveformsToHistogram_NEL->GetEntry()->SetNumber(WaveformsInFile);
 
-  FileName_TE->SetText(FileName.c_str());
+  FileName_TE->SetText(ADAQFileName.c_str());
   Waveforms_NEL->SetNumber(WaveformsInFile);
   RecordLength_NEL->SetNumber(RecordLength);
   
@@ -2929,6 +2961,18 @@ void AAInterface::UpdateForNewFile(string FileName)
   
   PSDWaveforms_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
   PSDWaveforms_NEL->GetEntry()->SetNumber(WaveformsInFile);
+}
+
+
+void AAInterface::UpdateForACRONYMFile()
+{
+  
+
+
+
+
+
+
 }
 
 

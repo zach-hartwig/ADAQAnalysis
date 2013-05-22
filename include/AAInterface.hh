@@ -81,7 +81,8 @@ public:
   // Method to save all widget values in a storage class
   void SaveSettings(bool SaveToFile=false);
   
-  void UpdateForNewFile(string);
+  void UpdateForADAQFile();
+  void UpdateForACRONYMFile();
 
   // Method to alert the user via a ROOT message box
   void CreateMessageBox(string, string);

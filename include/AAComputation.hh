@@ -83,6 +83,7 @@ public:
 
   // Spectrum creation
   void CreateSpectrum();
+  void CreateACRONYMSpectrum();
   void CalculateSpectrumBackground();
 
   // Spectrum processing
@@ -187,6 +188,7 @@ private:
   TFile *ADAQRootFile, *ACRONYMRootFile;
   string ADAQFileName, ACRONYMFileName;
   bool ADAQFileLoaded, ACRONYMFileLoaded;
+  TTree *LSDetectorTree, *ESDetectorTree;
   ADAQAnalysisParallelResults *ADAQParResults;
   bool ADAQParResultsLoaded;
 
