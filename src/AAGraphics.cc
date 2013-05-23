@@ -96,7 +96,7 @@ AAGraphics::~AAGraphics()
 }
 
 
-void AAGraphics::PlotWaveform()
+void AAGraphics::PlotWaveform(int Color)
 {
   TH1F *Waveform_H = 0;
   
@@ -195,7 +195,7 @@ void AAGraphics::PlotWaveform()
   
   Waveform_H->SetMarkerStyle(24);
   Waveform_H->SetMarkerSize(1.0);
-  Waveform_H->SetMarkerColor(4);
+  Waveform_H->SetMarkerColor(Color);
   
   string DrawString;
   if(ADAQSettings->WaveformCurve)
@@ -236,15 +236,36 @@ void AAGraphics::PlotWaveform()
   
   if(ADAQSettings->PlotFloor)
     Floor_L->DrawLine(XMin, ADAQSettings->Floor, XMax, ADAQSettings->Floor);
-
+  
   if(ADAQSettings->FindPeaks){
     ComputationMgr->FindPeaks(Waveform_H);
+    
+    if(ADAQSettings->UsePSDFilters[ADAQSettings->PSDChannel])
+      ComputationMgr->CalculatePSDIntegrals(false);
     
     vector<PeakInfoStruct> PeakInfoVec = ComputationMgr->GetPeakInfoVec();
     
     vector<PeakInfoStruct>::iterator it;
     for(it = PeakInfoVec.begin(); it != PeakInfoVec.end(); it++){
 
+      ////////////////////////
+      // Color waveform by PSD 
+
+      if(ADAQSettings->UsePSDFilters[ADAQSettings->PSDChannel]){
+	
+	if((*it).PSDFilterFlag)
+	  Waveform_H->SetLineColor(kRed);
+	else
+	  Waveform_H->SetLineColor(kGreen+2);
+	
+	string NewDrawString = DrawString + " SAME";
+	Waveform_H->Draw(DrawString.c_str());
+      }
+
+
+      ////////////////////
+      // Plot peak markers
+      
       TMarker *PeakMarker = new TMarker((*it).PeakPosX,
 					(*it).PeakPosY*1.15,
 					it-PeakInfoVec.begin());
@@ -254,6 +275,9 @@ void AAGraphics::PlotWaveform()
       PeakMarker->SetMarkerSize(2.0);
       PeakMarker->Draw();
 
+      
+      /////////////////
+      // Plot crossings
 
       if(ADAQSettings->PlotCrossings){
 	TMarker *Low2HighMarker = new TMarker((*it).PeakLimit_Lower,
@@ -273,6 +297,9 @@ void AAGraphics::PlotWaveform()
 	High2LowMarker->Draw();
       }
 
+
+      //////////////////////////
+      // Plot integration region
 
       if(ADAQSettings->PlotPeakIntegrationRegion){
 
@@ -297,6 +324,9 @@ void AAGraphics::PlotWaveform()
 				     YMax);
       }
       
+
+      //////////////////////////////
+      // Plot PSD integration region
       
       if(ADAQSettings->PSDEnable and ADAQSettings->PSDPlotTailIntegrationRegion)
 	if(ADAQSettings->PSDChannel == ADAQSettings->WaveformChannel){

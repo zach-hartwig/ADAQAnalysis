@@ -249,7 +249,6 @@ void AAInterface::FillWaveformFrame()
   
   BaselineSubtractedWaveform_RB = new TGRadioButton(WaveformType_BG, "Baseline-subtracted", BaselineSubtractedWaveform_RB_ID);
   BaselineSubtractedWaveform_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
-  BaselineSubtractedWaveform_RB->SetState(kButtonDown);
 
   ZeroSuppressionWaveform_RB = new TGRadioButton(WaveformType_BG, "Zero suppression", ZeroSuppressionWaveform_RB_ID);
   ZeroSuppressionWaveform_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
@@ -985,7 +984,7 @@ void AAInterface::FillGraphicsFrame()
   TGHorizontalFrame *ResetAxesLimits_HF = new TGHorizontalFrame(GraphicsFrame_VF);
   GraphicsFrame_VF->AddFrame(ResetAxesLimits_HF, new TGLayoutHints(kLHintsLeft,15,5,5,5));
   
-  GraphicsFrame_VF->AddFrame(ReplotWaveform_TB = new TGTextButton(GraphicsFrame_VF, "Replot waveform", ReplotWaveform_TB_ID),
+  GraphicsFrame_VF->AddFrame(ReplotWaveform_TB = new TGTextButton(GraphicsFrame_VF, "Plot waveform", ReplotWaveform_TB_ID),
 			       new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
   ReplotWaveform_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   ReplotWaveform_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
@@ -993,7 +992,7 @@ void AAInterface::FillGraphicsFrame()
   ReplotWaveform_TB->ChangeOptions(ReplotWaveform_TB->GetOptions() | kFixedSize);
   ReplotWaveform_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
 
-  GraphicsFrame_VF->AddFrame(ReplotSpectrum_TB = new TGTextButton(GraphicsFrame_VF, "Replot spectrum", ReplotSpectrum_TB_ID),
+  GraphicsFrame_VF->AddFrame(ReplotSpectrum_TB = new TGTextButton(GraphicsFrame_VF, "Plot spectrum", ReplotSpectrum_TB_ID),
 			     new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
   ReplotSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   ReplotSpectrum_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
@@ -1001,7 +1000,7 @@ void AAInterface::FillGraphicsFrame()
   ReplotSpectrum_TB->ChangeOptions(ReplotSpectrum_TB->GetOptions() | kFixedSize);
   ReplotSpectrum_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   
-  GraphicsFrame_VF->AddFrame(ReplotSpectrumDerivative_TB = new TGTextButton(GraphicsFrame_VF, "Replot spectrum derivative", ReplotSpectrumDerivative_TB_ID),
+  GraphicsFrame_VF->AddFrame(ReplotSpectrumDerivative_TB = new TGTextButton(GraphicsFrame_VF, "Plot spectrum derivative", ReplotSpectrumDerivative_TB_ID),
 			     new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
   ReplotSpectrumDerivative_TB->Resize(200, 30);
   ReplotSpectrumDerivative_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
@@ -1009,7 +1008,7 @@ void AAInterface::FillGraphicsFrame()
   ReplotSpectrumDerivative_TB->ChangeOptions(ReplotSpectrumDerivative_TB->GetOptions() | kFixedSize);
   ReplotSpectrumDerivative_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
 
-  GraphicsFrame_VF->AddFrame(ReplotPSDHistogram_TB = new TGTextButton(GraphicsFrame_VF, "Replot PSD histogram", ReplotPSDHistogram_TB_ID),
+  GraphicsFrame_VF->AddFrame(ReplotPSDHistogram_TB = new TGTextButton(GraphicsFrame_VF, "Plot PSD histogram", ReplotPSDHistogram_TB_ID),
 			       new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
   ReplotPSDHistogram_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   ReplotPSDHistogram_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
@@ -1653,8 +1652,12 @@ void AAInterface::HandleMenu(int MenuID)
       }
       
       else if (MenuID == MenuFileSavePSDHistogramSlice_ID){
-	CreateMessageBox("Saving the PSD histogram slice is not yet implemented!","Stop");
-	Success = false;	
+	if(!ComputationMgr->GetPSDHistogramSliceExists()){
+	  CreateMessageBox("A PSD histogram slice has not been created yet and, therefore, there is nothing to save!","Stop");
+	  break;
+	}
+	else
+	  Success = ComputationMgr->SaveHistogramData("PSDHistogramSlice", FileName, FileExtension);
       }
 
       if(Success){
@@ -2516,7 +2519,10 @@ void AAInterface::HandleNumberEntries()
   case ZAxisSize_NEL_ID:
   case ZAxisOffset_NEL_ID:
   case ZAxisDivs_NEL_ID:
-
+  case PaletteAxisSize_NEL_ID:
+  case PaletteAxisOffset_NEL_ID:
+  case PaletteAxisDivs_NEL_ID:  
+    
     switch(GraphicsMgr->GetCanvasContentType()){
     case zWaveform:
       GraphicsMgr->PlotWaveform();
@@ -3068,6 +3074,11 @@ void AAInterface::UpdateForADAQFile()
   
   WaveformOptionsTab_CF->ShowFrame(WaveformOptions_CF);
   AnalysisOptionsTab_CF->ShowFrame(AnalysisOptions_CF);
+
+  NumProcessors_NEL->GetEntry()->SetState(true);      
+  UpdateFreq_NEL->GetEntry()->SetState(true);
+
+  IntegratePearson_CB->SetState(kButtonUp);
 }
 
 
@@ -3098,6 +3109,10 @@ void AAInterface::UpdateForACRONYMFile()
 
   // Graphics frame
   SetPearsonWidgetState(false, kButtonDisabled);
+
+  // Processing frame
+  NumProcessors_NEL->GetEntry()->SetState(false);      
+  UpdateFreq_NEL->GetEntry()->SetState(false);
   
   OptionsTabs_T->SetTab("Spectrum");
 }

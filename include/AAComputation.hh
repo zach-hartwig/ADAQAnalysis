@@ -162,7 +162,7 @@ public:
   bool GetSpectrumExists() { return SpectrumExists; }
   bool GetSpectrumDerivativeExists() { return SpectrumDerivativeExists; }
   bool GetPSDHistogramExists() { return PSDHistogramExists; }
-  bool GetPSDHIstogramSliceExists() { return PSDHistogramSliceExists; }
+  bool GetPSDHistogramSliceExists() { return PSDHistogramSliceExists; }
 
 
   ////////////////

@@ -39,7 +39,7 @@ public:
 
   CanvasContentTypes GetCanvasContentType() {return CanvasContentType;}
   
-  void PlotWaveform();
+  void PlotWaveform(int Color=kBlue);
   void PlotPearsonIntegration();
   
   void PlotSpectrum();

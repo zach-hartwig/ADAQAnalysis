@@ -1335,8 +1335,8 @@ bool AAComputation::SaveHistogramData(string Type, string FileName, string FileE
     HistogramToSave_H = Spectrum_H;
   else if(Type == "SpectrumDerivative")
     HistogramToSave_H = SpectrumDerivative_H;
-  else 
-    return false;
+  else if(Type == "PSDHistogramSlice")
+    HistogramToSave_H = (TH1F *)PSDHistogramSlice_H;
   
   if(FileExtension == ".dat" or FileExtension == ".csv"){
     
@@ -1361,9 +1361,6 @@ bool AAComputation::SaveHistogramData(string Type, string FileName, string FileE
     HistogramOutput.close();
 
     return true;
-    
-    //    string SuccessMessage = "The histogram data has been successfully saved to the following file:\n" + FullFileName;
-    //    CreateMessageBox(SuccessMessage,"Asterisk");
   }
   else if(FileExtension == ".root"){
     
@@ -1373,11 +1370,8 @@ bool AAComputation::SaveHistogramData(string Type, string FileName, string FileE
     
     HistogramToSave_H->Write("Spectrum");
     HistogramOutput->Close();
-
-    return true;
     
-    string SuccessMessage = "The TH1 * histogram named 'Spectrum' has been successfully saved to the following file:\n" + FullFileName;
-    //    CreateMessageBox(SuccessMessage,"Asterisk");
+    return true;
   }
   else{
     return false;
