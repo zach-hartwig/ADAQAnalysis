@@ -195,9 +195,9 @@ void AAInterface::CreateTheMainFrames()
   // ADAQAnalysisGUI to identify the version number of the code
   string TitleString;
   if(VersionString == "Development")
-    TitleString = "ADAQ Analysis Code (Development version)                                             Fear is the mind-killer.";
+    TitleString = "ADAQ Analysis (Development version)  \t\t\t\t\t Fear is the mind-killer.";
   else
-    TitleString = "ADAQ Analysis Code (Production version " + VersionString + ")                                       Fear is the mind-killer.";
+    TitleString = "ADAQ Analysis (Production version " + VersionString + ") \t\t\t\t\t Fear is the mind-killer.";
 
   SetWindowName(TitleString.c_str());
   MapSubwindows();

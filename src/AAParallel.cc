@@ -31,10 +31,10 @@ AAParallel::AAParallel()
   string USER = getenv("USER");
 
   if(VersionString == "Development")
-    ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysisGUI/trunk/bin/ADAQAnalysis_MPI";
+    ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysis/trunk/bin/ADAQAnalysis_MPI";
   else
-    ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysisGUI/versions/" + VersionString + "/bin/ADAQAnalysis_MPI";
-
+    ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysis/versions/" + VersionString + "/bin/ADAQAnalysis_MPI";
+  
   
   ParallelFileName = "/tmp/ADAQParallelProcessing_" + USER + ".root";
 }
