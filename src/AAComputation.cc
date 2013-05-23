@@ -35,8 +35,9 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PearsonIntegralValue(0),
     PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
     WaveformStart(0), WaveformEnd(0),
+    Spectrum_H(new TH1F), SpectrumBackground_H(new TH1F), SpectrumDeconvolved_H(new TH1F),
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), 
-    Verbose(false), ParallelVerbose(true),
+    Verbose(true), ParallelVerbose(true),
     Baseline(0.), PSDFilterPolarity(1.),
     V1720MaximumBit(4095), NumDataChannels(8),
     SpectrumExists(false), SpectrumDerivativeExists(false), PSDHistogramExists(false), PSDHistogramSliceExists(false),
@@ -67,6 +68,8 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     // Assign a blank initial structure for channel calibration data
     ADAQChannelCalibrationData Init;
     CalibrationData.push_back(Init);
+    
+    Waveform_H[ch] = new TH1F;
   }
 
   // Set ROOT to print only break messages and above (to suppress the
@@ -349,17 +352,17 @@ TH1F* AAComputation::CalculateBSWaveform(int Channel, int Waveform, bool Current
   vector<int> RawVoltage = *WaveformVecPtrs[Channel];
   
   Baseline = CalculateBaseline(&RawVoltage);
-  
+
   if(Waveform_H[Channel])
     delete Waveform_H[Channel];
-  
+
   Waveform_H[Channel] = new TH1F("Waveform_H","Baseline-subtracted Waveform", RecordLength-1, 0, RecordLength);
-  
+
   vector<int>::iterator it;  
   for(it=RawVoltage.begin(); it!=RawVoltage.end(); it++)
     Waveform_H[Channel]->SetBinContent((it-RawVoltage.begin()),
 				       Polarity*(*it-Baseline));
-
+  
   return Waveform_H[Channel];
 }
 
@@ -778,10 +781,10 @@ void AAComputation::CreateSpectrum()
     ///////////////////////////////
 
     // If the entire waveform is to be used to calculate a pulse spectrum ...
-    if(ADAQSettings->IntegrationTypeWholeWaveform){
+    if(ADAQSettings->ADAQSpectrumIntTypeWW){
       
       // If a pulse height spectrum (PHS) is to be created ...
-      if(ADAQSettings->SpectrumTypePHS){
+      if(ADAQSettings->ADAQSpectrumTypePHS){
 	// Get the pulse height by find the maximum bin value stored
 	// in the Waveform_H TH1F via class methods. Note that spectra
 	// are always created with positive polarity waveforms
@@ -798,7 +801,7 @@ void AAComputation::CreateSpectrum()
       }
 
       // ... or if a pulse area spectrum (PAS) is to be created ...
-      else if(ADAQSettings->SpectrumTypePAS){
+      else if(ADAQSettings->ADAQSpectrumTypePAS){
 
 	// Reset the pulse area "integral" to zero
 	PulseArea = 0.;
@@ -845,7 +848,7 @@ void AAComputation::CreateSpectrum()
     
     // If the peak-finding/limit-finding algorithm is to be used to
     // create the pulse spectrum ...
-    else if(ADAQSettings->IntegrationTypePeakFinder){
+    else if(ADAQSettings->ADAQSpectrumIntTypePF){
       
       // ...pass the Waveform_H[Channel] TH1F object to the peak-finding
       // algorithm, passing 'false' as the second argument to turn off
@@ -867,11 +870,11 @@ void AAComputation::CreateSpectrum()
       	CalculatePSDIntegrals(false);
       
       // If a PAS is to be created ...
-      if(ADAQSettings->SpectrumTypePAS)
+      if(ADAQSettings->ADAQSpectrumTypePAS)
 	IntegratePeaks();
       
       // or if a PHS is to be created ...
-      else if(ADAQSettings->SpectrumTypePHS)
+      else if(ADAQSettings->ADAQSpectrumTypePHS)
 	FindPeakHeights();
       
       // Note that we must add a +1 to the waveform number in order to
@@ -2744,7 +2747,6 @@ void AAComputation::CreatePSDHistogramSlice(int XPixel, int YPixel)
 
 void AAComputation::CreateACRONYMSpectrum()
 {
-  /*
   if(!Spectrum_H){
     delete Spectrum_H;
     SpectrumExists = false;
@@ -2758,15 +2760,16 @@ void AAComputation::CreateACRONYMSpectrum()
   TTree *TheTree = 0;
   TString TheBranchAddress;
   
-  if(ADAQSettings->LSDetectorSpectrum){
+  if(ADAQSettings->ACROSpectrumLS){
     TheTree = LSDetectorTree;
     TheBranchAddress = "LSDetectorEvents";
   }
-  else if(ADAQSettings->ESDetectorSpectrum){
+  else if(ADAQSettings->ACROSpectrumES){
     TheTree = ESDetectorTree;
     TheBranchAddress = "ESDetectorEvents";
   }
   
+  /*
   acroEvent *TheEvent = new acroEvent;
   TheTree->SetBranchAddress(TheBranchAddress, &TheEvent);
   
@@ -2775,11 +2778,13 @@ void AAComputation::CreateACRONYMSpectrum()
 
     TheTree->GetEvent(entry);
     
-    if(ADAQSettings->ESRecoilEnergy)
+    if(ADAQSettings->ACROSpectrumTypeEnergy)
       Spectrum_H->Fill(TheEvent->recoilEnergyDep);
-    else if(ADAQSettings->ESScintPhotonsCreated)
+
+    else if(ADAQSettings->ACROSpectrumTypeScintCreated)
       Spectrum_H->Fill(TheEvent->scintPhotonsCreated);
-    else if(ADAQSettings->ESScintPhotonsCounted)
+
+    else if(ADAQSettings->ACROSpectrumTypeScintCounted)
       Spectrum_H->Fill(TheEvent->scintPhotonsCounted);
   }
   

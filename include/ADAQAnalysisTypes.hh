@@ -67,7 +67,7 @@ enum{
 
   ////////////////////////////
   // Values for the menu frame
-
+  
   MenuFileOpenADAQ_ID,
   MenuFileOpenACRONYM_ID,
   MenuFileSaveSpectrum_ID,

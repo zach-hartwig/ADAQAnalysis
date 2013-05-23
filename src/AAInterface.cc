@@ -56,13 +56,14 @@ AAInterface::AAInterface(string CmdLineArg)
 
   if(CmdLineArg != "Unspecified"){
     ADAQFileName = CmdLineArg;
-    
     ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(ADAQFileName);
     
     if(ADAQFileLoaded)
       UpdateForADAQFile();
     else
       CreateMessageBox("The ADAQ ROOT file that you specified fail to load for some reason!\n","Stop");
+
+    ACRONYMFileLoaded = false;
   }
   
   string USER = getenv("USER");
@@ -83,8 +84,8 @@ void AAInterface::CreateTheMainFrames()
   TGHorizontalFrame *MenuFrame = new TGHorizontalFrame(this); 
 
   TGPopupMenu *MenuFile = new TGPopupMenu(gClient->GetRoot());
-  MenuFile->AddEntry("Open ADAQ ROOT file ...", MenuFileOpenADAQ_ID);
-  MenuFile->AddEntry("Open ACRONYM ROOT file ...", MenuFileOpenACRONYM_ID);
+  MenuFile->AddEntry("&Open ADAQ ROOT file ...", MenuFileOpenADAQ_ID);
+  MenuFile->AddEntry("Ope&n ACRONYM ROOT file ...", MenuFileOpenACRONYM_ID);
   MenuFile->AddEntry("&Save spectrum to file ...", MenuFileSaveSpectrum_ID);
   MenuFile->AddEntry("Save spectrum &derivative to file ...", MenuFileSaveSpectrumDerivative_ID);
   MenuFile->AddEntry("Save PSD &histogram slice to file ...", MenuFileSavePSDHistogramSlice_ID);
@@ -359,7 +360,7 @@ void AAInterface::FillSpectrumFrame()
 
   // Number of waveforms to bin in the histogram
   WaveformAndBins_HF->AddFrame(WaveformsToHistogram_NEL = new ADAQNumberEntryWithLabel(WaveformAndBins_HF, "Waveforms", WaveformsToHistogram_NEL_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,8,5));
+			       new TGLayoutHints(kLHintsLeft, 15,0,8,5));
   WaveformsToHistogram_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   WaveformsToHistogram_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   WaveformsToHistogram_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
@@ -368,7 +369,7 @@ void AAInterface::FillSpectrumFrame()
   
   // Number of spectrum bins number entry
   WaveformAndBins_HF->AddFrame(SpectrumNumBins_NEL = new ADAQNumberEntryWithLabel(WaveformAndBins_HF, "Num. bins", SpectrumNumBins_NEL_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,8,5));
+			       new TGLayoutHints(kLHintsLeft, 15,15,8,5));
   SpectrumNumBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   SpectrumNumBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
   SpectrumNumBins_NEL->GetEntry()->SetNumber(200);
@@ -385,32 +386,70 @@ void AAInterface::FillSpectrumFrame()
 
   // Maximum spectrum bin number entry
   SpectrumBinning_HF->AddFrame(SpectrumMaxBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Max. bin", SpectrumMaxBin_NEL_ID),
-		       new TGLayoutHints(kLHintsLeft, 36,0,0,0));
+		       new TGLayoutHints(kLHintsRight, 27,0,0,0));
   SpectrumMaxBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumMaxBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   SpectrumMaxBin_NEL->GetEntry()->SetNumber(22000);
 
-  TGHorizontalFrame *SpectrumOptions_HF = new TGHorizontalFrame(SpectrumFrame_VF);
-  SpectrumFrame_VF->AddFrame(SpectrumOptions_HF, new TGLayoutHints(kLHintsNormal, 15,0,0,0));
+
+  ///////////////////////
+  // ADAQ spectra options
+
+  TGHorizontalFrame *ADAQSpectrumOptions_HF = new TGHorizontalFrame(SpectrumFrame_VF);
+  SpectrumFrame_VF->AddFrame(ADAQSpectrumOptions_HF, new TGLayoutHints(kLHintsNormal, 15,0,0,0));
 
   // Spectrum type radio buttons
-  SpectrumOptions_HF->AddFrame(SpectrumType_BG = new TGButtonGroup(SpectrumOptions_HF, "Spectrum type", kVerticalFrame),
-			       new TGLayoutHints(kLHintsLeft, 0,5,0,0));
-  SpectrumTypePAS_RB = new TGRadioButton(SpectrumType_BG, "Pulse area", -1);
-  SpectrumTypePAS_RB->SetState(kButtonDown);
+  ADAQSpectrumOptions_HF->AddFrame(ADAQSpectrumType_BG = new TGButtonGroup(ADAQSpectrumOptions_HF, "ADAQ spectra", kVerticalFrame),
+				   new TGLayoutHints(kLHintsLeft, 0,5,0,0));
+  ADAQSpectrumTypePAS_RB = new TGRadioButton(ADAQSpectrumType_BG, "Pulse area", -1);
+  ADAQSpectrumTypePAS_RB->SetState(kButtonDown);
   
-  SpectrumTypePHS_RB = new TGRadioButton(SpectrumType_BG, "Pulse height", -1);
-  //SpectrumTypePHS_RB->SetState(kButtonDown);
+  ADAQSpectrumTypePHS_RB = new TGRadioButton(ADAQSpectrumType_BG, "Pulse height", -1);
+  //ADAQSpectrumTypePHS_RB->SetState(kButtonDown);
 
   // Integration type radio buttons
-  SpectrumOptions_HF->AddFrame(IntegrationType_BG = new TGButtonGroup(SpectrumOptions_HF, "Integration type", kVerticalFrame),
-			       new TGLayoutHints(kLHintsLeft, 5,5,0,0));
-  IntegrationTypeWholeWaveform_RB = new TGRadioButton(IntegrationType_BG, "Whole waveform", -1);
-  IntegrationTypeWholeWaveform_RB->SetState(kButtonDown);
+  ADAQSpectrumOptions_HF->AddFrame(ADAQSpectrumIntType_BG = new TGButtonGroup(ADAQSpectrumOptions_HF, "ADAQ integration", kVerticalFrame),
+				   new TGLayoutHints(kLHintsLeft, 5,5,0,0));
+  ADAQSpectrumIntTypeWW_RB = new TGRadioButton(ADAQSpectrumIntType_BG, "Whole waveform", -1);
+  ADAQSpectrumIntTypeWW_RB->SetState(kButtonDown);
   
-  IntegrationTypePeakFinder_RB = new TGRadioButton(IntegrationType_BG, "Peak finder", -1);
-  //IntegrationTypePeakFinder_RB->SetState(kButtonDown);
-   
+  ADAQSpectrumIntTypePF_RB = new TGRadioButton(ADAQSpectrumIntType_BG, "Peak finder", -1);
+  //ADAQSpectrumIntTypePF_RB->SetState(kButtonDown);
+
+
+  //////////////////////////
+  // ACRONYM spectra options
+
+  TGHorizontalFrame *ACROSpectrumOptions_HF = new TGHorizontalFrame(SpectrumFrame_VF);
+  SpectrumFrame_VF->AddFrame(ACROSpectrumOptions_HF, new TGLayoutHints(kLHintsNormal, 15,0,0,0));
+  
+  // Spectrum type radio buttons
+  ACROSpectrumOptions_HF->AddFrame(ACROSpectrumType_BG = new TGButtonGroup(ACROSpectrumOptions_HF, "ACRO spectra", kVerticalFrame),
+				   new TGLayoutHints(kLHintsLeft, 0,5,0,0));
+  ACROSpectrumTypeEnergy_RB = new TGRadioButton(ACROSpectrumType_BG, "Energy deposited", -1);
+  ACROSpectrumTypeEnergy_RB->SetState(kButtonDown);
+  ACROSpectrumTypeEnergy_RB->SetState(kButtonDisabled);
+  
+  ACROSpectrumTypeScintCreated_RB = new TGRadioButton(ACROSpectrumType_BG, "Scint. created", -1);
+  ACROSpectrumTypeScintCreated_RB->SetState(kButtonDisabled);
+
+  ACROSpectrumTypeScintCounted_RB = new TGRadioButton(ACROSpectrumType_BG, "Scint. counted", -1);
+  ACROSpectrumTypeScintCounted_RB->SetState(kButtonDisabled);
+
+  // Detector type radio buttons
+  ACROSpectrumOptions_HF->AddFrame(ACROSpectrumDetector_BG = new TGButtonGroup(ACROSpectrumOptions_HF, "ACRO detector", kVerticalFrame),
+				   new TGLayoutHints(kLHintsLeft, 5,5,0,0));
+  ACROSpectrumLS_RB = new TGRadioButton(ACROSpectrumDetector_BG, "LaBr3-SiAPD", -1);
+  ACROSpectrumLS_RB->SetState(kButtonDown);
+  ACROSpectrumLS_RB->SetState(kButtonDisabled);
+  
+  ACROSpectrumES_RB = new TGRadioButton(ACROSpectrumDetector_BG, "EJ301-PMT", -1);
+  ACROSpectrumES_RB->SetState(kButtonDisabled);
+
+
+  //////////////////////////////
+  // Spectrum energy calibration
+
   TGGroupFrame *SpectrumCalibration_GF = new TGGroupFrame(SpectrumFrame_VF, "Energy calibration", kVerticalFrame);
   SpectrumFrame_VF->AddFrame(SpectrumCalibration_GF, new TGLayoutHints(kLHintsNormal,15,5,5,5));
 
@@ -1486,27 +1525,26 @@ void AAInterface::HandleMenu(int MenuID)
       
       // Load the ROOT file and set the bool depending on outcome
       if(MenuID == MenuFileOpenADAQ_ID){
-	ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(FileName);
 	ADAQFileName = FileName;
-
-	ACRONYMFileLoaded = false;
+	ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(FileName);
 	
 	if(ADAQFileLoaded)
 	  UpdateForADAQFile();
 	else
 	  CreateMessageBox("The ADAQ ROOT file that you specified fail to load for some reason!\n","Stop");
-      }
-      else if (MenuID == MenuFileOpenACRONYM_ID){
-
-	ACRONYMFileLoaded = ComputationMgr->LoadACRONYMRootFile(FileName);
-	ACRONYMFileName = FileName;
 	
-	ADAQFileLoaded = false;
+	ACRONYMFileLoaded = false;
+      }
+      else if(MenuID == MenuFileOpenACRONYM_ID){
+	ACRONYMFileName = FileName;
+	ACRONYMFileLoaded = ComputationMgr->LoadACRONYMRootFile(FileName);
 	
 	if(ACRONYMFileLoaded)
 	  UpdateForACRONYMFile();
 	else
 	  CreateMessageBox("The ACRONYM ROOT file that you specified fail to load for some reason!\n","Stop");
+
+	ADAQFileLoaded = false;
       }
     }
     break;
@@ -1695,26 +1733,6 @@ void AAInterface::HandleTextButtons()
   case Quit_TB_ID:
     HandleTerminate();
     break;
-
-  case ResetXAxisLimits_TB_ID:
-
-    // Reset the XAxis double slider and member data
-    //    XAxisLimits_THS->SetPosition(0, RecordLength);
-    //    XAxisMin = 0;
-    //    XAxisMax = RecordLength;
-    
-    GraphicsMgr->PlotWaveform();
-    break;
-
-  case ResetYAxisLimits_TB_ID:    
-    // Reset the YAxis double slider and member data
-    //    YAxisLimits_DVS->SetPosition(0, V1720MaximumBit);
-    //    YAxisMin = 0;
-    //    YAxisMax = V1720MaximumBit;
-
-    GraphicsMgr->PlotWaveform();
-    break;
-
 
     //////////////////////////////////////////
     // Actions for setting a calibration point
@@ -2708,12 +2726,17 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->SpectrumMinBin = SpectrumMinBin_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->SpectrumMaxBin = SpectrumMaxBin_NEL->GetEntry()->GetIntNumber();
 
-  ADAQSettings->SpectrumTypePAS = SpectrumTypePAS_RB->IsDown();
-  ADAQSettings->SpectrumTypePHS = SpectrumTypePHS_RB->IsDown();
+  ADAQSettings->ADAQSpectrumTypePAS = ADAQSpectrumTypePAS_RB->IsDown();
+  ADAQSettings->ADAQSpectrumTypePHS = ADAQSpectrumTypePHS_RB->IsDown();
+  ADAQSettings->ADAQSpectrumIntTypeWW = ADAQSpectrumIntTypeWW_RB->IsDown();
+  ADAQSettings->ADAQSpectrumIntTypePF = ADAQSpectrumIntTypePF_RB->IsDown();
 
-  ADAQSettings->IntegrationTypeWholeWaveform = IntegrationTypeWholeWaveform_RB->IsDown();
-  ADAQSettings->IntegrationTypePeakFinder = IntegrationTypePeakFinder_RB->IsDown();
-  
+  ADAQSettings->ACROSpectrumTypeEnergy = ACROSpectrumTypeEnergy_RB->IsDown();
+  ADAQSettings->ACROSpectrumTypeScintCreated = ACROSpectrumTypeScintCreated_RB->IsDown();
+  ADAQSettings->ACROSpectrumTypeScintCounted= ACROSpectrumTypeScintCounted_RB->IsDown();
+  ADAQSettings->ACROSpectrumLS = ACROSpectrumLS_RB->IsDown();
+  ADAQSettings->ACROSpectrumES= ACROSpectrumES_RB->IsDown();
+
   ADAQSettings->FindBackground = SpectrumFindBackground_CB->IsDown();
   ADAQSettings->BackgroundMinBin = SpectrumRangeMin_NEL->GetEntry()->GetNumber();
   ADAQSettings->BackgroundMaxBin = SpectrumRangeMax_NEL->GetEntry()->GetNumber();
@@ -2961,18 +2984,34 @@ void AAInterface::UpdateForADAQFile()
   
   PSDWaveforms_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
   PSDWaveforms_NEL->GetEntry()->SetNumber(WaveformsInFile);
+
+  ADAQSpectrumTypePAS_RB->SetState(kButtonDown);
+  ADAQSpectrumTypePHS_RB->SetState(kButtonUp);
+  ADAQSpectrumIntTypeWW_RB->SetState(kButtonDown);
+  ADAQSpectrumIntTypePF_RB->SetState(kButtonUp);
+
+  ACROSpectrumTypeEnergy_RB->SetState(kButtonDisabled);
+  ACROSpectrumTypeScintCounted_RB->SetState(kButtonDisabled);
+  ACROSpectrumTypeScintCreated_RB->SetState(kButtonDisabled);
+  
+  ACROSpectrumLS_RB->SetState(kButtonDisabled);
+  ACROSpectrumES_RB->SetState(kButtonDisabled);
 }
 
 
 void AAInterface::UpdateForACRONYMFile()
 {
+  ADAQSpectrumTypePAS_RB->SetState(kButtonDisabled);
+  ADAQSpectrumTypePHS_RB->SetState(kButtonDisabled);
+  ADAQSpectrumIntTypeWW_RB->SetState(kButtonDisabled);
+  ADAQSpectrumIntTypePF_RB->SetState(kButtonDisabled);
+
+  ACROSpectrumTypeEnergy_RB->SetState(kButtonDown);
+  ACROSpectrumTypeScintCounted_RB->SetState(kButtonUp);
+  ACROSpectrumTypeScintCreated_RB->SetState(kButtonUp);
   
-
-
-
-
-
-
+  ACROSpectrumLS_RB->SetState(kButtonDown);
+  ACROSpectrumES_RB->SetState(kButtonUp);
 }
 
 
@@ -2987,5 +3026,3 @@ void AAInterface::SetCalibrationWidgetState(bool WidgetState, EButtonState Butto
   SpectrumCalibrationPlot_TB->SetState(ButtonState);
   SpectrumCalibrationReset_TB->SetState(ButtonState);
 }
-
-

@@ -40,9 +40,15 @@ public:
 
   int WaveformsToHistogram;
   int SpectrumNumBins, SpectrumMinBin, SpectrumMaxBin;
-  bool SpectrumTypePAS, SpectrumTypePHS;
-  bool IntegrationTypeWholeWaveform, IntegrationTypePeakFinder;
-
+  
+  bool ADAQSpectrumTypePAS, ADAQSpectrumTypePHS;
+  bool ADAQSpectrumIntTypeWW, ADAQSpectrumIntTypePF;
+  
+  bool ACROSpectrumTypeEnergy;
+  bool ACROSpectrumTypeScintCreated;
+  bool ACROSpectrumTypeScintCounted;
+  bool ACROSpectrumLS, ACROSpectrumES;
+  
   bool UseManualCalibration, UseEPCalibration;
   vector<TGraph *> SpectraCalibrations;
   vector<bool> UseSpectraCalibrations;

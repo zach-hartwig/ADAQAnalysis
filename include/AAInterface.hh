@@ -149,12 +149,21 @@ private:
   ADAQNumberEntryWithLabel *SpectrumMinBin_NEL;
   ADAQNumberEntryWithLabel *SpectrumMaxBin_NEL;
 
-  TGButtonGroup *SpectrumType_BG;
-  TGRadioButton *SpectrumTypePAS_RB, *SpectrumTypePHS_RB;
+  TGButtonGroup *ADAQSpectrumType_BG;
+  TGRadioButton *ADAQSpectrumTypePAS_RB, *ADAQSpectrumTypePHS_RB;
 
-  TGButtonGroup *IntegrationType_BG;
-  TGRadioButton *IntegrationTypePeakFinder_RB;
-  TGRadioButton *IntegrationTypeWholeWaveform_RB;
+  TGButtonGroup *ADAQSpectrumIntType_BG;
+  TGRadioButton *ADAQSpectrumIntTypePF_RB;
+  TGRadioButton *ADAQSpectrumIntTypeWW_RB;
+
+  TGButtonGroup *ACROSpectrumType_BG;
+  TGRadioButton *ACROSpectrumTypeEnergy_RB;
+  TGRadioButton *ACROSpectrumTypeScintCreated_RB;
+  TGRadioButton *ACROSpectrumTypeScintCounted_RB;
+  
+  TGButtonGroup *ACROSpectrumDetector_BG;
+  TGRadioButton *ACROSpectrumLS_RB;
+  TGRadioButton *ACROSpectrumES_RB;
 
   TGCheckButton *SpectrumCalibration_CB;
   TGRadioButton *SpectrumCalibrationManual_RB, *SpectrumCalibrationFixedEP_RB;

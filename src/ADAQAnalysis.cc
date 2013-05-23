@@ -93,13 +93,14 @@ int main(int argc, char *argv[])
     
     // Create the graphical user interface
     AAInterface *TheInterface = new AAInterface(CmdLineArg);
-    TheInterface->Connect("CloseWindow()", "ADAQInterface", TheInterface, "HandleTerminate()");
+    TheInterface->Connect("CloseWindow()", "AAInterface", TheInterface, "HandleTerminate()");
     
     // Run the application
     TheApplication->Run();
     
-    delete TheGraphics;
     delete TheInterface;
+
+    delete TheGraphics;
   }
 
   delete TheComputation;
