@@ -4,12 +4,18 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+// ADAQAnalysis classes
 #pragma link C++ class AAInterface+;
 #pragma link C++ class AAComputation+;
 #pragma link C++ class AAGraphics+;
 #pragma link C++ class AAParallel+;
+#pragma link C++ class AASettings+;
+#pragma link C++ class AAParallelResults+;
+
+// ADAQAcquisition classes
 #pragma link C++ class ADAQRootMeasParams+;
-#pragma link C++ class ADAQAnalysisSettings+;
-#pragma link C++ class ADAQAnalysisParallelResults+;
+
+// ACRONYM classes
+#pragma link C++ class acroEvent+;
 
 #endif

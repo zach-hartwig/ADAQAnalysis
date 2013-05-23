@@ -1,8 +1,10 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // name: AAInterface.cc
-// date: 21 May 13
+// date: 23 May 13
 // auth: Zach Hartwig
+//
+// desc:
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -10,7 +12,6 @@
 #include <TApplication.h>
 #include <TGClient.h>
 #include <TGFileDialog.h>
-#include <TGTab.h>
 #include <TGButtonGroup.h>
 #include <TGMsgBox.h>
 #include <TFile.h>
@@ -55,15 +56,35 @@ AAInterface::AAInterface(string CmdLineArg)
   GraphicsMgr->SetCanvasPointer(Canvas_EC->GetCanvas());
 
   if(CmdLineArg != "Unspecified"){
-    ADAQFileName = CmdLineArg;
-    ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(ADAQFileName);
-    
-    if(ADAQFileLoaded)
-      UpdateForADAQFile();
-    else
-      CreateMessageBox("The ADAQ ROOT file that you specified fail to load for some reason!\n","Stop");
 
-    ACRONYMFileLoaded = false;
+    size_t Pos = CmdLineArg.find_last_of(".");
+    if(Pos != string::npos){
+
+      if(CmdLineArg.substr(Pos,5) == ".root"){
+	ADAQFileName = CmdLineArg;
+	ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(ADAQFileName);
+	
+	if(ADAQFileLoaded)
+	  UpdateForADAQFile();
+	else
+	  CreateMessageBox("The ADAQ ROOT file that you specified fail to load for some reason!\n","Stop");
+	
+	ACRONYMFileLoaded = false;
+      }
+      else if(CmdLineArg.substr(Pos,5) == ".acro"){
+	ACRONYMFileName = CmdLineArg;
+	ACRONYMFileLoaded = ComputationMgr->LoadACRONYMRootFile(ACRONYMFileName);
+	
+	if(ACRONYMFileLoaded)
+	  UpdateForACRONYMFile();
+	else
+	  CreateMessageBox("The ACRONYM ROOT file that you specified fail to load for some reason!\n","Stop");
+      }
+      else
+	CreateMessageBox("Recognized files must end in '.root' (ADAQ) or '.acro' (ACRONYM)","Stop");
+    }
+    else
+      CreateMessageBox("Could not find an acceptable file to open. Please try again.","Stop");
   }
   
   string USER = getenv("USER");
@@ -116,7 +137,7 @@ void AAInterface::CreateTheMainFrames()
   Options_VF->SetBackgroundColor(ColorMgr->Number2Pixel(16));
   OptionsAndCanvas_HF->AddFrame(Options_VF);
   
-  TGTab *OptionsTabs_T = new TGTab(Options_VF);
+  OptionsTabs_T = new TGTab(Options_VF);
   OptionsTabs_T->SetBackgroundColor(ColorMgr->Number2Pixel(16));
   Options_VF->AddFrame(OptionsTabs_T, new TGLayoutHints(kLHintsLeft, 15,15,5,5));
 
@@ -125,31 +146,31 @@ void AAInterface::CreateTheMainFrames()
   // Create the individual tabs + frames
 
   // The tabbed frame to hold waveform widgets
-  TGCompositeFrame *WaveformOptionsTab_CF = OptionsTabs_T->AddTab("Waveform");
+  WaveformOptionsTab_CF = OptionsTabs_T->AddTab("Waveform");
   WaveformOptionsTab_CF->AddFrame(WaveformOptions_CF = new TGCompositeFrame(WaveformOptionsTab_CF, 1, 1, kVerticalFrame));
   WaveformOptions_CF->Resize(320,735);
   WaveformOptions_CF->ChangeOptions(WaveformOptions_CF->GetOptions() | kFixedSize);
 
   // The tabbed frame to hold spectrum widgets
-  TGCompositeFrame *SpectrumOptionsTab_CF = OptionsTabs_T->AddTab("Spectrum");
+  SpectrumOptionsTab_CF = OptionsTabs_T->AddTab("Spectrum");
   SpectrumOptionsTab_CF->AddFrame(SpectrumOptions_CF = new TGCompositeFrame(SpectrumOptionsTab_CF, 1, 1, kVerticalFrame));
   SpectrumOptions_CF->Resize(320,735);
   SpectrumOptions_CF->ChangeOptions(SpectrumOptions_CF->GetOptions() | kFixedSize);
 
   // The tabbed frame to hold analysis widgets
-  TGCompositeFrame *AnalysisOptionsTab_CF = OptionsTabs_T->AddTab("Analysis");
+  AnalysisOptionsTab_CF = OptionsTabs_T->AddTab("Analysis");
   AnalysisOptionsTab_CF->AddFrame(AnalysisOptions_CF = new TGCompositeFrame(AnalysisOptionsTab_CF, 1, 1, kVerticalFrame));
   AnalysisOptions_CF->Resize(320,735);
   AnalysisOptions_CF->ChangeOptions(AnalysisOptions_CF->GetOptions() | kFixedSize);
-
+  
   // The tabbed frame to hold graphical widgets
-  TGCompositeFrame *GraphicsOptionsTab_CF = OptionsTabs_T->AddTab("Graphics");
+  GraphicsOptionsTab_CF = OptionsTabs_T->AddTab("Graphics");
   GraphicsOptionsTab_CF->AddFrame(GraphicsOptions_CF = new TGCompositeFrame(GraphicsOptionsTab_CF, 1, 1, kVerticalFrame));
   GraphicsOptions_CF->Resize(320,735);
   GraphicsOptions_CF->ChangeOptions(GraphicsOptions_CF->GetOptions() | kFixedSize);
 
   // The tabbed frame to hold parallel processing widgets
-  TGCompositeFrame *ProcessingOptionsTab_CF = OptionsTabs_T->AddTab("Processing");
+  ProcessingOptionsTab_CF = OptionsTabs_T->AddTab("Processing");
   ProcessingOptionsTab_CF->AddFrame(ProcessingOptions_CF = new TGCompositeFrame(ProcessingOptionsTab_CF, 1, 1, kVerticalFrame));
   ProcessingOptions_CF->Resize(320,735);
   ProcessingOptions_CF->ChangeOptions(ProcessingOptions_CF->GetOptions() | kFixedSize);
@@ -160,6 +181,8 @@ void AAInterface::CreateTheMainFrames()
   FillGraphicsFrame();
   FillProcessingFrame();
   FillCanvasFrame();
+
+
 
   //////////////////////////////////////
   // Finalize options and map windows //
@@ -179,6 +202,9 @@ void AAInterface::CreateTheMainFrames()
   MapSubwindows();
   Resize(1125,800);
   MapWindow();
+
+  WaveformOptionsTab_CF->HideFrame(WaveformOptions_CF);
+  WaveformOptionsTab_CF->ShowFrame(WaveformOptions_CF);
 }
 
 
@@ -219,7 +245,7 @@ void AAInterface::FillWaveformFrame()
 				     new TGLayoutHints(kLHintsLeft, 0,5,0,5));
   RawWaveform_RB = new TGRadioButton(WaveformType_BG, "Raw voltage", RawWaveform_RB_ID);
   RawWaveform_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
-  //RawWaveform_RB->SetState(kButtonDown);
+  RawWaveform_RB->SetState(kButtonDown);
   
   BaselineSubtractedWaveform_RB = new TGRadioButton(WaveformType_BG, "Baseline-subtracted", BaselineSubtractedWaveform_RB_ID);
   BaselineSubtractedWaveform_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
@@ -233,7 +259,6 @@ void AAInterface::FillWaveformFrame()
   
   PositiveWaveform_RB = new TGRadioButton(WaveformPolarity_BG, "Positive", PositiveWaveform_RB_ID);
   PositiveWaveform_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
-  //PositiveWaveform_RB->SetState(kButtonDown);
   
   NegativeWaveform_RB = new TGRadioButton(WaveformPolarity_BG, "Negative", NegativeWaveform_RB_ID);
   NegativeWaveform_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
@@ -368,7 +393,7 @@ void AAInterface::FillSpectrumFrame()
   WaveformsToHistogram_NEL->GetEntry()->SetNumber(0);
   
   // Number of spectrum bins number entry
-  WaveformAndBins_HF->AddFrame(SpectrumNumBins_NEL = new ADAQNumberEntryWithLabel(WaveformAndBins_HF, "Num. bins", SpectrumNumBins_NEL_ID),
+  WaveformAndBins_HF->AddFrame(SpectrumNumBins_NEL = new ADAQNumberEntryWithLabel(WaveformAndBins_HF, "# Bins", SpectrumNumBins_NEL_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,15,8,5));
   SpectrumNumBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   SpectrumNumBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
@@ -386,7 +411,7 @@ void AAInterface::FillSpectrumFrame()
 
   // Maximum spectrum bin number entry
   SpectrumBinning_HF->AddFrame(SpectrumMaxBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Max. bin", SpectrumMaxBin_NEL_ID),
-		       new TGLayoutHints(kLHintsRight, 27,0,0,0));
+		       new TGLayoutHints(kLHintsRight, 31,0,0,0));
   SpectrumMaxBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumMaxBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   SpectrumMaxBin_NEL->GetEntry()->SetNumber(22000);
@@ -439,11 +464,11 @@ void AAInterface::FillSpectrumFrame()
   // Detector type radio buttons
   ACROSpectrumOptions_HF->AddFrame(ACROSpectrumDetector_BG = new TGButtonGroup(ACROSpectrumOptions_HF, "ACRO detector", kVerticalFrame),
 				   new TGLayoutHints(kLHintsLeft, 5,5,0,0));
-  ACROSpectrumLS_RB = new TGRadioButton(ACROSpectrumDetector_BG, "LaBr3-SiAPD", -1);
+  ACROSpectrumLS_RB = new TGRadioButton(ACROSpectrumDetector_BG, "LaBr3", -1);
   ACROSpectrumLS_RB->SetState(kButtonDown);
   ACROSpectrumLS_RB->SetState(kButtonDisabled);
   
-  ACROSpectrumES_RB = new TGRadioButton(ACROSpectrumDetector_BG, "EJ301-PMT", -1);
+  ACROSpectrumES_RB = new TGRadioButton(ACROSpectrumDetector_BG, "EJ301", -1);
   ACROSpectrumES_RB->SetState(kButtonDisabled);
 
 
@@ -451,35 +476,37 @@ void AAInterface::FillSpectrumFrame()
   // Spectrum energy calibration
 
   TGGroupFrame *SpectrumCalibration_GF = new TGGroupFrame(SpectrumFrame_VF, "Energy calibration", kVerticalFrame);
-  SpectrumFrame_VF->AddFrame(SpectrumCalibration_GF, new TGLayoutHints(kLHintsNormal,15,5,5,5));
+  SpectrumFrame_VF->AddFrame(SpectrumCalibration_GF, new TGLayoutHints(kLHintsNormal,15,5,0,0));
 
   // Energy calibration 
   SpectrumCalibration_GF->AddFrame(SpectrumCalibration_CB = new TGCheckButton(SpectrumCalibration_GF, "Make it so", SpectrumCalibration_CB_ID),
-				   new TGLayoutHints(kLHintsLeft, 0,0,0,5));
+				   new TGLayoutHints(kLHintsLeft, 0,0,0,0));
   SpectrumCalibration_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   SpectrumCalibration_CB->SetState(kButtonUp);
 
   TGHorizontalFrame *SpectrumCalibrationType_HF = new TGHorizontalFrame(SpectrumCalibration_GF);
   SpectrumCalibration_GF->AddFrame(SpectrumCalibrationType_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-
-  SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationManual_RB = new TGRadioButton(SpectrumCalibrationType_HF, "Manual entry", SpectrumCalibrationManual_RB_ID),
-				       new TGLayoutHints(kLHintsNormal, 0,15,0,5));
+  
+  SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationPoint_CBL = new ADAQComboBoxWithLabel(SpectrumCalibrationType_HF, "", SpectrumCalibrationPoint_CBL_ID),
+				       new TGLayoutHints(kLHintsNormal, 0,0,8,5));
+  SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Point 0",0);
+  SpectrumCalibrationPoint_CBL->GetComboBox()->Select(0);
+  SpectrumCalibrationPoint_CBL->GetComboBox()->SetEnabled(false);
+  
+  TGVerticalFrame *SpectrumCalibrationType_VF = new TGVerticalFrame(SpectrumCalibrationType_HF);
+  SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationType_VF);
+  
+  SpectrumCalibrationType_VF->AddFrame(SpectrumCalibrationManual_RB = new TGRadioButton(SpectrumCalibrationType_VF, "Manual entry", SpectrumCalibrationManual_RB_ID),
+				       new TGLayoutHints(kLHintsNormal, 10,0,0,5));
   SpectrumCalibrationManual_RB->SetState(kButtonDown);
   SpectrumCalibrationManual_RB->SetState(kButtonDisabled);
   SpectrumCalibrationManual_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   
-  SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationFixedEP_RB = new TGRadioButton(SpectrumCalibrationType_HF, "EP detector", SpectrumCalibrationFixedEP_RB_ID),
-				       new TGLayoutHints(kLHintsNormal, 0,0,0,5));
+  SpectrumCalibrationType_VF->AddFrame(SpectrumCalibrationFixedEP_RB = new TGRadioButton(SpectrumCalibrationType_VF, "EJ301 fixed", SpectrumCalibrationFixedEP_RB_ID),
+				       new TGLayoutHints(kLHintsNormal, 10,0,0,5));
   SpectrumCalibrationFixedEP_RB->SetState(kButtonDisabled);
   SpectrumCalibrationFixedEP_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
-  
-  
-  SpectrumCalibration_GF->AddFrame(SpectrumCalibrationPoint_CBL = new ADAQComboBoxWithLabel(SpectrumCalibration_GF, "", SpectrumCalibrationPoint_CBL_ID),
-				   new TGLayoutHints(kLHintsNormal, 0,0,5,5));
-  SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Point 0",0);
-  SpectrumCalibrationPoint_CBL->GetComboBox()->Select(0);
-  SpectrumCalibrationPoint_CBL->GetComboBox()->SetEnabled(false);
-    
+
   SpectrumCalibration_GF->AddFrame(SpectrumCalibrationEnergy_NEL = new ADAQNumberEntryWithLabel(SpectrumCalibration_GF, "Energy (keV or MeV)", SpectrumCalibrationEnergy_NEL_ID),
 					  new TGLayoutHints(kLHintsLeft,0,0,5,0));
   SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
@@ -957,16 +984,6 @@ void AAInterface::FillGraphicsFrame()
 
   TGHorizontalFrame *ResetAxesLimits_HF = new TGHorizontalFrame(GraphicsFrame_VF);
   GraphicsFrame_VF->AddFrame(ResetAxesLimits_HF, new TGLayoutHints(kLHintsLeft,15,5,5,5));
-  
-  ResetAxesLimits_HF->AddFrame(ResetXAxisLimits_TB = new TGTextButton(ResetAxesLimits_HF, "Reset X Axis", ResetXAxisLimits_TB_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
-  ResetXAxisLimits_TB->Resize(175, 40);
-  ResetXAxisLimits_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
-  
-  ResetAxesLimits_HF->AddFrame(ResetYAxisLimits_TB = new TGTextButton(ResetAxesLimits_HF, "Reset Y Axis", ResetYAxisLimits_TB_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,0,5));
-  ResetYAxisLimits_TB->Resize(175, 40);
-  ResetYAxisLimits_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   
   GraphicsFrame_VF->AddFrame(ReplotWaveform_TB = new TGTextButton(GraphicsFrame_VF, "Replot waveform", ReplotWaveform_TB_ID),
 			       new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
@@ -1495,9 +1512,18 @@ void AAInterface::HandleMenu(int MenuID)
     // selection. Only ROOT files are displayed in the dialog.
   case MenuFileOpenADAQ_ID:
   case MenuFileOpenACRONYM_ID:{
+
+    string Desc, Type;
+    if(MenuFileOpenADAQ_ID == MenuID){
+      Desc = "ADAQ ROOT file";
+      Type = "*.root";
+    }
+    else if(MenuFileOpenACRONYM_ID == MenuID){
+      Desc = "ACRONYM ROOT file";
+      Type = "*.acro";
+    }
     
-    const char *FileTypes[] = {"ADAQ-formatted ROOT file",     "*.root",
-			       "ACRONYM-formatted ROOT file",  "*.root",
+    const char *FileTypes[] = {Desc.c_str(), Type.c_str(),
 			       "All files",                    "*",
 			       0,                              0};
     
@@ -1543,7 +1569,7 @@ void AAInterface::HandleMenu(int MenuID)
 	  UpdateForACRONYMFile();
 	else
 	  CreateMessageBox("The ACRONYM ROOT file that you specified fail to load for some reason!\n","Stop");
-
+	
 	ADAQFileLoaded = false;
       }
     }
@@ -1718,24 +1744,60 @@ void AAInterface::HandleMenu(int MenuID)
 
 void AAInterface::HandleTextButtons()
 {
-  if(!ADAQFileLoaded)
+  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
     return;
-  
-  // Get the currently active widget and its ID, i.e. the widget from
-  // which the user has just sent a signal...
+
   TGTextButton *ActiveTextButton = (TGTextButton *) gTQSender;
   int ActiveTextButtonID  = ActiveTextButton->WidgetId();
-
+  
   SaveSettings();
 
   switch(ActiveTextButtonID){
 
-  case Quit_TB_ID:
-    HandleTerminate();
+    ////////////////////
+    // Spectrum frame //
+    ////////////////////
+
+    ///////////////////
+    // Spectra creation
+
+  case CreateSpectrum_TB_ID:
+    
+    // Alert the user the filtering particles by PSD into the spectra
+    // requires integration type peak finder to be used
+    if(ComputationMgr->GetUsePSDFilters()[ADAQSettings->PSDChannel] and 
+       ADAQSettings->ADAQSpectrumIntTypeWW)
+      CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
+    
+    // Sequential processing
+    if(ProcessingSeq_RB->IsDown()){
+      if(ADAQFileLoaded)
+	ComputationMgr->CreateSpectrum();
+      else if(ACRONYMFileLoaded)
+	ComputationMgr->CreateACRONYMSpectrum();
+      
+      if(ComputationMgr->GetSpectrumExists())
+	GraphicsMgr->PlotSpectrum();
+    }
+    
+    // Parallel processing
+    else{
+      if(ADAQFileLoaded){
+	SaveSettings(true);
+	ComputationMgr->ProcessWaveformsInParallel("histogramming");
+	
+	if(ComputationMgr->GetSpectrumExists())
+	  GraphicsMgr->PlotSpectrum();
+      }
+      else if(ACRONYMFileLoaded){
+	CreateMessageBox("Error! ACRONYM files cannot be processed in parallel! Please switch to 'sequential mode'.\n","Stop");
+      }
+    }
     break;
 
-    //////////////////////////////////////////
-    // Actions for setting a calibration point
+    
+    //////////////////////
+    // Spectra calibration
 
   case SpectrumCalibrationSetPoint_TB_ID:{
 
@@ -1772,9 +1834,6 @@ void AAInterface::HandleTextButtons()
     break;
   }
 
-    //////////////////////////////////////
-    // Actions for setting the calibration
-    
   case SpectrumCalibrationCalibrate_TB_ID:{
     
     // If there are 2 or more points in the current channel's
@@ -1797,9 +1856,6 @@ void AAInterface::HandleTextButtons()
     break;
   }
 
-    /////////////////////////////////////////////////////
-    // Actions for plotting the CalibrationManager TGraph
-    
   case SpectrumCalibrationPlot_TB_ID:{
     
     int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
@@ -1809,9 +1865,6 @@ void AAInterface::HandleTextButtons()
     break;
   }
 
-    ///////////////////////////////////////////
-    // Actions for resetting CalibrationManager
-    
   case SpectrumCalibrationReset_TB_ID:{
     
     // Get the current channel being histogrammed in 
@@ -1830,29 +1883,85 @@ void AAInterface::HandleTextButtons()
     break;
   }
 
-    /////////////////////////////////
-    // Actions to replot the spectrum
 
-  case ReplotWaveform_TB_ID:
-    GraphicsMgr->PlotWaveform();
+    ////////////////////
+    // Analysis frame //
+    ////////////////////
+
+    /////////////////////////////
+    // Pulse shape discrimination
+    
+  case PSDCalculate_TB_ID:
+
+    if(ADAQFileLoaded){
+      // Sequential processing
+      if(ProcessingSeq_RB->IsDown())
+	ComputationMgr->CreatePSDHistogram();
+      
+      // Parallel processing
+      else{
+	SaveSettings(true);
+	ComputationMgr->ProcessWaveformsInParallel("discriminating");
+      }
+      GraphicsMgr->PlotPSDHistogram();
+    }
+    else if(ACRONYMFileLoaded)
+      CreateMessageBox("ACRONYM files cannot be processed for pulse shape at this time!","Stop");
+    
     break;
 
-    /////////////////////////////////
-    // Actions to replot the spectrum
+  case PSDClearFilter_TB_ID:
+
+    if(ADAQFileLoaded){
+
+      ComputationMgr->ClearPSDFilter(ChannelSelector_CBL->GetComboBox()->GetSelected());
+      PSDEnableFilter_CB->SetState(kButtonUp);
+      
+      switch(GraphicsMgr->GetCanvasContentType()){
+      case zWaveform:
+	GraphicsMgr->PlotWaveform();
+	break;
+	
+      case zSpectrum:
+	GraphicsMgr->PlotSpectrum();
+	break;
+	
+      case zPSDHistogram:
+	GraphicsMgr->PlotPSDHistogram();
+	break;
+      }
+    }
+    
+    break;
+
+
+    //////////////
+    // Count rate
+
+  case CountRate_TB_ID:
+    if(ADAQFileLoaded)
+      ComputationMgr->CalculateCountRate();
+    break;
+
+
+
+    ////////////////////
+    // Graphics frame //
+    ////////////////////
+    
+  case ReplotWaveform_TB_ID:
+    if(ADAQFileLoaded)
+      GraphicsMgr->PlotWaveform();
+    break;
     
   case ReplotSpectrum_TB_ID:
-    
     if(ComputationMgr->GetSpectrumExists())
       GraphicsMgr->PlotSpectrum();
     else
       CreateMessageBox("A valid spectrum does not yet exist; therefore, it is difficult to replot it!","Stop");
     break;
     
-    ////////////////////////////////////////////
-    // Actions to replot the spectrum derivative
-    
   case ReplotSpectrumDerivative_TB_ID:
-    
     if(ComputationMgr->GetSpectrumExists()){
       SpectrumOverplotDerivative_CB->SetState(kButtonUp);
       GraphicsMgr->PlotSpectrumDerivative();
@@ -1860,51 +1969,20 @@ void AAInterface::HandleTextButtons()
     else
       CreateMessageBox("A valid spectrum does not yet exist; therefore, the spectrum derivative cannot be plotted!","Stop");
     break;
-      
-    //////////////////////////////////////
-    // Actions to replot the PSD histogram
     
   case ReplotPSDHistogram_TB_ID:
-    
-    if(ComputationMgr->GetPSDHistogramExists())
-      GraphicsMgr->PlotPSDHistogram();
-    else
-      CreateMessageBox("A valid PSD histogram does not yet exist; therefore, replotting cannot be achieved!","Stop");
-    break;
-    
-  case CreateSpectrum_TB_ID:
-
-    // Alert the user the filtering particles by PSD into the spectra
-    // requires integration type peak finder to be used
-    //if(UsePSDFilterManager[PSDChannel] and IntegrationTypeWholeWaveform)
-    //      CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
-    
-    // Create spectrum with sequential processing
-    if(ProcessingSeq_RB->IsDown())
-      ComputationMgr->CreateSpectrum();
-    
-    // Create spectrum with parallel processing
-    else{
-      SaveSettings(true);
-      ComputationMgr->ProcessWaveformsInParallel("histogramming");
+    if(ADAQFileLoaded){
+      if(ComputationMgr->GetPSDHistogramExists())
+	GraphicsMgr->PlotPSDHistogram();
+      else
+	CreateMessageBox("A valid PSD histogram does not yet exist; therefore, replotting cannot be achieved!","Stop");
     }
+    break;
 
-    GraphicsMgr->PlotSpectrum();
-    break;
     
-  case CountRate_TB_ID:
-    //CalculateCountRate();
-    break;
-    
-  case PSDCalculate_TB_ID:
-    if(ProcessingSeq_RB->IsDown())
-      ComputationMgr->CreatePSDHistogram();
-    else{
-      SaveSettings(true);
-      ComputationMgr->ProcessWaveformsInParallel("discriminating");
-    }
-    GraphicsMgr->PlotPSDHistogram();
-    break;
+    //////////////////////
+    // Processing frame //
+    //////////////////////
     
   case DesplicedFileSelection_TB_ID:{
 
@@ -1938,7 +2016,7 @@ void AAInterface::HandleTextButtons()
     else{
       string DesplicedFileName, DesplicedFileExtension;
       size_t Found = string::npos;
-
+      
       // Get the name for the despliced file. Note that
       // FileInformation.fFilename contains the absolute path to the
       // despliced file location
@@ -1969,42 +2047,28 @@ void AAInterface::HandleTextButtons()
   }
     
   case DesplicedFileCreation_TB_ID:
-    
-    
     // Alert the user the filtering particles by PSD into the spectra
     // requires integration type peak finder to be used
-    //if(UsePSDFilterManager[PSDChannel] and IntegrationTypeWholeWaveform)
+    if(ComputationMgr->GetUsePSDFilters()[ADAQSettings->PSDChannel] and ADAQSettings->ADAQSpectrumIntTypeWW)
       CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
     
-    // Desplice waveforms sequentially
+    // Sequential processing
     if(ProcessingSeq_RB->IsDown())
-      {}//CreateDesplicedFile();
-
-    // Desplice waveforms in parallel
+      ComputationMgr->CreateDesplicedFile();
+    
+    // Parallel processing
     else
-      {}//ProcessWaveformsInParallel("desplicing");
-
+      ComputationMgr->ProcessWaveformsInParallel("desplicing");
+    
     break;
 
     
-  case PSDClearFilter_TB_ID:
-    ComputationMgr->ClearPSDFilter(ChannelSelector_CBL->GetComboBox()->GetSelected());
-    PSDEnableFilter_CB->SetState(kButtonUp);
+    //////////////////
+    // Canvas frame //
+    //////////////////
 
-    switch(GraphicsMgr->GetCanvasContentType()){
-    case zWaveform:
-      GraphicsMgr->PlotWaveform();
-      break;
-      
-    case zSpectrum:
-      GraphicsMgr->PlotSpectrum();
-      break;
-
-    case zPSDHistogram:
-      GraphicsMgr->PlotPSDHistogram();
-      break;
-    }
-
+  case Quit_TB_ID:
+    HandleTerminate();
     break;
   }
 }
@@ -2012,13 +2076,11 @@ void AAInterface::HandleTextButtons()
 
 void AAInterface::HandleCheckButtons()
 {
-  // Get the currently active widget and its ID, i.e. the widget from
-  // which the user has just sent a signal...
+  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
+    return;
+
   TGCheckButton *ActiveCheckButton = (TGCheckButton *) gTQSender;
   int CheckButtonID = ActiveCheckButton->WidgetId();
-  
-  if(!ADAQFileLoaded)
-    return;
 
   SaveSettings();
   
@@ -2210,7 +2272,7 @@ void AAInterface::HandleCheckButtons()
   }
 
   case PSDEnableFilterCreation_CB_ID:{
-
+    
     if(PSDEnableFilterCreation_CB->IsDown() and GraphicsMgr->GetCanvasContentType() != zPSDHistogram){
       CreateMessageBox("The canvas does not presently contain a PSD histogram! PSD filter creation is not possible!","Stop");
       PSDEnableFilterCreation_CB->SetState(kButtonUp);
@@ -2221,18 +2283,17 @@ void AAInterface::HandleCheckButtons()
 
   case PSDEnableFilter_CB_ID:{
     if(PSDEnableFilter_CB->IsDown()){
-      //UsePSDFilterManager[PSDChannel] = true;
+      ComputationMgr->SetUsePSDFilter(PSDChannel_CBL->GetComboBox()->GetSelected(), true);
       FindPeaks_CB->SetState(kButtonDown);
     }
     else
-      {}//UsePSDFilterManager[PSDChannel] = false;
+      ComputationMgr->SetUsePSDFilter(PSDChannel_CBL->GetComboBox()->GetSelected(), false);
     break;
   }
     
   case PSDPlotTailIntegration_CB_ID:{
     if(!FindPeaks_CB->IsDown())
-      {}
-    //FindPeaks_CB->SetState(kButtonDown);
+      FindPeaks_CB->SetState(kButtonDown);
     GraphicsMgr->PlotWaveform();
     break;
   }
@@ -2292,9 +2353,9 @@ void AAInterface::HandleCheckButtons()
 
 void AAInterface::HandleSliders(int SliderPosition)
 {
-  if(!ADAQFileLoaded)
+  if(!ADAQFileLoaded or ACRONYMFileLoaded)
     return;
-
+  
   SaveSettings();
   
   WaveformSelector_NEL->GetEntry()->SetNumber(SliderPosition);
@@ -2305,7 +2366,7 @@ void AAInterface::HandleSliders(int SliderPosition)
 
 void AAInterface::HandleDoubleSliders()
 {
-  if(!ADAQFileLoaded)
+  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
     return;
   
   SaveSettings();
@@ -2350,6 +2411,9 @@ void AAInterface::HandleDoubleSliders()
 
 void AAInterface::HandleTripleSliderPointer()
 {
+  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
+    return;
+
   // To enable easy spectra calibration, the user has the options of
   // dragging the pointer of the X-axis horizontal slider just below
   // the canvas, which results in a "calibration line" drawn over the
@@ -2392,14 +2456,15 @@ void AAInterface::HandleTripleSliderPointer()
 
 void AAInterface::HandleNumberEntries()
 { 
+  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
+    return;
+
   // Get the "active" widget object/ID from which a signal has been sent
   TGNumberEntry *ActiveNumberEntry = (TGNumberEntry *) gTQSender;
   int NumberEntryID = ActiveNumberEntry->WidgetId();
   
   SaveSettings();
-  
-  if(!ADAQFileLoaded)
-    return;
+
 
   switch(NumberEntryID){
 
@@ -2479,13 +2544,13 @@ void AAInterface::HandleNumberEntries()
 
 void AAInterface::HandleRadioButtons()
 {
+  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
+    return;
+
   TGRadioButton *ActiveRadioButton = (TGRadioButton *) gTQSender;
   int RadioButtonID = ActiveRadioButton->WidgetId();
   
   SaveSettings();
-  
-  if(!ADAQFileLoaded)
-    return;
   
   switch(RadioButtonID){
     
@@ -2629,6 +2694,9 @@ void AAInterface::HandleRadioButtons()
 
 void AAInterface::HandleComboBox(int ComboBoxID, int SelectedID)
 {
+  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
+    return;
+
   switch(ComboBoxID){
     
   case PSDPlotType_CBL_ID:
@@ -2641,6 +2709,9 @@ void AAInterface::HandleComboBox(int ComboBoxID, int SelectedID)
 
 void AAInterface::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *Selected)
 {
+  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
+    return;
+
   // If the user has enabled the creation of a PSD filter and the
   // canvas event is equal to "1" (which represents a down-click
   // somewhere on the canvas pad) then send the pixel coordinates of
@@ -2673,10 +2744,8 @@ void AAInterface::HandleTerminate()
 
 void AAInterface::SaveSettings(bool SaveToFile)
 {
-  if(ADAQSettings)
-    delete ADAQSettings;
-  
-  ADAQSettings = new ADAQAnalysisSettings;
+  if(!ADAQSettings)
+    ADAQSettings = new AASettings;
   
   TFile *ADAQSettingsFile = 0;
   if(SaveToFile)
@@ -2996,11 +3065,23 @@ void AAInterface::UpdateForADAQFile()
   
   ACROSpectrumLS_RB->SetState(kButtonDisabled);
   ACROSpectrumES_RB->SetState(kButtonDisabled);
+  
+  WaveformOptionsTab_CF->ShowFrame(WaveformOptions_CF);
+  AnalysisOptionsTab_CF->ShowFrame(AnalysisOptions_CF);
 }
 
 
 void AAInterface::UpdateForACRONYMFile()
 {
+  FileName_TE->SetText(ACRONYMFileName.c_str());
+  Waveforms_NEL->SetNumber(0);
+  WaveformsToHistogram_NEL->GetEntry()->SetNumber(0);
+  RecordLength_NEL->SetNumber(0);
+  
+  // Waveform frame (disabled)
+  WaveformOptionsTab_CF->HideFrame(WaveformOptions_CF);
+
+  // Spectrum frame
   ADAQSpectrumTypePAS_RB->SetState(kButtonDisabled);
   ADAQSpectrumTypePHS_RB->SetState(kButtonDisabled);
   ADAQSpectrumIntTypeWW_RB->SetState(kButtonDisabled);
@@ -3009,9 +3090,31 @@ void AAInterface::UpdateForACRONYMFile()
   ACROSpectrumTypeEnergy_RB->SetState(kButtonDown);
   ACROSpectrumTypeScintCounted_RB->SetState(kButtonUp);
   ACROSpectrumTypeScintCreated_RB->SetState(kButtonUp);
-  
   ACROSpectrumLS_RB->SetState(kButtonDown);
   ACROSpectrumES_RB->SetState(kButtonUp);
+
+  // Analysis frame (disabled)
+  AnalysisOptionsTab_CF->HideFrame(AnalysisOptions_CF);
+
+  // Graphics frame
+  SetPearsonWidgetState(false, kButtonDisabled);
+  
+  OptionsTabs_T->SetTab("Spectrum");
+}
+
+
+void AAInterface::SetPearsonWidgetState(bool WidgetState, EButtonState ButtonState)
+{
+  IntegratePearson_CB->SetState(ButtonState);
+  PearsonChannel_CBL->GetComboBox()->SetEnabled(WidgetState);
+  PearsonPolarityPositive_RB->SetState(ButtonState);
+  PearsonPolarityNegative_RB->SetState(ButtonState);
+  PlotPearsonIntegration_CB->SetState(ButtonState);
+  IntegrateRawPearson_RB->SetState(ButtonState);
+  IntegrateFitToPearson_RB->SetState(ButtonState);
+  PearsonLowerLimit_NEL->GetEntry()->SetState(WidgetState);
+  PearsonMiddleLimit_NEL->GetEntry()->SetState(WidgetState);
+  PearsonUpperLimit_NEL->GetEntry()->SetState(WidgetState);
 }
 
 

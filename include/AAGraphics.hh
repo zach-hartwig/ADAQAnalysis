@@ -22,7 +22,7 @@
 
 
 #include "AAComputation.hh"
-#include "ADAQAnalysisSettings.hh"
+#include "AASettings.hh"
 
 
 class AAGraphics : public TObject
@@ -35,7 +35,7 @@ public:
 
   void SetCanvasPointer(TCanvas *C) { TheCanvas = C; }
 
-  void SetADAQSettings(ADAQAnalysisSettings *AAS) { ADAQSettings = AAS; }
+  void SetADAQSettings(AASettings *AAS) { ADAQSettings = AAS; }
 
   CanvasContentTypes GetCanvasContentType() {return CanvasContentType;}
   
@@ -55,8 +55,8 @@ public:
 private:
   
   static AAGraphics *TheGraphicsManager;
-
-  ADAQAnalysisSettings *ADAQSettings;
+  
+  AASettings *ADAQSettings;
 
   TCanvas *TheCanvas;
 

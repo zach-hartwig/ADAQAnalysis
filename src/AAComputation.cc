@@ -15,6 +15,8 @@
 #include "AAParallel.hh"
 #include "AAConstants.hh"
 
+#include "acroEvent.hh"
+
 #include <iostream>
 #include <fstream>
 using namespace std;
@@ -37,7 +39,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     WaveformStart(0), WaveformEnd(0),
     Spectrum_H(new TH1F), SpectrumBackground_H(new TH1F), SpectrumDeconvolved_H(new TH1F),
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), 
-    Verbose(true), ParallelVerbose(true),
+    Verbose(false), ParallelVerbose(true),
     Baseline(0.), PSDFilterPolarity(1.),
     V1720MaximumBit(4095), NumDataChannels(8),
     SpectrumExists(false), SpectrumDerivativeExists(false), PSDHistogramExists(false), PSDHistogramSliceExists(false),
@@ -115,7 +117,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     string ADAQSettingsFile = "/tmp/ADAQSettings_" + USER + ".root";
     TFile *F = new TFile(ADAQSettingsFile.c_str(), "read");
     
-    ADAQSettings = (ADAQAnalysisSettings *)F->Get("ADAQSettings");
+    ADAQSettings = dynamic_cast<AASettings *>(F->Get("ADAQSettings"));
     if(!ADAQSettings){
       cout << "\nError! ADAQAnalysis_MPI could not find the ADAQSettings object!\n"
 	   << endl;
@@ -187,7 +189,7 @@ bool AAComputation::LoadADAQRootFile(string FileName)
     // along with data in the ROOT file. At present, this is only the
     // despliced waveform files. For standard ADAQ ROOT files, the
     // ADAQParResults class member will be a NULL pointer
-    ADAQParResults = (ADAQAnalysisParallelResults *)ADAQRootFile->Get("ParResults");
+    ADAQParResults = dynamic_cast<AAParallelResults *>(ADAQRootFile->Get("ParResults"));
 
     // If a valid class with the parallel parameters was found
     // (despliced ADAQ ROOT files, etc) then set the bool to true; if no
@@ -286,19 +288,30 @@ bool AAComputation::LoadACRONYMRootFile(string FileName)
   ACRONYMFileName = FileName;
 
   TFile *ACRONYMRootFile = new TFile(FileName.c_str(), "read");
-
+  
   if(!ACRONYMRootFile->IsOpen()){
     ACRONYMFileLoaded = false;
   }
   else{
 
+    //////////////
+    // LS Detector 
+    
     if(LSDetectorTree) delete LSDetectorTree;
     LSDetectorTree = dynamic_cast<TTree *>(ACRONYMRootFile->Get("LSDetectorTree"));
-    
+
     if(!LSDetectorTree){
       cout << "\nERROR! Could not find the LSDetectorTree in the ACRONYM ROOT file!\n"
 	   << endl;
     }
+    else{
+      //      if(LSDetectorEvent) delete LSDetectorEvent;
+      LSDetectorEvent = new acroEvent;
+      LSDetectorTree->SetBranchAddress("LSDetectorEvents", &LSDetectorEvent);
+    }
+    
+    //////////////
+    // ES Detector
 
     if(ESDetectorTree) delete ESDetectorTree;
     ESDetectorTree = dynamic_cast<TTree *>(ACRONYMRootFile->Get("ESDetectorTree"));
@@ -307,11 +320,17 @@ bool AAComputation::LoadACRONYMRootFile(string FileName)
       cout << "\nERROR! Could not find the ESDetectorTree in the ACRONYM ROOT file!\n"
 	   << endl;
     }
+    else{
+      //      if(ESDetectorEvent) delete ESDetectorEvent;
+      ESDetectorEvent = new acroEvent;
+      ESDetectorTree->SetBranchAddress("ESDetectorEvents", &ESDetectorEvent);
+
+
+
+    }
     ACRONYMFileLoaded = true;
   }
-  
-  cout << "\nACRONYM file has been loaded!\n" << endl;
-  
+
   return ACRONYMFileLoaded;
 }
 
@@ -682,7 +701,7 @@ void AAComputation::CreateSpectrum()
   }
   
   // Create the TH1F histogram object for spectra creation
-  Spectrum_H = new TH1F("Spectrum_H", "Pulse spectrum", 
+  Spectrum_H = new TH1F("Spectrum_H", "ADAQ spectrum", 
 			ADAQSettings->SpectrumNumBins, 
 			ADAQSettings->SpectrumMinBin,
 			ADAQSettings->SpectrumMaxBin);
@@ -2291,7 +2310,7 @@ void AAComputation::CreateDesplicedFile()
 
   // Create a new class that will store the results calculated in
   // parallel persistently in the new despliced ROOT file
-  ADAQAnalysisParallelResults *PR = new ADAQAnalysisParallelResults;
+  AAParallelResults *PR = new AAParallelResults;
   
   // When the new despliced TFile object(s) that will RECEIVE the
   // despliced waveforms was(were) created above, that(those) TFile(s)
@@ -2752,43 +2771,40 @@ void AAComputation::CreateACRONYMSpectrum()
     SpectrumExists = false;
   }
   
-  Spectrum_H = new TH1F("Spectrum_H", "ACRONYM spectrum",
+  Spectrum_H = new TH1F("Spectrum_H", "ACRONYM Spectrum",
 			ADAQSettings->SpectrumNumBins,
 			ADAQSettings->SpectrumMinBin,
 			ADAQSettings->SpectrumMaxBin);
   
-  TTree *TheTree = 0;
-  TString TheBranchAddress;
+  TTree *Tree = 0;
+  acroEvent *Event = 0;
   
+  int Entries = 0;
   if(ADAQSettings->ACROSpectrumLS){
-    TheTree = LSDetectorTree;
-    TheBranchAddress = "LSDetectorEvents";
+    Entries = LSDetectorTree->GetEntries();
+    Tree = LSDetectorTree;
+    Event = LSDetectorEvent;
   }
   else if(ADAQSettings->ACROSpectrumES){
-    TheTree = ESDetectorTree;
-    TheBranchAddress = "ESDetectorEvents";
+    Entries = ESDetectorTree->GetEntries();
+    Tree = ESDetectorTree;
+    Event = ESDetectorEvent;
   }
-  
-  /*
-  acroEvent *TheEvent = new acroEvent;
-  TheTree->SetBranchAddress(TheBranchAddress, &TheEvent);
-  
 
-  for(int entry=0; entry<TheTree->GetEntries(); entry++){
-
-    TheTree->GetEvent(entry);
+  // Must plot all entries in tree at present: ZSH (23 May 13)
+  
+  for(int entry=0; entry<Entries; entry++){
+    
+    Tree->GetEvent(entry);
     
     if(ADAQSettings->ACROSpectrumTypeEnergy)
-      Spectrum_H->Fill(TheEvent->recoilEnergyDep);
-
+      Spectrum_H->Fill(Event->recoilEnergyDep);
+    
     else if(ADAQSettings->ACROSpectrumTypeScintCreated)
-      Spectrum_H->Fill(TheEvent->scintPhotonsCreated);
-
+      Spectrum_H->Fill(Event->scintPhotonsCreated);
+    
     else if(ADAQSettings->ACROSpectrumTypeScintCounted)
-      Spectrum_H->Fill(TheEvent->scintPhotonsCounted);
+      Spectrum_H->Fill(Event->scintPhotonsCounted);
   }
-  
-  delete TheTree;
-  delete TheEvent;
-  */
+  SpectrumExists = true;
 }

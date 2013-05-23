@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
-// name: ADAQAnalysisTypes.hh
+// name: AATypes.hh
 // date: 22 May 13
 // auth: Zach Hartwig
 // 
@@ -8,8 +8,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __ADAQAnalysisTypes_hh__
-#define __ADAQAnalysisTypes_hh__ 1
+#ifndef __AATypes_hh__
+#define __AATypes_hh__ 1
 
 #include <TGraph.h>
 
@@ -222,10 +222,6 @@ enum{
 
   PlotSpectrumDerivativeError_CB_ID,
   PlotAbsValueSpectrumDerivative_CB_ID,
-
-
-  ResetXAxisLimits_TB_ID,
-  ResetYAxisLimits_TB_ID,
 
   ReplotWaveform_TB_ID,
   ReplotSpectrum_TB_ID,

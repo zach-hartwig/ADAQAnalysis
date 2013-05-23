@@ -1,5 +1,5 @@
-#ifndef __ADAQAnalysisSettings_hh__
-#define __ADAQAnalysisSettings_hh__ 1
+#ifndef __AASettings_hh__
+#define __AASettings_hh__ 1
 
 #include <TObject.h>
 #include <TGraph.h>
@@ -9,7 +9,7 @@
 using namespace std;
 
 
-class ADAQAnalysisSettings : public TObject
+class AASettings : public TObject
 {
 public:
 
@@ -129,7 +129,7 @@ public:
   string ADAQFileName;
   string ACRONYMFileName;
   
-  ClassDef(ADAQAnalysisSettings, 1);
+  ClassDef(AASettings, 1);
 };
 
 #endif

@@ -410,14 +410,26 @@ void AAGraphics::PlotSpectrum()
   // Spectrum title
 
   string Title, XTitle, YTitle;
-
+  
   if(ADAQSettings->OverrideGraphicalDefault){
     Title = ADAQSettings->PlotTitle;
     XTitle = ADAQSettings->XAxisTitle;
     YTitle = ADAQSettings->YAxisTitle;
   }
+  else if(ComputationMgr->GetACRONYMFileLoaded()){
+    Title = "ACRONYM Spectrum";    
+    
+    if(ADAQSettings->ACROSpectrumTypeEnergy)
+      XTitle = "Energy [keV]";
+    else if(ADAQSettings->ACROSpectrumTypeScintCreated)
+      XTitle = "Scintillation photons created [#]";
+    else if(ADAQSettings->ACROSpectrumTypeScintCounted)
+      XTitle = "Scintillation photons detected [#]";
+    
+    YTitle = "Counts";
+  }
   else{
-    Title = "Pulse Spectrum";
+    Title = "ADAQ Spectrum";
     XTitle = "Pulse units [ADC]";
     YTitle = "Counts";
   }

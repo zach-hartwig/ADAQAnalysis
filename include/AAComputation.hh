@@ -33,9 +33,11 @@
 using namespace std;
 
 #include "ADAQRootGUIClasses.hh"
-#include "ADAQAnalysisSettings.hh"
-#include "ADAQAnalysisParallelResults.hh"
-#include "ADAQAnalysisTypes.hh"
+#include "AASettings.hh"
+#include "AAParallelResults.hh"
+#include "AATypes.hh"
+
+#include "acroEvent.hh"
 
 #ifndef __CINT__
 #include <boost/array.hpp>
@@ -53,7 +55,7 @@ public:
 
   // Pointer set methods
   void SetProgressBarPointer(TGHProgressBar *PB) { ProcessingProgressBar = PB; }
-  void SetADAQSettings(ADAQAnalysisSettings *AAS) { ADAQSettings = AAS; }
+  void SetADAQSettings(AASettings *AAS) { ADAQSettings = AAS; }
 
   
   ///////////////////////////
@@ -142,6 +144,7 @@ public:
   // Pulse shape discrimination filters
   vector<TGraph *> GetPSDFilters() { return PSDFilters; }
   vector<bool> GetUsePSDFilters() { return UsePSDFilters; }
+  void SetUsePSDFilter(int Channel, bool Use) {UsePSDFilters[Channel] = Use;}
 
   // ADAQ file data
   string GetADAQFileName() { return ADAQFileName; }
@@ -150,7 +153,9 @@ public:
 
   // ACRONYM file data
   string GetACRONYMFileName() { return ACRONYMFileName; }
-
+  int GetACRONYMLSEntries() { return LSDetectorTree->GetEntries(); }
+  int GetACRONYMESEntries() { return ESDetectorTree->GetEntries(); }
+  
   // Booleans
   bool GetADAQFileLoaded() { return ADAQFileLoaded; }
   bool GetACRONYMFileLoaded() { return ACRONYMFileLoaded; }
@@ -174,7 +179,7 @@ private:
   static AAComputation *TheComputationManager;
 
   TGHProgressBar *ProcessingProgressBar;
-  ADAQAnalysisSettings *ADAQSettings;
+  AASettings *ADAQSettings;
 
   // Bools to specify architecture type
   bool SequentialArchitecture, ParallelArchitecture;
@@ -189,7 +194,7 @@ private:
   string ADAQFileName, ACRONYMFileName;
   bool ADAQFileLoaded, ACRONYMFileLoaded;
   TTree *LSDetectorTree, *ESDetectorTree;
-  ADAQAnalysisParallelResults *ADAQParResults;
+  AAParallelResults *ADAQParResults;
   bool ADAQParResultsLoaded;
 
 
@@ -296,6 +301,8 @@ private:
 
   // A ROOT random number generator (RNG)
   TRandom *RNG;
+
+  acroEvent *LSDetectorEvent, *ESDetectorEvent;
 
   // Define the class to ROOT
   ClassDef(AAComputation, 1)

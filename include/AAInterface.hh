@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // name: AAInterface.hh
-// date: 17 May 13
+// date: 23 May 13
 // auth: Zach Hartwig
 //
 // desc: 
@@ -27,6 +27,7 @@
 #include <TObject.h>
 #include <TRandom.h>
 #include <TGMsgBox.h>
+#include <TGTab.h>
 
 // C++
 #include <string>
@@ -42,8 +43,8 @@ using namespace std;
 
 // ADAQ
 #include "ADAQRootGUIClasses.hh"
-#include "ADAQAnalysisTypes.hh"
-#include "ADAQAnalysisSettings.hh"
+#include "AATypes.hh"
+#include "AASettings.hh"
 #include "AAComputation.hh"
 #include "AAGraphics.hh"
 
@@ -87,14 +88,28 @@ public:
   // Method to alert the user via a ROOT message box
   void CreateMessageBox(string, string);
 
+  void SetPearsonWidgetState(bool, EButtonState);
   void SetCalibrationWidgetState(bool, EButtonState);
+  
 
 private:
+  TGTab *OptionsTabs_T;
+
+  TGCompositeFrame *WaveformOptionsTab_CF;
   TGCompositeFrame *WaveformOptions_CF;
+  
+  TGCompositeFrame *SpectrumOptionsTab_CF;
   TGCompositeFrame *SpectrumOptions_CF;
+
+  TGCompositeFrame *AnalysisOptionsTab_CF;
   TGCompositeFrame *AnalysisOptions_CF;
+
+  TGCompositeFrame *GraphicsOptionsTab_CF;
   TGCompositeFrame *GraphicsOptions_CF;
+
+  TGCompositeFrame *ProcessingOptionsTab_CF;
   TGCompositeFrame *ProcessingOptions_CF;
+
   TGHorizontalFrame *OptionsAndCanvas_HF;
 
   /////////////////////////////////////////////////////////
@@ -114,8 +129,6 @@ private:
   TGRadioButton *PositiveWaveform_RB, *NegativeWaveform_RB;
 
   TGCheckButton *PlotTrigger_CB;
-  TGTextButton *ResetXAxisLimits_TB;
-  TGTextButton *ResetYAxisLimits_TB;
 
   // Widgets for controlling baseline calc. and plotting
   TGCheckButton *PlotBaseline_CB;
@@ -342,7 +355,7 @@ private:
   string ADAQFileName, ACRONYMFileName;
 
   // The class which holds all ROOT widget settings
-  ADAQAnalysisSettings *ADAQSettings;
+  AASettings *ADAQSettings;
   string ADAQSettingsFileName;
 
   // The managers 
