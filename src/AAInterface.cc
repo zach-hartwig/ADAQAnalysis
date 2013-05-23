@@ -60,7 +60,8 @@ AAInterface::AAInterface(string CmdLineArg)
     size_t Pos = CmdLineArg.find_last_of(".");
     if(Pos != string::npos){
 
-      if(CmdLineArg.substr(Pos,5) == ".root"){
+      if(CmdLineArg.substr(Pos,5) == ".root" or
+	 CmdLineArg.substr(Pos,5) == ".acro"){
 	ADAQFileName = CmdLineArg;
 	ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(ADAQFileName);
 	
@@ -3101,8 +3102,8 @@ void AAInterface::UpdateForACRONYMFile()
   ACROSpectrumTypeEnergy_RB->SetState(kButtonDown);
   ACROSpectrumTypeScintCounted_RB->SetState(kButtonUp);
   ACROSpectrumTypeScintCreated_RB->SetState(kButtonUp);
-  ACROSpectrumLS_RB->SetState(kButtonDown);
-  ACROSpectrumES_RB->SetState(kButtonUp);
+  ACROSpectrumLS_RB->SetState(kButtonUp);
+  ACROSpectrumES_RB->SetState(kButtonDown);
 
   // Analysis frame (disabled)
   AnalysisOptionsTab_CF->HideFrame(AnalysisOptions_CF);
