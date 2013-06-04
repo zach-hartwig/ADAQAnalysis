@@ -61,7 +61,7 @@ AAInterface::AAInterface(string CmdLineArg)
     if(Pos != string::npos){
 
       if(CmdLineArg.substr(Pos,5) == ".root" or
-	 CmdLineArg.substr(Pos,5) == ".acro"){
+	 CmdLineArg.substr(Pos,5) == ".adaq"){
 	ADAQFileName = CmdLineArg;
 	ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(ADAQFileName);
 	
@@ -82,7 +82,7 @@ AAInterface::AAInterface(string CmdLineArg)
 	  CreateMessageBox("The ACRONYM ROOT file that you specified fail to load for some reason!\n","Stop");
       }
       else
-	CreateMessageBox("Recognized files must end in '.root' (ADAQ) or '.acro' (ACRONYM)","Stop");
+	CreateMessageBox("Recognized files must end in '.root or '.adaq' (ADAQ) or '.acro' (ACRONYM)","Stop");
     }
     else
       CreateMessageBox("Could not find an acceptable file to open. Please try again.","Stop");
@@ -3102,8 +3102,10 @@ void AAInterface::UpdateForACRONYMFile()
   ACROSpectrumTypeEnergy_RB->SetState(kButtonDown);
   ACROSpectrumTypeScintCounted_RB->SetState(kButtonUp);
   ACROSpectrumTypeScintCreated_RB->SetState(kButtonUp);
-  ACROSpectrumLS_RB->SetState(kButtonUp);
-  ACROSpectrumES_RB->SetState(kButtonDown);
+  ACROSpectrumLS_RB->SetEnabled(true);
+  ACROSpectrumLS_RB->SetOn(false);
+  ACROSpectrumES_RB->SetEnabled(true);
+  ACROSpectrumES_RB->SetOn(true);
 
   // Analysis frame (disabled)
   AnalysisOptionsTab_CF->HideFrame(AnalysisOptions_CF);

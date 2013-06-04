@@ -2790,15 +2790,19 @@ void AAComputation::CreateACRONYMSpectrum()
   for(int entry=0; entry<Entries; entry++){
     
     Tree->GetEvent(entry);
-    
+
+    double Quantity = 0.;
     if(ADAQSettings->ACROSpectrumTypeEnergy)
-      Spectrum_H->Fill(Event->recoilEnergyDep);
-    
+      Quantity = Event->recoilEnergyDep;
     else if(ADAQSettings->ACROSpectrumTypeScintCreated)
-      Spectrum_H->Fill(Event->scintPhotonsCreated);
-    
+      Quantity = Event->scintPhotonsCreated;
     else if(ADAQSettings->ACROSpectrumTypeScintCounted)
-      Spectrum_H->Fill(Event->scintPhotonsCounted);
+      Quantity = Event->scintPhotonsCounted;
+    
+    if(ADAQSettings->UseSpectraCalibrations[ADAQSettings->WaveformChannel])
+      Quantity = SpectraCalibrations[ADAQSettings->WaveformChannel]->Eval(Quantity);
+    
+    Spectrum_H->Fill(Quantity);
   }
   SpectrumExists = true;
 }
