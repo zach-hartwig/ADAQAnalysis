@@ -1330,13 +1330,17 @@ void AAComputation::IntegrateSpectrum()
 // (TH1F, TH1D ...) can be saved with this function
 bool AAComputation::SaveHistogramData(string Type, string FileName, string FileExtension)
 {
-  TH1F *HistogramToSave_H;
+  TH1F *HistogramToSave_H1;
+  TH2F *HistogramToSave_H2;
+
   if(Type == "Spectrum")
-    HistogramToSave_H = Spectrum_H;
+    HistogramToSave_H1 = Spectrum_H;
   else if(Type == "SpectrumDerivative")
-    HistogramToSave_H = SpectrumDerivative_H;
+    HistogramToSave_H1 = SpectrumDerivative_H;
+  else if(Type == "PSDHistogram")
+    HistogramToSave_H2 = PSDHistogram_H;
   else if(Type == "PSDHistogramSlice")
-    HistogramToSave_H = (TH1F *)PSDHistogramSlice_H;
+    HistogramToSave_H1 = (TH1F *)PSDHistogramSlice_H;
   
   if(FileExtension == ".dat" or FileExtension == ".csv"){
     
@@ -1351,11 +1355,11 @@ bool AAComputation::SaveHistogramData(string Type, string FileName, string FileE
     else if(FileExtension == ".csv")
       separator = ",";
 
-    int NumBins = HistogramToSave_H->GetNbinsX();
+    int NumBins = HistogramToSave_H1->GetNbinsX();
     
     for(int bin=0; bin<=NumBins; bin++)
-      HistogramOutput << HistogramToSave_H->GetBinCenter(bin) << separator
-		      << HistogramToSave_H->GetBinContent(bin)
+      HistogramOutput << HistogramToSave_H1->GetBinCenter(bin) << separator
+		      << HistogramToSave_H1->GetBinContent(bin)
 		      << endl;
     
     HistogramOutput.close();
@@ -1368,17 +1372,18 @@ bool AAComputation::SaveHistogramData(string Type, string FileName, string FileE
     
     TFile *HistogramOutput = new TFile(FullFileName.c_str(), "recreate");
     
-    HistogramToSave_H->Write("Spectrum");
+    if(Type == "PSDHistogram")
+      HistogramToSave_H2->Write("PSDHistogram");
+    else
+      HistogramToSave_H1->Write("Spectrum");
     HistogramOutput->Close();
     
     return true;
   }
   else{
     return false;
-    //    CreateMessageBox("Unacceptable file extension for the spectrum data file! Valid extensions are '.dat', '.csv', and '.root'!","Stop");
   }
 }
-
 
 
 TH2F *AAComputation::CreatePSDHistogram()
@@ -2035,7 +2040,7 @@ void AAComputation::RejectPileup(TH1F *Histogram_H)
 
 
 bool AAComputation::SetCalibrationPoint(int Channel, int SetPoint,
-					      double Energy, double PulseUnit)
+					double Energy, double PulseUnit)
 {
   // Add a new point to the calibration
   if(SetPoint == CalibrationData[Channel].PointID.size()){
@@ -2045,7 +2050,7 @@ bool AAComputation::SetCalibrationPoint(int Channel, int SetPoint,
     
     return true;
   }
-
+  
   // Overwrite a previous calibration point
   else{
     CalibrationData[Channel].Energy[SetPoint] = Energy;
@@ -2054,7 +2059,6 @@ bool AAComputation::SetCalibrationPoint(int Channel, int SetPoint,
     return false;
   }
 }
-
 
 
 bool AAComputation::SetCalibration(int Channel)
@@ -2079,6 +2083,22 @@ bool AAComputation::SetCalibration(int Channel)
   }
   else
     return false;
+}
+
+
+bool AAComputation::SetFixedEPCalibration()
+{
+  SetCalibrationPoint(ADAQSettings->WaveformChannel, 
+		      0, 
+		      EnergyPoints_FixedEP[0],
+		      PulseUnitPoints_FixedEP[0]);
+  
+  SetCalibrationPoint(ADAQSettings->WaveformChannel, 
+		      1, 
+		      EnergyPoints_FixedEP[1],
+		      PulseUnitPoints_FixedEP[1]);
+  
+  SetCalibration(ADAQSettings->WaveformChannel);
 }
 
 

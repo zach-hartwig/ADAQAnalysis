@@ -72,6 +72,7 @@ enum{
   MenuFileOpenACRONYM_ID,
   MenuFileSaveSpectrum_ID,
   MenuFileSaveSpectrumDerivative_ID,
+  MenuFileSavePSDHistogram_ID,
   MenuFileSavePSDHistogramSlice_ID,
   MenuFilePrint_ID,
   MenuFileExit_ID,

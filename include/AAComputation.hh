@@ -96,6 +96,7 @@ public:
   // Spectrum calibration
   bool SetCalibrationPoint(int, int, double, double);
   bool SetCalibration(int);
+  bool SetFixedEPCalibration();
   bool ClearCalibration(int);
 
   // Pulse shape discrimination processing

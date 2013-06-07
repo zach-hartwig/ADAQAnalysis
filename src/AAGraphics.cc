@@ -617,11 +617,6 @@ void AAGraphics::PlotPSDHistogram()
   int YDivs = ADAQSettings->YDivs;
   int ZDivs = ADAQSettings->ZDivs;
 
-  // Hack to make the X axis of the 2D PSD histogram actually look
-  // decent given the large numbers involved
-  if(ADAQSettings->OverrideGraphicalDefault)
-    XDivs = 505;
-  
   if(ADAQSettings->StatsOff)
     PSDHistogram_H->SetStats(false);
   else

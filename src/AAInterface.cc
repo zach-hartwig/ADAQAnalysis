@@ -110,6 +110,7 @@ void AAInterface::CreateTheMainFrames()
   MenuFile->AddEntry("Ope&n ACRONYM ROOT file ...", MenuFileOpenACRONYM_ID);
   MenuFile->AddEntry("&Save spectrum to file ...", MenuFileSaveSpectrum_ID);
   MenuFile->AddEntry("Save spectrum &derivative to file ...", MenuFileSaveSpectrumDerivative_ID);
+  MenuFile->AddEntry("Save PSD histo&gram to file ...", MenuFileSavePSDHistogram_ID);
   MenuFile->AddEntry("Save PSD &histogram slice to file ...", MenuFileSavePSDHistogramSlice_ID);
   MenuFile->AddEntry("&Print canvas ...", MenuFilePrint_ID);
   MenuFile->AddSeparator();
@@ -1578,6 +1579,7 @@ void AAInterface::HandleMenu(int MenuID)
     
   case MenuFileSaveSpectrum_ID:
   case MenuFileSaveSpectrumDerivative_ID:
+  case MenuFileSavePSDHistogram_ID:
   case MenuFileSavePSDHistogramSlice_ID:{
 
     // Create character arrays that enable file type selection (.dat
@@ -1651,8 +1653,22 @@ void AAInterface::HandleMenu(int MenuID)
 	else
 	  Success = ComputationMgr->SaveHistogramData("SpectrumDerivative", FileName, FileExtension);
       }
+
+      else if(MenuID == MenuFileSavePSDHistogram_ID){
+	if(!ComputationMgr->GetPSDHistogramExists()){
+	  CreateMessageBox("A PSD histogram has not been created yet and, therefore, there is nothing to save!","Stop");
+	  break;
+	}
+
+	if(FileExtension != ".root"){
+	  CreateMessageBox("PSD histograms may only be saved to a ROOT TFile (*.root). Please reselect file type!","Stop");
+	  break;
+	}
+
+	Success = ComputationMgr->SaveHistogramData("PSDHistogram", FileName, FileExtension);
+      }
       
-      else if (MenuID == MenuFileSavePSDHistogramSlice_ID){
+      else if(MenuID == MenuFileSavePSDHistogramSlice_ID){
 	if(!ComputationMgr->GetPSDHistogramSliceExists()){
 	  CreateMessageBox("A PSD histogram slice has not been created yet and, therefore, there is nothing to save!","Stop");
 	  break;
@@ -2599,13 +2615,14 @@ void AAInterface::HandleRadioButtons()
     break;
   }    
     
-
   case SpectrumCalibrationFixedEP_RB_ID:{
 
     if(SpectrumCalibrationFixedEP_RB->IsDown()){
       SpectrumCalibrationManual_RB->SetState(kButtonUp);
 
       SetCalibrationWidgetState(false, kButtonDisabled);
+      
+      ComputationMgr->SetFixedEPCalibration();
     }
     
     break;
