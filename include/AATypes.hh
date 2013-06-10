@@ -70,6 +70,7 @@ enum{
   
   MenuFileOpenADAQ_ID,
   MenuFileOpenACRONYM_ID,
+  MenuFileSaveWaveform_ID,
   MenuFileSaveSpectrum_ID,
   MenuFileSaveSpectrumDerivative_ID,
   MenuFileSavePSDHistogram_ID,

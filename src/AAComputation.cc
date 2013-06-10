@@ -1332,8 +1332,10 @@ bool AAComputation::SaveHistogramData(string Type, string FileName, string FileE
 {
   TH1F *HistogramToSave_H1;
   TH2F *HistogramToSave_H2;
-
-  if(Type == "Spectrum")
+  
+  if(Type == "Waveform")
+    HistogramToSave_H1 = Waveform_H[ADAQSettings->WaveformChannel];
+  else if(Type == "Spectrum")
     HistogramToSave_H1 = Spectrum_H;
   else if(Type == "SpectrumDerivative")
     HistogramToSave_H1 = SpectrumDerivative_H;
@@ -1372,10 +1374,13 @@ bool AAComputation::SaveHistogramData(string Type, string FileName, string FileE
     
     TFile *HistogramOutput = new TFile(FullFileName.c_str(), "recreate");
     
-    if(Type == "PSDHistogram")
+    if(Type == "Waveform")
+      HistogramToSave_H1->Write("Waveform");
+    else if(Type == "PSDHistogram")
       HistogramToSave_H2->Write("PSDHistogram");
     else
       HistogramToSave_H1->Write("Spectrum");
+    
     HistogramOutput->Close();
     
     return true;

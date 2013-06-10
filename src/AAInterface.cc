@@ -108,6 +108,7 @@ void AAInterface::CreateTheMainFrames()
   TGPopupMenu *MenuFile = new TGPopupMenu(gClient->GetRoot());
   MenuFile->AddEntry("&Open ADAQ ROOT file ...", MenuFileOpenADAQ_ID);
   MenuFile->AddEntry("Ope&n ACRONYM ROOT file ...", MenuFileOpenACRONYM_ID);
+  MenuFile->AddEntry("Save &waveform to file ...", MenuFileSaveWaveform_ID);
   MenuFile->AddEntry("&Save spectrum to file ...", MenuFileSaveSpectrum_ID);
   MenuFile->AddEntry("Save spectrum &derivative to file ...", MenuFileSaveSpectrumDerivative_ID);
   MenuFile->AddEntry("Save PSD histo&gram to file ...", MenuFileSavePSDHistogram_ID);
@@ -1576,7 +1577,8 @@ void AAInterface::HandleMenu(int MenuID)
     }
     break;
   }
-    
+
+  case MenuFileSaveWaveform_ID:
   case MenuFileSaveSpectrum_ID:
   case MenuFileSaveSpectrumDerivative_ID:
   case MenuFileSavePSDHistogram_ID:
@@ -1636,7 +1638,11 @@ void AAInterface::HandleMenu(int MenuID)
       
       bool Success = false;
       
-      if(MenuID == MenuFileSaveSpectrum_ID){
+      if(MenuID == MenuFileSaveWaveform_ID){
+	Success = ComputationMgr->SaveHistogramData("Waveform", FileName, FileExtension);
+      }
+      
+      else if(MenuID == MenuFileSaveSpectrum_ID){
 	if(!ComputationMgr->GetSpectrumExists()){
 	  CreateMessageBox("No spectra have been created yet and, therefore, there is nothing to save!","Stop");
 	  break;
@@ -1676,14 +1682,14 @@ void AAInterface::HandleMenu(int MenuID)
 	else
 	  Success = ComputationMgr->SaveHistogramData("PSDHistogramSlice", FileName, FileExtension);
       }
-
+      
       if(Success){
 	if(FileExtension == ".dat")
 	  CreateMessageBox("The histogram was successfully saved to the .dat file","Asterisk");
 	else if(FileExtension == ".csv")
 	  CreateMessageBox("The histogram was successfully saved to the .csv file","Asterisk");
 	else if(FileExtension == ".root")
-	  CreateMessageBox("The histogram name 'Spectrum' was successfully saved to the .root file","Asterisk");
+	  CreateMessageBox("The histogram (named 'Waveform','Spectrum',or 'PSDHistogram') \nwas successfully saved to the .root file!\n","Asterisk");
       }
       else
 	CreateMessageBox("The histogram failed to save to the file for unknown reasons!","Stop");
