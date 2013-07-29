@@ -3127,8 +3127,8 @@ void AAInterface::UpdateForACRONYMFile()
   ACROSpectrumTypeScintCreated_RB->SetState(kButtonUp);
   ACROSpectrumLS_RB->SetEnabled(true);
   ACROSpectrumLS_RB->SetOn(false);
-  ACROSpectrumES_RB->SetEnabled(true);
-  ACROSpectrumES_RB->SetOn(true);
+  //  ACROSpectrumES_RB->SetEnabled(true);
+  //  ACROSpectrumES_RB->SetOn(true);
 
   // Analysis frame (disabled)
   AnalysisOptionsTab_CF->HideFrame(AnalysisOptions_CF);
