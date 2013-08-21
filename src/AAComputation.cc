@@ -43,8 +43,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     Baseline(0.), PSDFilterPolarity(1.),
     V1720MaximumBit(4095), NumDataChannels(8),
     SpectrumExists(false), SpectrumDerivativeExists(false), PSDHistogramExists(false), PSDHistogramSliceExists(false),
-    TotalPeaks(0), TotalDeuterons(0),
-    GaussianBinWidth(1.), CountsBinWidth(1.)
+    TotalPeaks(0), TotalDeuterons(0)
 {
   if(TheComputationManager){
     cout << "\nERROR! TheComputationManager was constructed twice!\n" << endl;
@@ -1293,19 +1292,19 @@ void AAComputation::IntegrateSpectrum()
   // Gaussian fitting/integration
 
   if(ADAQSettings->SpectrumUseGaussianFit){
-    // Create a gaussian fit between the lower/upper limits; fit the
-    // gaussian to the histogram and store the result of the fit in a
-    // new TH1F object for analysis
     if(SpectrumFit_F)
       delete SpectrumFit_F;
-    
+
+    // Create a gaussian fit between the lower/upper limits; fit the
+    // gaussian to the histogram representing the integral region
+    // new TH1F object for analysis
     SpectrumFit_F = new TF1("PeakFit", "gaus", LowerIntLimit, UpperIntLimit);
     SpectrumIntegral_H->Fit("PeakFit","R N");
-    TH1F *SpectrumFit_H = (TH1F *)SpectrumFit_F->GetHistogram();
-    
-    // Get the bin width. Note that bin width is constant for these
-    // histograms so getting the zeroth bin is acceptable
-    GaussianBinWidth = SpectrumFit_H->GetBinWidth(0);
+
+    // Project the gaussian fit into a histogram with identical
+    // binning to the original spectrum to make analysis easier
+    TH1F *SpectrumFit_H = (TH1F *)SpectrumIntegral_H->Clone("SpectrumFit_H");
+    SpectrumFit_H->Eval(SpectrumFit_F);
     
     // Compute the integral and error between the lower/upper limits
     // of the histogram that resulted from the gaussian fit
@@ -1313,11 +1312,6 @@ void AAComputation::IntegrateSpectrum()
 					  SpectrumFit_H->FindBin(UpperIntLimit),
 					  Err,
 					  IntegralArg.c_str());
-    
-    if(ADAQSettings->SpectrumIntegralInCounts){
-      Int *= (GaussianBinWidth/CountsBinWidth);
-      Err *= (GaussianBinWidth/CountsBinWidth);
-    }
     
     // Draw the gaussian peak fit
     SpectrumFit_F->SetLineColor(kGreen+2);
@@ -1337,9 +1331,6 @@ void AAComputation::IntegrateSpectrum()
 						 StopBin,
 						 Err,
 						 IntegralArg.c_str());
-    
-    // Get the bin width of the histogram
-    CountsBinWidth = SpectrumIntegral_H->GetBinWidth(0);
   }
   
   // The spectrum integral and error may be normalized to the total

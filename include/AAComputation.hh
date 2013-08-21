@@ -294,9 +294,6 @@ private:
   // Aggregated total number of deuterons from the RFQ
   double TotalDeuterons;
 
-  // Bin widths for spectrum integration algorithms
-  double GaussianBinWidth, CountsBinWidth;
-  
   // Create a TColor ROOT object to handle pixel-2-color conversions
   TColor *ColorManager;
 
