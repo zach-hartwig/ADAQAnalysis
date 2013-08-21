@@ -54,9 +54,15 @@ public:
   vector<bool> UseSpectraCalibrations;
 
   bool FindBackground;
+  int BackgroundIterations;
+  bool BackgroundCompton, BackgroundSmoothing;
   int BackgroundMinBin, BackgroundMaxBin;
+  int BackgroundDirection;
+  int BackgroundFilterOrder;
+  int BackgroundSmoothingWidth;
+
   bool PlotWithBackground, PlotLessBackground;
-  
+
   bool SpectrumFindIntegral, SpectrumIntegralInCounts;
   bool SpectrumUseGaussianFit, SpectrumNormalizeToCurrent;
   bool SpectrumOverplotDerivative;

@@ -1134,6 +1134,7 @@ void AAComputation::CalculateSpectrumBackground()//TH1F *Spectrum_H)
   // background = background component of raw spectrum
   // deconvolved = raw spectrum less background spectrum
 
+
   // Clone the Spectrum_H object and give the clone a unique name
   TH1F *SpectrumClone_H = (TH1F *)Spectrum_H->Clone("SpectrumClone_H");
   
@@ -1158,7 +1159,40 @@ void AAComputation::CalculateSpectrumBackground()//TH1F *Spectrum_H)
 
   // Use the TSpectrum::Background() method to compute the spectrum
   // background; Set the resulting TH1F objects graphic attributes
-  SpectrumBackground_H = (TH1F *)PeakFinder->Background(SpectrumClone_H, 15, "goff");
+
+  int Iterations = ADAQSettings->BackgroundIterations;
+
+  string Compton = "";
+  if(ADAQSettings->BackgroundCompton)
+    Compton = " Compton ";
+
+  string Smoothing = " nosmoothing ";
+  if(ADAQSettings->BackgroundSmoothing)
+    Smoothing = "";
+
+  string Direction;
+  if(ADAQSettings->BackgroundDirection == 0)
+    Direction = " BackIncreasingWindow ";
+  else if(ADAQSettings->BackgroundDirection == 1)
+    Direction = " BackDecreasingWindow ";
+
+  stringstream ss;
+
+  string FilterOrder;
+  ss << " BackOrder" << ADAQSettings->BackgroundFilterOrder << " ";
+  FilterOrder = ss.str();
+
+  ss.str("");
+
+  string SmoothingWidth;
+  ss << " BackSmoothing" << ADAQSettings->BackgroundSmoothingWidth << " ";
+  SmoothingWidth = ss.str();
+
+  string BackgroundOptionsString = Compton + Smoothing + Direction + FilterOrder + SmoothingWidth;
+
+  SpectrumBackground_H = (TH1F *)PeakFinder->Background(SpectrumClone_H, 
+							Iterations,
+							BackgroundOptionsString.c_str());
   SpectrumBackground_H->SetLineColor(2);
   SpectrumBackground_H->SetLineWidth(2);
 
@@ -2811,8 +2845,12 @@ void AAComputation::CreateACRONYMSpectrum()
   }
 
   // Must plot all entries in tree at present: ZSH (23 May 13)
+
+  Int_t Max = Entries;
+  if(Entries>240000)
+    Max = 240000;
   
-  for(int entry=0; entry<Entries; entry++){
+  for(int entry=0; entry<Max; entry++){
     
     Tree->GetEvent(entry);
 

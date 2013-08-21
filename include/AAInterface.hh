@@ -151,6 +151,11 @@ private:
   // Widget to enable/disable pileup rejection algorithm
   TGCheckButton *UsePileupRejection_CB;
 
+  TGCheckButton *WaveformIntegrate_CB;
+  TGRadioButton *WaveformWholeIntegral_CB;
+  TGRadioButton *WaveformPeakFindingIntegral_CB;
+  ADAQNumberEntryWithLabel *WaveformIntegral_NEL;
+
 
   ///////////////////////////////////////////
   // Widgets for the spectrum tabbed frame //
@@ -196,6 +201,12 @@ private:
   TGCheckButton *SpectrumFindBackground_CB;
   ADAQNumberEntryWithLabel *SpectrumRangeMin_NEL;
   ADAQNumberEntryWithLabel *SpectrumRangeMax_NEL;
+  ADAQNumberEntryWithLabel *SpectrumBackgroundIterations_NEL;
+  ADAQComboBoxWithLabel *SpectrumBackgroundDirection_CBL;
+  TGCheckButton *SpectrumBackgroundCompton_CB, *SpectrumBackgroundSmoothing_CB;
+  ADAQComboBoxWithLabel *SpectrumBackgroundFilterOrder_CBL, *SpectrumBackgroundSmoothingWidth_CBL;
+
+  
   TGRadioButton *SpectrumWithBackground_RB;
   TGRadioButton *SpectrumLessBackground_RB;
 

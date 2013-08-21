@@ -136,11 +136,21 @@ enum{
   SpectrumNumPeaks_NEL_ID,
   SpectrumSigma_NEL_ID,
   SpectrumResolution_NEL_ID,
+
+
+
   SpectrumRangeMin_NEL_ID,
   SpectrumRangeMax_NEL_ID,
   SpectrumFindPeaks_CB_ID,
 
   SpectrumFindBackground_CB_ID,
+  SpectrumBackgroundIterations_NEL_ID,
+  SpectrumBackgroundCompton_CB_ID,
+  SpectrumBackgroundSmoothing_CB_ID,
+  SpectrumBackgroundDirection_CBL_ID,
+  SpectrumBackgroundFilterOrder_CBL_ID,
+  SpectrumBackgroundSmoothingWidth_CBL_ID,
+
   SpectrumNoBackground_RB_ID,
   SpectrumWithBackground_RB_ID,
   SpectrumLessBackground_RB_ID,
