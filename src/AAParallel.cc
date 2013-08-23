@@ -26,16 +26,47 @@ AAParallel::AAParallel()
   }
   TheParallelManager = this;
 
+  // ADAQAnalysis is configured separately for two types of users;
+  // users and developers. The user type is automatically set by the
+  // ADAQ Setup.sh configuration script.
+  
+  if(getenv("ADAQUSER")==NULL){
+    cout << "\nError! The 'ADAQUSER' environmental variable must be set to properly configure\n"
+	 <<   "       ADAQAnalysis! Please use the provided ADAQ Setup.sh script.\n"
+	 << endl;
+    exit(-42);
+  }
 
-  string ADAQHOME = getenv("ADAQHOME");
+  // Get ADAQ user type
+  string ADAQUSER = getenv("ADAQUSER");
+
+  // Get the linux user handle
   string USER = getenv("USER");
 
-  if(VersionString == "Development")
-    ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysis/trunk/bin/ADAQAnalysis_MPI";
-  else
-    ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysis/versions/" + VersionString + "/bin/ADAQAnalysis_MPI";
   
-  
+  // ADAQ users run the installed binaries from /usr/local/adaq
+  if(ADAQUSER == "user")
+    ParallelBinaryName = "/usr/local/adaq/ADAQAnalysis_MPI";
+
+  // ADAQ developers require settings relative to their top-level SVN
+  // checkout directory of the source code
+  else if(ADAQUSER == "developer"){
+    if(getenv("ADAQHOME")==NULL){
+      cout << "\nError! The 'ADAQHOME' environmental variable must be set to point to the top-level\n"
+	   <<   "       ADAQ SVN checkout directory! Please check your environment settings.\n"
+	   << endl;
+      exit(-42);
+    }
+
+    string ADAQHOME = getenv("ADAQHOME");
+    
+    if(VersionString == "Development")
+      ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysis/trunk/bin/ADAQAnalysis_MPI";
+    else
+      ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysis/versions/" + VersionString + "/bin/ADAQAnalysis_MPI";
+  }
+ 
+  // Set the location of the transient parallel processing file
   ParallelFileName = "/tmp/ADAQParallelProcessing_" + USER + ".root";
 }
 
