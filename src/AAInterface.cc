@@ -2190,17 +2190,25 @@ void AAInterface::HandleTextButtons()
     // requires integration type peak finder to be used
     if(ComputationMgr->GetUsePSDFilters()[ADAQSettings->PSDChannel] and ADAQSettings->ADAQSpectrumIntTypeWW)
       CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
+
+    if(ACRONYMFileLoaded){
+      CreateMessageBox("Error! ACRONYM files cannot be despliced!","Stop");
+      break;
+    }
     
     // Sequential processing
     if(ProcessingSeq_RB->IsDown())
       ComputationMgr->CreateDesplicedFile();
     
     // Parallel processing
-    else
-      ComputationMgr->ProcessWaveformsInParallel("desplicing");
-    
+    else{
+      if(ADAQFileLoaded){
+	SaveSettings(true);
+	ComputationMgr->ProcessWaveformsInParallel("desplicing");
+      }
+    }
     break;
-
+    
     
     //////////////////
     // Canvas frame //

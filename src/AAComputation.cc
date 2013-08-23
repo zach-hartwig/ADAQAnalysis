@@ -1452,7 +1452,7 @@ TH2F *AAComputation::CreatePSDHistogram()
   WaveformEnd = ADAQSettings->PSDWaveformsToDiscriminate;
   
 #ifdef MPI_ENABLED
-
+  
   int SlaveEvents = int(ADAQSettings->PSDWaveformsToDiscriminate/MPI_Size);
   
   int MasterEvents = int(ADAQSettings->PSDWaveformsToDiscriminate-SlaveEvents*(MPI_Size-1));
@@ -2224,6 +2224,12 @@ void AAComputation::ClearPSDFilter(int Channel)
 
 void AAComputation::CreateDesplicedFile()
 {
+  cout << ADAQSettings->WaveformsToDesplice << endl;
+
+  
+
+
+
   ////////////////////////////
   // Prepare for processing //
   ////////////////////////////
@@ -2255,7 +2261,7 @@ void AAComputation::CreateDesplicedFile()
   WaveformEnd = ADAQSettings->WaveformsToDesplice; // End (Up to but NOT including this waveform)
   
 #ifdef MPI_ENABLED
-  
+
   // If the waveform processing is to be done in parallel then
   // distribute the events as evenly as possible between the master
   // (rank == 0) and the slaves (rank != 0) to maximize computational
