@@ -396,8 +396,6 @@ void AAInterface::FillWaveformFrame()
   WaveformHeight_NEL->GetEntry()->SetNumber(0.);
   WaveformHeight_NEL->GetEntry()->SetState(false);
   WaveformHeight_NEL->GetEntry()->Resize(125,20);
-
-
 }
 
 

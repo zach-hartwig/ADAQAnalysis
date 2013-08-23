@@ -2445,6 +2445,13 @@ void AAComputation::CreateDesplicedFile()
       // the TTree variable from the Waveform_H object
       int index = 0;
 
+      // A crude filter to prevent imposter peaks (e.g. TSpectrum
+      // finds a peak in the noise or in a badly distorted or
+      // saturated waveform)
+      int WaveformWidth = (*peak_iter).PeakLimit_Upper - (*peak_iter).PeakLimit_Lower;
+      if(WaveformWidth < 10)
+	continue;
+
       for(int sample=(*peak_iter).PeakLimit_Lower; sample<(*peak_iter).PeakLimit_Upper; sample++){
 	VoltageInADC_AllChannels[0].push_back(Waveform_H[Channel]->GetBinContent(sample));;
 	index++;
