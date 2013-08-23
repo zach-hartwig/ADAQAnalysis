@@ -82,6 +82,7 @@ public:
   void RejectPileup(TH1F *);
   void IntegratePearsonWaveform(int);
   void CalculateCountRate();
+  void AnalyzeWaveform(TH1F *);
 
   // Spectrum creation
   void CreateSpectrum();
@@ -114,6 +115,10 @@ public:
 
   ////////////////////////////////////////
   // Public access methods for member data
+
+  // Waveform analysis results
+  double GetWaveformAnalysisHeight() {return WaveformAnalysisHeight;}
+  double GetWaveformAnalysisArea() {return WaveformAnalysisArea;}
 
   // Waveform peak data
   vector<PeakInfoStruct> GetPeakInfoVec() {return PeakInfoVec;}
@@ -223,8 +228,10 @@ private:
 
   // Waveform processing range
   int WaveformStart, WaveformEnd;
-  
 
+  // Waveform analysis results
+  double WaveformAnalysisHeight, WaveformAnalysisArea;
+  
   /////////////////////
   // Spectrum variables
 

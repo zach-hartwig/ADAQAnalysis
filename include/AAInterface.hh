@@ -139,7 +139,7 @@ private:
   TGCheckButton *PlotZeroSuppressionCeiling_CB;
   ADAQNumberEntryWithLabel *ZeroSuppressionCeiling_NEL;
 
-  TGCheckButton *FindPeaks_CB;
+  TGCheckButton *FindPeaks_CB, *UseMarkovSmoothing_CB;
   ADAQNumberEntryWithLabel *MaxPeaks_NEL;
   ADAQNumberEntryWithLabel *Sigma_NEL;
   ADAQNumberEntryWithLabel *Resolution_NEL;
@@ -151,10 +151,8 @@ private:
   // Widget to enable/disable pileup rejection algorithm
   TGCheckButton *UsePileupRejection_CB;
 
-  TGCheckButton *WaveformIntegrate_CB;
-  TGRadioButton *WaveformWholeIntegral_CB;
-  TGRadioButton *WaveformPeakFindingIntegral_CB;
-  ADAQNumberEntryWithLabel *WaveformIntegral_NEL;
+  TGCheckButton *WaveformAnalysis_CB;
+  ADAQNumberEntryWithLabel *WaveformIntegral_NEL, *WaveformHeight_NEL;
 
 
   ///////////////////////////////////////////

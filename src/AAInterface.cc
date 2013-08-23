@@ -283,6 +283,13 @@ void AAInterface::FillWaveformFrame()
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
   FindPeaks_CB->SetState(kButtonDisabled);
   FindPeaks_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  
+  WaveformOptions_CF->AddFrame(UseMarkovSmoothing_CB = new TGCheckButton(WaveformOptions_CF, "Use Markov smoothing", UseMarkovSmoothing_CB_ID),
+			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
+  UseMarkovSmoothing_CB->SetState(kButtonDown);
+  UseMarkovSmoothing_CB->SetState(kButtonDisabled);
+
+  UseMarkovSmoothing_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   WaveformOptions_CF->AddFrame(MaxPeaks_NEL = new ADAQNumberEntryWithLabel(WaveformOptions_CF, "Maximum peaks", MaxPeaks_NEL_ID),
 		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
@@ -367,15 +374,28 @@ void AAInterface::FillWaveformFrame()
 		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
   PlotTrigger_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
-
-  TGGroupFrame *WaveformIntegration_GF = new TGGroupFrame(WaveformOptions_CF, "Waveform integration", kVerticalFrame);
-  WaveformOptions_CF->AddFrame(WaveformIntegration_GF, new TGLayoutHints(kLHintsLeft, 15,5,0,5));
-
-  WaveformIntegration_GF->AddFrame(WaveformIntegrate_CB = new TGCheckButton(WaveformIntegration_GF, "Integrate waveform", -1),
-				   new TGLayoutHints(kLHintsLeft, 0,5,0,0));
-
-  WaveformIntegration_GF->AddFrame(WaveformIntegral_NEL = new ADAQNumberEntryWithLabel(WaveformIntegration_GF, "Integral (ADC)", -1),
-				   new TGLayoutHints(kLHintsLeft, 0,5,0,0));
+  
+  TGGroupFrame *WaveformAnalysis_GF = new TGGroupFrame(WaveformOptions_CF, "Waveform analysis", kVerticalFrame);
+  WaveformOptions_CF->AddFrame(WaveformAnalysis_GF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+  
+  WaveformAnalysis_GF->AddFrame(WaveformAnalysis_CB = new TGCheckButton(WaveformAnalysis_GF, "Analyze waveform", WaveformAnalysis_CB_ID),
+				new TGLayoutHints(kLHintsLeft, 0,5,0,0));
+  WaveformAnalysis_CB->SetState(kButtonDisabled);
+  WaveformAnalysis_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  
+  WaveformAnalysis_GF->AddFrame(WaveformIntegral_NEL = new ADAQNumberEntryWithLabel(WaveformAnalysis_GF, "Integral (ADC)", -1),
+				new TGLayoutHints(kLHintsLeft, 0,5,0,0));
+  WaveformIntegral_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  WaveformIntegral_NEL->GetEntry()->SetNumber(0.);
+  WaveformIntegral_NEL->GetEntry()->SetState(false);
+  WaveformIntegral_NEL->GetEntry()->Resize(125,20);
+  
+  WaveformAnalysis_GF->AddFrame(WaveformHeight_NEL = new ADAQNumberEntryWithLabel(WaveformAnalysis_GF, "Height (ADC)", -1),
+				new TGLayoutHints(kLHintsLeft, 0,5,0,0));
+  WaveformHeight_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  WaveformHeight_NEL->GetEntry()->SetNumber(0.);
+  WaveformHeight_NEL->GetEntry()->SetState(false);
+  WaveformHeight_NEL->GetEntry()->Resize(125,20);
 
 
 }
@@ -2208,6 +2228,7 @@ void AAInterface::HandleCheckButtons()
   switch(CheckButtonID){
     
   case FindPeaks_CB_ID:
+  case UseMarkovSmoothing_CB_ID:
     GraphicsMgr->PlotWaveform();
     break;
 
@@ -2218,6 +2239,7 @@ void AAInterface::HandleCheckButtons()
   case PlotTrigger_CB_ID:
   case PlotBaseline_CB_ID:
   case UsePileupRejection_CB_ID:
+  case WaveformAnalysis_CB_ID:
   case PlotPearsonIntegration_CB_ID:
     GraphicsMgr->PlotWaveform();
     break;
@@ -2488,6 +2510,15 @@ void AAInterface::HandleSliders(int SliderPosition)
   WaveformSelector_NEL->GetEntry()->SetNumber(SliderPosition);
   
   GraphicsMgr->PlotWaveform();
+
+  // Update the waveform analysis widgets
+  if(WaveformAnalysis_CB->IsDown()){
+    double Height = ComputationMgr->GetWaveformAnalysisHeight();
+    WaveformHeight_NEL->GetEntry()->SetNumber(Height);
+    
+    double Area = ComputationMgr->GetWaveformAnalysisArea();
+    WaveformIntegral_NEL->GetEntry()->SetNumber(Area);
+  }
 }
 
 
@@ -2601,6 +2632,15 @@ void AAInterface::HandleNumberEntries()
   case WaveformSelector_NEL_ID:
     WaveformSelector_HS->SetPosition(WaveformSelector_NEL->GetEntry()->GetIntNumber());
     GraphicsMgr->PlotWaveform();
+
+    // Update the waveform analysis widgets
+    if(WaveformAnalysis_CB->IsDown()){
+      double Height = ComputationMgr->GetWaveformAnalysisHeight();
+      WaveformHeight_NEL->GetEntry()->SetNumber(Height);
+
+      double Area = ComputationMgr->GetWaveformAnalysisArea();
+      WaveformIntegral_NEL->GetEntry()->SetNumber(Area);
+    }
     break;
     
   case MaxPeaks_NEL_ID:
@@ -2687,25 +2727,39 @@ void AAInterface::HandleRadioButtons()
     
   case RawWaveform_RB_ID:
     FindPeaks_CB->SetState(kButtonDisabled);
+    UseMarkovSmoothing_CB->SetState(kButtonDisabled);
+    WaveformAnalysis_CB->SetState(kButtonDisabled);
     GraphicsMgr->PlotWaveform();
     break;
     
   case BaselineSubtractedWaveform_RB_ID:
-    if(FindPeaks_CB->IsDown())
+    if(FindPeaks_CB->IsDown()){
       FindPeaks_CB->SetState(kButtonDown);
-    else
+      UseMarkovSmoothing_CB->SetState(kButtonDown);
+      WaveformAnalysis_CB->SetState(kButtonDown);
+    }
+    else{
       FindPeaks_CB->SetState(kButtonUp);
+      UseMarkovSmoothing_CB->SetState(kButtonUp);
+      WaveformAnalysis_CB->SetState(kButtonUp);
+    }
     GraphicsMgr->PlotWaveform();
     break;
     
   case ZeroSuppressionWaveform_RB_ID:
-    if(FindPeaks_CB->IsDown())
+    if(FindPeaks_CB->IsDown()){
       FindPeaks_CB->SetState(kButtonDown);
-    else
+      UseMarkovSmoothing_CB->SetState(kButtonDown);
+      WaveformAnalysis_CB->SetState(kButtonDown);
+    }
+    else{
       FindPeaks_CB->SetState(kButtonUp);
+      UseMarkovSmoothing_CB->SetState(kButtonUp);
+      WaveformAnalysis_CB->SetState(kButtonUp);
+    }
     GraphicsMgr->PlotWaveform();
     break;
-
+    
   case PositiveWaveform_RB_ID:
   case NegativeWaveform_RB_ID:
     GraphicsMgr->PlotWaveform();
@@ -2911,6 +2965,7 @@ void AAInterface::SaveSettings(bool SaveToFile)
     ADAQSettings->WaveformPolarity = -1.0;
   
   ADAQSettings->FindPeaks = FindPeaks_CB->IsDown();
+  ADAQSettings->UseMarkovSmoothing = UseMarkovSmoothing_CB->IsDown();
   ADAQSettings->MaxPeaks = MaxPeaks_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->Sigma = Sigma_NEL->GetEntry()->GetNumber();
   ADAQSettings->Resolution = Resolution_NEL->GetEntry()->GetNumber();
@@ -2927,6 +2982,8 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->BaselineCalcMax = BaselineCalcMax_NEL->GetEntry()->GetIntNumber();
 
   ADAQSettings->PlotTrigger = PlotTrigger_CB->IsDown();
+  
+  ADAQSettings->WaveformAnalysis = WaveformAnalysis_CB->IsDown();
 
   //////////////////////////////////////
   // Values from "Spectrum" tabbed frame

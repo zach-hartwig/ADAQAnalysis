@@ -95,6 +95,7 @@ enum{
   ZeroSuppressionCeiling_NEL_ID,
 
   FindPeaks_CB_ID,
+  UseMarkovSmoothing_CB_ID,
   MaxPeaks_NEL_ID,
   Sigma_NEL_ID,
   Resolution_NEL_ID,
@@ -111,6 +112,8 @@ enum{
   BaselineCalcMax_NEL_ID,
 
   PlotTrigger_CB_ID,
+
+  WaveformAnalysis_CB_ID,
 
   
   /////////////////////////////////////////
@@ -136,8 +139,6 @@ enum{
   SpectrumNumPeaks_NEL_ID,
   SpectrumSigma_NEL_ID,
   SpectrumResolution_NEL_ID,
-
-
 
   SpectrumRangeMin_NEL_ID,
   SpectrumRangeMax_NEL_ID,

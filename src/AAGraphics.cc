@@ -111,7 +111,10 @@ void AAGraphics::PlotWaveform(int Color)
 
   else if(ADAQSettings->ZSWaveform)
     Waveform_H = ComputationMgr->CalculateZSWaveform(Channel, Waveform);
-
+  
+  if(ADAQSettings->WaveformAnalysis)
+    ComputationMgr->AnalyzeWaveform(Waveform_H);
+  
 
   // Determine the X-axis size and min/max values
   int XAxisSize = Waveform_H->GetNbinsX();

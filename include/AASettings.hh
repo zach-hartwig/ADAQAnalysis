@@ -22,7 +22,7 @@ public:
   bool PlotZeroSuppressionCeiling;
   int ZeroSuppressionCeiling;
 
-  bool FindPeaks;
+  bool FindPeaks, UseMarkovSmoothing;
   int MaxPeaks, Sigma, Floor;
   double Resolution;
   
@@ -33,7 +33,7 @@ public:
   bool PlotBaselineCalcRegion;
   int BaselineCalcMin, BaselineCalcMax;
   
-  bool PlotTrigger;
+  bool PlotTrigger, WaveformAnalysis;
 
   
   // Spectrum frame

@@ -165,7 +165,7 @@ bool AAComputation::LoadADAQRootFile(string FileName)
   ADAQFileName = FileName;
   
   // Open the specified ROOT file 
-  TFile *ADAQRootFile = new TFile(FileName.c_str(), "read");
+  ADAQRootFile = new TFile(FileName.c_str(), "read");
   
   // If a valid ADAQ ROOT file was NOT opened...
   if(!ADAQRootFile->IsOpen()){
@@ -472,12 +472,16 @@ bool AAComputation::FindPeaks(TH1F *Histogram_H)
   //
   // sigma = distance between allowable peak finds
   // resolution = fraction of max peak above which peaks are valid
+
+  string PeakFinderOptions = "goff nodraw";
+  if(!ADAQSettings->UseMarkovSmoothing)
+    PeakFinderOptions += " noMarkov";
   
   int NumPotentialPeaks = PeakFinder->Search(Histogram_H,				    
 					     ADAQSettings->Sigma,
-					     "goff", 
+					     PeakFinderOptions.c_str(),
 					     ADAQSettings->Resolution);
-  
+
   // Since the PeakFinder actually found potential peaks then get the
   // X and Y positions of the potential peaks from the PeakFinder
   float *PotentialPeakPosX = PeakFinder->GetPositionX();
@@ -722,7 +726,6 @@ void AAComputation::CreateSpectrum()
   // Reboot the PeakFinder with up-to-date max peaks
   if(PeakFinder) delete PeakFinder;
   PeakFinder = new TSpectrum(ADAQSettings->MaxPeaks);
-  
 
   // Assign the range of waveforms that will be analyzed to create a
   // histogram. Note that in sequential architecture if N waveforms
@@ -824,9 +827,8 @@ void AAComputation::CreateSpectrum()
 	// Reset the pulse area "integral" to zero
 	PulseArea = 0.;
 	
-	// ...iterate through the bins in the Waveform_H histogram. If
-	// the current bin value (the waveform voltage) is above the
-	// floor, then add that bin to the pulse area integral
+	// ...iterate through the bins in the Waveform_H histogram and
+	// add each bin value to the pulse area integral.
 	for(int sample=0; sample<Waveform_H[Channel]->GetEntries(); sample++){
 	  SampleHeight = Waveform_H[Channel]->GetBinContent(sample);
 
@@ -839,7 +841,6 @@ void AAComputation::CreateSpectrum()
 	  // broadening the photo peaks. May want to implement a
 	  // "minimum waveform height to be histogrammed" at some
 	  // point in the future.
-	  // if(SampleHeight >= 20)
 	  PulseArea += SampleHeight;
 	}
 	
@@ -894,7 +895,7 @@ void AAComputation::CreateSpectrum()
       // or if a PHS is to be created ...
       else if(ADAQSettings->ADAQSpectrumTypePHS)
 	FindPeakHeights();
-      
+
       // Note that we must add a +1 to the waveform number in order to
       // get the modulo to land on the correct intervals
       if(IsMaster)
@@ -2228,7 +2229,7 @@ void AAComputation::CreateDesplicedFile()
   ////////////////////////////
   
   // Reset the progres bar if binary is sequential architecture
-
+  
   if(SequentialArchitecture){
     ProcessingProgressBar->Reset();
     ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(41));
@@ -2242,7 +2243,7 @@ void AAComputation::CreateDesplicedFile()
   // Variable to aggregate the integrated RFQ current. Presently this
   // feature is NOT implemented. 
   TotalDeuterons = 0.;
-
+  
   ////////////////////////////////////
   // Assign waveform processing ranges
   
@@ -2355,7 +2356,8 @@ void AAComputation::CreateDesplicedFile()
   // Create a new class that will store the results calculated in
   // parallel persistently in the new despliced ROOT file
   AAParallelResults *PR = new AAParallelResults;
-  
+
+
   // When the new despliced TFile object(s) that will RECEIVE the
   // despliced waveforms was(were) created above, that(those) TFile(s)
   // became the current TFile (or "directory") for ROOT. In order to
@@ -2381,7 +2383,6 @@ void AAComputation::CreateDesplicedFile()
     // control of the ADAQAnalysisGUI while processing
     if(SequentialArchitecture)
       gSystem->ProcessEvents();
-    
 
     /////////////////////////////////////////
     // Calculate the Waveform_H member object
@@ -2405,7 +2406,7 @@ void AAComputation::CreateDesplicedFile()
     // integration results on the canvas.
     if(ADAQSettings->IntegratePearson)
       IntegratePearsonWaveform(false);
-    
+
 
     ///////////////////////////
     // Find peaks and peak data
@@ -2448,7 +2449,7 @@ void AAComputation::CreateDesplicedFile()
 	VoltageInADC_AllChannels[0].push_back(Waveform_H[Channel]->GetBinContent(sample));;
 	index++;
       }
-      
+
       // Add a buffer (of length DesplicedWaveformBuffer in [samples]) of
       // zeros to the beginning and end of the despliced waveform to
       // aid future waveform processing
@@ -2490,11 +2491,11 @@ void AAComputation::CreateDesplicedFile()
 
   MPI::COMM_WORLD.Barrier();
   
-#endif
-  
   if(IsMaster)
     cout << "\nADAQAnalysis_MPI Node[0] : Waveform processing complete!\n"
 	 << endl;
+  
+  #endif
   
   ///////////////////////////////////////////////////////
   // Finish processing and creation of the despliced file
@@ -2859,4 +2860,16 @@ void AAComputation::CreateACRONYMSpectrum()
     Spectrum_H->Fill(Quantity);
   }
   SpectrumExists = true;
+}
+
+
+void AAComputation::AnalyzeWaveform(TH1F *Histogram_H)
+{
+  WaveformAnalysisHeight = Histogram_H->GetBinContent(Histogram_H->GetMaximumBin());
+  
+  WaveformAnalysisArea = 0.;
+  for(int sample=0; sample<Histogram_H->GetEntries(); sample++){
+    double PulseHeight = Histogram_H->GetBinContent(sample);
+    WaveformAnalysisArea += PulseHeight;
+  }
 }
