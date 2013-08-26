@@ -179,9 +179,16 @@ bool AAComputation::LoadADAQRootFile(string FileName)
 
     // Get the ADAQRootMeasParams objects stored in the ROOT file
     ADAQMeasParams = (ADAQRootMeasParams *)ADAQRootFile->Get("MeasParams");
-  
+
     // Get the TTree with waveforms stored in the ROOT file
     ADAQWaveformTree = (TTree *)ADAQRootFile->Get("WaveformTree");
+
+    // Seg fault protection against valid ROOT files that are missing
+    // the essential ADAQ objects.
+    if(ADAQMeasParams == NULL || ADAQWaveformTree == NULL){
+      ADAQFileLoaded = false;
+      return false;
+    }
 
     // Attempt to get the class containing results that were calculated
     // in a parallel run of ADAQAnalysisGUI and stored persistently
@@ -196,7 +203,7 @@ bool AAComputation::LoadADAQRootFile(string FileName)
     // files) then set the bool to false. This bool will be used
     // appropriately throughout the code to import parallel results.
     (ADAQParResults) ? ADAQParResultsLoaded = true : ADAQParResultsLoaded = false;
-
+    
     // If the ADAQParResults class was loaded then ...
     if(ADAQParResultsLoaded){
       // Load the total integrated RFQ current and update the number
@@ -204,11 +211,11 @@ bool AAComputation::LoadADAQRootFile(string FileName)
       TotalDeuterons = ADAQParResults->TotalDeuterons;
       //if(SequentialArchitecture)
       //DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
-    
+      
       if(Verbose)
 	cout << "Total RFQ current from despliced file: " << ADAQParResults->TotalDeuterons << endl;
     }
-
+    
     // Get the record length (acquisition window)
     RecordLength = ADAQMeasParams->RecordLength;
   
