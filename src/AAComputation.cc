@@ -336,21 +336,20 @@ bool AAComputation::LoadACRONYMRootFile(string FileName)
 
 TH1F *AAComputation::CalculateRawWaveform(int Channel, int Waveform)
 {
+  if(Waveform_H[Channel])
+    delete Waveform_H[Channel];
+  Waveform_H[Channel] = new TH1F("Waveform_H", "Raw Waveform", RecordLength-1, 0, RecordLength);
+  
   ADAQWaveformTree->GetEntry(Waveform);
 
   vector<int> RawVoltage = *WaveformVecPtrs[Channel];
-
-  Baseline = CalculateBaseline(&RawVoltage);
-
-  if(Waveform_H[Channel])
-    delete Waveform_H[Channel];
-  
-  Waveform_H[Channel] = new TH1F("Waveform_H", "Raw Waveform", RecordLength-1, 0, RecordLength);
-  
-  vector<int>::iterator iter;
-  for(iter=RawVoltage.begin(); iter!=RawVoltage.end(); iter++)
-    Waveform_H[Channel]->SetBinContent((iter-RawVoltage.begin()), *iter);
-  
+  if(!RawVoltage.empty()){
+    Baseline = CalculateBaseline(&RawVoltage);
+    
+    vector<int>::iterator iter;
+    for(iter=RawVoltage.begin(); iter!=RawVoltage.end(); iter++)
+      Waveform_H[Channel]->SetBinContent((iter-RawVoltage.begin()), *iter);
+  }
   return Waveform_H[Channel];
 }
 
@@ -362,25 +361,25 @@ TH1F *AAComputation::CalculateRawWaveform(int Channel, int Waveform)
 // Pearson (RFQ current) waveform) should be used in processing
 TH1F* AAComputation::CalculateBSWaveform(int Channel, int Waveform, bool CurrentWaveform)
 {
+  if(Waveform_H[Channel])
+    delete Waveform_H[Channel];
+  Waveform_H[Channel] = new TH1F("Waveform_H","Baseline-subtracted Waveform", RecordLength-1, 0, RecordLength);
+
   ADAQWaveformTree->GetEntry(Waveform);
   
   double Polarity;
   (CurrentWaveform) ? Polarity = ADAQSettings->PearsonPolarity : Polarity = ADAQSettings->WaveformPolarity;
   
   vector<int> RawVoltage = *WaveformVecPtrs[Channel];
-  
-  Baseline = CalculateBaseline(&RawVoltage);
 
-  if(Waveform_H[Channel])
-    delete Waveform_H[Channel];
-
-  Waveform_H[Channel] = new TH1F("Waveform_H","Baseline-subtracted Waveform", RecordLength-1, 0, RecordLength);
-
-  vector<int>::iterator it;  
-  for(it=RawVoltage.begin(); it!=RawVoltage.end(); it++)
-    Waveform_H[Channel]->SetBinContent((it-RawVoltage.begin()),
-				       Polarity*(*it-Baseline));
-  
+  if(!RawVoltage.empty()){
+    Baseline = CalculateBaseline(&RawVoltage);
+    
+    vector<int>::iterator it;  
+    for(it=RawVoltage.begin(); it!=RawVoltage.end(); it++)
+      Waveform_H[Channel]->SetBinContent((it-RawVoltage.begin()),
+					 Polarity*(*it-Baseline));
+  }
   return Waveform_H[Channel];
 }
 
@@ -399,34 +398,38 @@ TH1F *AAComputation::CalculateZSWaveform(int Channel, int Waveform, bool Current
   (CurrentWaveform) ? Polarity = ADAQSettings->PearsonPolarity : Polarity = ADAQSettings->WaveformPolarity;
   
   vector<int> RawVoltage = *WaveformVecPtrs[Channel];
-
-  Baseline = CalculateBaseline(&RawVoltage);
-  
-  vector<double> ZSVoltage;
-  vector<int> ZSPosition;
-  
-  vector<int>::iterator it;
-  for(it=RawVoltage.begin(); it!=RawVoltage.end(); it++){
-    
-    double VoltageMinusBaseline = Polarity*(*it-Baseline);
-    
-    if(VoltageMinusBaseline >= ADAQSettings->ZeroSuppressionCeiling){
-      ZSVoltage.push_back(VoltageMinusBaseline);
-      ZSPosition.push_back(it - RawVoltage.begin());
-    }
-  }
-  
-  int ZSWaveformSize = ZSVoltage.size();
   
   if(Waveform_H[Channel])
     delete Waveform_H[Channel];
+
   
-  Waveform_H[Channel] = new TH1F("Waveform_H","Zero Suppression Waveform", ZSWaveformSize-1, 0, ZSWaveformSize);
+  if(RawVoltage.empty()){
+    Waveform_H[Channel] = new TH1F("Waveform_H","Zero Suppression Waveform", RecordLength-1, 0, RecordLength);
+  }
+  else{
+    Baseline = CalculateBaseline(&RawVoltage);
+    
+    vector<double> ZSVoltage;
+    vector<int> ZSPosition;
+    
+    vector<int>::iterator it;
+    for(it=RawVoltage.begin(); it!=RawVoltage.end(); it++){
+      
+      double VoltageMinusBaseline = Polarity*(*it-Baseline);
+      
+      if(VoltageMinusBaseline >= ADAQSettings->ZeroSuppressionCeiling){
+	ZSVoltage.push_back(VoltageMinusBaseline);
+	ZSPosition.push_back(it - RawVoltage.begin());
+      }
+    }
   
-  vector<double>::iterator iter;
-  for(iter=ZSVoltage.begin(); iter!=ZSVoltage.end(); iter++)
-    Waveform_H[Channel]->SetBinContent((iter-ZSVoltage.begin()), *iter);
+    int ZSWaveformSize = ZSVoltage.size();
+    Waveform_H[Channel] = new TH1F("Waveform_H","Zero Suppression Waveform", ZSWaveformSize-1, 0, ZSWaveformSize);
   
+    vector<double>::iterator iter;
+    for(iter=ZSVoltage.begin(); iter!=ZSVoltage.end(); iter++)
+      Waveform_H[Channel]->SetBinContent((iter-ZSVoltage.begin()), *iter);
+  }
   return Waveform_H[Channel];
 }
 
