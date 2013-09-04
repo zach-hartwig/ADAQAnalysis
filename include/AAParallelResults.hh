@@ -6,7 +6,7 @@
 class AAParallelResults : public TObject
 {
 public:
-  double TotalDeuterons;
+  double DeuteronsInTotal;
   
   ClassDef(AAParallelResults, 1);
 };

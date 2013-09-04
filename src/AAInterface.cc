@@ -1903,6 +1903,7 @@ void AAInterface::HandleTextButtons()
     if(ProcessingSeq_RB->IsDown()){
       if(ADAQFileLoaded)
 	ComputationMgr->CreateSpectrum();
+
       else if(ACRONYMFileLoaded)
 	ComputationMgr->CreateACRONYMSpectrum();
       
@@ -1925,10 +1926,15 @@ void AAInterface::HandleTextButtons()
     }
 
     // Update spectrum analysis widgets accordingly
-
+    
+    if(IntegratePearson_CB->IsDown()){
+      double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
+      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
+    }
+    
     int SpectrumMinBin = SpectrumMinBin_NEL->GetEntry()->GetNumber();
     SpectrumRangeMin_NEL->GetEntry()->SetNumber(SpectrumMinBin);
-
+    
     int SpectrumMaxBin = SpectrumMaxBin_NEL->GetEntry()->GetNumber();
     SpectrumRangeMax_NEL->GetEntry()->SetNumber(SpectrumMaxBin);
     break;
@@ -2247,7 +2253,23 @@ void AAInterface::HandleCheckButtons()
   case UsePileupRejection_CB_ID:
   case WaveformAnalysis_CB_ID:
   case PlotPearsonIntegration_CB_ID:
-    GraphicsMgr->PlotWaveform();
+
+    if(PlotPearsonIntegration_CB->IsDown()){
+
+      // Reset the total number of deuterons
+      ComputationMgr->SetDeuteronsInTotal(0.);
+      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(0.);
+
+      GraphicsMgr->PlotWaveform();
+      
+      double DeuteronsInWaveform = ComputationMgr->GetDeuteronsInWaveform();
+      DeuteronsInWaveform_NEFL->GetEntry()->SetNumber(DeuteronsInWaveform);
+      
+      double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
+      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
+    }
+    else
+      GraphicsMgr->PlotWaveform();
     break;
 
   case OverrideTitles_CB_ID:
@@ -2365,6 +2387,7 @@ void AAInterface::HandleCheckButtons()
     bool WidgetState = false;
     
     if(IntegratePearson_CB->IsDown()){
+      // Set states to activate buttons
       ButtonState = kButtonUp;
       WidgetState = true;
     }
@@ -2379,11 +2402,18 @@ void AAInterface::HandleCheckButtons()
     if(WidgetState==true and IntegrateFitToPearson_RB->IsDown())
       PearsonMiddleLimit_NEL->GetEntry()->SetState(WidgetState);
     PearsonUpperLimit_NEL->GetEntry()->SetState(WidgetState);
-    
-    if(!IntegratePearson_CB->IsDown() or
-       (IntegratePearson_CB->IsDown() and PlotPearsonIntegration_CB->IsDown()))
+
+    if(IntegratePearson_CB->IsDown() and PlotPearsonIntegration_CB->IsDown()){
+
       GraphicsMgr->PlotWaveform();
-    
+      
+      double DeuteronsInWaveform = ComputationMgr->GetDeuteronsInWaveform();
+      DeuteronsInWaveform_NEFL->GetEntry()->SetNumber(DeuteronsInWaveform);
+      
+      double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
+      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
+    }
+
     break;
   }
     
@@ -2517,6 +2547,15 @@ void AAInterface::HandleSliders(int SliderPosition)
   
   GraphicsMgr->PlotWaveform();
 
+  // Update the deuteron/Pearson integration widgets
+  if(IntegratePearson_CB->IsDown()){
+    double DeuteronsInWaveform = ComputationMgr->GetDeuteronsInWaveform();
+    DeuteronsInWaveform_NEFL->GetEntry()->SetNumber(DeuteronsInWaveform);
+    
+    double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
+    DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
+  }
+
   // Update the waveform analysis widgets
   if(WaveformAnalysis_CB->IsDown()){
     double Height = ComputationMgr->GetWaveformAnalysisHeight();
@@ -2639,6 +2678,15 @@ void AAInterface::HandleNumberEntries()
     WaveformSelector_HS->SetPosition(WaveformSelector_NEL->GetEntry()->GetIntNumber());
     GraphicsMgr->PlotWaveform();
 
+    // Update the deuteron/Pearson integration widgets
+    if(IntegratePearson_CB->IsDown()){
+      double DeuteronsInWaveform = ComputationMgr->GetDeuteronsInWaveform();
+      DeuteronsInWaveform_NEFL->GetEntry()->SetNumber(DeuteronsInWaveform);
+
+      double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
+      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
+    }
+    
     // Update the waveform analysis widgets
     if(WaveformAnalysis_CB->IsDown()){
       double Height = ComputationMgr->GetWaveformAnalysisHeight();

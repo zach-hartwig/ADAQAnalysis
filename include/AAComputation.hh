@@ -127,7 +127,11 @@ public:
   TH1F *GetPearsonRiseFit() {return PearsonRiseFit_H;}
   TH1F *GetPearsonPlateauFit() {return PearsonPlateauFit_H;}
   double GetPearsonIntegralValue() {return PearsonIntegralValue;}
-
+  
+  double GetDeuteronsInWaveform() {return DeuteronsInWaveform;}
+  void SetDeuteronsInTotal(double DIT) {DeuteronsInTotal = DIT;}
+  double GetDeuteronsInTotal() {return DeuteronsInTotal;}
+  
   // Spectra
   TH1F *GetSpectrum() {return Spectrum_H;}
   TH1F *GetSpectrumBackground() {return SpectrumBackground_H;}
@@ -298,8 +302,7 @@ private:
   // Aggregated total waveform peaks found during processing
   int TotalPeaks;
   
-  // Aggregated total number of deuterons from the RFQ
-  double TotalDeuterons;
+  double DeuteronsInWaveform, DeuteronsInTotal;
 
   // Create a TColor ROOT object to handle pixel-2-color conversions
   TColor *ColorManager;

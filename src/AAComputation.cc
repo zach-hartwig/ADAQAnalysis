@@ -43,7 +43,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     Baseline(0.), PSDFilterPolarity(1.),
     V1720MaximumBit(4095), NumDataChannels(8),
     SpectrumExists(false), SpectrumDerivativeExists(false), PSDHistogramExists(false), PSDHistogramSliceExists(false),
-    TotalPeaks(0), TotalDeuterons(0)
+    TotalPeaks(0), DeuteronsInWaveform(0.), DeuteronsInTotal(0.)
 {
   if(TheComputationManager){
     cout << "\nERROR! TheComputationManager was constructed twice!\n" << endl;
@@ -208,12 +208,10 @@ bool AAComputation::LoadADAQRootFile(string FileName)
     if(ADAQParResultsLoaded){
       // Load the total integrated RFQ current and update the number
       // entry field widget in the "Analysis" tab frame accordingly
-      TotalDeuterons = ADAQParResults->TotalDeuterons;
-      //if(SequentialArchitecture)
-      //DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
+      DeuteronsInTotal = ADAQParResults->DeuteronsInTotal;
       
       if(Verbose)
-	cout << "Total RFQ current from despliced file: " << ADAQParResults->TotalDeuterons << endl;
+	cout << "Total RFQ current from despliced file: " << ADAQParResults->DeuteronsInTotal << endl;
     }
     
     // Get the record length (acquisition window)
@@ -731,7 +729,7 @@ void AAComputation::CreateSpectrum()
   // parallel processing (i.e. a "despliced" file) and will be
   // calculated from scratch here
   if(!ADAQParResultsLoaded)
-    TotalDeuterons = 0.;
+    DeuteronsInTotal = 0.;
   
   // Reboot the PeakFinder with up-to-date max peaks
   if(PeakFinder) delete PeakFinder;
@@ -867,8 +865,10 @@ void AAComputation::CreateSpectrum()
       // Note that we must add a +1 to the waveform number in order to
       // get the modulo to land on the correct intervals
       if(IsMaster)
-      	if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
-      	  UpdateProcessingProgress(waveform);
+	// Check to ensure no floating point exception for low number
+	if(WaveformEnd >= 50)
+	  if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
+	    UpdateProcessingProgress(waveform);
     }
     
     /////////////////////////////////////
@@ -909,8 +909,9 @@ void AAComputation::CreateSpectrum()
       // Note that we must add a +1 to the waveform number in order to
       // get the modulo to land on the correct intervals
       if(IsMaster)
-      	if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
-      	  UpdateProcessingProgress(waveform);
+	if(WaveformEnd >= 50)
+	  if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
+	    UpdateProcessingProgress(waveform);
     }
   }
   
@@ -921,13 +922,7 @@ void AAComputation::CreateSpectrum()
     ProcessingProgressBar->Increment(100);
     ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(32));
     ProcessingProgressBar->SetForegroundColor(ColorManager->Number2Pixel(0));
-    
-    // Update the number entry field in the "Analysis" tab to display
-    // the total number of deuterons
-    //if(IntegratePearson)
-    //      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
   }
-
   
 #ifdef MPI_ENABLED
   // Parallel waveform processing is complete at this point and it is
@@ -989,7 +984,7 @@ void AAComputation::CreateSpectrum()
 
   // Aggregate the total calculated RFQ current (if enabled) from all
   // nodes to the master node
-  TotalDeuterons = AAParallel::GetInstance()->SumDoublesToMaster(TotalDeuterons);
+  DeuteronsInTotal = AAParallel::GetInstance()->SumDoublesToMaster(DeuteronsInTotal);
   
   // The master should output the array to a text file, which will be
   // read in by the running sequential binary of ADAQAnalysisGUI
@@ -1029,7 +1024,7 @@ void AAComputation::CreateSpectrum()
     
     // Create/write the aggregated current vector to a file
     TVectorD AggregatedDeuterons(1);
-    AggregatedDeuterons[0] = TotalDeuterons;
+    AggregatedDeuterons[0] = DeuteronsInTotal;
     AggregatedDeuterons.Write("AggregatedDeuterons");
     
     // ... and write the ROOT file to disk
@@ -1347,11 +1342,11 @@ void AAComputation::IntegrateSpectrum()
   // The spectrum integral and error may be normalized to the total
   // computed RFQ current if desired by the user
   if(ADAQSettings->SpectrumNormalizeToCurrent){
-    if(TotalDeuterons == 0)
-      TotalDeuterons = 1.0;
+    if(DeuteronsInTotal == 0)
+      DeuteronsInTotal = 1.0;
     else{
-      Int /= TotalDeuterons;
-      Err /= TotalDeuterons;
+      Int /= DeuteronsInTotal;
+      Err /= DeuteronsInTotal;
     }
   }
   
@@ -1521,9 +1516,6 @@ TH2F *AAComputation::CreatePSDHistogram()
     ProcessingProgressBar->Increment(100);
     ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(32));
     ProcessingProgressBar->SetForegroundColor(ColorManager->Number2Pixel(0));
-    
-    //if(IntegratePearson)
-    //      {}//      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
   }
 
 #ifdef MPI_ENABLED
@@ -1594,7 +1586,7 @@ TH2F *AAComputation::CreatePSDHistogram()
   double ReturnDouble = AAParallel::GetInstance()->SumDoublesToMaster(Entries);
   
   // Aggregated the total deuterons from all nodes to the master
-  TotalDeuterons = AAParallel::GetInstance()->SumDoublesToMaster(TotalDeuterons);
+  DeuteronsInTotal = AAParallel::GetInstance()->SumDoublesToMaster(DeuteronsInTotal);
 
   if(IsMaster){
     
@@ -1625,7 +1617,7 @@ TH2F *AAComputation::CreatePSDHistogram()
     MasterPSDHistogram_H->Write("MasterPSDHistogram");
 
     TVectorD AggregatedDeuterons(1);
-    AggregatedDeuterons[0] = TotalDeuterons;
+    AggregatedDeuterons[0] = DeuteronsInTotal;
     AggregatedDeuterons.Write("AggregatedDeuterons");
 
     ParallelFile->Write();
@@ -1864,20 +1856,20 @@ void AAComputation::IntegratePearsonWaveform(int Waveform)
   if(ADAQSettings->IntegrateRawPearson){
     
     // Integrate the current waveform between the lower/upper limits. 
-    PearsonIntegralValue = Waveform_H[Channel]->Integral(Waveform_H[Channel]->FindBin(ADAQSettings->PearsonLowerLimit),
-							 Waveform_H[Channel]->FindBin(ADAQSettings->PearsonUpperLimit));
+    double PearsonIntegralValue = Waveform_H[Channel]->Integral(Waveform_H[Channel]->FindBin(ADAQSettings->PearsonLowerLimit),
+								Waveform_H[Channel]->FindBin(ADAQSettings->PearsonUpperLimit));
     
     // Compute the total number of deuterons in this waveform by
     // converting the result of the integral from units of V / ADC
     // with the appropriate factors.
-    double Deuterons = PearsonIntegralValue * adc2volts_V1720 * sample2seconds_V1720;
-    Deuterons *= (volts2amps_Pearson / amplification_Pearson / electron_charge);
+    DeuteronsInWaveform = PearsonIntegralValue * adc2volts_V1720 * sample2seconds_V1720;
+    DeuteronsInWaveform *= (volts2amps_Pearson / amplification_Pearson / electron_charge);
     
-    if(Deuterons > 0)
-      TotalDeuterons += Deuterons;
+    if(DeuteronsInWaveform > 0)
+      DeuteronsInTotal += DeuteronsInWaveform;
     
     if(Verbose)
-      cout << "Total number of deuterons: " << "\t" << TotalDeuterons << endl;
+      cout << "Total number of deuterons: " << "\t" << DeuteronsInTotal << endl;
     
     PearsonRawIntegration_H = (TH1F *)Waveform_H[Channel]->Clone("PearsonRawIntegration_H");
   }
@@ -1901,26 +1893,25 @@ void AAComputation::IntegratePearsonWaveform(int Waveform)
     // Compute the integrals. Note the "width" argument is passed to
     // the integration to specify that the histogram results should be
     // multiplied by the bin width.
-    PearsonIntegralValue = PearsonRiseFit_H->Integral(PearsonRiseFit_H->FindBin(ADAQSettings->PearsonLowerLimit), 
-						      PearsonRiseFit_H->FindBin(ADAQSettings->PearsonUpperLimit),
-						      "width");
+    double PearsonIntegralValue = PearsonRiseFit_H->Integral(PearsonRiseFit_H->FindBin(ADAQSettings->PearsonLowerLimit), 
+							     PearsonRiseFit_H->FindBin(ADAQSettings->PearsonUpperLimit),
+							     "width");
     
     PearsonIntegralValue += PearsonPlateauFit_H->Integral(PearsonPlateauFit_H->FindBin(ADAQSettings->PearsonMiddleLimit),
 							  PearsonPlateauFit_H->FindBin(ADAQSettings->PearsonUpperLimit),
 							  "width");
     
-    
     // Compute the total number of deuterons in this waveform by
     // converting the result of the integrals from units of V / ADC
     // with the appropriate factors.
-    double Deuterons = PearsonIntegralValue * adc2volts_V1720 * sample2seconds_V1720;
-    Deuterons *= (volts2amps_Pearson / amplification_Pearson / electron_charge);
+    DeuteronsInWaveform = PearsonIntegralValue * adc2volts_V1720 * sample2seconds_V1720;
+    DeuteronsInWaveform *= (volts2amps_Pearson / amplification_Pearson / electron_charge);
     
-    if(Deuterons > 0)
-      TotalDeuterons += Deuterons;
-
+    if(DeuteronsInWaveform > 0)
+      DeuteronsInTotal += DeuteronsInWaveform;
+    
     if(Verbose)
-      cout << "Total number of deuterons: " << "\t" << TotalDeuterons << endl;
+      cout << "Total number of deuterons: " << "\t" << DeuteronsInTotal << endl;
     
     // Delete the TF1 objects to prevent bleeding memory
     delete RiseFit;
@@ -2004,8 +1995,7 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
       // Obtain the total number of deuterons integrated during
       // histogram creation and update the ROOT widget
       TVectorD *AggregatedDeuterons = (TVectorD *)ParallelFile->Get("AggregatedDeuterons");
-      TotalDeuterons = (*AggregatedDeuterons)[0];
-      //DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
+      DeuteronsInTotal = (*AggregatedDeuterons)[0];
     }
     
     
@@ -2024,8 +2014,7 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
       PSDHistogramExists = true;
       
       TVectorD *AggregatedDeuterons = (TVectorD *)ParallelFile->Get("AggregatedDeuterons");
-      TotalDeuterons = (*AggregatedDeuterons)[0];
-      //DeuteronsInTotal_NEFL->GetEntry()->SetNumber(TotalDeuterons);
+      DeuteronsInTotal = (*AggregatedDeuterons)[0];
     }
   }
   else
@@ -2258,7 +2247,7 @@ void AAComputation::CreateDesplicedFile()
   
   // Variable to aggregate the integrated RFQ current. Presently this
   // feature is NOT implemented. 
-  TotalDeuterons = 0.;
+  DeuteronsInTotal = 0.;
   
   ////////////////////////////////////
   // Assign waveform processing ranges
@@ -2417,7 +2406,7 @@ void AAComputation::CreateDesplicedFile()
     
     // If specified by the user then calculate the RFQ current
     // integral for each waveform and aggregate the total (into the
-    // 'TotalDeuterons' class data member) for persistent storage in the
+    // 'DeuteronsInTotal' class data member) for persistent storage in the
     // despliced TFile. The 'false' argument specifies not to plot
     // integration results on the canvas.
     if(ADAQSettings->IntegratePearson)
@@ -2526,7 +2515,7 @@ void AAComputation::CreateDesplicedFile()
   // Store the values calculated in parallel into the class for
   // persistent storage in the despliced ROOT file
   
-  PR->TotalDeuterons = TotalDeuterons;
+  PR->DeuteronsInTotal = DeuteronsInTotal;
   
   // Now that we are finished processing waveforms from the original
   // ADAQ ROOT file we want to switch the current TFile (or
@@ -2560,7 +2549,7 @@ void AAComputation::CreateDesplicedFile()
 
   // Aggregate the total integrated RFQ current (if enabled) on each
   // of the parallal nodes to a single double value on the master
-  double AggregatedCurrent = AAParallel::GetInstance()->SumDoublesToMaster(TotalDeuterons);
+  double AggregatedCurrent = AAParallel::GetInstance()->SumDoublesToMaster(DeuteronsInTotal);
 
   // Ensure all nodes are at the same point before aggregating files
   MPI::COMM_WORLD.Barrier();
@@ -2596,7 +2585,7 @@ void AAComputation::CreateDesplicedFile()
     
     // Store the aggregated RFQ current value on the master into the
     // persistent parallel results class for writing to the ROOT file
-    PR->TotalDeuterons = AggregatedCurrent;
+    PR->DeuteronsInTotal = AggregatedCurrent;
 
     // Open the final despliced TFile, write the measurement
     // parameters and comment objects to it, and close the TFile.

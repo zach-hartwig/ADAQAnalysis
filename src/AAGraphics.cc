@@ -30,11 +30,11 @@ AAGraphics::AAGraphics()
   TheGraphicsManager = this;
 
   Trigger_L->SetLineStyle(7);
-  Trigger_L->SetLineColor(2);
+  Trigger_L->SetLineColor(kRed);
   Trigger_L->SetLineWidth(2);
 
   Floor_L->SetLineStyle(7);
-  Floor_L->SetLineColor(2);
+  Floor_L->SetLineColor(kRed);
   Floor_L->SetLineWidth(2);
 
   Baseline_B->SetFillStyle(3002);
@@ -60,11 +60,11 @@ AAGraphics::AAGraphics()
   Calibration_L->SetLineWidth(2);
 
   PearsonLowerLimit_L->SetLineStyle(7);
-  PearsonLowerLimit_L->SetLineColor(4);
+  PearsonLowerLimit_L->SetLineColor(kBlue);
   PearsonLowerLimit_L->SetLineWidth(2);
 
   PearsonMiddleLimit_L->SetLineStyle(7);
-  PearsonMiddleLimit_L->SetLineColor(8);
+  PearsonMiddleLimit_L->SetLineColor(kGreen+2);
   PearsonMiddleLimit_L->SetLineWidth(2);
   
   PearsonUpperLimit_L->SetLineStyle(7);
@@ -379,11 +379,20 @@ void AAGraphics::PlotWaveform(int Color)
 
 void AAGraphics::PlotPearsonIntegration()
 {
+  // The RFQ current signal is overplotted on the current canvas and
+  // then the integration region is overplotted on top of that
+
+  TH1F *PearsonSignal_H = ComputationMgr->CalculateBSWaveform(ADAQSettings->PearsonChannel,
+							      ADAQSettings->WaveformToPlot,
+							      true);
+
+  PearsonSignal_H->SetLineColor(kRed);
+  PearsonSignal_H->Draw("SAME");
+
   if(ADAQSettings->IntegrateRawPearson){
     TH1F *PearsonIntegration_H = ComputationMgr->GetPearsonRawIntegration();
-    
-    // Plot the integration region of the histogram waveform
-    PearsonIntegration_H->SetFillColor(4);
+
+    PearsonIntegration_H->SetFillColor(kBlue);
     PearsonIntegration_H->SetLineColor(2);
     PearsonIntegration_H->SetFillStyle(3001);
     PearsonIntegration_H->GetXaxis()->SetRangeUser(ADAQSettings->PearsonLowerLimit, 
