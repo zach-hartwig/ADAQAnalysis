@@ -17,5 +17,6 @@
 
 // ACRONYM classes
 #pragma link C++ class acroEvent+;
+#pragma link C++ class acroRun+;
 
 #endif

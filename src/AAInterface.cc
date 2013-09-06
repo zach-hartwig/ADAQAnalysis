@@ -494,11 +494,13 @@ void AAInterface::FillSpectrumFrame()
   // Detector type radio buttons
   ACROSpectrumOptions_HF->AddFrame(ACROSpectrumDetector_BG = new TGButtonGroup(ACROSpectrumOptions_HF, "ACRO detector", kVerticalFrame),
 				   new TGLayoutHints(kLHintsLeft, 5,5,0,0));
-  ACROSpectrumLS_RB = new TGRadioButton(ACROSpectrumDetector_BG, "LaBr3", -1);
+  ACROSpectrumLS_RB = new TGRadioButton(ACROSpectrumDetector_BG, "LaBr3", ACROSpectrumLS_RB_ID);
+  ACROSpectrumLS_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   //ACROSpectrumLS_RB->SetState(kButtonDown);
   //ACROSpectrumLS_RB->SetState(kButtonDisabled);
   
-  ACROSpectrumES_RB = new TGRadioButton(ACROSpectrumDetector_BG, "EJ301", -1);
+  ACROSpectrumES_RB = new TGRadioButton(ACROSpectrumDetector_BG, "EJ301", ACROSpectrumES_RB_ID);
+  ACROSpectrumES_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   ACROSpectrumES_RB->SetState(kButtonDown);
 
   
@@ -2818,6 +2820,21 @@ void AAInterface::HandleRadioButtons()
   case NegativeWaveform_RB_ID:
     GraphicsMgr->PlotWaveform();
 
+  case ACROSpectrumLS_RB_ID:
+    if(ACROSpectrumLS_RB->IsDown()){
+      WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, ComputationMgr->GetACRONYMLSEntries() );
+      WaveformsToHistogram_NEL->GetEntry()->SetNumber( ComputationMgr->GetACRONYMLSEntries() );
+    }
+    break;
+
+  case ACROSpectrumES_RB_ID:
+    if(ACROSpectrumES_RB->IsDown()){
+      WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, ComputationMgr->GetACRONYMESEntries() );
+      WaveformsToHistogram_NEL->GetEntry()->SetNumber( ComputationMgr->GetACRONYMESEntries() );
+    }
+    break;
+    
+
   case SpectrumCalibrationManual_RB_ID:{
     
     if(SpectrumCalibrationManual_RB->IsDown()){
@@ -3422,6 +3439,15 @@ void AAInterface::UpdateForACRONYMFile()
   }
   else
     ACROSpectrumES_RB->SetEnabled(true);
+
+  if(ACROSpectrumLS_RB->IsDown()){
+    WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, ComputationMgr->GetACRONYMLSEntries() );
+    WaveformsToHistogram_NEL->GetEntry()->SetNumber( ComputationMgr->GetACRONYMLSEntries() );
+  }
+  else if (ACROSpectrumES_RB->IsDown()){
+    WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, ComputationMgr->GetACRONYMESEntries() );
+    WaveformsToHistogram_NEL->GetEntry()->SetNumber( ComputationMgr->GetACRONYMESEntries() );
+  }
 
   // Analysis frame (disabled)
   AnalysisOptionsTab_CF->HideFrame(AnalysisOptions_CF);

@@ -38,6 +38,7 @@ using namespace std;
 #include "AATypes.hh"
 
 #include "acroEvent.hh"
+#include "acroRun.hh"
 
 #ifndef __CINT__
 #include <boost/array.hpp>
@@ -204,6 +205,8 @@ private:
   string ADAQFileName, ACRONYMFileName;
   bool ADAQFileLoaded, ACRONYMFileLoaded;
   TTree *LSDetectorTree, *ESDetectorTree;
+  acroEvent *LSDetectorEvent, *ESDetectorEvent;
+  acroRun *RunSummary;
   AAParallelResults *ADAQParResults;
   bool ADAQParResultsLoaded;
 
@@ -310,7 +313,6 @@ private:
   // A ROOT random number generator (RNG)
   TRandom *RNG;
 
-  acroEvent *LSDetectorEvent, *ESDetectorEvent;
 
   // Define the class to ROOT
   ClassDef(AAComputation, 1)

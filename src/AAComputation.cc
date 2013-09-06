@@ -15,8 +15,6 @@
 #include "AAParallel.hh"
 #include "AAConstants.hh"
 
-#include "acroEvent.hh"
-
 #include <iostream>
 #include <fstream>
 using namespace std;
@@ -328,10 +326,16 @@ bool AAComputation::LoadACRONYMRootFile(string FileName)
       //      if(ESDetectorEvent) delete ESDetectorEvent;
       ESDetectorEvent = new acroEvent;
       ESDetectorTree->SetBranchAddress("ESDetectorEvents", &ESDetectorEvent);
-
-
-
     }
+
+    //////////////
+    // Run Summary
+    
+    if(RunSummary) delete RunSummary;
+    RunSummary = dynamic_cast<acroRun *>(ACRONYMRootFile->Get("RunSummary"));
+
+
+
     ACRONYMFileLoaded = true;
   }
 
@@ -2835,7 +2839,7 @@ void AAComputation::CreateACRONYMSpectrum()
   
   TTree *Tree = 0;
   acroEvent *Event = 0;
-  
+
   int Entries = 0;
   if(ADAQSettings->ACROSpectrumLS){
     Entries = LSDetectorTree->GetEntries();
@@ -2848,13 +2852,11 @@ void AAComputation::CreateACRONYMSpectrum()
     Event = ESDetectorEvent;
   }
 
-  // Must plot all entries in tree at present: ZSH (23 May 13)
-
-  Int_t Max = Entries;
-  if(Entries>240000)
-    Max = 240000;
+  // Number to histogram is automatically updated in AAInterface when
+  // the LaBr3/EJ301 radio buttons are clicked
+  int MaxEntriesToPlot = ADAQSettings->WaveformsToHistogram;
   
-  for(int entry=0; entry<Max; entry++){
+  for(int entry=0; entry<MaxEntriesToPlot; entry++){
     
     Tree->GetEvent(entry);
 

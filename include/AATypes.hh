@@ -125,6 +125,10 @@ enum{
   SpectrumMinBin_NEL_ID,
   SpectrumMaxBin_NEL_ID,
 
+
+  ACROSpectrumLS_RB_ID,
+  ACROSpectrumES_RB_ID,
+
   SpectrumCalibration_CB_ID,
   SpectrumCalibrationManual_RB_ID,
   SpectrumCalibrationFixedEP_RB_ID,

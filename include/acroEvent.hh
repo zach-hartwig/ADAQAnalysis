@@ -12,12 +12,10 @@ public:
   void Reset(){;}
 
   // The recoil particle
-
   Double_t recoilEnergyDep;
-  Double_t recoilLightOutput;
+
 
   // The scintillation photons
-
   Int_t scintPhotonsCreated; // in the scintillator
   Int_t scintPhotonsCounted; // by the readout device
 
