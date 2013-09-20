@@ -72,6 +72,7 @@ enum{
   MenuFileOpenACRONYM_ID,
   MenuFileSaveWaveform_ID,
   MenuFileSaveSpectrum_ID,
+  MenuFileSaveSpectrumBackground_ID,
   MenuFileSaveSpectrumDerivative_ID,
   MenuFileSavePSDHistogram_ID,
   MenuFileSavePSDHistogramSlice_ID,
@@ -230,9 +231,10 @@ enum{
   DrawWaveformWithMarkers_RB_ID,
   DrawWaveformWithBoth_RB_ID,
   
-  DrawSpectrumWithBars_RB_ID,
   DrawSpectrumWithCurve_RB_ID,
   DrawSpectrumWithMarkers_RB_ID,
+  DrawSpectrumWithError_RB_ID,
+  DrawSpectrumWithBars_RB_ID,
 
   SetStatsOff_CB_ID,
   PlotVerticalAxisInLog_CB_ID,

@@ -40,7 +40,8 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     Verbose(false), ParallelVerbose(true),
     Baseline(0.), PSDFilterPolarity(1.),
     V1720MaximumBit(4095), NumDataChannels(8),
-    SpectrumExists(false), SpectrumDerivativeExists(false), PSDHistogramExists(false), PSDHistogramSliceExists(false),
+    SpectrumExists(false), SpectrumBackgroundExists(false), SpectrumDerivativeExists(false), 
+    PSDHistogramExists(false), PSDHistogramSliceExists(false),
     TotalPeaks(0), DeuteronsInWaveform(0.), DeuteronsInTotal(0.)
 {
   if(TheComputationManager){
@@ -1164,7 +1165,10 @@ void AAComputation::CalculateSpectrumBackground()//TH1F *Spectrum_H)
   // PeakFinder = new TSpectrum(SpectrumNumPeaks_NEL->GetEntry()->GetIntNumber());
 
   // Delete the TH1F object that holds a previous background histogram
-  if(SpectrumBackground_H) delete SpectrumBackground_H;
+  if(SpectrumBackground_H){
+    delete SpectrumBackground_H;
+    SpectrumBackgroundExists = false;
+  }
 
   // Use the TSpectrum::Background() method to compute the spectrum
   // background; Set the resulting TH1F objects graphic attributes
@@ -1234,6 +1238,14 @@ void AAComputation::CalculateSpectrumBackground()//TH1F *Spectrum_H)
   SpectrumDeconvolved_H->SetLineColor(4);
   SpectrumDeconvolved_H->SetLineWidth(2);
 
+  // Create an object to hold the sum of the squares of the bin
+  // weights is created and calculated (i.e. error will be propogated
+  // during the background subtraction into the deconvolved spectrum)
+  SpectrumDeconvolved_H->Sumw2();
+  
+  SpectrumDeconvolved_H->SetLineColor(kBlue);
+  SpectrumDeconvolved_H->SetLineWidth(2);
+
   // Subtract the background spectrum from the raw spectrum
   SpectrumDeconvolved_H->Add(SpectrumClone_H, SpectrumBackground_H, 1.0, -1.0);
 
@@ -1251,6 +1263,10 @@ void AAComputation::CalculateSpectrumBackground()//TH1F *Spectrum_H)
   // Set the TH1::Entries to equal the full integral of the TH1 object
   SpectrumDeconvolved_H->SetEntries(SpectrumDeconvolved_H->Integral(ADAQSettings->SpectrumMinBin,
 								    ADAQSettings->SpectrumMaxBin+1));
+  
+  // Set the bool that flags whether or not the SpectrumBackground_H
+  // object is available
+  SpectrumBackgroundExists = true;
 }
 
 
@@ -1372,6 +1388,8 @@ bool AAComputation::SaveHistogramData(string Type, string FileName, string FileE
     HistogramToSave_H1 = Waveform_H[ADAQSettings->WaveformChannel];
   else if(Type == "Spectrum")
     HistogramToSave_H1 = Spectrum_H;
+  else if(Type == "SpectrumBackground")
+    HistogramToSave_H1 = SpectrumBackground_H;
   else if(Type == "SpectrumDerivative")
     HistogramToSave_H1 = SpectrumDerivative_H;
   else if(Type == "PSDHistogram")
@@ -1793,9 +1811,11 @@ TGraph *AAComputation::CalculateSpectrumDerivative()
     // DifferenceErrors[bin] = sqrt(Current) + sqrt(Previous);
   }
   
-  if(SpectrumDerivative_G)
+  if(SpectrumDerivative_G){
     delete SpectrumDerivative_G;
-
+    SpectrumDerivativeExists = false;
+  }
+  
   if(ADAQSettings->PlotSpectrumDerivativeError)
     SpectrumDerivative_G = new TGraphErrors(NumBins, BinCenters, Differences, BinCenterErrors, DifferenceErrors);
   else

@@ -277,7 +277,8 @@ private:
   TGRadioButton *DrawWaveformWithCurve_RB, *DrawWaveformWithMarkers_RB, *DrawWaveformWithBoth_RB;
   
   TGButtonGroup *SpectrumDrawOptions_BG;
-  TGRadioButton *DrawSpectrumWithCurve_RB, *DrawSpectrumWithMarkers_RB, *DrawSpectrumWithBars_RB;
+  TGRadioButton *DrawSpectrumWithCurve_RB, *DrawSpectrumWithMarkers_RB;
+  TGRadioButton *DrawSpectrumWithError_RB, *DrawSpectrumWithBars_RB;
   
   TGCheckButton *SetStatsOff_CB;
   TGCheckButton *PlotVerticalAxisInLog_CB;

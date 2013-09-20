@@ -526,40 +526,52 @@ void AAGraphics::PlotSpectrum()
 
   /////////////////////////
   // Plot the main spectrum
+
+  // "HIST" is required to prevent forced drawing of error bars style
+  // since the TH1::Sumw2() function is called during calculationg of
+  // the background spectrum for proper error propagation
+
   string DrawString;
   if(ADAQSettings->SpectrumBars){
     Spectrum_H->SetFillStyle(4100);
     Spectrum_H->SetFillColor(4);
-    DrawString = "B";
+    DrawString = "HIST B";
   }
   else if(ADAQSettings->SpectrumCurve){
     Spectrum_H->SetFillStyle(4000);
-    DrawString = "C";
+    DrawString = "HIST C";
   }
   else if(ADAQSettings->SpectrumMarkers){
     Spectrum_H->SetMarkerStyle(24);
     Spectrum_H->SetMarkerColor(4);
     Spectrum_H->SetMarkerSize(1.0);
-    DrawString = "P";
+    DrawString = "HIST P";
+  }
+  else if (ADAQSettings->SpectrumError){
+    Spectrum_H->SetMarkerStyle(24);
+    Spectrum_H->SetMarkerColor(kBlue);
+    Spectrum_H->SetMarkerSize(0.5);
+    gStyle->SetEndErrorSize(4);
+    DrawString = "E1";
   }
   
   Spectrum_H->Draw(DrawString.c_str());
-  
+
   ////////////////////////////////////////////
   // Overlay the background spectra if desired
   if(ADAQSettings->FindBackground and ADAQSettings->PlotWithBackground){
     TH1F *SpectrumBackground_H = ComputationMgr->GetSpectrumBackground();
     SpectrumBackground_H->Draw("C SAME");
   }
-
+  
   if(ADAQSettings->SpectrumFindIntegral){
     TH1F *SpectrumIntegral_H = ComputationMgr->GetSpectrumIntegral();
-    SpectrumIntegral_H->Draw("B SAME");
-    SpectrumIntegral_H->Draw("C SAME");
+    SpectrumIntegral_H->Draw("HIST B SAME");
+    SpectrumIntegral_H->Draw("HIST C SAME");
     
     if(ADAQSettings->SpectrumUseGaussianFit){
       TF1 *SpectrumFit_F = ComputationMgr->GetSpectrumFit();
-      SpectrumFit_F->Draw("SAME");
+      SpectrumFit_F->Draw("HIST SAME");
     }
   }
   

@@ -105,14 +105,23 @@ void AAInterface::CreateTheMainFrames()
 
   TGHorizontalFrame *MenuFrame = new TGHorizontalFrame(this); 
 
+  TGPopupMenu *SaveSpectrumSubMenu = new TGPopupMenu(gClient->GetRoot());
+  SaveSpectrumSubMenu->AddEntry("&raw ...", MenuFileSaveSpectrum_ID);
+  SaveSpectrumSubMenu->AddEntry("&background ...", MenuFileSaveSpectrumBackground_ID);
+  SaveSpectrumSubMenu->AddEntry("&derivative ...", MenuFileSaveSpectrumDerivative_ID);
+  
+  TGPopupMenu *SavePSDSubMenu = new TGPopupMenu(gClient->GetRoot());
+  SavePSDSubMenu->AddEntry("histo&gram ...", MenuFileSavePSDHistogram_ID);
+  SavePSDSubMenu->AddEntry("sli&ce ...", MenuFileSavePSDHistogramSlice_ID);
+  
   TGPopupMenu *MenuFile = new TGPopupMenu(gClient->GetRoot());
   MenuFile->AddEntry("&Open ADAQ ROOT file ...", MenuFileOpenADAQ_ID);
   MenuFile->AddEntry("Ope&n ACRONYM ROOT file ...", MenuFileOpenACRONYM_ID);
-  MenuFile->AddEntry("Save &waveform to file ...", MenuFileSaveWaveform_ID);
-  MenuFile->AddEntry("&Save spectrum to file ...", MenuFileSaveSpectrum_ID);
-  MenuFile->AddEntry("Save spectrum &derivative to file ...", MenuFileSaveSpectrumDerivative_ID);
-  MenuFile->AddEntry("Save PSD histo&gram to file ...", MenuFileSavePSDHistogram_ID);
-  MenuFile->AddEntry("Save PSD &histogram slice to file ...", MenuFileSavePSDHistogramSlice_ID);
+  MenuFile->AddSeparator();
+  MenuFile->AddEntry("Save &waveform ...", MenuFileSaveWaveform_ID);
+  MenuFile->AddPopup("Save &spectrum ...", SaveSpectrumSubMenu);
+  MenuFile->AddPopup("Save &PSD ...",SavePSDSubMenu);
+  MenuFile->AddSeparator();
   MenuFile->AddEntry("&Print canvas ...", MenuFilePrint_ID);
   MenuFile->AddSeparator();
   MenuFile->AddEntry("E&xit", MenuFileExit_ID);
@@ -1041,7 +1050,7 @@ void AAInterface::FillGraphicsFrame()
   GraphicsFrame_VF->AddFrame(WaveformDrawOptions_BG = new TGButtonGroup(GraphicsFrame_VF, "Waveform draw options", kHorizontalFrame),
 			      new TGLayoutHints(kLHintsNormal, 5,5,5,5));
   
-  DrawWaveformWithCurve_RB = new TGRadioButton(WaveformDrawOptions_BG, "Smooth curve   ", DrawWaveformWithCurve_RB_ID);
+  DrawWaveformWithCurve_RB = new TGRadioButton(WaveformDrawOptions_BG, "Curve   ", DrawWaveformWithCurve_RB_ID);
   DrawWaveformWithCurve_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   DrawWaveformWithCurve_RB->SetState(kButtonDown);
   
@@ -1054,12 +1063,15 @@ void AAInterface::FillGraphicsFrame()
   GraphicsFrame_VF->AddFrame(SpectrumDrawOptions_BG = new TGButtonGroup(GraphicsFrame_VF, "Spectrum draw options", kHorizontalFrame),
 			      new TGLayoutHints(kLHintsNormal, 5,5,5,5));
   
-  DrawSpectrumWithCurve_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Smooth curve   ", DrawSpectrumWithCurve_RB_ID);
+  DrawSpectrumWithCurve_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Curve   ", DrawSpectrumWithCurve_RB_ID);
   DrawSpectrumWithCurve_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   DrawSpectrumWithCurve_RB->SetState(kButtonDown);
   
   DrawSpectrumWithMarkers_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Markers   ", DrawSpectrumWithMarkers_RB_ID);
   DrawSpectrumWithMarkers_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+
+  DrawSpectrumWithError_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Error   ", DrawSpectrumWithError_RB_ID);
+  DrawSpectrumWithError_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
 
   DrawSpectrumWithBars_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Bars", DrawSpectrumWithBars_RB_ID);
   DrawSpectrumWithBars_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
@@ -1686,6 +1698,7 @@ void AAInterface::HandleMenu(int MenuID)
 
   case MenuFileSaveWaveform_ID:
   case MenuFileSaveSpectrum_ID:
+  case MenuFileSaveSpectrumBackground_ID:
   case MenuFileSaveSpectrumDerivative_ID:
   case MenuFileSavePSDHistogram_ID:
   case MenuFileSavePSDHistogramSlice_ID:{
@@ -1757,6 +1770,15 @@ void AAInterface::HandleMenu(int MenuID)
 	  Success = ComputationMgr->SaveHistogramData("Spectrum", FileName, FileExtension);
       }
       
+      else if(MenuID == MenuFileSaveSpectrumBackground_ID){
+	if(!ComputationMgr->GetSpectrumBackgroundExists()){
+	  CreateMessageBox("No spectrum derivatives have been created yet and, therefore, there is nothing to save!","Stop");
+	  break;
+	}
+	else
+	  Success = ComputationMgr->SaveHistogramData("SpectrumBackground", FileName, FileExtension);
+      }
+
       else if(MenuID == MenuFileSaveSpectrumDerivative_ID){
 	if(!ComputationMgr->GetSpectrumDerivativeExists()){
 	  CreateMessageBox("No spectrum derivatives have been created yet and, therefore, there is nothing to save!","Stop");
@@ -2942,6 +2964,7 @@ void AAInterface::HandleRadioButtons()
 
   case DrawSpectrumWithBars_RB_ID:
   case DrawSpectrumWithCurve_RB_ID:
+  case DrawSpectrumWithError_RB_ID:
   case DrawSpectrumWithMarkers_RB_ID:
     GraphicsMgr->PlotSpectrum();
     break;
@@ -3139,6 +3162,7 @@ void AAInterface::SaveSettings(bool SaveToFile)
   
   ADAQSettings->SpectrumCurve = DrawSpectrumWithCurve_RB->IsDown();
   ADAQSettings->SpectrumMarkers = DrawSpectrumWithMarkers_RB->IsDown();
+  ADAQSettings->SpectrumError = DrawSpectrumWithError_RB->IsDown();
   ADAQSettings->SpectrumBars = DrawSpectrumWithBars_RB->IsDown();
 
   ADAQSettings->StatsOff = SetStatsOff_CB->IsDown();

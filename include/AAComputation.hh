@@ -134,10 +134,10 @@ public:
   double GetDeuteronsInTotal() {return DeuteronsInTotal;}
   
   // Spectra
-  TH1F *GetSpectrum() {return Spectrum_H;}
-  TH1F *GetSpectrumBackground() {return SpectrumBackground_H;}
-  TH1F *GetSpectrumWithoutBackground() {return SpectrumDeconvolved_H;}
-
+  TH1F *GetSpectrum() {return (TH1F *)Spectrum_H->Clone();}
+  TH1F *GetSpectrumBackground() {return (TH1F *)SpectrumBackground_H->Clone();}
+  TH1F *GetSpectrumWithoutBackground() {return (TH1F *)SpectrumDeconvolved_H->Clone();}
+  
   // Spectra calibrations
   vector<TGraph *> GetSpectraCalibrations() { return SpectraCalibrations; }
   vector<bool> GetUseSpectraCalibrations() { return UseSpectraCalibrations; }
@@ -171,6 +171,7 @@ public:
   bool GetADAQFileLoaded() { return ADAQFileLoaded; }
   bool GetACRONYMFileLoaded() { return ACRONYMFileLoaded; }
   bool GetSpectrumExists() { return SpectrumExists; }
+  bool GetSpectrumBackgroundExists() { return SpectrumBackgroundExists; }
   bool GetSpectrumDerivativeExists() { return SpectrumDerivativeExists; }
   bool GetPSDHistogramExists() { return PSDHistogramExists; }
   bool GetPSDHistogramSliceExists() { return PSDHistogramSliceExists; }
@@ -274,7 +275,7 @@ private:
 
   ///////////
   // Booleans
-  bool SpectrumExists, SpectrumDerivativeExists;
+  bool SpectrumExists, SpectrumBackgroundExists, SpectrumDerivativeExists;
   bool PSDHistogramExists, PSDHistogramSliceExists;
 
 

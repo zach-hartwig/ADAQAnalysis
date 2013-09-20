@@ -92,7 +92,7 @@ public:
   // Graphics
   
   bool WaveformCurve, WaveformMarkers, WaveformBoth;
-  bool SpectrumCurve, SpectrumMarkers, SpectrumBars;
+  bool SpectrumCurve, SpectrumMarkers, SpectrumError, SpectrumBars;
   bool StatsOff, PlotVerticalAxisInLog;
   bool PlotSpectrumDerivativeError, PlotAbsValueSpectrumDerivative, PlotYAxisWithAutoRange;
   bool OverrideGraphicalDefault;
