@@ -1064,15 +1064,16 @@ void AAComputation::IntegratePeaks()
     // integral under each waveform peak that has passed all criterion
     double PeakIntegral = Waveform_H[ADAQSettings->WaveformChannel]->Integral((*it).PeakLimit_Lower,
 									      (*it).PeakLimit_Upper);
+
+    int Channel = ADAQSettings->WaveformChannel;
     
     // If the user has calibrated the spectrum, then transform the
     // peak integral in pulse units [ADC] to energy units
-    if(ADAQSettings->UseSpectraCalibrations[ADAQSettings->WaveformChannel])
-      PeakIntegral = ADAQSettings->SpectraCalibrations[ADAQSettings->WaveformChannel]->Eval(PeakIntegral);
+    if(ADAQSettings->UseSpectraCalibrations[Channel])
+      PeakIntegral = ADAQSettings->SpectraCalibrations[Channel]->Eval(PeakIntegral);
     
     // Add the peak integral to the PAS 
     Spectrum_H->Fill(PeakIntegral);
-
   }
 }
 
@@ -1098,6 +1099,7 @@ void AAComputation::FindPeakHeights()
     // Initialize the peak height for each peak region
     double PeakHeight = 0.;
 
+    // Get the waveform processing channel number
     int Channel = ADAQSettings->WaveformChannel;
 
     // Iterate over the samples between lower and upper integration
@@ -1109,8 +1111,8 @@ void AAComputation::FindPeakHeights()
 
     // If the user has calibrated the spectrum then transform the peak
     // heights in pulse units [ADC] to energy
-    if(UseSpectraCalibrations[Channel])
-      PeakHeight = SpectraCalibrations[Channel]->Eval(PeakHeight);
+    if(ADAQSettings->UseSpectraCalibrations[Channel])
+      PeakHeight = ADAQSettings->SpectraCalibrations[Channel]->Eval(PeakHeight);
     
     // Add the detector pulse peak height to the spectrum histogram
     Spectrum_H->Fill(PeakHeight);
