@@ -45,17 +45,22 @@ cd $TOPDIR
 echo -e "\nChecking out tagged version from the Git repository ..."
 git co $VERSION -b $VERSION >& /dev/null
 
-echo -e "\nBuilding the ADAQAnalysis binaries ..."
-make clean >& /dev/null
-make -j2 both >& /dev/null
+# Overwrite the include/AAVersion.hh header with correct version 
+sed 's/VersionString = "Development"/VersionString = "$VERSION"/' include/AAVersion.hh > include/tmp.hh
+mv include/tmp.hh include/AAVersion.hh
+rm include/tmp.hh
 
-echo -e "\nCopying the binaries to $INSTALLDIR ..."
-sudo cp bin/* $INSTALLDIR >& /dev/null
+# echo -e "\nBuilding the ADAQAnalysis binaries ..."
+# make clean >& /dev/null
+# make -j2 both >& /dev/null
 
-echo -e "\nRemoving the temporary tag branch ..."
-git br -d $VERSION >& /dev/null
+# echo -e "\nCopying the binaries to $INSTALLDIR ..."
+# sudo cp bin/* $INSTALLDIR >& /dev/null
 
-echo -e "\n*********************************************"
-echo -e   "**   ADAQAnalysis has been installed in:   **"
-echo -e   "**           $INSTALLDIR               **"
-echo -e   "*********************************************\n"
+# echo -e "\nRemoving the temporary tag branch ..."
+# git br -d $VERSION >& /dev/null
+
+# echo -e "\n*********************************************"
+# echo -e   "**   ADAQAnalysis has been installed in:   **"
+# echo -e   "**           $INSTALLDIR               **"
+# echo -e   "*********************************************\n"
