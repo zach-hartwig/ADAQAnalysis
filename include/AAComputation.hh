@@ -11,6 +11,7 @@
 #ifndef __AAComputation_hh__
 #define __AAComputation_hh__ 1
 
+// ROOT
 #include <TObject.h>
 #include <TRootEmbeddedCanvas.h>
 #include <TCanvas.h>
@@ -28,11 +29,15 @@
 #include <TGProgressBar.h>
 #include <TF1.h>
 
+// C++
 #include <string>
 #include <vector>
 using namespace std;
 
-#include "ADAQRootGUIClasses.hh"
+// ADAQ
+#include "ADAQRootClasses.hh"
+
+// ADAQAnalysis
 #include "AASettings.hh"
 #include "AAParallelResults.hh"
 #include "AATypes.hh"

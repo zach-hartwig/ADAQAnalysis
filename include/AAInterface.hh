@@ -42,7 +42,9 @@ using namespace std;
 #endif
 
 // ADAQ
-#include "ADAQRootGUIClasses.hh"
+#include "ADAQRootClasses.hh"
+
+// ADAQAnalysis
 #include "AATypes.hh"
 #include "AASettings.hh"
 #include "AAComputation.hh"

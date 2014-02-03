@@ -1,6 +1,6 @@
 #********************************************************************
 #  name: Makefile                  
-#  date: 22 May 13
+#  date: 02 Feb 14
 #  auth: Zach Hartwig              
 #
 #  desc: GNUmakefile for building ADAQAnalysis code in seqential and
@@ -58,8 +58,7 @@ TMP = $(patsubst %.cc,%.o,$(SRCFILES))
 OBJS = $(subst /src/,/build/,$(TMP))
 
 # Specify the includes for the ROOT dictionary build
-INCLUDES = $(ADAQHOME)/acquisition/root/GUI/trunk/include
-CXXFLAGS += -I$(INCLUDES) -I$(INCLDIR)
+CXXFLAGS += -I$(ADAQHOME)/include -I$(INCLDIR)
 
 # Specify the required Boost libraries. Note that the sws/cmodws
 # cluster recently upgraded GCC, which breaks the ancient fucking
@@ -73,7 +72,7 @@ ifeq ($(DOMAIN),.psfc.mit.edu)
    BOOSTLIBS = -L/home/hartwig/scratch/boost/boost_1_53_0/lib -lboost_thread -lboost_system
    CXXFLAGS += -I/home/hartwig/scratch/boost/boost_1_53_0/include
 else
-   BOOSTLIBS = -lboost_thread-mt
+   BOOSTLIBS = -lboost_thread
 endif
 
 # If the user desires to build a parallel version of the binary then
@@ -179,7 +178,7 @@ $(BUILDDIR)/ADAQAnalysisDict_MPI.o : $(BUILDDIR)/ADAQAnalysisDict.cc
 
 $(BUILDDIR)/ADAQAnalysisDict.cc : $(INCLDIR)/*.hh $(INCLDIR)/RootLinkDef.h
 	@echo -e "\nGenerating ROOT dictionary $@ ..."
-	rootcint -f $@ -c -I$(INCLUDES) $^ 
+	rootcint -f $@ -c -I$(ADAQHOME)/include $^ 
 
 
 #*************#
