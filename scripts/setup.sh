@@ -17,7 +17,7 @@
 export HOSTTYPE=$(uname -m)
 
 if [ ! "$#" -eq 1 ]; then
-    echo -e "\nError! The ADAQAnalysis Setup.sh script only accepts single cmd line arg!"
+    echo -e "\nError! The ADAQAnalysis setup.sh script only accepts single cmd line arg!"
     echo -e   "       'usr' to setup environment for installed production binaries in /usr/local/adaq"
     echo -e   "       'dev' to setup developer environment for source code binary builds\n"
 fi
@@ -28,13 +28,15 @@ if [ "$1" ==  'usr' ]; then
     export PATH=/usr/local/adaq:$PATH
     export LD_LIBRARY_PATH=/usr/local/adaq/lib/$HOSTTYPE:$LD_LIBRARY_PATH
 
-    echo -e "\nADAQAnalysis : Environment has been configured for ADAQAnalysis user!\n"
+    echo -e "ADAQAnalysis : Environment has been configured for ADAQAnalysis user!"
 
 elif [ "$1" == 'dev' ]; then
     export ADAQUSER=developer
-    export PATH=$PWD/../bin:$PATH
+
+    SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    export PATH=${SCRIPTDIR///scripts/}/bin:$PATH
     export LD_LIBRARY_PATH=$ADAQHOME/lib/$HOSTTYPE:$LD_LIBRARY_PATH
     export PYTHONPATH=$ADAQHOME/lib/$HOSTTYPE:$PYTHONPATH
 
-    echo -e "\nADAQAnalysis : Environment has been configured for ADAQAnalysis developer!\n"
+    echo -e "ADAQAnalysis : Environment has been configured for ADAQAnalysis developer!"
 fi
