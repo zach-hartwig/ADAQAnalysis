@@ -361,6 +361,10 @@ private:
   // Number of processors/threads available on current system
   const int NumProcessors;
 
+  // Variables for size adjustment of widget layout
+  int CanvasX, CanvasY, CanvasFrameWidth, SliderBuffer, LeftFrameLength;
+  int TotalX, TotalY;
+
   // Variables relating to files (paths, bools)
   string DataDirectory, PrintDirectory, DesplicedDirectory, HistogramDirectory;
   bool ADAQFileLoaded, ACRONYMFileLoaded;
