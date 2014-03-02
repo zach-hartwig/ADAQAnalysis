@@ -1645,17 +1645,18 @@ void AAInterface::HandleMenu(int MenuID)
     string Desc[2], Type[2];
     if(MenuFileOpenADAQ_ID == MenuID){
       Desc[0] = "ADAQ ROOT file";
-      Type[0] = "*.root";
+      Type[0] = "*.adaq";
 
       Desc[1] = "ADAQ ROOT file";
-      Type[1] = "*.adaq";
+      Type[1] = "*.root";
+
     }
     else if(MenuFileOpenACRONYM_ID == MenuID){
       Desc[0] = "ACRONYM ROOT file";
-      Type[0] = "*.root";
+      Type[0] = "*.acro";
       
       Desc[1] = "ACRONYM ROOT file";
-      Type[1] = "*.acro";
+      Type[1] = "*.root";
     }
     
     const char *FileTypes[] = {Desc[0].c_str(), Type[0].c_str(),
