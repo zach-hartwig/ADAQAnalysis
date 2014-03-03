@@ -40,7 +40,7 @@ AAInterface::AAInterface(string CmdLineArg)
   : TGMainFrame(gClient->GetRoot()),
     NumDataChannels(8), NumProcessors(boost::thread::hardware_concurrency()),
     CanvasX(700), CanvasY(500), CanvasFrameWidth(700), 
-    SliderBuffer(55), LeftFrameLength(705), TotalX(1125), TotalY(800),
+    SliderBuffer(45), LeftFrameLength(705), TotalX(1125), TotalY(800),
     DataDirectory(getenv("PWD")), PrintDirectory(getenv("HOME")),
     DesplicedDirectory(getenv("HOME")), HistogramDirectory(getenv("HOME")),
     ADAQFileLoaded(false), ACRONYMFileLoaded(false)
@@ -1588,7 +1588,7 @@ void AAInterface::FillCanvasFrame()
   Canvas_EC->GetCanvas()->Connect("ProcessedEvent(int, int, int, TObject *)", "AAInterface", this, "HandleCanvas(int, int, int, TObject *)");
 
   Canvas_VF->AddFrame(XAxisLimits_THS = new TGTripleHSlider(Canvas_VF, CanvasX, kDoubleScaleBoth, XAxisLimits_THS_ID),
-		      new TGLayoutHints(kLHintsNormal, SliderBuffer,5,5,5));
+		      new TGLayoutHints(kLHintsNormal, SliderBuffer,5,5,0));
   XAxisLimits_THS->SetRange(0,1);
   XAxisLimits_THS->SetPosition(0,1);
   XAxisLimits_THS->SetPointerPosition(0.5);
@@ -1596,16 +1596,16 @@ void AAInterface::FillCanvasFrame()
   XAxisLimits_THS->Connect("PointerPositionChanged()", "AAInterface", this, "HandleTripleSliderPointer()");
     
   Canvas_VF->AddFrame(new TGLabel(Canvas_VF, "  Waveform selector  "),
-		      new TGLayoutHints(kLHintsCenterX, 5,5,15,0));
+		      new TGLayoutHints(kLHintsCenterX, 5,5,10,0));
 
   Canvas_VF->AddFrame(WaveformSelector_HS = new TGHSlider(Canvas_VF, CanvasX, kSlider1),
-		      new TGLayoutHints(kLHintsNormal, SliderBuffer,5,0,5));
+		      new TGLayoutHints(kLHintsNormal, SliderBuffer,5,0,0));
   WaveformSelector_HS->SetRange(1,100);
   WaveformSelector_HS->SetPosition(1);
   WaveformSelector_HS->Connect("PositionChanged(int)", "AAInterface", this, "HandleSliders(int)");
 
   Canvas_VF->AddFrame(new TGLabel(Canvas_VF, "  Spectrum integration limits  "),
-		      new TGLayoutHints(kLHintsCenterX, 5,5,15,0));
+		      new TGLayoutHints(kLHintsCenterX, 5,5,10,0));
 
   Canvas_VF->AddFrame(SpectrumIntegrationLimits_DHS = new TGDoubleHSlider(Canvas_VF, CanvasX, kDoubleScaleBoth, SpectrumIntegrationLimits_DHS_ID),
 		      new TGLayoutHints(kLHintsNormal, SliderBuffer,5,0,5));
@@ -1615,9 +1615,9 @@ void AAInterface::FillCanvasFrame()
 		      
   TGHorizontalFrame *SubCanvas_HF = new TGHorizontalFrame(Canvas_VF);
   SubCanvas_HF->SetBackgroundColor(ColorMgr->Number2Pixel(16));
-  Canvas_VF->AddFrame(SubCanvas_HF, new TGLayoutHints(kLHintsRight | kLHintsBottom, 5,5,20,5));
+  Canvas_VF->AddFrame(SubCanvas_HF, new TGLayoutHints(kLHintsRight | kLHintsBottom, 5,30,20,5));
   
-  SubCanvas_HF->AddFrame(ProcessingProgress_PB = new TGHProgressBar(SubCanvas_HF, TGProgressBar::kFancy, CanvasY),
+  SubCanvas_HF->AddFrame(ProcessingProgress_PB = new TGHProgressBar(SubCanvas_HF, TGProgressBar::kFancy, CanvasX-300),
 			 new TGLayoutHints(kLHintsLeft, 5,55,7,5));
   ProcessingProgress_PB->SetBarColor(ColorMgr->Number2Pixel(41));
   ProcessingProgress_PB->ShowPosition(kTRUE, kFALSE, "%0.f% waveforms processed");
