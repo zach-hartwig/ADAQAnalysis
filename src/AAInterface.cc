@@ -238,7 +238,7 @@ void AAInterface::FillWaveformFrame()
   /////////////////////////////////////////
   // Fill the waveform options tabbed frame
   
-  TGCanvas *WaveformFrame_C = new TGCanvas(WaveformOptions_CF, 320, LeftFrameLength, kDoubleBorder);
+  TGCanvas *WaveformFrame_C = new TGCanvas(WaveformOptions_CF, 320, LeftFrameLength-20, kDoubleBorder);
   WaveformOptions_CF->AddFrame(WaveformFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
 
   TGVerticalFrame *WaveformFrame_VF = new TGVerticalFrame(WaveformFrame_C->GetViewPort(), 320, LeftFrameLength);
@@ -430,7 +430,7 @@ void AAInterface::FillSpectrumFrame()
   /////////////////////////////////////////
   // Fill the spectrum options tabbed frame
   
-  TGCanvas *SpectrumFrame_C = new TGCanvas(SpectrumOptions_CF, 320, 705, kDoubleBorder);
+  TGCanvas *SpectrumFrame_C = new TGCanvas(SpectrumOptions_CF, 320, LeftFrameLength-20, kDoubleBorder);
   SpectrumOptions_CF->AddFrame(SpectrumFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
   
   TGVerticalFrame *SpectrumFrame_VF = new TGVerticalFrame(SpectrumFrame_C->GetViewPort(), 320, LeftFrameLength);
@@ -816,7 +816,7 @@ void AAInterface::FillAnalysisFrame()
   /////////////////////////////////////////
   // Fill the analysis options tabbed frame
 
-  TGCanvas *AnalysisFrame_C = new TGCanvas(AnalysisOptions_CF, 320, 705, kDoubleBorder);
+  TGCanvas *AnalysisFrame_C = new TGCanvas(AnalysisOptions_CF, 320, LeftFrameLength-20, kDoubleBorder);
   AnalysisOptions_CF->AddFrame(AnalysisFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
 
   TGVerticalFrame *AnalysisFrame_VF = new TGVerticalFrame(AnalysisFrame_C->GetViewPort(), 320, LeftFrameLength);
@@ -1057,7 +1057,7 @@ void AAInterface::FillGraphicsFrame()
   /////////////////////////////////////////
   // Fill the graphics options tabbed frame
 
-  TGCanvas *GraphicsFrame_C = new TGCanvas(GraphicsOptions_CF, 320, 705, kDoubleBorder);
+  TGCanvas *GraphicsFrame_C = new TGCanvas(GraphicsOptions_CF, 320, LeftFrameLength-20, kDoubleBorder);
   GraphicsOptions_CF->AddFrame(GraphicsFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
   
   TGVerticalFrame *GraphicsFrame_VF = new TGVerticalFrame(GraphicsFrame_C->GetViewPort(), 320, LeftFrameLength);
@@ -1329,7 +1329,7 @@ void AAInterface::FillProcessingFrame()
   ///////////////////////////////////
   // Fill the processing widget frame
   
-  TGCanvas *ProcessingFrame_C = new TGCanvas(ProcessingOptions_CF, 320, 705, kDoubleBorder);
+  TGCanvas *ProcessingFrame_C = new TGCanvas(ProcessingOptions_CF, 320, LeftFrameLength-20, kDoubleBorder);
   ProcessingOptions_CF->AddFrame(ProcessingFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
   
   TGVerticalFrame *ProcessingFrame_VF = new TGVerticalFrame(ProcessingFrame_C->GetViewPort(), 320, LeftFrameLength);
