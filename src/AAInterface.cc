@@ -39,12 +39,26 @@ using namespace std;
 AAInterface::AAInterface(string CmdLineArg)
   : TGMainFrame(gClient->GetRoot()),
     NumDataChannels(8), NumProcessors(boost::thread::hardware_concurrency()),
+    CanvasX(700), CanvasY(500), CanvasFrameWidth(700), 
+    SliderBuffer(45), LeftFrameLength(705), TotalX(1125), TotalY(800),
     DataDirectory(getenv("PWD")), PrintDirectory(getenv("HOME")),
     DesplicedDirectory(getenv("HOME")), HistogramDirectory(getenv("HOME")),
     ADAQFileLoaded(false), ACRONYMFileLoaded(false)
 {
   SetCleanup(kDeepCleanup);
 
+  // Allow cmd line arg to specify a small canvas size
+  size_t Pos = CmdLineArg.find("small");
+  if(Pos != string::npos){
+    CanvasX = 500;
+    CanvasY = 300;
+    CanvasFrameWidth = 400;
+    LeftFrameLength = 540;
+    TotalX = 950;
+    TotalY = 610;
+  }
+
+  // Create the entire graphical interface
   CreateTheMainFrames();
 
   ColorMgr = new TColor;
@@ -55,11 +69,11 @@ AAInterface::AAInterface(string CmdLineArg)
   GraphicsMgr = AAGraphics::GetInstance();
   GraphicsMgr->SetCanvasPointer(Canvas_EC->GetCanvas());
 
-  if(CmdLineArg != "Unspecified"){
+  if(CmdLineArg != "Unspecified" and CmdLineArg != "small"){
 
     size_t Pos = CmdLineArg.find_last_of(".");
     if(Pos != string::npos){
-
+      
       if(CmdLineArg.substr(Pos,5) == ".root" or
 	 CmdLineArg.substr(Pos,5) == ".adaq"){
 	ADAQFileName = CmdLineArg;
@@ -138,7 +152,7 @@ void AAInterface::CreateTheMainFrames()
   //////////////////////////////////////////////////////////
 
   AddFrame(OptionsAndCanvas_HF = new TGHorizontalFrame(this),
-	   new TGLayoutHints(kLHintsTop, 5, 5,5,5));
+	   new TGLayoutHints(kLHintsTop, 5,5,5,5));
   OptionsAndCanvas_HF->SetBackgroundColor(ColorMgr->Number2Pixel(16));
 
   
@@ -160,31 +174,31 @@ void AAInterface::CreateTheMainFrames()
   // The tabbed frame to hold waveform widgets
   WaveformOptionsTab_CF = OptionsTabs_T->AddTab("Waveform");
   WaveformOptionsTab_CF->AddFrame(WaveformOptions_CF = new TGCompositeFrame(WaveformOptionsTab_CF, 1, 1, kVerticalFrame));
-  WaveformOptions_CF->Resize(320,735);
+  WaveformOptions_CF->Resize(320,LeftFrameLength);
   WaveformOptions_CF->ChangeOptions(WaveformOptions_CF->GetOptions() | kFixedSize);
 
   // The tabbed frame to hold spectrum widgets
   SpectrumOptionsTab_CF = OptionsTabs_T->AddTab("Spectrum");
   SpectrumOptionsTab_CF->AddFrame(SpectrumOptions_CF = new TGCompositeFrame(SpectrumOptionsTab_CF, 1, 1, kVerticalFrame));
-  SpectrumOptions_CF->Resize(320,735);
+  SpectrumOptions_CF->Resize(320,LeftFrameLength);
   SpectrumOptions_CF->ChangeOptions(SpectrumOptions_CF->GetOptions() | kFixedSize);
 
   // The tabbed frame to hold analysis widgets
   AnalysisOptionsTab_CF = OptionsTabs_T->AddTab("Analysis");
   AnalysisOptionsTab_CF->AddFrame(AnalysisOptions_CF = new TGCompositeFrame(AnalysisOptionsTab_CF, 1, 1, kVerticalFrame));
-  AnalysisOptions_CF->Resize(320,735);
+  AnalysisOptions_CF->Resize(320,LeftFrameLength);
   AnalysisOptions_CF->ChangeOptions(AnalysisOptions_CF->GetOptions() | kFixedSize);
   
   // The tabbed frame to hold graphical widgets
   GraphicsOptionsTab_CF = OptionsTabs_T->AddTab("Graphics");
   GraphicsOptionsTab_CF->AddFrame(GraphicsOptions_CF = new TGCompositeFrame(GraphicsOptionsTab_CF, 1, 1, kVerticalFrame));
-  GraphicsOptions_CF->Resize(320,735);
+  GraphicsOptions_CF->Resize(320,LeftFrameLength);
   GraphicsOptions_CF->ChangeOptions(GraphicsOptions_CF->GetOptions() | kFixedSize);
 
   // The tabbed frame to hold parallel processing widgets
   ProcessingOptionsTab_CF = OptionsTabs_T->AddTab("Processing");
   ProcessingOptionsTab_CF->AddFrame(ProcessingOptions_CF = new TGCompositeFrame(ProcessingOptionsTab_CF, 1, 1, kVerticalFrame));
-  ProcessingOptions_CF->Resize(320,735);
+  ProcessingOptions_CF->Resize(320,LeftFrameLength);
   ProcessingOptions_CF->ChangeOptions(ProcessingOptions_CF->GetOptions() | kFixedSize);
 
   FillWaveformFrame();
@@ -193,7 +207,6 @@ void AAInterface::CreateTheMainFrames()
   FillGraphicsFrame();
   FillProcessingFrame();
   FillCanvasFrame();
-
 
 
   //////////////////////////////////////
@@ -212,7 +225,7 @@ void AAInterface::CreateTheMainFrames()
 
   SetWindowName(TitleString.c_str());
   MapSubwindows();
-  Resize(1125,800);
+  Resize(TotalX, TotalY);
   MapWindow();
 
   WaveformOptionsTab_CF->HideFrame(WaveformOptions_CF);
@@ -225,10 +238,14 @@ void AAInterface::FillWaveformFrame()
   /////////////////////////////////////////
   // Fill the waveform options tabbed frame
   
-  // Waveform selection (data channel and waveform number)
+  TGCanvas *WaveformFrame_C = new TGCanvas(WaveformOptions_CF, 320, LeftFrameLength-20, kDoubleBorder);
+  WaveformOptions_CF->AddFrame(WaveformFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
+
+  TGVerticalFrame *WaveformFrame_VF = new TGVerticalFrame(WaveformFrame_C->GetViewPort(), 320, LeftFrameLength);
+  WaveformFrame_C->SetContainer(WaveformFrame_VF);
   
-  TGHorizontalFrame *WaveformSelection_HF = new TGHorizontalFrame(WaveformOptions_CF);
-  WaveformOptions_CF->AddFrame(WaveformSelection_HF, new TGLayoutHints(kLHintsLeft, 15,5,15,5));
+  TGHorizontalFrame *WaveformSelection_HF = new TGHorizontalFrame(WaveformFrame_VF);
+  WaveformFrame_VF->AddFrame(WaveformSelection_HF, new TGLayoutHints(kLHintsLeft, 15,5,15,5));
   
   WaveformSelection_HF->AddFrame(ChannelSelector_CBL = new ADAQComboBoxWithLabel(WaveformSelection_HF, "", -1),
 				 new TGLayoutHints(kLHintsLeft, 0,5,5,5));
@@ -250,8 +267,8 @@ void AAInterface::FillWaveformFrame()
   
   // Waveform specification (type and polarity)
 
-  TGHorizontalFrame *WaveformSpecification_HF = new TGHorizontalFrame(WaveformOptions_CF);
-  WaveformOptions_CF->AddFrame(WaveformSpecification_HF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+  TGHorizontalFrame *WaveformSpecification_HF = new TGHorizontalFrame(WaveformFrame_VF);
+  WaveformFrame_VF->AddFrame(WaveformSpecification_HF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
   
   WaveformSpecification_HF->AddFrame(WaveformType_BG = new TGButtonGroup(WaveformSpecification_HF, "Type", kVerticalFrame),
 				     new TGLayoutHints(kLHintsLeft, 0,5,0,5));
@@ -277,59 +294,59 @@ void AAInterface::FillWaveformFrame()
 
   // Zero suppression options
 
-  WaveformOptions_CF->AddFrame(PlotZeroSuppressionCeiling_CB = new TGCheckButton(WaveformOptions_CF, "Plot zero suppression ceiling", PlotZeroSuppressionCeiling_CB_ID),
+  WaveformFrame_VF->AddFrame(PlotZeroSuppressionCeiling_CB = new TGCheckButton(WaveformFrame_VF, "Plot zero suppression ceiling", PlotZeroSuppressionCeiling_CB_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
   PlotZeroSuppressionCeiling_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
-  WaveformOptions_CF->AddFrame(ZeroSuppressionCeiling_NEL = new ADAQNumberEntryWithLabel(WaveformOptions_CF, "Zero suppression ceiling", ZeroSuppressionCeiling_NEL_ID),
+  WaveformFrame_VF->AddFrame(ZeroSuppressionCeiling_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Zero suppression ceiling", ZeroSuppressionCeiling_NEL_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,0,5));
   ZeroSuppressionCeiling_NEL->GetEntry()->SetNumber(15);
   ZeroSuppressionCeiling_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   // Peak finding (ROOT TSpectrum) options
 
-  WaveformOptions_CF->AddFrame(FindPeaks_CB = new TGCheckButton(WaveformOptions_CF, "Find peaks", FindPeaks_CB_ID),
+  WaveformFrame_VF->AddFrame(FindPeaks_CB = new TGCheckButton(WaveformFrame_VF, "Find peaks", FindPeaks_CB_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
   FindPeaks_CB->SetState(kButtonDisabled);
   FindPeaks_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
-  WaveformOptions_CF->AddFrame(UseMarkovSmoothing_CB = new TGCheckButton(WaveformOptions_CF, "Use Markov smoothing", UseMarkovSmoothing_CB_ID),
+  WaveformFrame_VF->AddFrame(UseMarkovSmoothing_CB = new TGCheckButton(WaveformFrame_VF, "Use Markov smoothing", UseMarkovSmoothing_CB_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
   UseMarkovSmoothing_CB->SetState(kButtonDown);
   UseMarkovSmoothing_CB->SetState(kButtonDisabled);
 
   UseMarkovSmoothing_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
-  WaveformOptions_CF->AddFrame(MaxPeaks_NEL = new ADAQNumberEntryWithLabel(WaveformOptions_CF, "Maximum peaks", MaxPeaks_NEL_ID),
+  WaveformFrame_VF->AddFrame(MaxPeaks_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Maximum peaks", MaxPeaks_NEL_ID),
 		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
   MaxPeaks_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   MaxPeaks_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   MaxPeaks_NEL->GetEntry()->SetNumber(15);
   MaxPeaks_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
-  WaveformOptions_CF->AddFrame(Sigma_NEL = new ADAQNumberEntryWithLabel(WaveformOptions_CF, "Sigma", Sigma_NEL_ID),
+  WaveformFrame_VF->AddFrame(Sigma_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Sigma", Sigma_NEL_ID),
 		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
   Sigma_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   Sigma_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   Sigma_NEL->GetEntry()->SetNumber(15);
   Sigma_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
-  WaveformOptions_CF->AddFrame(Resolution_NEL = new ADAQNumberEntryWithLabel(WaveformOptions_CF, "Resolution", Resolution_NEL_ID),
+  WaveformFrame_VF->AddFrame(Resolution_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Resolution", Resolution_NEL_ID),
 		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
   Resolution_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   Resolution_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   Resolution_NEL->GetEntry()->SetNumber(0.005);
   Resolution_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
-  WaveformOptions_CF->AddFrame(Floor_NEL = new ADAQNumberEntryWithLabel(WaveformOptions_CF, "Floor", Floor_NEL_ID),
+  WaveformFrame_VF->AddFrame(Floor_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Floor", Floor_NEL_ID),
 		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
   Floor_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   Floor_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   Floor_NEL->GetEntry()->SetNumber(50);
   Floor_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
   
-  TGGroupFrame *PeakPlottingOptions_GF = new TGGroupFrame(WaveformOptions_CF, "Peak finding plotting options", kHorizontalFrame);
-  WaveformOptions_CF->AddFrame(PeakPlottingOptions_GF, new TGLayoutHints(kLHintsLeft, 15,5,0,5));
+  TGGroupFrame *PeakPlottingOptions_GF = new TGGroupFrame(WaveformFrame_VF, "Peak finding plotting options", kHorizontalFrame);
+  WaveformFrame_VF->AddFrame(PeakPlottingOptions_GF, new TGLayoutHints(kLHintsLeft, 15,5,0,5));
 
   PeakPlottingOptions_GF->AddFrame(PlotFloor_CB = new TGCheckButton(PeakPlottingOptions_GF, "Floor", PlotFloor_CB_ID),
 				   new TGLayoutHints(kLHintsLeft, 0,0,5,0));
@@ -345,19 +362,19 @@ void AAInterface::FillWaveformFrame()
 
   // Pileup options
   
-  WaveformOptions_CF->AddFrame(UsePileupRejection_CB = new TGCheckButton(WaveformOptions_CF, "Use pileup rejection", UsePileupRejection_CB_ID),
+  WaveformFrame_VF->AddFrame(UsePileupRejection_CB = new TGCheckButton(WaveformFrame_VF, "Use pileup rejection", UsePileupRejection_CB_ID),
 			       new TGLayoutHints(kLHintsNormal, 15,5,5,5));
   UsePileupRejection_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   UsePileupRejection_CB->SetState(kButtonDown);
 			       
   // Baseline calculation options
   
-  WaveformOptions_CF->AddFrame(PlotBaseline_CB = new TGCheckButton(WaveformOptions_CF, "Plot baseline calc. region.", PlotBaseline_CB_ID),
+  WaveformFrame_VF->AddFrame(PlotBaseline_CB = new TGCheckButton(WaveformFrame_VF, "Plot baseline calc. region.", PlotBaseline_CB_ID),
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
   PlotBaseline_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
-  TGHorizontalFrame *BaselineRegion_HF = new TGHorizontalFrame(WaveformOptions_CF);
-  WaveformOptions_CF->AddFrame(BaselineRegion_HF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+  TGHorizontalFrame *BaselineRegion_HF = new TGHorizontalFrame(WaveformFrame_VF);
+  WaveformFrame_VF->AddFrame(BaselineRegion_HF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
   
   BaselineRegion_HF->AddFrame(BaselineCalcMin_NEL = new ADAQNumberEntryWithLabel(BaselineRegion_HF, "Min.", BaselineCalcMin_NEL_ID),
 			      new TGLayoutHints(kLHintsLeft, 0,5,0,0));
@@ -379,13 +396,13 @@ void AAInterface::FillWaveformFrame()
 
   // Trigger
 
-  WaveformOptions_CF->AddFrame(PlotTrigger_CB = new TGCheckButton(WaveformOptions_CF, "Plot trigger", PlotTrigger_CB_ID),
+  WaveformFrame_VF->AddFrame(PlotTrigger_CB = new TGCheckButton(WaveformFrame_VF, "Plot trigger", PlotTrigger_CB_ID),
 		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
   PlotTrigger_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   
-  TGGroupFrame *WaveformAnalysis_GF = new TGGroupFrame(WaveformOptions_CF, "Waveform analysis", kVerticalFrame);
-  WaveformOptions_CF->AddFrame(WaveformAnalysis_GF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+  TGGroupFrame *WaveformAnalysis_GF = new TGGroupFrame(WaveformFrame_VF, "Waveform analysis", kVerticalFrame);
+  WaveformFrame_VF->AddFrame(WaveformAnalysis_GF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
   
   WaveformAnalysis_GF->AddFrame(WaveformAnalysis_CB = new TGCheckButton(WaveformAnalysis_GF, "Analyze waveform", WaveformAnalysis_CB_ID),
 				new TGLayoutHints(kLHintsLeft, 0,5,0,0));
@@ -413,12 +430,11 @@ void AAInterface::FillSpectrumFrame()
   /////////////////////////////////////////
   // Fill the spectrum options tabbed frame
   
-  TGCanvas *SpectrumFrame_C = new TGCanvas(SpectrumOptions_CF, 320, 705, kDoubleBorder);
+  TGCanvas *SpectrumFrame_C = new TGCanvas(SpectrumOptions_CF, 320, LeftFrameLength-20, kDoubleBorder);
   SpectrumOptions_CF->AddFrame(SpectrumFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
   
-  TGVerticalFrame *SpectrumFrame_VF = new TGVerticalFrame(SpectrumFrame_C->GetViewPort(), 320, 705);
+  TGVerticalFrame *SpectrumFrame_VF = new TGVerticalFrame(SpectrumFrame_C->GetViewPort(), 320, LeftFrameLength);
   SpectrumFrame_C->SetContainer(SpectrumFrame_VF);
-  
   
   TGHorizontalFrame *WaveformAndBins_HF = new TGHorizontalFrame(SpectrumFrame_VF);
   SpectrumFrame_VF->AddFrame(WaveformAndBins_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
@@ -800,10 +816,10 @@ void AAInterface::FillAnalysisFrame()
   /////////////////////////////////////////
   // Fill the analysis options tabbed frame
 
-  TGCanvas *AnalysisFrame_C = new TGCanvas(AnalysisOptions_CF, 320, 705, kDoubleBorder);
+  TGCanvas *AnalysisFrame_C = new TGCanvas(AnalysisOptions_CF, 320, LeftFrameLength-20, kDoubleBorder);
   AnalysisOptions_CF->AddFrame(AnalysisFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
 
-  TGVerticalFrame *AnalysisFrame_VF = new TGVerticalFrame(AnalysisFrame_C->GetViewPort(), 320, 705);
+  TGVerticalFrame *AnalysisFrame_VF = new TGVerticalFrame(AnalysisFrame_C->GetViewPort(), 320, LeftFrameLength);
   AnalysisFrame_C->SetContainer(AnalysisFrame_VF);
 
   // Pulse Shape Discrimination (PSD)
@@ -1041,10 +1057,10 @@ void AAInterface::FillGraphicsFrame()
   /////////////////////////////////////////
   // Fill the graphics options tabbed frame
 
-  TGCanvas *GraphicsFrame_C = new TGCanvas(GraphicsOptions_CF, 320, 705, kDoubleBorder);
+  TGCanvas *GraphicsFrame_C = new TGCanvas(GraphicsOptions_CF, 320, LeftFrameLength-20, kDoubleBorder);
   GraphicsOptions_CF->AddFrame(GraphicsFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
   
-  TGVerticalFrame *GraphicsFrame_VF = new TGVerticalFrame(GraphicsFrame_C->GetViewPort(), 320, 705);
+  TGVerticalFrame *GraphicsFrame_VF = new TGVerticalFrame(GraphicsFrame_C->GetViewPort(), 320, LeftFrameLength);
   GraphicsFrame_C->SetContainer(GraphicsFrame_VF);
   
   GraphicsFrame_VF->AddFrame(WaveformDrawOptions_BG = new TGButtonGroup(GraphicsFrame_VF, "Waveform draw options", kHorizontalFrame),
@@ -1313,10 +1329,10 @@ void AAInterface::FillProcessingFrame()
   ///////////////////////////////////
   // Fill the processing widget frame
   
-  TGCanvas *ProcessingFrame_C = new TGCanvas(ProcessingOptions_CF, 320, 705, kDoubleBorder);
+  TGCanvas *ProcessingFrame_C = new TGCanvas(ProcessingOptions_CF, 320, LeftFrameLength-20, kDoubleBorder);
   ProcessingOptions_CF->AddFrame(ProcessingFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
   
-  TGVerticalFrame *ProcessingFrame_VF = new TGVerticalFrame(ProcessingFrame_C->GetViewPort(), 320, 705);
+  TGVerticalFrame *ProcessingFrame_VF = new TGVerticalFrame(ProcessingFrame_C->GetViewPort(), 320, LeftFrameLength);
   ProcessingFrame_C->SetContainer(ProcessingFrame_VF);
   
   // Processing type (sequential / parallel)
@@ -1504,8 +1520,8 @@ void AAInterface::FillCanvasFrame()
 
   // ADAQ ROOT file name text entry
   Canvas_VF->AddFrame(FileName_TE = new TGTextEntry(Canvas_VF, "<No file currently selected>", -1),
-		      new TGLayoutHints(kLHintsTop, 30,5,0,5));
-  FileName_TE->Resize(700,20);
+		      new TGLayoutHints(kLHintsTop | kLHintsCenterX, 30,5,0,5));
+  FileName_TE->Resize(CanvasFrameWidth,20);
   FileName_TE->SetState(false);
   FileName_TE->SetAlignment(kTextCenterX);
   FileName_TE->SetBackgroundColor(ColorMgr->Number2Pixel(18));
@@ -1513,7 +1529,7 @@ void AAInterface::FillCanvasFrame()
 
   // File statistics horizontal frame
 
-  TGHorizontalFrame *FileStats_HF = new TGHorizontalFrame(Canvas_VF,700,30);
+  TGHorizontalFrame *FileStats_HF = new TGHorizontalFrame(Canvas_VF,CanvasFrameWidth,30);
   FileStats_HF->SetBackgroundColor(ColorMgr->Number2Pixel(16));
   Canvas_VF->AddFrame(FileStats_HF, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 5,5,0,5));
 
@@ -1554,13 +1570,13 @@ void AAInterface::FillCanvasFrame()
   TGHorizontalFrame *Canvas_HF = new TGHorizontalFrame(Canvas_VF);
   Canvas_VF->AddFrame(Canvas_HF, new TGLayoutHints(kLHintsCenterX));
 
-  Canvas_HF->AddFrame(YAxisLimits_DVS = new TGDoubleVSlider(Canvas_HF, 500, kDoubleScaleBoth, YAxisLimits_DVS_ID),
-		      new TGLayoutHints(kLHintsTop));
+  Canvas_HF->AddFrame(YAxisLimits_DVS = new TGDoubleVSlider(Canvas_HF, CanvasY, kDoubleScaleBoth, YAxisLimits_DVS_ID),
+		      new TGLayoutHints(kLHintsCenterY));
   YAxisLimits_DVS->SetRange(0,1);
   YAxisLimits_DVS->SetPosition(0,1);
   YAxisLimits_DVS->Connect("PositionChanged()", "AAInterface", this, "HandleDoubleSliders()");
   
-  Canvas_HF->AddFrame(Canvas_EC = new TRootEmbeddedCanvas("TheCanvas_EC", Canvas_HF, 700, 500),
+  Canvas_HF->AddFrame(Canvas_EC = new TRootEmbeddedCanvas("TheCanvas_EC", Canvas_HF, CanvasX, CanvasY),
 		      new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
   Canvas_EC->GetCanvas()->SetFillColor(0);
   Canvas_EC->GetCanvas()->SetFrameFillColor(19);
@@ -1571,8 +1587,8 @@ void AAInterface::FillCanvasFrame()
   Canvas_EC->GetCanvas()->SetRightMargin(0.05);
   Canvas_EC->GetCanvas()->Connect("ProcessedEvent(int, int, int, TObject *)", "AAInterface", this, "HandleCanvas(int, int, int, TObject *)");
 
-  Canvas_VF->AddFrame(XAxisLimits_THS = new TGTripleHSlider(Canvas_VF, 700, kDoubleScaleBoth, XAxisLimits_THS_ID),
-		      new TGLayoutHints(kLHintsRight));
+  Canvas_VF->AddFrame(XAxisLimits_THS = new TGTripleHSlider(Canvas_VF, CanvasX, kDoubleScaleBoth, XAxisLimits_THS_ID),
+		      new TGLayoutHints(kLHintsNormal, SliderBuffer,5,5,0));
   XAxisLimits_THS->SetRange(0,1);
   XAxisLimits_THS->SetPosition(0,1);
   XAxisLimits_THS->SetPointerPosition(0.5);
@@ -1580,28 +1596,28 @@ void AAInterface::FillCanvasFrame()
   XAxisLimits_THS->Connect("PointerPositionChanged()", "AAInterface", this, "HandleTripleSliderPointer()");
     
   Canvas_VF->AddFrame(new TGLabel(Canvas_VF, "  Waveform selector  "),
-		      new TGLayoutHints(kLHintsCenterX, 5,5,15,0));
+		      new TGLayoutHints(kLHintsCenterX, 5,5,10,0));
 
-  Canvas_VF->AddFrame(WaveformSelector_HS = new TGHSlider(Canvas_VF, 700, kSlider1),
-		      new TGLayoutHints(kLHintsRight));
+  Canvas_VF->AddFrame(WaveformSelector_HS = new TGHSlider(Canvas_VF, CanvasX, kSlider1),
+		      new TGLayoutHints(kLHintsNormal, SliderBuffer,5,0,0));
   WaveformSelector_HS->SetRange(1,100);
   WaveformSelector_HS->SetPosition(1);
   WaveformSelector_HS->Connect("PositionChanged(int)", "AAInterface", this, "HandleSliders(int)");
 
   Canvas_VF->AddFrame(new TGLabel(Canvas_VF, "  Spectrum integration limits  "),
-		      new TGLayoutHints(kLHintsCenterX, 5,5,15,0));
+		      new TGLayoutHints(kLHintsCenterX, 5,5,10,0));
 
-  Canvas_VF->AddFrame(SpectrumIntegrationLimits_DHS = new TGDoubleHSlider(Canvas_VF, 700, kDoubleScaleBoth, SpectrumIntegrationLimits_DHS_ID),
-		      new TGLayoutHints(kLHintsRight));
+  Canvas_VF->AddFrame(SpectrumIntegrationLimits_DHS = new TGDoubleHSlider(Canvas_VF, CanvasX, kDoubleScaleBoth, SpectrumIntegrationLimits_DHS_ID),
+		      new TGLayoutHints(kLHintsNormal, SliderBuffer,5,0,5));
   SpectrumIntegrationLimits_DHS->SetRange(0,1);
   SpectrumIntegrationLimits_DHS->SetPosition(0,1);
   SpectrumIntegrationLimits_DHS->Connect("PositionChanged()", "AAInterface", this, "HandleDoubleSliders()");
 		      
   TGHorizontalFrame *SubCanvas_HF = new TGHorizontalFrame(Canvas_VF);
   SubCanvas_HF->SetBackgroundColor(ColorMgr->Number2Pixel(16));
-  Canvas_VF->AddFrame(SubCanvas_HF, new TGLayoutHints(kLHintsRight | kLHintsBottom, 5,5,20,5));
+  Canvas_VF->AddFrame(SubCanvas_HF, new TGLayoutHints(kLHintsRight | kLHintsBottom, 5,30,20,5));
   
-  SubCanvas_HF->AddFrame(ProcessingProgress_PB = new TGHProgressBar(SubCanvas_HF, TGProgressBar::kFancy, 400),
+  SubCanvas_HF->AddFrame(ProcessingProgress_PB = new TGHProgressBar(SubCanvas_HF, TGProgressBar::kFancy, CanvasX-300),
 			 new TGLayoutHints(kLHintsLeft, 5,55,7,5));
   ProcessingProgress_PB->SetBarColor(ColorMgr->Number2Pixel(41));
   ProcessingProgress_PB->ShowPosition(kTRUE, kFALSE, "%0.f% waveforms processed");
@@ -1629,17 +1645,18 @@ void AAInterface::HandleMenu(int MenuID)
     string Desc[2], Type[2];
     if(MenuFileOpenADAQ_ID == MenuID){
       Desc[0] = "ADAQ ROOT file";
-      Type[0] = "*.root";
+      Type[0] = "*.adaq";
 
       Desc[1] = "ADAQ ROOT file";
-      Type[1] = "*.adaq";
+      Type[1] = "*.root";
+
     }
     else if(MenuFileOpenACRONYM_ID == MenuID){
       Desc[0] = "ACRONYM ROOT file";
-      Type[0] = "*.root";
+      Type[0] = "*.acro";
       
       Desc[1] = "ACRONYM ROOT file";
-      Type[1] = "*.acro";
+      Type[1] = "*.root";
     }
     
     const char *FileTypes[] = {Desc[0].c_str(), Type[0].c_str(),

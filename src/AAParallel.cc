@@ -40,33 +40,19 @@ AAParallel::AAParallel()
   // Get ADAQ user type
   string ADAQUSER = getenv("ADAQUSER");
 
-  // Get the linux user handle
-  string USER = getenv("USER");
-
-  
-  // ADAQ users run the installed binaries from /usr/local/adaq
+  // ADAQ users will run the production version binaries from the
+  // system-wide /usr/local/adaq location. Force explicit path.
   if(ADAQUSER == "user")
     ParallelBinaryName = "/usr/local/adaq/ADAQAnalysis_MPI";
 
-  // ADAQ developers require settings relative to their top-level SVN
-  // checkout directory of the source code
-  else if(ADAQUSER == "developer"){
-    if(getenv("ADAQHOME")==NULL){
-      cout << "\nError! The 'ADAQHOME' environmental variable must be set to point to the top-level\n"
-	   <<   "       ADAQ SVN checkout directory! Please check your environment settings.\n"
-	   << endl;
-      exit(-42);
-    }
-
-    string ADAQHOME = getenv("ADAQHOME");
-    
-    if(VersionString == "Development")
-      ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysis/trunk/bin/ADAQAnalysis_MPI";
-    else
-      ParallelBinaryName = ADAQHOME + "/analysis/ADAQAnalysis/versions/" + VersionString + "/bin/ADAQAnalysis_MPI";
-  }
- 
-  // Set the location of the transient parallel processing file
+  // ADAQ developers will run the locally built development binaries
+  // from their Git repository. Use relative path via setup.sh script
+  else if(ADAQUSER == "developer")
+    ParallelBinaryName = "ADAQAnalysis_MPI";
+  
+  // Set the location of the transient parallel processing file. Use
+  // the linux user name to ensure a unique file name is created.
+  string USER = getenv("USER");
   ParallelFileName = "/tmp/ADAQParallelProcessing_" + USER + ".root";
 }
 
