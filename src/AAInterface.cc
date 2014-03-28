@@ -483,7 +483,7 @@ void AAInterface::FillSpectrumFrame()
   // Spectrum type radio buttons
   ADAQSpectrumOptions_HF->AddFrame(ADAQSpectrumType_BG = new TGButtonGroup(ADAQSpectrumOptions_HF, "ADAQ spectra", kVerticalFrame),
 				   new TGLayoutHints(kLHintsLeft, 0,5,0,0));
-  ADAQSpectrumTypePAS_RB = new TGRadioButton(ADAQSpectrumType_BG, "Pulse area", -1);
+  ADAQSpectrumTypePAS_RB = new TGRadioButton(ADAQSpectrumType_BG, "Pulse rea", -1);
   ADAQSpectrumTypePAS_RB->SetState(kButtonDown);
   
   ADAQSpectrumTypePHS_RB = new TGRadioButton(ADAQSpectrumType_BG, "Pulse height", -1);
@@ -583,13 +583,15 @@ void AAInterface::FillSpectrumFrame()
   SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
   SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);
   SpectrumCalibrationEnergy_NEL->GetEntry()->SetState(false);
+  SpectrumCalibrationEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
-  SpectrumCalibration_GF->AddFrame(SpectrumCalibrationPulseUnit_NEL = new ADAQNumberEntryWithLabel(SpectrumCalibration_GF, "Pulse Unit (ADC)", SpectrumCalibrationPulseUnit_NEL_ID),
+  SpectrumCalibration_GF->AddFrame(SpectrumCalibrationPulseUnit_NEL = new ADAQNumberEntryWithLabel(SpectrumCalibration_GF, "Pulse unit (ADC)", SpectrumCalibrationPulseUnit_NEL_ID),
 				       new TGLayoutHints(kLHintsLeft,0,0,0,5));
   SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(1.0);
   SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetState(false);
+  SpectrumCalibrationPulseUnit_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
   TGHorizontalFrame *SpectrumCalibration_HF1 = new TGHorizontalFrame(SpectrumCalibration_GF);
   SpectrumCalibration_GF->AddFrame(SpectrumCalibration_HF1);
@@ -659,7 +661,7 @@ void AAInterface::FillSpectrumFrame()
   SpectrumBackgroundIterations_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   SpectrumBackgroundIterations_NEL->GetEntry()->SetNumber(15);
   SpectrumBackgroundIterations_NEL->GetEntry()->Resize(40,20);
-  SpectrumBackgroundIterations_NEL->GetEntry()->Connect("ValueSet(long", "AAInterface", this, "HandleNumberEntries()");
+  SpectrumBackgroundIterations_NEL->GetEntry()->Connect("ValueSet()", "AAInterface", this, "HandleNumberEntries()");
 
   ////
 
@@ -2806,6 +2808,28 @@ void AAInterface::HandleNumberEntries()
     ComputationMgr->CalculateSpectrumBackground();
     GraphicsMgr->PlotSpectrum();
     break;
+
+  case SpectrumCalibrationEnergy_NEL_ID:
+  case SpectrumCalibrationPulseUnit_NEL_ID:{
+    // Get the current spectrum
+    TH1F *Spectrum_H = ComputationMgr->GetSpectrum();
+    
+    // Get the value set in the PulseUnit number entry
+    double Value = 0.;
+    if(SpectrumCalibrationEnergy_NEL_ID == NumberEntryID)
+      Value = SpectrumCalibrationEnergy_NEL->GetEntry()->GetNumber();
+    else
+      Value = SpectrumCalibrationPulseUnit_NEL->GetEntry()->GetNumber();
+    
+    // Draw the new calibration line value ontop of the spectrum
+    GraphicsMgr->PlotSpectrum();
+    GraphicsMgr->PlotCalibrationLine(Value,
+				     Spectrum_H->GetMinimum(),
+				     Spectrum_H->GetMaximum());
+    
+    Canvas_EC->GetCanvas()->Update();
+    break;
+  }
     
   case XAxisSize_NEL_ID:
   case XAxisOffset_NEL_ID:
@@ -3060,6 +3084,9 @@ void AAInterface::HandleComboBox(int ComboBoxID, int SelectedID)
       else{
 	SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(Energy[SelectedID]);
 	SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(PulseUnit[SelectedID]);
+
+	// Update the position of the calibration line
+	SpectrumCalibrationEnergy_NEL->GetEntry()->ValueSet(0);
       }
     }
     break;

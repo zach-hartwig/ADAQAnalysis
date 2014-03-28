@@ -878,9 +878,7 @@ void AAGraphics::PlotCalibration(int Channel)
 
 
 void AAGraphics::PlotCalibrationLine(double XPos, double YMin, double YMax)
-{
-  Calibration_L->DrawLine(XPos, YMin, XPos, YMax);
-}
+{ Calibration_L->DrawLine(XPos, YMin, XPos, YMax); }
 
 
 void AAGraphics::PlotPSDFilter()
