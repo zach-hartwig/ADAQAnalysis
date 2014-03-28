@@ -140,6 +140,7 @@ enum{
   SpectrumCalibrationCalibrate_TB_ID,
   SpectrumCalibrationReset_TB_ID,
   SpectrumCalibrationPlot_TB_ID,
+  SpectrumCalibrationLoad_TB_ID,
 
   SpectrumNumPeaks_NEL_ID,
   SpectrumSigma_NEL_ID,

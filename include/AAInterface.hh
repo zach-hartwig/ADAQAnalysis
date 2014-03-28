@@ -192,6 +192,7 @@ private:
   TGTextButton *SpectrumCalibrationCalibrate_TB;
   TGTextButton *SpectrumCalibrationPlot_TB;
   TGTextButton *SpectrumCalibrationReset_TB;
+  TGTextButton *SpectrumCalibrationLoad_TB;
 
   TGCheckButton *SpectrumFindPeaks_CB;
   ADAQNumberEntryWithLabel *SpectrumNumPeaks_NEL;
