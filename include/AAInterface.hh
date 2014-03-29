@@ -49,6 +49,7 @@ using namespace std;
 #include "AASettings.hh"
 #include "AAComputation.hh"
 #include "AAGraphics.hh"
+#include "AAInterpolation.hh"
 
 class AAInterface : public TGMainFrame
 {
@@ -250,6 +251,13 @@ private:
   TGCheckButton *PSDEnableFilter_CB;
   TGRadioButton *PSDPositiveFilter_RB, *PSDNegativeFilter_RB;
   TGTextButton *PSDClearFilter_TB;
+
+  TGCheckButton *PEAEnable_CB;
+  ADAQNumberEntryWithLabel *PEALightConversionFactor_NEL;
+  ADAQNumberEntryWithLabel *PEAProtonEnergy_NEL;
+  ADAQNumberEntryWithLabel *PEAAlphaEnergy_NEL;
+  ADAQNumberEntryWithLabel *PEACarbonEnergy_NEL;
+  
   
   ADAQNumberEntryWithLabel *RFQPulseWidth_NEL;
   ADAQNumberEntryWithLabel *RFQRepRate_NEL;
@@ -379,6 +387,7 @@ private:
   TColor *ColorMgr;
   AAComputation *ComputationMgr;
   AAGraphics *GraphicsMgr;
+  AAInterpolation *InterpolationMgr;
   
   // Define the class to ROOT
   ClassDef(AAInterface, 1);

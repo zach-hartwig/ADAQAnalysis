@@ -69,6 +69,8 @@ AAInterface::AAInterface(string CmdLineArg)
   GraphicsMgr = AAGraphics::GetInstance();
   GraphicsMgr->SetCanvasPointer(Canvas_EC->GetCanvas());
 
+  InterpolationMgr = AAInterpolation::GetInstance();
+
   if(CmdLineArg != "Unspecified" and CmdLineArg != "small"){
 
     size_t Pos = CmdLineArg.find_last_of(".");
@@ -978,6 +980,38 @@ void AAInterface::FillAnalysisFrame()
   PSDCalculate_TB->ChangeOptions(PSDCalculate_TB->GetOptions() | kFixedSize);
   PSDCalculate_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   PSDCalculate_TB->SetState(kButtonDisabled);
+
+  // Particle energy analysis (PEA)
+  TGGroupFrame *PEA_GF = new TGGroupFrame(AnalysisFrame_VF, "Particle energy deposition (EJ301)", kVerticalFrame);
+  AnalysisFrame_VF->AddFrame(PEA_GF, new TGLayoutHints(kLHintsNormal, 15,5,5,5));
+
+  PEA_GF->AddFrame(PEAEnable_CB = new TGCheckButton(PEA_GF, "Enable", -1),
+		   new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+
+  PEA_GF->AddFrame(PEALightConversionFactor_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Conversion factor", 1),
+		   new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  PEALightConversionFactor_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PEALightConversionFactor_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEALightConversionFactor_NEL->GetEntry()->SetNumber(1.);
+  
+  PEA_GF->AddFrame(PEAProtonEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Proton energy [MeV]", PEAProtonEnergy_NEL_ID),
+		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
+  PEAProtonEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PEAProtonEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEAProtonEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+
+  PEA_GF->AddFrame(PEAAlphaEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Alpha energy [MeV]", PEAAlphaEnergy_NEL_ID),
+		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
+  PEAAlphaEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PEAAlphaEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEAAlphaEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+
+  PEA_GF->AddFrame(PEACarbonEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Carbon energy [MeV]", PEACarbonEnergy_NEL_ID),
+		   new TGLayoutHints(kLHintsNormal, 5,5,0,5));
+  PEACarbonEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PEACarbonEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEACarbonEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+
 
   // Count rate
 
@@ -2733,6 +2767,19 @@ void AAInterface::HandleTripleSliderPointer()
     // Set the calibration pulse units for the current calibration
     // point based on the X position of the calibration line
     SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(XPos);
+
+
+    if(PEAEnable_CB->IsDown()){
+
+      double PE = InterpolationMgr->GetProtonEnergyDeposition(1.0);
+      PEAProtonEnergy_NEL->GetEntry()->SetNumber(PE);
+
+      double AE = InterpolationMgr->GetAlphaEnergyDeposition(1.0);
+      PEAAlphaEnergy_NEL->GetEntry()->SetNumber(AE);
+
+      double CE = InterpolationMgr->GetProtonEnergyDeposition(1.0);
+      PEACarbonEnergy_NEL->GetEntry()->SetNumber(CE);
+    }
   }
 }
 
@@ -2830,6 +2877,11 @@ void AAInterface::HandleNumberEntries()
     Canvas_EC->GetCanvas()->Update();
     break;
   }
+
+  case PEAProtonEnergy_NEL_ID:
+  case PEAAlphaEnergy_NEL_ID:
+  case PEACarbonEnergy_NEL_ID:
+    break;
     
   case XAxisSize_NEL_ID:
   case XAxisOffset_NEL_ID:

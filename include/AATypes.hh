@@ -198,6 +198,10 @@ enum{
   PSDClearFilter_TB_ID,
   PSDCalculate_TB_ID,
 
+  PEAProtonEnergy_NEL_ID,
+  PEAAlphaEnergy_NEL_ID,
+  PEACarbonEnergy_NEL_ID,
+
   CountRate_TB_ID,
 
 
