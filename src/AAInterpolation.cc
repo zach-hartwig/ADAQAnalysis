@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 using namespace std;
 
 
@@ -14,11 +15,11 @@ AAInterpolation *AAInterpolation::GetInstance()
 
 
 AAInterpolation::AAInterpolation()
+  : m_e(0.511), MeV2GeV(0.001)
 {
   if(TheInterpolationManager)
     cout << "\nError! TheInterpolationManager was constructed twice!\n" << endl;
-  else
-    TheInterpolationManager = this;
+  TheInterpolationManager = this;
 
   ElectronResponse = new TGraph(LightEntries, EnergyDep, ElectronLight);
   ElectronInverse = new TGraph(LightEntries, ElectronLight, EnergyDep);
@@ -44,4 +45,31 @@ AAInterpolation::~AAInterpolation()
   delete AlphaInverse;
   delete CarbonResponse;
   delete CarbonInverse;
+}
+
+double AAInterpolation::GetGammaEnergy(double EE)
+{
+  double square_root = sqrt(pow(EE,2)-(4*-1*EE*m_e/2));
+  return ((EE+square_root)/2);
+}
+
+
+double AAInterpolation::GetProtonEnergy(double EE)
+{
+  double Light = ElectronResponse->Eval(EE, 0, "S");
+  return ProtonInverse->Eval(Light, 0, "S");
+}
+
+
+double AAInterpolation::GetAlphaEnergy(double EE)
+{
+  double Light = ElectronResponse->Eval(EE, 0, "S");
+  return AlphaInverse->Eval(Light, 0, "S");
+}
+
+
+double AAInterpolation::GetCarbonEnergy(double EE)
+{
+  double Light = ElectronResponse->Eval(EE, 0, "S");
+  return (CarbonInverse->Eval(Light, 0, "S")*MeV2GeV);
 }

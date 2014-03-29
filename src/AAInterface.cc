@@ -982,11 +982,12 @@ void AAInterface::FillAnalysisFrame()
   PSDCalculate_TB->SetState(kButtonDisabled);
 
   // Particle energy analysis (PEA)
-  TGGroupFrame *PEA_GF = new TGGroupFrame(AnalysisFrame_VF, "Particle energy deposition (EJ301)", kVerticalFrame);
+  TGGroupFrame *PEA_GF = new TGGroupFrame(AnalysisFrame_VF, "Particle energy analysis (EJ301/9)", kVerticalFrame);
   AnalysisFrame_VF->AddFrame(PEA_GF, new TGLayoutHints(kLHintsNormal, 15,5,5,5));
-
-  PEA_GF->AddFrame(PEAEnable_CB = new TGCheckButton(PEA_GF, "Enable", -1),
+  
+  PEA_GF->AddFrame(PEAEnable_CB = new TGCheckButton(PEA_GF, "Enable", PEAEnable_CB_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  PEAEnable_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   PEA_GF->AddFrame(PEALightConversionFactor_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Conversion factor", 1),
 		   new TGLayoutHints(kLHintsNormal, 5,5,5,5));
@@ -994,22 +995,39 @@ void AAInterface::FillAnalysisFrame()
   PEALightConversionFactor_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PEALightConversionFactor_NEL->GetEntry()->SetNumber(1.);
   
-  PEA_GF->AddFrame(PEAProtonEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Proton energy [MeV]", PEAProtonEnergy_NEL_ID),
+  PEA_GF->AddFrame(PEAElectronEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Electron [MeV]", PEAElectronEnergy_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  PEAProtonEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PEAElectronEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
+  PEAElectronEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEAElectronEnergy_NEL->GetEntry()->Resize(70,20);
+  PEAElectronEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+
+  PEA_GF->AddFrame(PEAGammaEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Gamma [MeV]", PEAGammaEnergy_NEL_ID),
+		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
+  PEAGammaEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
+  PEAGammaEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEAGammaEnergy_NEL->GetEntry()->Resize(70,20);
+  PEAGammaEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+
+  PEA_GF->AddFrame(PEAProtonEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Proton (neutron) [MeV]", PEAProtonEnergy_NEL_ID),
+		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
+  PEAProtonEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
   PEAProtonEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEAProtonEnergy_NEL->GetEntry()->Resize(70,20);
   PEAProtonEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
-  PEA_GF->AddFrame(PEAAlphaEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Alpha energy [MeV]", PEAAlphaEnergy_NEL_ID),
+  PEA_GF->AddFrame(PEAAlphaEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Alpha [MeV]", PEAAlphaEnergy_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  PEAAlphaEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PEAAlphaEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
   PEAAlphaEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEAAlphaEnergy_NEL->GetEntry()->Resize(70,20);
   PEAAlphaEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
-  PEA_GF->AddFrame(PEACarbonEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Carbon energy [MeV]", PEACarbonEnergy_NEL_ID),
+  PEA_GF->AddFrame(PEACarbonEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Carbon [GeV]", PEACarbonEnergy_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,5));
-  PEACarbonEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PEACarbonEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
   PEACarbonEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEACarbonEnergy_NEL->GetEntry()->Resize(70,20);
   PEACarbonEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
 
@@ -2622,6 +2640,10 @@ void AAInterface::HandleCheckButtons()
     break;
   }
 
+  case PEAEnable_CB_ID:
+    HandleTripleSliderPointer();
+    break;
+
   case PlotSpectrumDerivativeError_CB_ID:
   case PlotAbsValueSpectrumDerivative_CB_ID:
   case SpectrumOverplotDerivative_CB_ID:{
@@ -2769,15 +2791,24 @@ void AAInterface::HandleTripleSliderPointer()
     SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(XPos);
 
 
+    // The user can drag the triple slider point in order to calculate
+    // the energy deposition from other particle to produce the
+    // equivalent amount of light as electrons. This feature is only
+    // intended for use for EJ301/EJ309 liqoid organic scintillators.
+    // Note that the spectra must be calibrated in MeVee.
     if(PEAEnable_CB->IsDown()){
+      PEAElectronEnergy_NEL->GetEntry()->SetNumber(XPos);
+      
+      double GE = InterpolationMgr->GetGammaEnergy(XPos);
+      PEAGammaEnergy_NEL->GetEntry()->SetNumber(GE);
 
-      double PE = InterpolationMgr->GetProtonEnergyDeposition(1.0);
+      double PE = InterpolationMgr->GetProtonEnergy(XPos);
       PEAProtonEnergy_NEL->GetEntry()->SetNumber(PE);
-
-      double AE = InterpolationMgr->GetAlphaEnergyDeposition(1.0);
+      
+      double AE = InterpolationMgr->GetAlphaEnergy(XPos);
       PEAAlphaEnergy_NEL->GetEntry()->SetNumber(AE);
 
-      double CE = InterpolationMgr->GetProtonEnergyDeposition(1.0);
+      double CE = InterpolationMgr->GetCarbonEnergy(XPos);
       PEACarbonEnergy_NEL->GetEntry()->SetNumber(CE);
     }
   }

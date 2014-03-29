@@ -93,6 +93,9 @@ int main(int argc, char *argv[])
   if(!ParallelArchitecture){
     // Create the singleton graphics manager
     AAGraphics *TheGraphics = new AAGraphics;
+
+    // Create the singletone interpolation manager
+    AAInterpolation *TheInterpolation = new AAInterpolation;
     
     // Create the graphical user interface
     AAInterface *TheInterface = new AAInterface(CmdLineArg);

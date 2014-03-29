@@ -24,21 +24,20 @@ public:
 
   static AAInterpolation *GetInstance();
 
+  double GetGammaEnergy(double);
+  double GetProtonEnergy(double);
+  double GetAlphaEnergy(double);
+  double GetCarbonEnergy(double);
+
   TGraph *GetElectronResponse() {return ElectronResponse;}
   TGraph *GetProtonResponse() {return ProtonResponse;}
   TGraph *GetAlphaResponse() {return AlphaResponse;}
   TGraph *GetCarbonResponse() {return CarbonResponse;}
 
-  double GetProtonEnergyDeposition(double ElectronEquivalent)
-  { return ProtonInverse->Eval(ElectronEquivalent, 0, "S"); }
-  
-  double GetAlphaEnergyDeposition(double ElectronEquivalent)
-  { return AlphaInverse->Eval(ElectronEquivalent, 0, "S"); }
-  
-  double GetCarbonDeposition(double ElectronEquivalent)
-  { return CarbonInverse->Eval(ElectronEquivalent, 0, "S"); }
-
 private:
+  const double m_e;
+  const double MeV2GeV;
+
   static AAInterpolation *TheInterpolationManager;
 
   TGraph *ElectronResponse, *ElectronInverse;

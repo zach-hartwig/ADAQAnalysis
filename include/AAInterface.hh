@@ -254,11 +254,9 @@ private:
 
   TGCheckButton *PEAEnable_CB;
   ADAQNumberEntryWithLabel *PEALightConversionFactor_NEL;
-  ADAQNumberEntryWithLabel *PEAProtonEnergy_NEL;
-  ADAQNumberEntryWithLabel *PEAAlphaEnergy_NEL;
-  ADAQNumberEntryWithLabel *PEACarbonEnergy_NEL;
-  
-  
+  ADAQNumberEntryWithLabel *PEAElectronEnergy_NEL, *PEAGammaEnergy_NEL;
+  ADAQNumberEntryWithLabel *PEAProtonEnergy_NEL, *PEAAlphaEnergy_NEL, *PEACarbonEnergy_NEL;
+    
   ADAQNumberEntryWithLabel *RFQPulseWidth_NEL;
   ADAQNumberEntryWithLabel *RFQRepRate_NEL;
   ADAQNumberEntryWithLabel *CountRateWaveforms_NEL;
