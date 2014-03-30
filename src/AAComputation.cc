@@ -42,7 +42,8 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     V1720MaximumBit(4095), NumDataChannels(8),
     SpectrumExists(false), SpectrumBackgroundExists(false), SpectrumDerivativeExists(false), 
     PSDHistogramExists(false), PSDHistogramSliceExists(false),
-    TotalPeaks(0), DeuteronsInWaveform(0.), DeuteronsInTotal(0.)
+  TotalPeaks(0), DeuteronsInWaveform(0.), DeuteronsInTotal(0.), HalfHeight(0.),
+  EdgePosition(0.), EdgePositionFound(false)
 {
   if(TheComputationManager){
     cout << "\nERROR! TheComputationManager was constructed twice!\n" << endl;
@@ -2126,8 +2127,8 @@ bool AAComputation::SetCalibration(int Channel)
     
     // Create a new "SpectraCalibrations" TGraph object.
     SpectraCalibrations[Channel] = new TGraph(NumCalibrationPoints,
-						    &CalibrationData[Channel].PulseUnit[0],
-						    &CalibrationData[Channel].Energy[0]);
+					      &CalibrationData[Channel].PulseUnit[0],
+					      &CalibrationData[Channel].Energy[0]);
     
     // Set the current channel's calibration boolean to true,
     // indicating that the current channel will convert pulse units
@@ -2140,23 +2141,6 @@ bool AAComputation::SetCalibration(int Channel)
   else
     return false;
 }
-
-
-bool AAComputation::SetFixedEPCalibration()
-{
-  SetCalibrationPoint(ADAQSettings->WaveformChannel, 
-		      0, 
-		      EnergyPoints_FixedEP[0],
-		      PulseUnitPoints_FixedEP[0]);
-  
-  SetCalibrationPoint(ADAQSettings->WaveformChannel, 
-		      1, 
-		      EnergyPoints_FixedEP[1],
-		      PulseUnitPoints_FixedEP[1]);
-  
-  SetCalibration(ADAQSettings->WaveformChannel);
-}
-
 
 
 bool AAComputation::ClearCalibration(int Channel)
@@ -2183,6 +2167,61 @@ bool AAComputation::ClearCalibration(int Channel)
   return true;
 }
 
+
+void AAComputation::SetEdgeBound(double X, double Y)
+{
+  if(EdgeHBound.size() == 0){
+    EdgePositionFound = false;
+
+    EdgeHBound.push_back(Y);
+    EdgeVBound.push_back(X);
+  }
+  else if (EdgeHBound.size() == 1){
+    EdgeHBound.push_back(Y);
+    EdgeVBound.push_back(X);
+    
+    HalfHeight = (EdgeHBound[0]+EdgeHBound[1])/2;
+    
+    FindEdge();
+    
+    EdgeHBound.clear();
+    EdgeVBound.clear();
+  }
+}
+
+void AAComputation::FindEdge()
+{
+  double MinADC = 0.;
+  double MaxADC = 0.;
+  if(EdgeVBound[0] < EdgeVBound[1]){
+    MinADC = EdgeVBound[0];
+    MaxADC = EdgeVBound[1];
+  }
+  else{
+    MinADC = EdgeVBound[1];
+    MaxADC = EdgeVBound[0];
+  }
+
+  double increment = 1;
+  for(double value=MinADC; value<=MaxADC; value+=increment){
+    double X0 = value;
+    double X1 = value + increment;
+
+    double Y0 = Spectrum_H->Interpolate(X0);
+    double Y1 = Spectrum_H->Interpolate(X1);
+    
+    if((Y0 > HalfHeight) and (Y1 < HalfHeight)){
+      double m = (Y1 - Y0) / (X1 - X0);
+      double Y = abs(Y0+Y1)/2;
+
+      EdgePosition = (1./m)*(Y-Y0)+X0;
+      
+      EdgePositionFound = true;
+
+      break;
+    }
+  }
+}
 
 
 // Method to create a pulse shape discrimination (PSD) filter, which

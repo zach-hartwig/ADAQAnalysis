@@ -462,14 +462,14 @@ void AAInterface::FillSpectrumFrame()
   SpectrumFrame_VF->AddFrame(SpectrumBinning_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
 
   // Minimum spectrum bin number entry
-  SpectrumBinning_HF->AddFrame(SpectrumMinBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Min. bin", SpectrumMinBin_NEL_ID),
+  SpectrumBinning_HF->AddFrame(SpectrumMinBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Min.", SpectrumMinBin_NEL_ID),
 		       new TGLayoutHints(kLHintsLeft, 15,0,0,0));
   SpectrumMinBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumMinBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
   SpectrumMinBin_NEL->GetEntry()->SetNumber(0);
 
   // Maximum spectrum bin number entry
-  SpectrumBinning_HF->AddFrame(SpectrumMaxBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Max. bin", SpectrumMaxBin_NEL_ID),
+  SpectrumBinning_HF->AddFrame(SpectrumMaxBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Max.", SpectrumMaxBin_NEL_ID),
 		       new TGLayoutHints(kLHintsRight, 31,0,0,0));
   SpectrumMaxBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumMaxBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -485,7 +485,7 @@ void AAInterface::FillSpectrumFrame()
   // Spectrum type radio buttons
   ADAQSpectrumOptions_HF->AddFrame(ADAQSpectrumType_BG = new TGButtonGroup(ADAQSpectrumOptions_HF, "ADAQ spectra", kVerticalFrame),
 				   new TGLayoutHints(kLHintsLeft, 0,5,0,0));
-  ADAQSpectrumTypePAS_RB = new TGRadioButton(ADAQSpectrumType_BG, "Pulse rea", -1);
+  ADAQSpectrumTypePAS_RB = new TGRadioButton(ADAQSpectrumType_BG, "Pulse area", -1);
   ADAQSpectrumTypePAS_RB->SetState(kButtonDown);
   
   ADAQSpectrumTypePHS_RB = new TGRadioButton(ADAQSpectrumType_BG, "Pulse height", -1);
@@ -549,18 +549,45 @@ void AAInterface::FillSpectrumFrame()
   TGGroupFrame *SpectrumCalibration_GF = new TGGroupFrame(SpectrumFrame_VF, "Energy calibration", kVerticalFrame);
   SpectrumFrame_VF->AddFrame(SpectrumCalibration_GF, new TGLayoutHints(kLHintsNormal,15,5,10,0));
 
+  TGHorizontalFrame *SpectrumCalibration_HF0 = new TGHorizontalFrame(SpectrumCalibration_GF);
+  SpectrumCalibration_GF->AddFrame(SpectrumCalibration_HF0, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+
   // Energy calibration 
-  SpectrumCalibration_GF->AddFrame(SpectrumCalibration_CB = new TGCheckButton(SpectrumCalibration_GF, "Make it so", SpectrumCalibration_CB_ID),
-				   new TGLayoutHints(kLHintsLeft, 0,0,0,0));
+  SpectrumCalibration_HF0->AddFrame(SpectrumCalibration_CB = new TGCheckButton(SpectrumCalibration_HF0, "Make it so", SpectrumCalibration_CB_ID),
+				    new TGLayoutHints(kLHintsLeft, 0,0,10,0));
   SpectrumCalibration_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   SpectrumCalibration_CB->SetState(kButtonUp);
+
+  // Load from file text button
+  SpectrumCalibration_HF0->AddFrame(SpectrumCalibrationLoad_TB = new TGTextButton(SpectrumCalibration_HF0, "Load from file", SpectrumCalibrationLoad_TB_ID),
+				    new TGLayoutHints(kLHintsRight, 15,0,5,5));
+  SpectrumCalibrationLoad_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  SpectrumCalibrationLoad_TB->Resize(120,25);
+  SpectrumCalibrationLoad_TB->ChangeOptions(SpectrumCalibrationLoad_TB->GetOptions() | kFixedSize);
+  SpectrumCalibrationLoad_TB->SetState(kButtonDisabled);
+
+  TGHorizontalFrame *SpectrumCalibration_HF5 = new TGHorizontalFrame(SpectrumCalibration_GF);
+  SpectrumCalibration_GF->AddFrame(SpectrumCalibration_HF5, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+
+  SpectrumCalibration_HF5->AddFrame(SpectrumCalibrationStandard_RB = new TGRadioButton(SpectrumCalibration_HF5, "Standard", SpectrumCalibrationStandard_RB_ID),
+				    new TGLayoutHints(kLHintsNormal, 10,5,5,5));
+  SpectrumCalibrationStandard_RB->SetState(kButtonDown);
+  SpectrumCalibrationStandard_RB->SetState(kButtonDisabled);
+  SpectrumCalibrationStandard_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  
+  SpectrumCalibration_HF5->AddFrame(SpectrumCalibrationEdgeFinder_RB = new TGRadioButton(SpectrumCalibration_HF5, "Edge finder", SpectrumCalibrationEdgeFinder_RB_ID),
+				       new TGLayoutHints(kLHintsNormal, 30,5,5,5));
+  SpectrumCalibrationEdgeFinder_RB->SetState(kButtonDisabled);
+  SpectrumCalibrationEdgeFinder_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+
 
   TGHorizontalFrame *SpectrumCalibrationType_HF = new TGHorizontalFrame(SpectrumCalibration_GF);
   SpectrumCalibration_GF->AddFrame(SpectrumCalibrationType_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   
   SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationPoint_CBL = new ADAQComboBoxWithLabel(SpectrumCalibrationType_HF, "", SpectrumCalibrationPoint_CBL_ID),
-				       new TGLayoutHints(kLHintsNormal, 0,0,8,5));
-  SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Point 0",0);
+				       new TGLayoutHints(kLHintsNormal, 0,0,10,3));
+  SpectrumCalibrationPoint_CBL->GetComboBox()->Resize(150,20);
+  SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Calibration point 0",0);
   SpectrumCalibrationPoint_CBL->GetComboBox()->Select(0);
   SpectrumCalibrationPoint_CBL->GetComboBox()->SetEnabled(false);
   SpectrumCalibrationPoint_CBL->GetComboBox()->Connect("Selected(int,int)", "AAInterface", this, "HandleComboBox(int,int)");
@@ -568,19 +595,9 @@ void AAInterface::FillSpectrumFrame()
   TGVerticalFrame *SpectrumCalibrationType_VF = new TGVerticalFrame(SpectrumCalibrationType_HF);
   SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationType_VF);
   
-  SpectrumCalibrationType_VF->AddFrame(SpectrumCalibrationManual_RB = new TGRadioButton(SpectrumCalibrationType_VF, "Manual entry", SpectrumCalibrationManual_RB_ID),
-				       new TGLayoutHints(kLHintsNormal, 10,0,0,5));
-  SpectrumCalibrationManual_RB->SetState(kButtonDown);
-  SpectrumCalibrationManual_RB->SetState(kButtonDisabled);
-  SpectrumCalibrationManual_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
-  
-  SpectrumCalibrationType_VF->AddFrame(SpectrumCalibrationFixedEP_RB = new TGRadioButton(SpectrumCalibrationType_VF, "EJ301 fixed", SpectrumCalibrationFixedEP_RB_ID),
-				       new TGLayoutHints(kLHintsNormal, 10,0,0,5));
-  SpectrumCalibrationFixedEP_RB->SetState(kButtonDisabled);
-  SpectrumCalibrationFixedEP_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
 
   SpectrumCalibration_GF->AddFrame(SpectrumCalibrationEnergy_NEL = new ADAQNumberEntryWithLabel(SpectrumCalibration_GF, "Energy (keV or MeV)", SpectrumCalibrationEnergy_NEL_ID),
-					  new TGLayoutHints(kLHintsLeft,0,0,5,0));
+					  new TGLayoutHints(kLHintsLeft,0,0,0,0));
   SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
   SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);
@@ -600,7 +617,7 @@ void AAInterface::FillSpectrumFrame()
   
   // Set point text button
   SpectrumCalibration_HF1->AddFrame(SpectrumCalibrationSetPoint_TB = new TGTextButton(SpectrumCalibration_HF1, "Set Pt.", SpectrumCalibrationSetPoint_TB_ID),
-				    new TGLayoutHints(kLHintsNormal, 5,0,5,0));
+				    new TGLayoutHints(kLHintsNormal, 5,5,5,0));
   SpectrumCalibrationSetPoint_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   SpectrumCalibrationSetPoint_TB->Resize(100,25);
   SpectrumCalibrationSetPoint_TB->ChangeOptions(SpectrumCalibrationSetPoint_TB->GetOptions() | kFixedSize);
@@ -619,7 +636,7 @@ void AAInterface::FillSpectrumFrame()
   
   // Plot text button
   SpectrumCalibration_HF2->AddFrame(SpectrumCalibrationPlot_TB = new TGTextButton(SpectrumCalibration_HF2, "Plot", SpectrumCalibrationPlot_TB_ID),
-				    new TGLayoutHints(kLHintsNormal, 5,0,5,5));
+				    new TGLayoutHints(kLHintsNormal, 5,5,5,5));
   SpectrumCalibrationPlot_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   SpectrumCalibrationPlot_TB->Resize(100,25);
   SpectrumCalibrationPlot_TB->ChangeOptions(SpectrumCalibrationPlot_TB->GetOptions() | kFixedSize);
@@ -636,13 +653,6 @@ void AAInterface::FillSpectrumFrame()
   TGHorizontalFrame *SpectrumCalibration_HF3 = new TGHorizontalFrame(SpectrumCalibration_GF);
   SpectrumCalibration_GF->AddFrame(SpectrumCalibration_HF3);
 
-  // Load from file text button
-  SpectrumCalibration_HF3->AddFrame(SpectrumCalibrationLoad_TB = new TGTextButton(SpectrumCalibration_HF3, "Load from file", SpectrumCalibrationLoad_TB_ID),
-				    new TGLayoutHints(kLHintsCenterX, 5,0,10,5));
-  SpectrumCalibrationLoad_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
-  SpectrumCalibrationLoad_TB->Resize(200,25);
-  SpectrumCalibrationLoad_TB->ChangeOptions(SpectrumCalibrationLoad_TB->GetOptions() | kFixedSize);
-  SpectrumCalibrationLoad_TB->SetState(kButtonDisabled);
 
 
   // Spectrum analysis
@@ -2037,7 +2047,7 @@ void AAInterface::HandleTextButtons()
       // the user wants to add subsequent points to the calibration
       stringstream ss;
       ss << (SetPoint+1);
-      string NewPointLabel = "Point " + ss.str();
+      string NewPointLabel = "Calibration point " + ss.str();
       SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry(NewPointLabel.c_str(),SetPoint+1);
       
       // Set the combo box to display the new calibration point...
@@ -2092,7 +2102,7 @@ void AAInterface::HandleTextButtons()
     // Reset the calibration widgets
     if(Success){
       SpectrumCalibrationPoint_CBL->GetComboBox()->RemoveAll();
-      SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Point 0", 0);
+      SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Calibration point 0", 0);
       SpectrumCalibrationPoint_CBL->GetComboBox()->Select(0);
       SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);
       SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(1.0);
@@ -2141,7 +2151,7 @@ void AAInterface::HandleTextButtons()
 	// the user wants to add subsequent points to the calibration
 	stringstream ss;
 	ss << (SetPoint+1);
-	string NewPointLabel = "Point " + ss.str();
+	string NewPointLabel = "Calibration point " + ss.str();
 	SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry(NewPointLabel.c_str(),SetPoint+1);
 	
 	// Set the combo box to display the next setable calibration point...
@@ -2433,16 +2443,16 @@ void AAInterface::HandleCheckButtons()
   case SpectrumCalibration_CB_ID:{
     
     if(SpectrumCalibration_CB->IsDown()){
-      SpectrumCalibrationManual_RB->SetState(kButtonUp);
-      SpectrumCalibrationFixedEP_RB->SetState(kButtonUp);
+      SpectrumCalibrationStandard_RB->SetState(kButtonUp);
+      SpectrumCalibrationEdgeFinder_RB->SetState(kButtonUp);
 
       SetCalibrationWidgetState(true, kButtonUp);
       
       HandleTripleSliderPointer();
     }
     else{
-      SpectrumCalibrationManual_RB->SetState(kButtonDisabled);
-      SpectrumCalibrationFixedEP_RB->SetState(kButtonDisabled);
+      SpectrumCalibrationStandard_RB->SetState(kButtonDisabled);
+      SpectrumCalibrationEdgeFinder_RB->SetState(kButtonDisabled);
 
       SetCalibrationWidgetState(false, kButtonDisabled);
     }
@@ -2753,61 +2763,76 @@ void AAInterface::HandleTripleSliderPointer()
   if(!ADAQFileLoaded and !ACRONYMFileLoaded)
     return;
 
-  // To enable easy spectra calibration, the user has the options of
-  // dragging the pointer of the X-axis horizontal slider just below
-  // the canvas, which results in a "calibration line" drawn over the
-  // plotted pulse spectrum. As the user drags the line, the pulse
-  // unit number entry widget in the calibration group frame is
-  // update, allowing the user to easily set the value of pulse units
-  // (in ADC) of a feature that appears in the spectrum with a known
-  // calibration energy, entered in the number entry widget above.
+  if(ComputationMgr->GetSpectrumExists() and
+     GraphicsMgr->GetCanvasContentType() == zSpectrum){
 
-  // If the pulse spectrum object (Spectrum_H) exists and the user has
-  // selected calibration mode via the appropriate check button ...
-  if(ComputationMgr->GetSpectrumExists() and SpectrumCalibration_CB->IsDown() and GraphicsMgr->GetCanvasContentType() == zSpectrum){
-
+    // Get the current spectrum
     TH1F *Spectrum_H = ComputationMgr->GetSpectrum();
-        
+
     // Calculate the position along the X-axis of the pulse spectrum
     // (the "area" or "height" in ADC units) based on the current
     // X-axis maximum and the triple slider's pointer position
     double XPos = XAxisLimits_THS->GetPointerPosition() * Spectrum_H->GetXaxis()->GetXmax();
-    
+
     // Calculate min. and max. on the Y-axis for plotting
     float Min, Max;
     YAxisLimits_DVS->GetPosition(Min, Max);
     double YMin = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-Max);
     double YMax = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-Min);
 
-    // Redraw the pulse spectrum
-    GraphicsMgr->PlotSpectrum();
-    GraphicsMgr->PlotCalibrationLine(XPos, YMin, YMax);
+    // To enable easy spectra calibration, the user has the options of
+    // dragging the pointer of the X-axis horizontal slider just below
+    // the canvas, which results in a "calibration line" drawn over
+    // the plotted pulse spectrum. As the user drags the line, the
+    // pulse unit number entry widget in the calibration group frame
+    // is update, allowing the user to easily set the value of pulse
+    // units (in ADC) of a feature that appears in the spectrum with a
+    // known calibration energy, entered in the number entry widget
+    // above.
 
-    // Update the canvas with the new spectrum and calibration line
-    Canvas_EC->GetCanvas()->Update();
+    // If the pulse spectrum object (Spectrum_H) exists and the user has
+    // selected calibration mode via the appropriate buttons ...
+    if(SpectrumCalibration_CB->IsDown() and SpectrumCalibrationStandard_RB->IsDown()){
+      
+      // Redraw the pulse spectrum
+      GraphicsMgr->PlotSpectrum();
+      GraphicsMgr->PlotVCalibrationLine(XPos, YMin, XPos, YMax);
+      
+      // Update the canvas with the new spectrum and calibration line
+      Canvas_EC->GetCanvas()->Update();
+      
+      // Set the calibration pulse units for the current calibration
+      // point based on the X position of the calibration line
+      SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(XPos);
+    }
     
-    // Set the calibration pulse units for the current calibration
-    // point based on the X position of the calibration line
-    SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(XPos);
-
-
     // The user can drag the triple slider point in order to calculate
     // the energy deposition from other particle to produce the
     // equivalent amount of light as electrons. This feature is only
     // intended for use for EJ301/EJ309 liqoid organic scintillators.
     // Note that the spectra must be calibrated in MeVee.
-    if(PEAEnable_CB->IsDown()){
+    
+    const int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
+    bool SpectrumIsCalibrated = ComputationMgr->GetUseSpectraCalibrations()[Channel];
+    
+    if(PEAEnable_CB->IsDown() and SpectrumIsCalibrated){
+
+      // Redraw the pulse spectrum with line at XPos
+      GraphicsMgr->PlotSpectrum();
+      GraphicsMgr->PlotVCalibrationLine(XPos, YMin, XPos, YMax);
+      Canvas_EC->GetCanvas()->Update();
+      
       PEAElectronEnergy_NEL->GetEntry()->SetNumber(XPos);
       
       double GE = InterpolationMgr->GetGammaEnergy(XPos);
       PEAGammaEnergy_NEL->GetEntry()->SetNumber(GE);
-
-      double PE = InterpolationMgr->GetProtonEnergy(XPos);
+      
+       double PE = InterpolationMgr->GetProtonEnergy(XPos);
       PEAProtonEnergy_NEL->GetEntry()->SetNumber(PE);
       
       double AE = InterpolationMgr->GetAlphaEnergy(XPos);
       PEAAlphaEnergy_NEL->GetEntry()->SetNumber(AE);
-
+      
       double CE = InterpolationMgr->GetCarbonEnergy(XPos);
       PEACarbonEnergy_NEL->GetEntry()->SetNumber(CE);
     }
@@ -2901,9 +2926,10 @@ void AAInterface::HandleNumberEntries()
     
     // Draw the new calibration line value ontop of the spectrum
     GraphicsMgr->PlotSpectrum();
-    GraphicsMgr->PlotCalibrationLine(Value,
-				     Spectrum_H->GetMinimum(),
-				     Spectrum_H->GetMaximum());
+    GraphicsMgr->PlotVCalibrationLine(Value,
+				      Spectrum_H->GetMinimum(),
+				      Value,
+				      Spectrum_H->GetMaximum());
     
     Canvas_EC->GetCanvas()->Update();
     break;
@@ -3018,27 +3044,20 @@ void AAInterface::HandleRadioButtons()
     break;
     
 
-  case SpectrumCalibrationManual_RB_ID:{
-    
-    if(SpectrumCalibrationManual_RB->IsDown()){
-      SpectrumCalibrationFixedEP_RB->SetState(kButtonUp);
-      
-      SetCalibrationWidgetState(true, kButtonUp);
-      
-      SpectrumCalibrationReset_TB->Clicked();
+  case SpectrumCalibrationStandard_RB_ID:{
+    if(SpectrumCalibrationStandard_RB->IsDown()){
+      SpectrumCalibrationEdgeFinder_RB->SetState(kButtonUp);
+      HandleTripleSliderPointer();
     }
 
     break;
   }    
     
-  case SpectrumCalibrationFixedEP_RB_ID:{
-
-    if(SpectrumCalibrationFixedEP_RB->IsDown()){
-      SpectrumCalibrationManual_RB->SetState(kButtonUp);
-
-      SetCalibrationWidgetState(false, kButtonDisabled);
-      
-      ComputationMgr->SetFixedEPCalibration();
+  case SpectrumCalibrationEdgeFinder_RB_ID:{
+    if(SpectrumCalibrationEdgeFinder_RB->IsDown()){
+      GraphicsMgr->PlotSpectrum();
+      Canvas_EC->GetCanvas()->Update();
+      SpectrumCalibrationStandard_RB->SetState(kButtonUp);
     }
     
     break;
@@ -3195,6 +3214,13 @@ void AAInterface::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *Sel
   if(!ADAQFileLoaded and !ACRONYMFileLoaded)
     return;
 
+  // For an unknown reason, the XPixel value appears (erroneously) to
+  // be two pixels too low for a given cursor selection, I have
+  // examined this issue in detail but cannot determine the reason nor
+  // is it treated in the ROOT forums. At present, the fix is simply
+  // to add two pixels for a given XPixel cursor selection.
+  XPixel += 2;
+
   // If the user has enabled the creation of a PSD filter and the
   // canvas event is equal to "1" (which represents a down-click
   // somewhere on the canvas pad) then send the pixel coordinates of
@@ -3216,6 +3242,53 @@ void AAInterface::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *Sel
     else{
       ComputationMgr->CreatePSDHistogramSlice(XPixel, YPixel);
       GraphicsMgr->PlotPSDHistogramSlice(XPixel, YPixel);
+    }
+  }
+
+  // The user has the option of using an automated edge location
+  // finder for setting the calibration of EJ301/9 liq. organic
+  // scintillators. The user set two points that must "bound" the
+  // spectral edge:
+  // point 0 : top height of edge; leftmost pulse unit
+  // point 1 : bottom height of edge; rightmost pulse unit
+  if(SpectrumCalibrationEdgeFinder_RB->IsDown()){
+
+    if(ComputationMgr->GetSpectrumExists() and
+       GraphicsMgr->GetCanvasContentType() == zSpectrum){
+
+      // Get the current spectrum
+      TH1F *Spectrum_H = ComputationMgr->GetSpectrum();
+
+      double X = gPad->AbsPixeltoX(XPixel);
+      double Y = gPad->AbsPixeltoY(YPixel);
+
+      double XMin = Spectrum_H->GetXaxis()->GetXmin();
+      double XMax = Spectrum_H->GetXaxis()->GetXmax();
+      double YMin = Spectrum_H->GetMinimum();
+      double YMax = Spectrum_H->GetMaximum();
+
+      // The bound point is set once the user clicks the canvas at the
+      // desired (X,Y) == (Pulse unit, Counts) location. Note that
+      // AAComputation class automatically keep track of which point
+      // is set and when to calculate the edge
+      if(EventID == 1){
+	ComputationMgr->SetEdgeBound(X, Y);
+	
+	// Once the edge position is found (after two points are set)
+	// then update the number entry so the user may set a
+	// calibration points and draw the point on screen for
+	// verification
+	if(ComputationMgr->GetEdgePositionFound()){
+	  double HalfHeight = ComputationMgr->GetHalfHeight();
+	  double EdgePos = ComputationMgr->GetEdgePosition();
+	  SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(EdgePos);
+
+	  GraphicsMgr->PlotSpectrum();
+	  GraphicsMgr->PlotHCalibrationLine(XMin, HalfHeight, XMax, HalfHeight);
+	  GraphicsMgr->PlotVCalibrationLine(EdgePos, YMin, EdgePos, YMax);
+	  Canvas_EC->GetCanvas()->Update();
+	}
+      }
     }
   }
 }
@@ -3278,8 +3351,8 @@ void AAInterface::SaveSettings(bool SaveToFile)
 
   ADAQSettings->WaveformsToHistogram = WaveformsToHistogram_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->SpectrumNumBins = SpectrumNumBins_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->SpectrumMinBin = SpectrumMinBin_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->SpectrumMaxBin = SpectrumMaxBin_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->SpectrumMinBin = SpectrumMinBin_NEL->GetEntry()->GetNumber();
+  ADAQSettings->SpectrumMaxBin = SpectrumMaxBin_NEL->GetEntry()->GetNumber();
 
   ADAQSettings->ADAQSpectrumTypePAS = ADAQSpectrumTypePAS_RB->IsDown();
   ADAQSettings->ADAQSpectrumTypePHS = ADAQSpectrumTypePHS_RB->IsDown();

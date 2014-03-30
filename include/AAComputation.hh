@@ -103,8 +103,10 @@ public:
   // Spectrum calibration
   bool SetCalibrationPoint(int, int, double, double);
   bool SetCalibration(int);
-  bool SetFixedEPCalibration();
   bool ClearCalibration(int);
+
+  void SetEdgeBound(double,double);
+  void FindEdge();
 
   // Pulse shape discrimination processing
   TH2F *CreatePSDHistogram();
@@ -146,6 +148,10 @@ public:
   // Spectra calibrations
   vector<TGraph *> GetSpectraCalibrations() { return SpectraCalibrations; }
   vector<bool> GetUseSpectraCalibrations() { return UseSpectraCalibrations; }
+
+  double GetEdgePosition() {return EdgePosition;}
+  double GetHalfHeight() {return HalfHeight;}
+  bool GetEdgePositionFound() {return EdgePositionFound;}
   
   // Spectra analysis
   TH1F *GetSpectrumIntegral() { return SpectrumIntegral_H; }
@@ -249,8 +255,10 @@ private:
   // Spectrum variables
 
   TH1F *Spectrum_H;
+
   TH1F *SpectrumDerivative_H;
   TGraph *SpectrumDerivative_G;
+
   TH1F *SpectrumBackground_H, *SpectrumDeconvolved_H;
   TH1F *SpectrumIntegral_H;
   TF1 *SpectrumFit_F;
@@ -319,6 +327,9 @@ private:
   // A ROOT random number generator (RNG)
   TRandom *RNG;
 
+  vector<double> EdgeHBound, EdgeVBound;
+  double HalfHeight, EdgePosition;
+  bool EdgePositionFound;
 
   // Define the class to ROOT
   ClassDef(AAComputation, 1)

@@ -21,7 +21,8 @@ AAGraphics *AAGraphics::GetInstance()
 
 AAGraphics::AAGraphics()
   : Trigger_L(new TLine), Floor_L(new TLine), Baseline_B(new TBox), ZSCeiling_L(new TLine),
-    LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine), IntegrationRegion_B(new TBox), Calibration_L(new TLine),
+    LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine), IntegrationRegion_B(new TBox), 
+    HCalibration_L(new TLine), VCalibration_L(new TLine),
     PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
     PSDPeakOffset_L(new TLine), PSDTailOffset_L(new TLine), PSDTailIntegral_B(new TBox), DerivativeReference_L(new TLine)
 {
@@ -55,9 +56,13 @@ AAGraphics::AAGraphics()
   IntegrationRegion_B->SetFillColor(kGreen+2);
   IntegrationRegion_B->SetFillStyle(3003);
   
-  Calibration_L->SetLineStyle(7);
-  Calibration_L->SetLineColor(2);
-  Calibration_L->SetLineWidth(2);
+  HCalibration_L->SetLineStyle(7);
+  HCalibration_L->SetLineColor(kRed);
+  HCalibration_L->SetLineWidth(2);
+
+  VCalibration_L->SetLineStyle(7);
+  VCalibration_L->SetLineColor(kRed);
+  VCalibration_L->SetLineWidth(2);
 
   PearsonLowerLimit_L->SetLineStyle(7);
   PearsonLowerLimit_L->SetLineColor(kBlue);
@@ -876,9 +881,14 @@ void AAGraphics::PlotCalibration(int Channel)
 
 }
 
+// Horizontal calibration line
+void AAGraphics::PlotHCalibrationLine(double X1, double Y1, double X2, double Y2)
+{ HCalibration_L->DrawLine(X1, Y1, X2, Y2); }
 
-void AAGraphics::PlotCalibrationLine(double XPos, double YMin, double YMax)
-{ Calibration_L->DrawLine(XPos, YMin, XPos, YMax); }
+
+// Vertical calibration line
+void AAGraphics::PlotVCalibrationLine(double X1, double Y1, double X2, double Y2)
+{ VCalibration_L->DrawLine(X1, Y1, X2, Y2); }
 
 
 void AAGraphics::PlotPSDFilter()

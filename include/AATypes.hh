@@ -131,8 +131,8 @@ enum{
   ACROSpectrumES_RB_ID,
 
   SpectrumCalibration_CB_ID,
-  SpectrumCalibrationManual_RB_ID,
-  SpectrumCalibrationFixedEP_RB_ID,
+  SpectrumCalibrationStandard_RB_ID,
+  SpectrumCalibrationEdgeFinder_RB_ID,
   SpectrumCalibrationPoint_CBL_ID,
   SpectrumCalibrationEnergy_NEL_ID,
   SpectrumCalibrationPulseUnit_NEL_ID,

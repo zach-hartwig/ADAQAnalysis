@@ -185,7 +185,7 @@ private:
   TGRadioButton *ACROSpectrumES_RB;
 
   TGCheckButton *SpectrumCalibration_CB;
-  TGRadioButton *SpectrumCalibrationManual_RB, *SpectrumCalibrationFixedEP_RB;
+  TGRadioButton *SpectrumCalibrationStandard_RB, *SpectrumCalibrationEdgeFinder_RB;
   ADAQComboBoxWithLabel *SpectrumCalibrationPoint_CBL;
   ADAQNumberEntryWithLabel *SpectrumCalibrationEnergy_NEL;
   ADAQNumberEntryWithLabel *SpectrumCalibrationPulseUnit_NEL;

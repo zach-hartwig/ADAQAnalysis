@@ -39,7 +39,8 @@ public:
   // Spectrum frame
 
   int WaveformsToHistogram;
-  int SpectrumNumBins, SpectrumMinBin, SpectrumMaxBin;
+  int SpectrumNumBins;
+  double SpectrumMinBin, SpectrumMaxBin;
   
   bool ADAQSpectrumTypePAS, ADAQSpectrumTypePHS;
   bool ADAQSpectrumIntTypeWW, ADAQSpectrumIntTypePF;

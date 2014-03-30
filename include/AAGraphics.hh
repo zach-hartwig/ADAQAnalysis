@@ -50,7 +50,8 @@ public:
   void PlotPSDFilter();
 
   void PlotCalibration(int);
-  void PlotCalibrationLine(double, double, double);
+  void PlotHCalibrationLine(double, double, double, double);
+  void PlotVCalibrationLine(double, double, double, double);
   
 private:
   
@@ -60,7 +61,8 @@ private:
 
   TCanvas *TheCanvas;
 
-  TLine *Trigger_L, *Floor_L, *Calibration_L, *ZSCeiling_L;
+  TLine *Trigger_L, *Floor_L, *ZSCeiling_L;
+  TLine *HCalibration_L, *VCalibration_L;
   TLine *LPeakDelimiter_L, *RPeakDelimiter_L;
   TBox *IntegrationRegion_B;
   TLine *PearsonLowerLimit_L, *PearsonMiddleLimit_L, *PearsonUpperLimit_L;
