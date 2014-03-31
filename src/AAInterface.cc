@@ -2185,8 +2185,9 @@ void AAInterface::HandleTextButtons()
       int SetPoint = 0;
       while(In.good()){
 	double Energy, PulseUnit;
-	if(In.eof()) break;
 	In >> Energy >> PulseUnit;
+
+	if(In.eof()) break;
 
 	ComputationMgr->SetCalibrationPoint(Channel, SetPoint, Energy, PulseUnit);
 	
