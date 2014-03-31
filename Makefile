@@ -172,7 +172,7 @@ $(BUILDDIR)/AAParallel_MPI.o : $(SRCDIR)/AAParallel.cc $(INCLDIR)/AAParallel.hh
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(BUILDDIR)/AAIntertpolation_MPI.o : $(SRCDIR)/AAInterpolation.cc $(INCLDIR)/AAInterpolation.hh $(INCLDIR)/AAInterpolationData.hh
+$(BUILDDIR)/AAInterpolation_MPI.o : $(SRCDIR)/AAInterpolation.cc $(INCLDIR)/AAInterpolation.hh $(INCLDIR)/AAInterpolationData.hh
 	@echo -e "\nBuilding $@ ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 

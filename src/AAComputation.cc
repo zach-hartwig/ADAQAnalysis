@@ -2168,6 +2168,23 @@ bool AAComputation::ClearCalibration(int Channel)
 }
 
 
+bool AAComputation::WriteCalibrationFile(int Channel, string FName)
+{
+  if(!UseSpectraCalibrations[Channel])
+    return false;
+  else{
+    ofstream Out(FName.c_str(), ofstream::trunc);
+    for(int i=0; i<CalibrationData[Channel].PointID.size(); i++)
+      Out << setw(10) << CalibrationData[Channel].Energy[i]
+	  << setw(10) << CalibrationData[Channel].PulseUnit[i]
+	  << endl;
+    Out.close();
+
+    return true;
+  }
+}
+
+
 void AAComputation::SetEdgeBound(double X, double Y)
 {
   if(EdgeHBound.size() == 0){

@@ -74,6 +74,7 @@ enum{
   MenuFileSaveSpectrum_ID,
   MenuFileSaveSpectrumBackground_ID,
   MenuFileSaveSpectrumDerivative_ID,
+  MenuFileSaveSpectrumCalibration_ID,
   MenuFileSavePSDHistogram_ID,
   MenuFileSavePSDHistogramSlice_ID,
   MenuFilePrint_ID,

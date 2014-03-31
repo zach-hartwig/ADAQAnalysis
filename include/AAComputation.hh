@@ -104,6 +104,7 @@ public:
   bool SetCalibrationPoint(int, int, double, double);
   bool SetCalibration(int);
   bool ClearCalibration(int);
+  bool WriteCalibrationFile(int, string);
 
   void SetEdgeBound(double,double);
   void FindEdge();

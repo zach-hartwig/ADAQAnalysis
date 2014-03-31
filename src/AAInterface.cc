@@ -122,13 +122,16 @@ void AAInterface::CreateTheMainFrames()
   TGHorizontalFrame *MenuFrame = new TGHorizontalFrame(this); 
 
   TGPopupMenu *SaveSpectrumSubMenu = new TGPopupMenu(gClient->GetRoot());
-  SaveSpectrumSubMenu->AddEntry("&raw ...", MenuFileSaveSpectrum_ID);
-  SaveSpectrumSubMenu->AddEntry("&background ...", MenuFileSaveSpectrumBackground_ID);
-  SaveSpectrumSubMenu->AddEntry("&derivative ...", MenuFileSaveSpectrumDerivative_ID);
+  SaveSpectrumSubMenu->AddEntry("&raw", MenuFileSaveSpectrum_ID);
+  SaveSpectrumSubMenu->AddEntry("&background", MenuFileSaveSpectrumBackground_ID);
+  SaveSpectrumSubMenu->AddEntry("&derivative", MenuFileSaveSpectrumDerivative_ID);
+
+  TGPopupMenu *SaveCalibrationSubMenu = new TGPopupMenu(gClient->GetRoot());
+  SaveCalibrationSubMenu->AddEntry("&values to file", MenuFileSaveSpectrumCalibration_ID);
   
   TGPopupMenu *SavePSDSubMenu = new TGPopupMenu(gClient->GetRoot());
-  SavePSDSubMenu->AddEntry("histo&gram ...", MenuFileSavePSDHistogram_ID);
-  SavePSDSubMenu->AddEntry("sli&ce ...", MenuFileSavePSDHistogramSlice_ID);
+  SavePSDSubMenu->AddEntry("histo&gram", MenuFileSavePSDHistogram_ID);
+  SavePSDSubMenu->AddEntry("sli&ce", MenuFileSavePSDHistogramSlice_ID);
   
   TGPopupMenu *MenuFile = new TGPopupMenu(gClient->GetRoot());
   MenuFile->AddEntry("&Open ADAQ ROOT file ...", MenuFileOpenADAQ_ID);
@@ -136,6 +139,7 @@ void AAInterface::CreateTheMainFrames()
   MenuFile->AddSeparator();
   MenuFile->AddEntry("Save &waveform ...", MenuFileSaveWaveform_ID);
   MenuFile->AddPopup("Save &spectrum ...", SaveSpectrumSubMenu);
+  MenuFile->AddPopup("Save &calibration ...", SaveCalibrationSubMenu);
   MenuFile->AddPopup("Save &PSD ...",SavePSDSubMenu);
   MenuFile->AddSeparator();
   MenuFile->AddEntry("&Print canvas ...", MenuFilePrint_ID);
@@ -462,15 +466,15 @@ void AAInterface::FillSpectrumFrame()
   SpectrumFrame_VF->AddFrame(SpectrumBinning_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
 
   // Minimum spectrum bin number entry
-  SpectrumBinning_HF->AddFrame(SpectrumMinBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Min.", SpectrumMinBin_NEL_ID),
+  SpectrumBinning_HF->AddFrame(SpectrumMinBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Minimum  ", SpectrumMinBin_NEL_ID),
 		       new TGLayoutHints(kLHintsLeft, 15,0,0,0));
   SpectrumMinBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumMinBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
   SpectrumMinBin_NEL->GetEntry()->SetNumber(0);
 
   // Maximum spectrum bin number entry
-  SpectrumBinning_HF->AddFrame(SpectrumMaxBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Max.", SpectrumMaxBin_NEL_ID),
-		       new TGLayoutHints(kLHintsRight, 31,0,0,0));
+  SpectrumBinning_HF->AddFrame(SpectrumMaxBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Maximum", SpectrumMaxBin_NEL_ID),
+		       new TGLayoutHints(kLHintsRight, 15,0,0,0));
   SpectrumMaxBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumMaxBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   SpectrumMaxBin_NEL->GetEntry()->SetNumber(22000);
@@ -779,7 +783,7 @@ void AAInterface::FillSpectrumFrame()
 			   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumUseGaussianFit_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
-  Horizontal2_HF->AddFrame(SpectrumNormalizePeakToCurrent_CB = new TGCheckButton(Horizontal2_HF, "Normalize to current", SpectrumNormalizePeakToCurrent_CB_ID),
+  Horizontal2_HF->AddFrame(SpectrumNormalizePeakToCurrent_CB = new TGCheckButton(Horizontal2_HF, "Norm. 2 current", SpectrumNormalizePeakToCurrent_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 10,5,0,0));
   SpectrumNormalizePeakToCurrent_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
@@ -798,6 +802,55 @@ void AAInterface::FillSpectrumFrame()
   SpectrumAnalysis_GF->AddFrame(SpectrumOverplotDerivative_CB = new TGCheckButton(SpectrumAnalysis_GF, "Overplot spectrum derivative", SpectrumOverplotDerivative_CB_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,5,0));
   SpectrumOverplotDerivative_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+
+  // Particle energy analysis (PEA)
+  TGGroupFrame *PEA_GF = new TGGroupFrame(SpectrumFrame_VF, "Particle energy analysis (EJ301/9)", kVerticalFrame);
+  SpectrumFrame_VF->AddFrame(PEA_GF, new TGLayoutHints(kLHintsNormal, 15,5,5,5));
+  
+  PEA_GF->AddFrame(PEAEnable_CB = new TGCheckButton(PEA_GF, "Enable", PEAEnable_CB_ID),
+		   new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  PEAEnable_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+
+  PEA_GF->AddFrame(PEALightConversionFactor_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Conversion factor", 1),
+		   new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  PEALightConversionFactor_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PEALightConversionFactor_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEALightConversionFactor_NEL->GetEntry()->SetNumber(1.);
+  
+  PEA_GF->AddFrame(PEAElectronEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Electron [MeV]", PEAElectronEnergy_NEL_ID),
+		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
+  PEAElectronEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
+  PEAElectronEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEAElectronEnergy_NEL->GetEntry()->Resize(70,20);
+  PEAElectronEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+
+  PEA_GF->AddFrame(PEAGammaEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Gamma [MeV]", PEAGammaEnergy_NEL_ID),
+		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
+  PEAGammaEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
+  PEAGammaEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEAGammaEnergy_NEL->GetEntry()->Resize(70,20);
+  PEAGammaEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+
+  PEA_GF->AddFrame(PEAProtonEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Proton (neutron) [MeV]", PEAProtonEnergy_NEL_ID),
+		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
+  PEAProtonEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
+  PEAProtonEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEAProtonEnergy_NEL->GetEntry()->Resize(70,20);
+  PEAProtonEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+
+  PEA_GF->AddFrame(PEAAlphaEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Alpha [MeV]", PEAAlphaEnergy_NEL_ID),
+		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
+  PEAAlphaEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
+  PEAAlphaEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEAAlphaEnergy_NEL->GetEntry()->Resize(70,20);
+  PEAAlphaEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+
+  PEA_GF->AddFrame(PEACarbonEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Carbon [GeV]", PEACarbonEnergy_NEL_ID),
+		   new TGLayoutHints(kLHintsNormal, 5,5,0,5));
+  PEACarbonEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
+  PEACarbonEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEACarbonEnergy_NEL->GetEntry()->Resize(70,20);
+  PEACarbonEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
 }
 
@@ -990,56 +1043,6 @@ void AAInterface::FillAnalysisFrame()
   PSDCalculate_TB->ChangeOptions(PSDCalculate_TB->GetOptions() | kFixedSize);
   PSDCalculate_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   PSDCalculate_TB->SetState(kButtonDisabled);
-
-  // Particle energy analysis (PEA)
-  TGGroupFrame *PEA_GF = new TGGroupFrame(AnalysisFrame_VF, "Particle energy analysis (EJ301/9)", kVerticalFrame);
-  AnalysisFrame_VF->AddFrame(PEA_GF, new TGLayoutHints(kLHintsNormal, 15,5,5,5));
-  
-  PEA_GF->AddFrame(PEAEnable_CB = new TGCheckButton(PEA_GF, "Enable", PEAEnable_CB_ID),
-		   new TGLayoutHints(kLHintsNormal, 5,5,5,5));
-  PEAEnable_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
-
-  PEA_GF->AddFrame(PEALightConversionFactor_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Conversion factor", 1),
-		   new TGLayoutHints(kLHintsNormal, 5,5,5,5));
-  PEALightConversionFactor_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
-  PEALightConversionFactor_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PEALightConversionFactor_NEL->GetEntry()->SetNumber(1.);
-  
-  PEA_GF->AddFrame(PEAElectronEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Electron [MeV]", PEAElectronEnergy_NEL_ID),
-		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  PEAElectronEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
-  PEAElectronEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PEAElectronEnergy_NEL->GetEntry()->Resize(70,20);
-  PEAElectronEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-
-  PEA_GF->AddFrame(PEAGammaEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Gamma [MeV]", PEAGammaEnergy_NEL_ID),
-		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  PEAGammaEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
-  PEAGammaEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PEAGammaEnergy_NEL->GetEntry()->Resize(70,20);
-  PEAGammaEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-
-  PEA_GF->AddFrame(PEAProtonEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Proton (neutron) [MeV]", PEAProtonEnergy_NEL_ID),
-		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  PEAProtonEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
-  PEAProtonEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PEAProtonEnergy_NEL->GetEntry()->Resize(70,20);
-  PEAProtonEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-
-  PEA_GF->AddFrame(PEAAlphaEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Alpha [MeV]", PEAAlphaEnergy_NEL_ID),
-		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  PEAAlphaEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
-  PEAAlphaEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PEAAlphaEnergy_NEL->GetEntry()->Resize(70,20);
-  PEAAlphaEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-
-  PEA_GF->AddFrame(PEACarbonEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Carbon [GeV]", PEACarbonEnergy_NEL_ID),
-		   new TGLayoutHints(kLHintsNormal, 5,5,0,5));
-  PEACarbonEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
-  PEACarbonEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PEACarbonEnergy_NEL->GetEntry()->Resize(70,20);
-  PEACarbonEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-
 
   // Count rate
 
@@ -1882,6 +1885,37 @@ void AAInterface::HandleMenu(int MenuID)
     }
     break;
   }
+
+  case MenuFileSaveSpectrumCalibration_ID:{
+    
+    const char *FileTypes[] = {"ADAQ calibration file", "*.acal",
+			       0, 0};
+
+    TGFileInfo FileInformation;
+    FileInformation.fFileTypes = FileTypes;
+    FileInformation.fIniDir = StrDup(getenv("PWD"));
+
+    new TGFileDialog(gClient->GetRoot(), this, kFDSave, &FileInformation);
+
+    if(FileInformation.fFilename==NULL)
+      CreateMessageBox("No file was selected and, therefore, nothing will be saved!","Stop");
+    else{
+      
+      string FName = FileInformation.fFilename;
+
+      size_t Found = FName.find_last_of(".acal");
+      if(Found == string::npos)
+	FName += ".acal";
+
+      const int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
+      bool Success = ComputationMgr->WriteCalibrationFile(Channel, FName);
+      if(Success)
+	CreateMessageBox("The calibration file was successfully written to file.","Asterisk");
+      else
+	CreateMessageBox("There was an unknown error in writing the calibration file!","Stop");
+    }
+    break;
+  }
     
     // Acition that enables the user to print the currently displayed
     // canvas to a file of the user's choice. But really, it's not a
@@ -2077,7 +2111,12 @@ void AAInterface::HandleTextButtons()
 
     bool Success = ComputationMgr->SetCalibration(Channel);
 
-    if(!Success)
+    if(Success){
+      SpectrumCalibrationCalibrate_TB->SetText("Calibrated");
+      SpectrumCalibrationCalibrate_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
+      SpectrumCalibrationCalibrate_TB->SetBackgroundColor(ColorMgr->Number2Pixel(32));
+    }
+    else
       CreateMessageBox("The calibration could not be set!","Stop");
 
     break;
@@ -2101,6 +2140,10 @@ void AAInterface::HandleTextButtons()
 
     // Reset the calibration widgets
     if(Success){
+      SpectrumCalibrationCalibrate_TB->SetText("Calibrate");
+      SpectrumCalibrationCalibrate_TB->SetForegroundColor(ColorMgr->Number2Pixel(1));
+      SpectrumCalibrationCalibrate_TB->SetBackgroundColor(ColorMgr->Number2Pixel(18));
+
       SpectrumCalibrationPoint_CBL->GetComboBox()->RemoveAll();
       SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Calibration point 0", 0);
       SpectrumCalibrationPoint_CBL->GetComboBox()->Select(0);
@@ -2164,7 +2207,12 @@ void AAInterface::HandleTextButtons()
 
       // Use the loaded calibration points to set the calibration
       bool Success = ComputationMgr->SetCalibration(Channel);
-      if(!Success)
+      if(Success){
+	SpectrumCalibrationCalibrate_TB->SetText("Calibrated");
+	SpectrumCalibrationCalibrate_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
+	SpectrumCalibrationCalibrate_TB->SetBackgroundColor(ColorMgr->Number2Pixel(32));
+      }
+      else
 	CreateMessageBox("The calibration could not be set! Please check file format.","Stop");
     }
     break;
@@ -2262,7 +2310,7 @@ void AAInterface::HandleTextButtons()
       if(ComputationMgr->GetPSDHistogramExists())
 	GraphicsMgr->PlotPSDHistogram();
       else
-	CreateMessageBox("A valid PSD histogram does not yet exist; therefore, replotting cannot be achieved!","Stop");
+CreateMessageBox("A valid PSD histogram does not yet exist; therefore, replotting cannot be achieved!","Stop");
     }
     break;
 
