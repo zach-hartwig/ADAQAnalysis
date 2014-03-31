@@ -371,6 +371,8 @@ private:
   // Variables for size adjustment of widget layout
   int CanvasX, CanvasY, CanvasFrameWidth, SliderBuffer, LeftFrameLength;
   int TotalX, TotalY;
+  int NumEdgeBoundingPoints;
+  double EdgeBoundX0, EdgeBoundY0;
 
   // Variables relating to files (paths, bools)
   string DataDirectory, PrintDirectory, DesplicedDirectory, HistogramDirectory;

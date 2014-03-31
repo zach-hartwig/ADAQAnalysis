@@ -52,6 +52,7 @@ public:
   void PlotCalibration(int);
   void PlotHCalibrationLine(double, double, double, double);
   void PlotVCalibrationLine(double, double, double, double);
+  void PlotEdgeBoundingBox(double, double, double, double);
   
 private:
   
@@ -63,6 +64,7 @@ private:
 
   TLine *Trigger_L, *Floor_L, *ZSCeiling_L;
   TLine *HCalibration_L, *VCalibration_L;
+  TBox *EdgeBoundingBox_B;
   TLine *LPeakDelimiter_L, *RPeakDelimiter_L;
   TBox *IntegrationRegion_B;
   TLine *PearsonLowerLimit_L, *PearsonMiddleLimit_L, *PearsonUpperLimit_L;

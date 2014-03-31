@@ -41,6 +41,7 @@ AAInterface::AAInterface(string CmdLineArg)
     NumDataChannels(8), NumProcessors(boost::thread::hardware_concurrency()),
     CanvasX(700), CanvasY(500), CanvasFrameWidth(700), 
     SliderBuffer(45), LeftFrameLength(705), TotalX(1125), TotalY(800),
+    NumEdgeBoundingPoints(0),
     DataDirectory(getenv("PWD")), PrintDirectory(getenv("HOME")),
     DesplicedDirectory(getenv("HOME")), HistogramDirectory(getenv("HOME")),
     ADAQFileLoaded(false), ACRONYMFileLoaded(false)
@@ -2155,8 +2156,8 @@ void AAInterface::HandleTextButtons()
 
   case SpectrumCalibrationLoad_TB_ID:{
 
-    const char *FileTypes[] = {"ADAQ-formatted calibration file", "*.acal",
-			       "All files",                       "*.*",
+    const char *FileTypes[] = {"ADAQ calibration file", "*.acal",
+			       "All files",             "*.*",
 			       0, 0};
 
     TGFileInfo FileInformation;
@@ -3316,17 +3317,33 @@ void AAInterface::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *Sel
       double YMin = Spectrum_H->GetMinimum();
       double YMax = Spectrum_H->GetMaximum();
 
+      // Enables the a semi-transparent box to be drawn over the edge
+      // to be calibrated once the user has clicked for the first point
+      if(NumEdgeBoundingPoints == 1){
+	GraphicsMgr->PlotSpectrum();
+	GraphicsMgr->PlotEdgeBoundingBox(EdgeBoundX0, EdgeBoundY0, X, Y);
+	Canvas_EC->GetCanvas()->Update();
+      }
+
       // The bound point is set once the user clicks the canvas at the
       // desired (X,Y) == (Pulse unit, Counts) location. Note that
       // AAComputation class automatically keep track of which point
       // is set and when to calculate the edge
       if(EventID == 1){
 	ComputationMgr->SetEdgeBound(X, Y);
+
+	// Keep track of the number of times the user has clicked
+	if(NumEdgeBoundingPoints == 0){
+	  EdgeBoundX0 = X;
+	  EdgeBoundY0 = Y;
+	}
+	
+	NumEdgeBoundingPoints++;
 	
 	// Once the edge position is found (after two points are set)
 	// then update the number entry so the user may set a
 	// calibration points and draw the point on screen for
-	// verification
+	// verification. Reset number of edge bounding points.
 	if(ComputationMgr->GetEdgePositionFound()){
 	  double HalfHeight = ComputationMgr->GetHalfHeight();
 	  double EdgePos = ComputationMgr->GetEdgePosition();
@@ -3336,6 +3353,8 @@ void AAInterface::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *Sel
 	  GraphicsMgr->PlotHCalibrationLine(XMin, HalfHeight, XMax, HalfHeight);
 	  GraphicsMgr->PlotVCalibrationLine(EdgePos, YMin, EdgePos, YMax);
 	  Canvas_EC->GetCanvas()->Update();
+	  
+	  NumEdgeBoundingPoints = 0;
 	}
       }
     }
