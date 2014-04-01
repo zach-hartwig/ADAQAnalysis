@@ -812,19 +812,21 @@ void AAInterface::FillSpectrumFrame()
 		   new TGLayoutHints(kLHintsNormal, 5,5,5,5));
   PEAEnable_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
-  PEA_GF->AddFrame(PEALightConversionFactor_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Conversion factor", -1),
+  PEA_GF->AddFrame(PEALightConversionFactor_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Conversion factor", PEALightConversionFactor_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,5,0));
   PEALightConversionFactor_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PEALightConversionFactor_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PEALightConversionFactor_NEL->GetEntry()->SetNumber(1.);
   PEALightConversionFactor_NEL->GetEntry()->SetState(false);
-  
+  PEALightConversionFactor_NEL->GetEntry()->Connect("ValueSet(long", "AAInterface", this, "HandleNumberEntries()");
+    
   PEA_GF->AddFrame(PEAErrorWidth_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Error width [%]", PEAErrorWidth_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,5));
   PEAErrorWidth_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PEAErrorWidth_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PEAErrorWidth_NEL->GetEntry()->SetNumber(5);
   PEAErrorWidth_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  PEAErrorWidth_NEL->GetEntry()->SetState(false);
   
   PEA_GF->AddFrame(PEAElectronEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Electron [MeV]", PEAElectronEnergy_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
@@ -832,6 +834,7 @@ void AAInterface::FillSpectrumFrame()
   PEAElectronEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PEAElectronEnergy_NEL->GetEntry()->Resize(70,20);
   PEAElectronEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  PEAElectronEnergy_NEL->GetEntry()->SetState(false);
 
   PEA_GF->AddFrame(PEAGammaEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Gamma [MeV]", PEAGammaEnergy_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
@@ -839,6 +842,7 @@ void AAInterface::FillSpectrumFrame()
   PEAGammaEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PEAGammaEnergy_NEL->GetEntry()->Resize(70,20);
   PEAGammaEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  PEAGammaEnergy_NEL->GetEntry()->SetState(false);
 
   PEA_GF->AddFrame(PEAProtonEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Proton (neutron) [MeV]", PEAProtonEnergy_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
@@ -846,6 +850,7 @@ void AAInterface::FillSpectrumFrame()
   PEAProtonEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PEAProtonEnergy_NEL->GetEntry()->Resize(70,20);
   PEAProtonEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  PEAProtonEnergy_NEL->GetEntry()->SetState(false);
 
   PEA_GF->AddFrame(PEAAlphaEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Alpha [MeV]", PEAAlphaEnergy_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
@@ -853,6 +858,7 @@ void AAInterface::FillSpectrumFrame()
   PEAAlphaEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PEAAlphaEnergy_NEL->GetEntry()->Resize(70,20);
   PEAAlphaEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  PEAAlphaEnergy_NEL->GetEntry()->SetState(false);
 
   PEA_GF->AddFrame(PEACarbonEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Carbon [GeV]", PEACarbonEnergy_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,5));
@@ -860,7 +866,7 @@ void AAInterface::FillSpectrumFrame()
   PEACarbonEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PEACarbonEnergy_NEL->GetEntry()->Resize(70,20);
   PEACarbonEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-
+  PEACarbonEnergy_NEL->GetEntry()->SetState(false);
 }
 
 
@@ -2708,9 +2714,27 @@ void AAInterface::HandleCheckButtons()
     break;
   }
 
-  case PEAEnable_CB_ID:
-    HandleTripleSliderPointer();
+  case PEAEnable_CB_ID:{
+
+    int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
+
+    bool SpectrumIsCalibrated = ComputationMgr->GetUseSpectraCalibrations()[Channel];
+
+    if(PEAEnable_CB->IsDown() and SpectrumIsCalibrated){
+      SpectrumCalibration_CB->Clicked();
+      SpectrumCalibration_CB->SetState(kButtonUp);
+      SetCalibrationWidgetState(false, kButtonDisabled);
+
+      SetPEAWidgetState(true, kButtonUp);
+      HandleTripleSliderPointer();
+    }
+    else{
+      SetPEAWidgetState(false, kButtonDisabled);
+      GraphicsMgr->PlotSpectrum();
+    }
+    
     break;
+  }
 
   case PlotSpectrumDerivativeError_CB_ID:
   case PlotAbsValueSpectrumDerivative_CB_ID:
@@ -2982,9 +3006,16 @@ void AAInterface::HandleNumberEntries()
     GraphicsMgr->PlotVCalibrationLine(Value);
     break;
   }
+
+  case PEALightConversionFactor_NEL_ID:{
+    double CF = PEALightConversionFactor_NEL->GetEntry()->GetNumber();
+    InterpolationMgr->SetConversionFactor(CF);
+    InterpolationMgr->ConstructResponses();
+    HandleTripleSliderPointer();
+    break;
+  }
     
   case PEAErrorWidth_NEL_ID:
-    
     HandleTripleSliderPointer();
     break;
 
@@ -3832,7 +3863,6 @@ void AAInterface::SetPearsonWidgetState(bool WidgetState, EButtonState ButtonSta
 
 void AAInterface::SetCalibrationWidgetState(bool WidgetState, EButtonState ButtonState)
 {
-  // Set the widget states based on above variable set results
   SpectrumCalibrationPoint_CBL->GetComboBox()->SetEnabled(WidgetState);
   SpectrumCalibrationEnergy_NEL->GetEntry()->SetState(WidgetState);
   SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetState(WidgetState);
@@ -3842,3 +3872,17 @@ void AAInterface::SetCalibrationWidgetState(bool WidgetState, EButtonState Butto
   SpectrumCalibrationReset_TB->SetState(ButtonState);
   SpectrumCalibrationLoad_TB->SetState(ButtonState);
 }
+
+
+void AAInterface::SetPEAWidgetState(bool WidgetState, EButtonState ButtonState)
+{
+  PEALightConversionFactor_NEL->GetEntry()->SetState(WidgetState);
+  PEAErrorWidth_NEL->GetEntry()->SetState(WidgetState);
+  PEAElectronEnergy_NEL->GetEntry()->SetState(WidgetState);
+  PEAGammaEnergy_NEL->GetEntry()->SetState(WidgetState);
+  PEAProtonEnergy_NEL->GetEntry()->SetState(WidgetState);
+  PEAAlphaEnergy_NEL->GetEntry()->SetState(WidgetState);
+  PEACarbonEnergy_NEL->GetEntry()->SetState(WidgetState);
+}
+
+

@@ -89,17 +89,11 @@ ifeq ($(ARCH),mpi)
    TMP := $(OBJS)
    OBJS = $(patsubst %.o, %_MPI.o, $(TMP))
 
-# If the user desires to build teh sequential version of the binary
+# If the user desires to build the sequential version of the binary
 # then set the macros requires for the sequential build
 else	
    SEQ_TARGET = $(BINDIR)/ADAQAnalysis
-
-   ifeq ($(HOSTNAME),TheBlackArrow)
-      CXX := clang++ -ferror-limit=5 -w
-   else
-      CXX := g++ -w
-   endif
-
+   CXX := clang++ -ferror-limit=5 -w
 endif
 
 
