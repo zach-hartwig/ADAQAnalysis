@@ -200,6 +200,7 @@ enum{
   PSDCalculate_TB_ID,
 
   PEAEnable_CB_ID,
+  PEAErrorWidth_NEL_ID,
   PEAElectronEnergy_NEL_ID,
   PEAGammaEnergy_NEL_ID,
   PEAProtonEnergy_NEL_ID,

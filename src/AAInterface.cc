@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // name: AAInterface.cc
-// date: 23 May 13
+// date: 01 Apr 14
 // auth: Zach Hartwig
 //
 // desc:
@@ -812,11 +812,19 @@ void AAInterface::FillSpectrumFrame()
 		   new TGLayoutHints(kLHintsNormal, 5,5,5,5));
   PEAEnable_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
-  PEA_GF->AddFrame(PEALightConversionFactor_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Conversion factor", 1),
-		   new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  PEA_GF->AddFrame(PEALightConversionFactor_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Conversion factor", -1),
+		   new TGLayoutHints(kLHintsNormal, 5,5,5,0));
   PEALightConversionFactor_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PEALightConversionFactor_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PEALightConversionFactor_NEL->GetEntry()->SetNumber(1.);
+  PEALightConversionFactor_NEL->GetEntry()->SetState(false);
+  
+  PEA_GF->AddFrame(PEAErrorWidth_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Error width [%]", PEAErrorWidth_NEL_ID),
+		   new TGLayoutHints(kLHintsNormal, 5,5,0,5));
+  PEAErrorWidth_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PEAErrorWidth_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PEAErrorWidth_NEL->GetEntry()->SetNumber(5);
+  PEAErrorWidth_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
   
   PEA_GF->AddFrame(PEAElectronEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Electron [MeV]", PEAElectronEnergy_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
@@ -2844,12 +2852,8 @@ void AAInterface::HandleTripleSliderPointer()
     // selected calibration mode via the appropriate buttons ...
     if(SpectrumCalibration_CB->IsDown() and SpectrumCalibrationStandard_RB->IsDown()){
       
-      // Redraw the pulse spectrum
-      GraphicsMgr->PlotSpectrum();
-      GraphicsMgr->PlotVCalibrationLine(XPos, YMin, XPos, YMax);
-      
-      // Update the canvas with the new spectrum and calibration line
-      Canvas_EC->GetCanvas()->Update();
+      // Plot the calibration line
+      GraphicsMgr->PlotVCalibrationLine(XPos);
       
       // Set the calibration pulse units for the current calibration
       // point based on the X position of the calibration line
@@ -2867,10 +2871,10 @@ void AAInterface::HandleTripleSliderPointer()
     
     if(PEAEnable_CB->IsDown() and SpectrumIsCalibrated){
 
+      double Error = PEAErrorWidth_NEL->GetEntry()->GetNumber();
+
       // Redraw the pulse spectrum with line at XPos
-      GraphicsMgr->PlotSpectrum();
-      GraphicsMgr->PlotVCalibrationLine(XPos, YMin, XPos, YMax);
-      Canvas_EC->GetCanvas()->Update();
+      GraphicsMgr->PlotPEALineAndBox(XPos, Error);
       
       PEAElectronEnergy_NEL->GetEntry()->SetNumber(XPos);
       
@@ -2975,16 +2979,17 @@ void AAInterface::HandleNumberEntries()
       Value = SpectrumCalibrationPulseUnit_NEL->GetEntry()->GetNumber();
     
     // Draw the new calibration line value ontop of the spectrum
-    GraphicsMgr->PlotSpectrum();
-    GraphicsMgr->PlotVCalibrationLine(Value,
-				      Spectrum_H->GetMinimum(),
-				      Value,
-				      Spectrum_H->GetMaximum());
-    
-    Canvas_EC->GetCanvas()->Update();
+    GraphicsMgr->PlotVCalibrationLine(Value);
     break;
   }
+    
+  case PEAErrorWidth_NEL_ID:
+    
+    HandleTripleSliderPointer();
+    break;
 
+  case PEAElectronEnergy_NEL_ID:
+  case PEAGammaEnergy_NEL_ID:
   case PEAProtonEnergy_NEL_ID:
   case PEAAlphaEnergy_NEL_ID:
   case PEACarbonEnergy_NEL_ID:
@@ -3106,7 +3111,6 @@ void AAInterface::HandleRadioButtons()
   case SpectrumCalibrationEdgeFinder_RB_ID:{
     if(SpectrumCalibrationEdgeFinder_RB->IsDown()){
       GraphicsMgr->PlotSpectrum();
-      Canvas_EC->GetCanvas()->Update();
       SpectrumCalibrationStandard_RB->SetState(kButtonUp);
     }
     
@@ -3312,18 +3316,10 @@ void AAInterface::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *Sel
       double X = gPad->AbsPixeltoX(XPixel);
       double Y = gPad->AbsPixeltoY(YPixel);
 
-      double XMin = Spectrum_H->GetXaxis()->GetXmin();
-      double XMax = Spectrum_H->GetXaxis()->GetXmax();
-      double YMin = Spectrum_H->GetMinimum();
-      double YMax = Spectrum_H->GetMaximum();
-
       // Enables the a semi-transparent box to be drawn over the edge
       // to be calibrated once the user has clicked for the first point
-      if(NumEdgeBoundingPoints == 1){
-	GraphicsMgr->PlotSpectrum();
+      if(NumEdgeBoundingPoints == 1)
 	GraphicsMgr->PlotEdgeBoundingBox(EdgeBoundX0, EdgeBoundY0, X, Y);
-	Canvas_EC->GetCanvas()->Update();
-      }
 
       // The bound point is set once the user clicks the canvas at the
       // desired (X,Y) == (Pulse unit, Counts) location. Note that
@@ -3348,11 +3344,8 @@ void AAInterface::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *Sel
 	  double HalfHeight = ComputationMgr->GetHalfHeight();
 	  double EdgePos = ComputationMgr->GetEdgePosition();
 	  SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(EdgePos);
-
-	  GraphicsMgr->PlotSpectrum();
-	  GraphicsMgr->PlotHCalibrationLine(XMin, HalfHeight, XMax, HalfHeight);
-	  GraphicsMgr->PlotVCalibrationLine(EdgePos, YMin, EdgePos, YMax);
-	  Canvas_EC->GetCanvas()->Update();
+	  
+	  GraphicsMgr->PlotCalibrationCross(EdgePos, HalfHeight);
 	  
 	  NumEdgeBoundingPoints = 0;
 	}

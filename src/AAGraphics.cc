@@ -1,34 +1,50 @@
+// ROOT
 #include <TROOT.h>
 #include <TStyle.h>
 #include <TMarker.h>
 #include <TPaletteAxis.h>
+#include <TFrame.h>
+#include <TPad.h>
 
-
+// C++
 #include <iostream>
 #include <cmath>
 #include <sstream>
 using namespace std;
 
+
+// AA
 #include "AAGraphics.hh"
 
 
+// The static meyer's singleton 
 AAGraphics *AAGraphics::TheGraphicsManager = 0;
 
 
+// Access method to the Meyer's singleton pointer
 AAGraphics *AAGraphics::GetInstance()
 { return TheGraphicsManager; }
 
 
 AAGraphics::AAGraphics()
-  : Trigger_L(new TLine), Floor_L(new TLine), Baseline_B(new TBox), ZSCeiling_L(new TLine),
-    LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine), IntegrationRegion_B(new TBox), 
-    HCalibration_L(new TLine), VCalibration_L(new TLine), EdgeBoundingBox_B(new TBox),
+  : Trigger_L(new TLine), Floor_L(new TLine), ZSCeiling_L(new TLine), Baseline_B(new TBox), 
+    LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine), IntegrationRegion_B(new TBox),
+    PSDPeakOffset_L(new TLine), PSDTailOffset_L(new TLine), PSDTailIntegral_B(new TBox),
     PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
-    PSDPeakOffset_L(new TLine), PSDTailOffset_L(new TLine), PSDTailIntegral_B(new TBox), DerivativeReference_L(new TLine)
+    HCalibration_L(new TLine), VCalibration_L(new TLine), EdgeBoundingBox_B(new TBox),
+    PEALine_L(new TLine), PEABox_B(new TBox), DerivativeReference_L(new TLine)
 {
   if(TheGraphicsManager)
     cout << "\nERROR! TheGraphicsManager was constructed twice\n" << endl;
   TheGraphicsManager = this;
+
+  // All of the graphical objects for waveform and spectral analysis
+  // (TLines, TBoxes, etc) are declared once in order to save memory
+  // and prevent memory leaks. Attributes are set here and then actual
+  // drawing is carried out via the TLine::DrawLine() or
+  // TBox::DrawBox() methods.
+
+  // Graphical objects for waveform analysis
 
   Trigger_L->SetLineStyle(7);
   Trigger_L->SetLineColor(kRed);
@@ -38,36 +54,35 @@ AAGraphics::AAGraphics()
   Floor_L->SetLineColor(kRed);
   Floor_L->SetLineWidth(2);
 
-  Baseline_B->SetFillStyle(3002);
-  Baseline_B->SetFillColor(8);
-
   ZSCeiling_L->SetLineStyle(7);
   ZSCeiling_L->SetLineColor(kViolet+1);
   ZSCeiling_L->SetLineWidth(2);
 
+  Baseline_B->SetFillStyle(3002);
+  Baseline_B->SetFillColor(8);
+
   LPeakDelimiter_L->SetLineStyle(7);
-  LPeakDelimiter_L->SetLineWidth(2);
   LPeakDelimiter_L->SetLineColor(kGreen+3);
+  LPeakDelimiter_L->SetLineWidth(2);
+
   
   RPeakDelimiter_L->SetLineStyle(7);
-  RPeakDelimiter_L->SetLineWidth(2);
   RPeakDelimiter_L->SetLineColor(kGreen+1);
+  RPeakDelimiter_L->SetLineWidth(2);
 
   IntegrationRegion_B->SetFillColor(kGreen+2);
   IntegrationRegion_B->SetFillStyle(3003);
-  
-  HCalibration_L->SetLineStyle(7);
-  HCalibration_L->SetLineColor(kRed);
-  HCalibration_L->SetLineWidth(2);
 
-  VCalibration_L->SetLineStyle(7);
-  VCalibration_L->SetLineColor(kRed);
-  VCalibration_L->SetLineWidth(2);
+  PSDPeakOffset_L->SetLineStyle(7);
+  PSDPeakOffset_L->SetLineColor(kMagenta+3);
+  PSDPeakOffset_L->SetLineWidth(2);
 
-  EdgeBoundingBox_B->SetFillStyle(3002);
-  EdgeBoundingBox_B->SetFillColor(kRed);
-  EdgeBoundingBox_B->SetLineWidth(2);
-  EdgeBoundingBox_B->SetLineColor(kRed);
+  PSDTailOffset_L->SetLineStyle(7);
+  PSDTailOffset_L->SetLineColor(kMagenta+1);
+  PSDTailOffset_L->SetLineWidth(2);
+
+  PSDTailIntegral_B->SetFillColor(kMagenta+2);
+  PSDTailIntegral_B->SetFillStyle(3003);
 
   PearsonLowerLimit_L->SetLineStyle(7);
   PearsonLowerLimit_L->SetLineColor(kBlue);
@@ -78,24 +93,36 @@ AAGraphics::AAGraphics()
   PearsonMiddleLimit_L->SetLineWidth(2);
   
   PearsonUpperLimit_L->SetLineStyle(7);
-  PearsonUpperLimit_L->SetLineColor(4);
+  PearsonUpperLimit_L->SetLineColor(kBlue);
   PearsonUpperLimit_L->SetLineWidth(2);
 
-  PSDPeakOffset_L->SetLineStyle(7);
-  PSDPeakOffset_L->SetLineColor(kMagenta+3);
-  PSDPeakOffset_L->SetLineWidth(2);
 
-  PSDTailOffset_L->SetLineStyle(7);
-  PSDTailOffset_L->SetLineColor(kMagenta+1);
-  PSDTailOffset_L->SetLineWidth(2);
+  // Graphical objects for spectral analysis
+  
+  HCalibration_L->SetLineStyle(7);
+  HCalibration_L->SetLineColor(kRed);
+  HCalibration_L->SetLineWidth(2);
 
-  PSDTailIntegral_B->SetFillStyle(3003);
-  PSDTailIntegral_B->SetFillColor(kMagenta+2);
+  VCalibration_L->SetLineStyle(7);
+  VCalibration_L->SetLineColor(kRed);
+  VCalibration_L->SetLineWidth(2);
+
+  EdgeBoundingBox_B->SetFillColor(kRed);
+  EdgeBoundingBox_B->SetFillStyle(3002);
+
+  PEALine_L->SetLineStyle(7);
+  PEALine_L->SetLineColor(kOrange+1);
+  PEALine_L->SetLineWidth(2);
+  
+  PEABox_B->SetFillColor(kOrange+1);
+  PEABox_B->SetFillStyle(3002);
 
   DerivativeReference_L->SetLineStyle(7);
-  DerivativeReference_L->SetLineColor(2);
+  DerivativeReference_L->SetLineColor(kRed);
   DerivativeReference_L->SetLineWidth(2);
 
+
+  // Get the pointer to the computation manager
   ComputationMgr = AAComputation::GetInstance();
 }
 
@@ -429,7 +456,7 @@ void AAGraphics::PlotSpectrum()
   //////////////////////////////////
   // Determine main spectrum to plot
 
-  TH1F *Spectrum_H = 0;
+  //TH1F *Spectrum_H = 0;
   
   if(ADAQSettings->FindBackground and ADAQSettings->PlotLessBackground)
     Spectrum_H = ComputationMgr->GetSpectrumWithoutBackground();
@@ -887,16 +914,74 @@ void AAGraphics::PlotCalibration(int Channel)
 }
 
 // Horizontal calibration line
-void AAGraphics::PlotHCalibrationLine(double X0, double Y0, double X1, double Y1)
-{ HCalibration_L->DrawLine(X0, Y0, X1, Y1); }
+void AAGraphics::PlotHCalibrationLine(double Y, bool refresh)
+{ 
+  if(refresh)
+    PlotSpectrum();
+
+  double XMin = gPad->GetFrame()->GetX1();
+  double XMax = gPad->GetFrame()->GetX2();
+  
+  HCalibration_L->DrawLine(XMin, Y, XMax, Y);
+  
+  if(refresh)
+    TheCanvas->Update();
+}
 
 
 // Vertical calibration line
-void AAGraphics::PlotVCalibrationLine(double X0, double Y0, double X1, double Y1)
-{ VCalibration_L->DrawLine(X0, Y0, X1, Y1); }
+void AAGraphics::PlotVCalibrationLine(double X, bool refresh)
+{
+  if(refresh)
+    PlotSpectrum();
+  
+  double YMin = gPad->GetFrame()->GetY1();
+  double YMax = gPad->GetFrame()->GetY2();
 
+  VCalibration_L->DrawLine(X, YMin, X, YMax);
+
+  if(refresh)
+    TheCanvas->Update();
+}
+
+
+// A "cross" of horiz. and vert. calibration lines
+void AAGraphics::PlotCalibrationCross(double EdgePos, double HalfHeight)
+{
+  PlotSpectrum();
+  PlotVCalibrationLine(EdgePos, false);
+  PlotHCalibrationLine(HalfHeight, false);
+  TheCanvas->Update();
+}
+
+
+// A transparent box that encompasses the calibration edge
 void AAGraphics::PlotEdgeBoundingBox(double X0, double Y0, double X1, double Y1)
-{ EdgeBoundingBox_B->DrawBox(X0, Y0, X1, Y1); }
+{
+  PlotSpectrum();
+  EdgeBoundingBox_B->DrawBox(X0, Y0, X1, Y1);
+  TheCanvas->Update();
+}
+
+
+// A line and transparent region for EJ301/9 particle energy analysis
+void AAGraphics::PlotPEALineAndBox(double X, double Error)
+{
+  PlotSpectrum();
+
+  double YMin = gPad->GetFrame()->GetY1();
+  double YMax = gPad->GetFrame()->GetY2();
+  
+  PEALine_L->DrawLine(X, YMin, X, YMax);
+
+  // Convert error from % to decimal
+  Error *= 0.01;
+  
+  PEABox_B->DrawBox(X*(1-Error), YMin, X*(1+Error), YMax);
+  
+  TheCanvas->Update();
+}
+
 
 
 void AAGraphics::PlotPSDFilter()

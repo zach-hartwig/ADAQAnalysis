@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // name: AAGraphics.hh
-// date: 17 May 13
+// date: 01 Apr 14
 // auth: Zach Hartwig
 //
 // desc: 
@@ -12,6 +12,7 @@
 #define __AAGraphics_hh__ 1
 
 
+// ROOT
 #include <TObject.h>
 #include <TCanvas.h>
 #include <TH1F.h>
@@ -21,6 +22,7 @@
 #include <TLine.h>
 
 
+// AA
 #include "AAComputation.hh"
 #include "AASettings.hh"
 
@@ -31,28 +33,50 @@ public:
   AAGraphics();
   ~AAGraphics();
 
+  // Access omethod to the Meyer's singleton pointer
   static AAGraphics *GetInstance();
+
+  //////////////////
+  // Set/Get methods
 
   void SetCanvasPointer(TCanvas *C) { TheCanvas = C; }
 
   void SetADAQSettings(AASettings *AAS) { ADAQSettings = AAS; }
 
   CanvasContentTypes GetCanvasContentType() {return CanvasContentType;}
+
+  
+  ////////////////////////////
+  // Waveform plotting methods
   
   void PlotWaveform(int Color=kBlue);
   void PlotPearsonIntegration();
+
+
+  ///////////////////////////
+  // Spectra plotting methods
   
   void PlotSpectrum();
   void PlotSpectrumDerivative();
+
+  
+  //////////////////////////////////////////////
+  // Pulse shape discrimination plotting methods
 
   void PlotPSDHistogram();
   void PlotPSDHistogramSlice(int, int);
   void PlotPSDFilter();
 
+
+  ///////////////////////////////////////////
+  // Analysis graphic object plotting methods
+  
   void PlotCalibration(int);
-  void PlotHCalibrationLine(double, double, double, double);
-  void PlotVCalibrationLine(double, double, double, double);
+  void PlotHCalibrationLine(double, bool refresh = true);
+  void PlotVCalibrationLine(double, bool refresh = true);
+  void PlotCalibrationCross(double, double);
   void PlotEdgeBoundingBox(double, double, double, double);
+  void PlotPEALineAndBox(double, double);
   
 private:
   
@@ -62,15 +86,25 @@ private:
 
   TCanvas *TheCanvas;
 
+  TH1F *Spectrum_H;
+
+  // Objects for waveform analysis
+
   TLine *Trigger_L, *Floor_L, *ZSCeiling_L;
-  TLine *HCalibration_L, *VCalibration_L;
-  TBox *EdgeBoundingBox_B;
+  TBox *Baseline_B;
   TLine *LPeakDelimiter_L, *RPeakDelimiter_L;
   TBox *IntegrationRegion_B;
-  TLine *PearsonLowerLimit_L, *PearsonMiddleLimit_L, *PearsonUpperLimit_L;
   TLine *PSDPeakOffset_L, *PSDTailOffset_L;
+  TBox *PSDTailIntegral_B;
+  TLine *PearsonLowerLimit_L, *PearsonMiddleLimit_L, *PearsonUpperLimit_L;
+
+  // Objects for spectral analysis
+
+  TLine *HCalibration_L, *VCalibration_L;
+  TBox *EdgeBoundingBox_B;
+  TLine *PEALine_L;
+  TBox *PEABox_B;
   TLine *DerivativeReference_L;
-  TBox *Baseline_B, *PSDTailIntegral_B;
   
   AAComputation *ComputationMgr;
   
