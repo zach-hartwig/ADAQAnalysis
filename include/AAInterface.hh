@@ -93,6 +93,7 @@ public:
 
   void SetPearsonWidgetState(bool, EButtonState);
   void SetCalibrationWidgetState(bool, EButtonState);
+  void SetPEAWidgetState(bool, EButtonState);
   
 
 private:

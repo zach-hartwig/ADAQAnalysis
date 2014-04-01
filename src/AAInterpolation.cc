@@ -22,10 +22,15 @@ AAInterpolation::AAInterpolation()
     cout << "\nError! TheInterpolationManager was constructed twice!\n" << endl;
   TheInterpolationManager = this;
 
-  Data.push_back(ProtonData);
+  // Put the data arrays into a vector for indexable access. There is
+  // no electron data since it is constructed from the linear response
+
+  Data.push_back(NULL);
   Data.push_back(ProtonData);
   Data.push_back(AlphaData);
   Data.push_back(CarbonData);
+
+  // Initialize the vectors
 
   vector<double> Init;
   for(int i=0; i<NumParticles; i++){
@@ -33,6 +38,7 @@ AAInterpolation::AAInterpolation()
     Response.push_back(new TGraph);
     Inverse.push_back(new TGraph);
   }
+
   ConstructResponses();
 }
 
@@ -48,27 +54,35 @@ AAInterpolation::~AAInterpolation()
 
 void AAInterpolation::ConstructResponses()
 {
-  // Clear any previous light response curves and light responses
+  // Iterate to construct the scintillation light response
+  // (E_deposited vs light output) and inverse response (light output
+  // vs. E_deposited) for all particles
   for(int particle=0; particle<NumParticles; particle++){
 
+    // Clear previous responses
     Light[particle].clear();
     delete Response[particle];
     delete Inverse[particle];
 
     for(int entry=0; entry<LightEntries; entry++){
-
+      // Linear e- response is constructed from energy deposition
       if(particle == ELECTRON)
 	Light[particle].push_back(EnergyDep[entry] * PhotonsPerMeVee);
+
+      // Nonlinear p/a/c response is constructed from data
       else
 	Light[particle].push_back(Data[particle][entry] * PhotonsPerMeVee * ConversionFactor);
-      
-      Response[particle] = new TGraph(LightEntries, EnergyDep, &Light[particle][0]);
-      Inverse[particle] = new TGraph(LightEntries, &Light[particle][0], EnergyDep);
     }
+
+    // Construct the response and inversve functions
+    Response[particle] = new TGraph(LightEntries, EnergyDep, &Light[particle][0]);
+    Inverse[particle] = new TGraph(LightEntries, &Light[particle][0], EnergyDep);
   }
 }
 
 
+// Method to get the electron energy deposition based on the energy
+// deposited by the specified particle
 double AAInterpolation::GetElectronEnergy(double Energy, int Particle)
 {
   double Light = Response[Particle]->Eval(Energy, 0, "S");
@@ -76,6 +90,7 @@ double AAInterpolation::GetElectronEnergy(double Energy, int Particle)
 }
 
 
+// Method to get the gamma energy from electron equivalent energy (EE)
 double AAInterpolation::GetGammaEnergy(double EE)
 {
   double square_root = sqrt(pow(EE,2)-(4*-1*EE*m_e/2));
@@ -83,6 +98,7 @@ double AAInterpolation::GetGammaEnergy(double EE)
 }
 
 
+// Method to get the proton/neutron energy from EE energy
 double AAInterpolation::GetProtonEnergy(double EE)
 {
   double Light = Response[ELECTRON]->Eval(EE, 0, "S");
@@ -90,6 +106,7 @@ double AAInterpolation::GetProtonEnergy(double EE)
 }
 
 
+// Method to get the alpha energy from the EE energy
 double AAInterpolation::GetAlphaEnergy(double EE)
 {
   double Light = Response[ELECTRON]->Eval(EE, 0, "S");
@@ -97,6 +114,7 @@ double AAInterpolation::GetAlphaEnergy(double EE)
 }
 
 
+// Method to get the carbon energy from the EE energy
 double AAInterpolation::GetCarbonEnergy(double EE)
 {
   double Light = Response[ELECTRON]->Eval(EE, 0, "S");

@@ -27,8 +27,11 @@ public:
 
   static AAInterpolation *GetInstance();
 
+  // Method to construct particle-dependent light responses
   void ConstructResponses();
   
+  // Set/get methods for member data
+
   void SetConversionFactor(double CF) {ConversionFactor = CF;}
   double GetConversionFactor() {return ConversionFactor;}
 
@@ -47,7 +50,7 @@ private:
   const double m_e, MeV2GeV;
   const int NumParticles;
 
-  const enum {ELECTRON, PROTON, ALPHA, CARBON};
+  enum {ELECTRON, PROTON, ALPHA, CARBON};
 
   double ConversionFactor;
 
