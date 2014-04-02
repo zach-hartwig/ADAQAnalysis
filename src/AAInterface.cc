@@ -528,13 +528,13 @@ void AAInterface::FillSpectrumFrame()
 				   new TGLayoutHints(kLHintsLeft, 5,5,0,0));
   ACROSpectrumLS_RB = new TGRadioButton(ACROSpectrumDetector_BG, "LaBr3", ACROSpectrumLS_RB_ID);
   ACROSpectrumLS_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
-  //ACROSpectrumLS_RB->SetState(kButtonDown);
-  //ACROSpectrumLS_RB->SetState(kButtonDisabled);
+  ACROSpectrumLS_RB->SetState(kButtonDown);
+  ACROSpectrumLS_RB->SetState(kButtonDisabled);
   
   ACROSpectrumES_RB = new TGRadioButton(ACROSpectrumDetector_BG, "EJ301", ACROSpectrumES_RB_ID);
   ACROSpectrumES_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
-  ACROSpectrumES_RB->SetState(kButtonDown);
-
+  ACROSpectrumES_RB->SetState(kButtonDisabled);
+  
   
   /////////////////////////
   // Create spectrum button
@@ -678,8 +678,8 @@ void AAInterface::FillSpectrumFrame()
   SpectrumBackgroundIterations_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   SpectrumBackgroundIterations_NEL->GetEntry()->SetNumber(15);
   SpectrumBackgroundIterations_NEL->GetEntry()->Resize(40,20);
-  SpectrumBackgroundIterations_NEL->GetEntry()->Connect("ValueSet()", "AAInterface", this, "HandleNumberEntries()");
-
+  SpectrumBackgroundIterations_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  
   ////
 
   TGHorizontalFrame *SpectrumBackgroundOptions1_HF = new TGHorizontalFrame(SpectrumAnalysis_GF);
