@@ -48,9 +48,8 @@ AAInterface::AAInterface(string CmdLineArg)
 {
   SetCleanup(kDeepCleanup);
 
-  // Allow cmd line arg to specify a small canvas size
-  size_t Pos = CmdLineArg.find("small");
-  if(Pos != string::npos){
+  // Allow env. variable to control small version of GUI
+  if(getenv("ADAQANALYSIS_SMALL")!=NULL){
     CanvasX = 500;
     CanvasY = 300;
     CanvasFrameWidth = 400;
@@ -58,7 +57,7 @@ AAInterface::AAInterface(string CmdLineArg)
     TotalX = 950;
     TotalY = 610;
   }
-
+  
   // Create the entire graphical interface
   CreateTheMainFrames();
 
@@ -71,9 +70,9 @@ AAInterface::AAInterface(string CmdLineArg)
   GraphicsMgr->SetCanvasPointer(Canvas_EC->GetCanvas());
 
   InterpolationMgr = AAInterpolation::GetInstance();
-
-  if(CmdLineArg != "Unspecified" and CmdLineArg != "small"){
-
+  
+  if(CmdLineArg != "Unspecified"){
+    
     size_t Pos = CmdLineArg.find_last_of(".");
     if(Pos != string::npos){
       
@@ -3778,7 +3777,7 @@ void AAInterface::UpdateForACRONYMFile()
   Waveforms_NEL->SetNumber(0);
   WaveformsToHistogram_NEL->GetEntry()->SetNumber(0);
   RecordLength_NEL->SetNumber(0);
-  
+ 
   // Waveform frame (disabled)
   WaveformOptionsTab_CF->HideFrame(WaveformOptions_CF);
 
@@ -3801,7 +3800,7 @@ void AAInterface::UpdateForACRONYMFile()
   }
   else
     ACROSpectrumTypeScintCounted_RB->SetEnabled(true);
-    
+   
   if(ACROSpectrumTypeScintCreated_RB->IsDown()){
     ACROSpectrumTypeScintCreated_RB->SetEnabled(true);
     ACROSpectrumTypeScintCreated_RB->SetState(kButtonDown);
