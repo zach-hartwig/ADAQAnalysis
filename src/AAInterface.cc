@@ -1788,6 +1788,7 @@ void AAInterface::HandleMenu(int MenuID)
 			       0,             0};
   
     TGFileInfo FileInformation;
+    FileInformation.fFileTypeIdx = 4;
     FileInformation.fFileTypes = FileTypes;
     FileInformation.fIniDir = StrDup(HistogramDirectory.c_str());
     
@@ -1904,8 +1905,9 @@ void AAInterface::HandleMenu(int MenuID)
   case MenuFileSaveSpectrumCalibration_ID:{
     
     const char *FileTypes[] = {"ADAQ calibration file", "*.acal",
+			       "All files"            , "*.*",
 			       0, 0};
-
+    
     TGFileInfo FileInformation;
     FileInformation.fFileTypes = FileTypes;
     FileInformation.fIniDir = StrDup(getenv("PWD"));
@@ -1941,10 +1943,10 @@ void AAInterface::HandleMenu(int MenuID)
     
     // List the available graphical file options
     const char *FileTypes[] = {"EPS file",          "*.eps",
+			       "JPG file",          "*.jpeg",
 			       "PS file",           "*.ps",
 			       "PDF file",          "*.pdf",
 			       "PNG file",          "*.png",
-			       "JPG file",          "*.jpeg",
 			       0,                  0 };
 
     // Use the ROOT prebuilt file dialog machinery
