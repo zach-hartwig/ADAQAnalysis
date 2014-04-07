@@ -292,7 +292,7 @@ bool AAComputation::LoadACRONYMRootFile(string FileName)
   ACRONYMFileName = FileName;
 
   TFile *ACRONYMRootFile = new TFile(FileName.c_str(), "read");
-  
+
   if(!ACRONYMRootFile->IsOpen()){
     ACRONYMFileLoaded = false;
   }
@@ -309,11 +309,11 @@ bool AAComputation::LoadACRONYMRootFile(string FileName)
 	   << endl;
     }
     else{
-      //      if(LSDetectorEvent) delete LSDetectorEvent;
+      // if(LSDetectorEvent) delete LSDetectorEvent;
       LSDetectorEvent = new acroEvent;
       LSDetectorTree->SetBranchAddress("LSDetectorEvents", &LSDetectorEvent);
     }
-    
+
     //////////////
     // ES Detector
 
@@ -325,18 +325,17 @@ bool AAComputation::LoadACRONYMRootFile(string FileName)
 	   << endl;
     }
     else{
-      //      if(ESDetectorEvent) delete ESDetectorEvent;
+      // if(ESDetectorEvent) delete ESDetectorEvent;
       ESDetectorEvent = new acroEvent;
       ESDetectorTree->SetBranchAddress("ESDetectorEvents", &ESDetectorEvent);
     }
 
+
     //////////////
     // Run Summary
     
-    if(RunSummary) delete RunSummary;
+    // if(RunSummary) delete RunSummary;
     RunSummary = dynamic_cast<acroRun *>(ACRONYMRootFile->Get("RunSummary"));
-
-
 
     ACRONYMFileLoaded = true;
   }
