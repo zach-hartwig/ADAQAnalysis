@@ -3067,7 +3067,7 @@ void AAInterface::HandleNumberEntries()
 
 void AAInterface::HandleRadioButtons()
 {
-  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
+  if(!ADAQFileLoaded or !ACRONYMFileLoaded)
     return;
 
   TGRadioButton *ActiveRadioButton = (TGRadioButton *) gTQSender;
