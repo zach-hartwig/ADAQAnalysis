@@ -3695,13 +3695,13 @@ void AAInterface::UpdateForADAQFile()
   RecordLength_NEL->SetNumber(RecordLength);
   
   BaselineCalcMin_NEL->GetEntry()->SetLimitValues(0,RecordLength-1);
-  BaselineCalcMin_NEL->GetEntry()->SetNumber(0);
-  
   BaselineCalcMax_NEL->GetEntry()->SetLimitValues(1,RecordLength);
-  
-  int BaselineCalcMax = 0;
-  (RecordLength > 1500) ? BaselineCalcMax = 750 : BaselineCalcMax = 100;
-  BaselineCalcMax_NEL->GetEntry()->SetNumber(BaselineCalcMax);
+
+  // Set the baseline calculation region to the values used during the
+  // data acquisition as the default; user may update afterwards
+  int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
+  BaselineCalcMin_NEL->GetEntry()->SetNumber(AMP->BaselineCalcMin[Channel]);
+  BaselineCalcMax_NEL->GetEntry()->SetNumber(AMP->BaselineCalcMax[Channel]);
   
   PearsonLowerLimit_NEL->GetEntry()->SetLimitValues(0, RecordLength-1);
   PearsonLowerLimit_NEL->GetEntry()->SetNumber(0);
