@@ -3158,7 +3158,6 @@ void AAInterface::HandleRadioButtons()
     break;
 
   case SpectrumLessBackground_RB_ID:
-    cout << "HERE" << endl;
     SpectrumWithBackground_RB->SetState(kButtonUp);
     SaveSettings();
     ComputationMgr->CalculateSpectrumBackground();
