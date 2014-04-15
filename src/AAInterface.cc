@@ -3067,7 +3067,7 @@ void AAInterface::HandleNumberEntries()
 
 void AAInterface::HandleRadioButtons()
 {
-  if(!ADAQFileLoaded or !ACRONYMFileLoaded)
+  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
     return;
 
   TGRadioButton *ActiveRadioButton = (TGRadioButton *) gTQSender;
@@ -3115,6 +3115,7 @@ void AAInterface::HandleRadioButtons()
   case PositiveWaveform_RB_ID:
   case NegativeWaveform_RB_ID:
     GraphicsMgr->PlotWaveform();
+    break;
 
   case ACROSpectrumLS_RB_ID:
     if(ACROSpectrumLS_RB->IsDown()){
@@ -3157,6 +3158,7 @@ void AAInterface::HandleRadioButtons()
     break;
 
   case SpectrumLessBackground_RB_ID:
+    cout << "HERE" << endl;
     SpectrumWithBackground_RB->SetState(kButtonUp);
     SaveSettings();
     ComputationMgr->CalculateSpectrumBackground();
