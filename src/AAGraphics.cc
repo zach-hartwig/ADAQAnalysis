@@ -937,6 +937,13 @@ void AAGraphics::PlotVCalibrationLine(double X, bool refresh)
   
   double YMin = gPad->GetFrame()->GetY1();
   double YMax = gPad->GetFrame()->GetY2();
+  
+  // If the YAxis is in log then {Y1,Y2} must be converted to linear
+  // scale in order to correctly draw the line
+  if(gPad->GetLogy()){
+    YMin = pow(10, YMin);
+    YMax = pow(10, YMax);
+  }
 
   VCalibration_L->DrawLine(X, YMin, X, YMax);
 
@@ -959,6 +966,12 @@ void AAGraphics::PlotCalibrationCross(double EdgePos, double HalfHeight)
 void AAGraphics::PlotEdgeBoundingBox(double X0, double Y0, double X1, double Y1)
 {
   PlotSpectrum();
+
+  if(gPad->GetLogy()){
+    Y0 = pow(10, Y0);
+    Y1 = pow(10, Y1);
+  }
+
   EdgeBoundingBox_B->DrawBox(X0, Y0, X1, Y1);
   TheCanvas->Update();
 }
@@ -971,6 +984,13 @@ void AAGraphics::PlotPEALineAndBox(double X, double Error)
 
   double YMin = gPad->GetFrame()->GetY1();
   double YMax = gPad->GetFrame()->GetY2();
+  
+  // If the YAxis is in log then {Y1,Y2} must be converted to linear
+  // scale in order to correctly draw the line
+  if(gPad->GetLogy()){
+    YMin = pow(10, YMin);
+    YMax = pow(10, YMax);
+  }
   
   PEALine_L->DrawLine(X, YMin, X, YMax);
 

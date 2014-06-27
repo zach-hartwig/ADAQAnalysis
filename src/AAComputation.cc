@@ -2186,6 +2186,9 @@ bool AAComputation::WriteCalibrationFile(int Channel, string FName)
 
 void AAComputation::SetEdgeBound(double X, double Y)
 {
+  if(gPad->GetLogy())
+    Y = pow(10,Y);
+
   if(EdgeHBound.size() == 0){
     EdgePositionFound = false;
 
@@ -2204,6 +2207,7 @@ void AAComputation::SetEdgeBound(double X, double Y)
     EdgeVBound.clear();
   }
 }
+
 
 void AAComputation::FindEdge()
 {
