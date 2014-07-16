@@ -60,7 +60,7 @@ AAInterface::AAInterface(string CmdLineArg)
   
   ThemeForegroundColor = ColorMgr->Number2Pixel(18);
   ThemeBackgroundColor = ColorMgr->Number2Pixel(22);
-
+  
   CreateTheMainFrames();
  
   ComputationMgr = AAComputation::GetInstance();
@@ -420,7 +420,7 @@ void AAInterface::FillWaveformFrame()
   WaveformFrame_VF->AddFrame(WaveformAnalysis_GF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
   
   WaveformAnalysis_GF->AddFrame(WaveformAnalysis_CB = new TGCheckButton(WaveformAnalysis_GF, "Analyze waveform", WaveformAnalysis_CB_ID),
-				new TGLayoutHints(kLHintsLeft, 0,5,0,0));
+				new TGLayoutHints(kLHintsLeft, 0,5,5,0));
   WaveformAnalysis_CB->SetState(kButtonDisabled);
   WaveformAnalysis_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
@@ -968,14 +968,14 @@ void AAInterface::FillGraphicsFrame()
   GraphicsFrame_VF->AddFrame(SpectrumDrawOptions_BG = new TGButtonGroup(GraphicsFrame_VF, "Spectrum draw options", kHorizontalFrame),
 			      new TGLayoutHints(kLHintsNormal, 5,5,5,5));
   
-  DrawSpectrumWithCurve_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Curve   ", DrawSpectrumWithCurve_RB_ID);
+  DrawSpectrumWithCurve_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Curve  ", DrawSpectrumWithCurve_RB_ID);
   DrawSpectrumWithCurve_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   DrawSpectrumWithCurve_RB->SetState(kButtonDown);
   
-  DrawSpectrumWithMarkers_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Markers   ", DrawSpectrumWithMarkers_RB_ID);
+  DrawSpectrumWithMarkers_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Markers  ", DrawSpectrumWithMarkers_RB_ID);
   DrawSpectrumWithMarkers_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
 
-  DrawSpectrumWithError_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Error   ", DrawSpectrumWithError_RB_ID);
+  DrawSpectrumWithError_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Error  ", DrawSpectrumWithError_RB_ID);
   DrawSpectrumWithError_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
 
   DrawSpectrumWithBars_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Bars", DrawSpectrumWithBars_RB_ID);
@@ -2404,8 +2404,7 @@ void AAInterface::HandleTextButtons()
     ////////////////////
     
   case ReplotWaveform_TB_ID:
-    if(ADAQFileLoaded)
-      GraphicsMgr->PlotWaveform();
+    GraphicsMgr->PlotWaveform();
     break;
     
   case ReplotSpectrum_TB_ID:
@@ -3386,7 +3385,8 @@ void AAInterface::HandleRadioButtons()
   case DrawSpectrumWithCurve_RB_ID:
   case DrawSpectrumWithError_RB_ID:
   case DrawSpectrumWithMarkers_RB_ID:
-    GraphicsMgr->PlotSpectrum();
+    if(ComputationMgr->GetSpectrumExists())
+      GraphicsMgr->PlotSpectrum();
     break;
   }
 }
@@ -3802,25 +3802,25 @@ void AAInterface::CreateMessageBox(string Message, string IconName)
     IconType = kMBIconAsterisk;
   
   const int NumTitles = 8;
-
-  string BoxTitlesAsterisk[] = {"ADAQAnalysis says 'good job!", 
-				"Oh, so you are competent!",
-				"This is a triumph of science!",
-				"Excellent work. You're practically a PhD now.",
-				"For you ARE the Kwisatz Haderach!",
-				"There will be a parade in your honor.",
-				"Oh, well, bra-VO!",
-				"Top notch."};
   
-  string BoxTitlesStop[] = {"ADAQAnalysis is disappointed in you...", 
-			    "Seriously? I'd like another operator, please.",
-			    "Unaccepktable. Just totally unacceptable.",
-			    "That was about as successful as the Hindenburg...",
-			    "You blew it!",
-			    "Abominable! Off with your head!",
-			    "Do, or do not. There is no try."
-			    "You fucked it up, Walter! You always fuck it up!"};
-
+  string BoxTitlesAsterisk[NumTitles] = {"ADAQAnalysis says 'good job!", 
+					 "Oh, so you are competent!",
+					 "This is a triumph of science!",
+					 "Excellent work. You're practically a PhD now.",
+					 "For you ARE the Kwisatz Haderach!",
+					 "There will be a parade in your honor.",
+					 "Oh, well, bra-VO!",
+					 "Top notch."};
+  
+  string BoxTitlesStop[NumTitles] = {"ADAQAnalysis is disappointed in you...", 
+				     "Seriously? I'd like another operator, please.",
+				     "Unaccepktable. Just totally unacceptable.",
+				     "That was about as successful as the Hindenburg...",
+				     "You blew it!",
+				     "Abominable! Off with your head!",
+				     "Do, or do not. There is no try.",
+				     "You fucked it up, Walter! You always fuck it up!"};
+  
   // Surprise the user!
   int RndmInt = RndmMgr->Integer(NumTitles);
   
