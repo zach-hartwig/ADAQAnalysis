@@ -712,7 +712,7 @@ void AAComputation::CreateSpectrum()
   // Reset the waveform progress bar
   if(SequentialArchitecture){
     ProcessingProgressBar->Reset();
-    ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(41));
+    ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(33));
     ProcessingProgressBar->SetForegroundColor(ColorManager->Number2Pixel(1));
   }
   
@@ -1327,7 +1327,7 @@ void AAComputation::IntegrateSpectrum()
     // gaussian to the histogram representing the integral region
     // new TH1F object for analysis
     SpectrumFit_F = new TF1("PeakFit", "gaus", LowerIntLimit, UpperIntLimit);
-    SpectrumIntegral_H->Fit("PeakFit","R N");
+    SpectrumIntegral_H->Fit("PeakFit","R N Q");
 
     // Project the gaussian fit into a histogram with identical
     // binning to the original spectrum to make analysis easier
@@ -1455,7 +1455,7 @@ TH2F *AAComputation::CreatePSDHistogram()
   
   if(SequentialArchitecture){
     ProcessingProgressBar->Reset();
-    ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(41));
+    ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(33));
     ProcessingProgressBar->SetForegroundColor(ColorManager->Number2Pixel(1));
   }
   
@@ -2322,7 +2322,7 @@ void AAComputation::CreateDesplicedFile()
   
   if(SequentialArchitecture){
     ProcessingProgressBar->Reset();
-    ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(41));
+    ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(33));
     ProcessingProgressBar->SetForegroundColor(ColorManager->Number2Pixel(1));
   }
   

@@ -196,6 +196,13 @@ private:
   TGTextButton *SpectrumCalibrationReset_TB;
   TGTextButton *SpectrumCalibrationLoad_TB;
 
+  TGTextButton *CreateSpectrum_TB;
+
+
+  ///////////////////////////////////////////
+  // Widgets for the analysis tabbed frame //
+  ///////////////////////////////////////////
+
   TGCheckButton *SpectrumFindPeaks_CB;
   ADAQNumberEntryWithLabel *SpectrumNumPeaks_NEL;
   ADAQNumberEntryWithLabel *SpectrumSigma_NEL;
@@ -209,9 +216,13 @@ private:
   TGCheckButton *SpectrumBackgroundCompton_CB, *SpectrumBackgroundSmoothing_CB;
   ADAQComboBoxWithLabel *SpectrumBackgroundFilterOrder_CBL, *SpectrumBackgroundSmoothingWidth_CBL;
 
-  
   TGRadioButton *SpectrumWithBackground_RB;
   TGRadioButton *SpectrumLessBackground_RB;
+
+  ADAQNumberEntryFieldWithLabel *SpectrumFitHeight_NEFL;
+  ADAQNumberEntryFieldWithLabel *SpectrumFitMean_NEFL;
+  ADAQNumberEntryFieldWithLabel *SpectrumFitSigma_NEFL;
+  ADAQNumberEntryFieldWithLabel *SpectrumFitRes_NEFL;
 
   TGCheckButton *SpectrumFindIntegral_CB;
   TGCheckButton *SpectrumIntegralInCounts_CB;
@@ -221,37 +232,6 @@ private:
   ADAQNumberEntryFieldWithLabel *SpectrumIntegralError_NEFL;
   
   TGCheckButton *SpectrumOverplotDerivative_CB;
-
-  TGTextButton *CreateSpectrum_TB;
-
-
-  ///////////////////////////////////////////
-  // Widgets for the analysis tabbed frame //
-  ///////////////////////////////////////////
-  
-  TGCheckButton *PSDEnable_CB;
-  ADAQComboBoxWithLabel *PSDChannel_CBL;
-  ADAQNumberEntryWithLabel *PSDThreshold_NEL;
-  ADAQNumberEntryWithLabel *PSDPeakOffset_NEL;
-  ADAQNumberEntryWithLabel *PSDTailOffset_NEL;
-  ADAQNumberEntryWithLabel *PSDWaveforms_NEL;
-
-  ADAQNumberEntryWithLabel *PSDNumTailBins_NEL, *PSDMinTailBin_NEL, *PSDMaxTailBin_NEL;
-  ADAQNumberEntryWithLabel *PSDNumTotalBins_NEL, *PSDMinTotalBin_NEL, *PSDMaxTotalBin_NEL;
-
-  ADAQComboBoxWithLabel *PSDPlotType_CBL;
-
-  TGCheckButton *PSDPlotTailIntegration_CB;
-  
-  TGCheckButton *PSDEnableHistogramSlicing_CB;
-  TGRadioButton *PSDHistogramSliceX_RB, *PSDHistogramSliceY_RB;
-  
-  TGTextButton *PSDCalculate_TB;
-  
-  TGCheckButton *PSDEnableFilterCreation_CB;
-  TGCheckButton *PSDEnableFilter_CB;
-  TGRadioButton *PSDPositiveFilter_RB, *PSDNegativeFilter_RB;
-  TGTextButton *PSDClearFilter_TB;
 
   TGCheckButton *PEAEnable_CB;
   ADAQNumberEntryWithLabel *PEALightConversionFactor_NEL;
@@ -314,6 +294,30 @@ private:
   ADAQNumberEntryWithLabel *NumProcessors_NEL;
   ADAQNumberEntryWithLabel *UpdateFreq_NEL;
 
+  TGCheckButton *PSDEnable_CB;
+  ADAQComboBoxWithLabel *PSDChannel_CBL;
+  ADAQNumberEntryWithLabel *PSDThreshold_NEL;
+  ADAQNumberEntryWithLabel *PSDPeakOffset_NEL;
+  ADAQNumberEntryWithLabel *PSDTailOffset_NEL;
+  ADAQNumberEntryWithLabel *PSDWaveforms_NEL;
+
+  ADAQNumberEntryWithLabel *PSDNumTailBins_NEL, *PSDMinTailBin_NEL, *PSDMaxTailBin_NEL;
+  ADAQNumberEntryWithLabel *PSDNumTotalBins_NEL, *PSDMinTotalBin_NEL, *PSDMaxTotalBin_NEL;
+
+  ADAQComboBoxWithLabel *PSDPlotType_CBL;
+
+  TGCheckButton *PSDPlotTailIntegration_CB;
+  
+  TGCheckButton *PSDEnableHistogramSlicing_CB;
+  TGRadioButton *PSDHistogramSliceX_RB, *PSDHistogramSliceY_RB;
+  
+  TGTextButton *PSDCalculate_TB;
+  
+  TGCheckButton *PSDEnableFilterCreation_CB;
+  TGCheckButton *PSDEnableFilter_CB;
+  TGRadioButton *PSDPositiveFilter_RB, *PSDNegativeFilter_RB;
+  TGTextButton *PSDClearFilter_TB;
+
   TGCheckButton *IntegratePearson_CB;
   ADAQComboBoxWithLabel *PearsonChannel_CBL;
   TGRadioButton *PearsonPolarityPositive_RB, *PearsonPolarityNegative_RB;
@@ -375,6 +379,8 @@ private:
   int TotalX, TotalY;
   int NumEdgeBoundingPoints;
   double EdgeBoundX0, EdgeBoundY0;
+
+  long ThemeForegroundColor, ThemeBackgroundColor;
 
   // Variables relating to files (paths, bools)
   string DataDirectory, PrintDirectory, DesplicedDirectory, HistogramDirectory;
