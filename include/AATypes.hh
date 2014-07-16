@@ -199,14 +199,21 @@ enum{
   PSDClearFilter_TB_ID,
   PSDCalculate_TB_ID,
 
-  PEAEnable_CB_ID,
-  PEALightConversionFactor_NEL_ID,
-  PEAErrorWidth_NEL_ID,
-  PEAElectronEnergy_NEL_ID,
-  PEAGammaEnergy_NEL_ID,
-  PEAProtonEnergy_NEL_ID,
-  PEAAlphaEnergy_NEL_ID,
-  PEACarbonEnergy_NEL_ID,
+  EAEnable_CB_ID,
+  EASpectrumType_CBL_ID,
+
+  EAGammaEDep_NEL_ID,
+  EAEscapePeaks_CB_ID,
+
+  EAEJ301_RB_ID,
+  EAEJ309_RB_ID,
+  EALightConversionFactor_NEL_ID,
+  EAErrorWidth_NEL_ID,
+  EAElectronEnergy_NEL_ID,
+  EAGammaEnergy_NEL_ID,
+  EAProtonEnergy_NEL_ID,
+  EAAlphaEnergy_NEL_ID,
+  EACarbonEnergy_NEL_ID,
 
   CountRate_TB_ID,
 

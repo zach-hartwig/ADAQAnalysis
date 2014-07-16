@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // name: AAInterface.hh
-// date: 23 May 13
+// date: 16 Jul 14
 // auth: Zach Hartwig
 //
 // desc: 
@@ -91,10 +91,12 @@ public:
 
   // Method to alert the user via a ROOT message box
   void CreateMessageBox(string, string);
-
+  
+  void SetPSDWidgetState(bool, EButtonState);
   void SetPearsonWidgetState(bool, EButtonState);
   void SetCalibrationWidgetState(bool, EButtonState);
-  void SetPEAWidgetState(bool, EButtonState);
+  void SetEAGammaWidgetState(bool, EButtonState);
+  void SetEANeutronWidgetState(bool, EButtonState);
   
 
 private:
@@ -189,6 +191,7 @@ private:
   TGCheckButton *SpectrumCalibration_CB;
   TGRadioButton *SpectrumCalibrationStandard_RB, *SpectrumCalibrationEdgeFinder_RB;
   ADAQComboBoxWithLabel *SpectrumCalibrationPoint_CBL;
+  ADAQComboBoxWithLabel *SpectrumCalibrationUnit_CBL;
   ADAQNumberEntryWithLabel *SpectrumCalibrationEnergy_NEL;
   ADAQNumberEntryWithLabel *SpectrumCalibrationPulseUnit_NEL;
   TGTextButton *SpectrumCalibrationSetPoint_TB;
@@ -233,12 +236,18 @@ private:
   ADAQNumberEntryFieldWithLabel *SpectrumIntegralError_NEFL;
   
   TGCheckButton *SpectrumOverplotDerivative_CB;
+  
+  TGCheckButton *EAEnable_CB;
+  ADAQComboBoxWithLabel *EASpectrumType_CBL;
 
-  TGCheckButton *PEAEnable_CB;
-  ADAQNumberEntryWithLabel *PEALightConversionFactor_NEL;
-  ADAQNumberEntryWithLabel *PEAErrorWidth_NEL;
-  ADAQNumberEntryWithLabel *PEAElectronEnergy_NEL, *PEAGammaEnergy_NEL;
-  ADAQNumberEntryWithLabel *PEAProtonEnergy_NEL, *PEAAlphaEnergy_NEL, *PEACarbonEnergy_NEL;
+  ADAQNumberEntryWithLabel *EAGammaEDep_NEL;
+  TGCheckButton *EAEscapePeaks_CB;
+
+  TGRadioButton *EAEJ301_RB, *EAEJ309_RB;
+  ADAQNumberEntryWithLabel *EALightConversionFactor_NEL;
+  ADAQNumberEntryWithLabel *EAErrorWidth_NEL;
+  ADAQNumberEntryWithLabel *EAElectronEnergy_NEL, *EAGammaEnergy_NEL;
+  ADAQNumberEntryWithLabel *EAProtonEnergy_NEL, *EAAlphaEnergy_NEL, *EACarbonEnergy_NEL;
     
   ADAQNumberEntryWithLabel *RFQPulseWidth_NEL;
   ADAQNumberEntryWithLabel *RFQRepRate_NEL;

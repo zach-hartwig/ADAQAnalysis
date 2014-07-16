@@ -32,7 +32,7 @@ AAGraphics::AAGraphics()
     PSDPeakOffset_L(new TLine), PSDTailOffset_L(new TLine), PSDTailIntegral_B(new TBox),
     PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
     HCalibration_L(new TLine), VCalibration_L(new TLine), EdgeBoundingBox_B(new TBox),
-    PEALine_L(new TLine), PEABox_B(new TBox), DerivativeReference_L(new TLine),
+    EALine_L(new TLine), EABox_B(new TBox), DerivativeReference_L(new TLine),
     CanvasContentType(zEmpty)
 {
   if(TheGraphicsManager)
@@ -110,12 +110,12 @@ AAGraphics::AAGraphics()
   EdgeBoundingBox_B->SetFillColor(kRed);
   EdgeBoundingBox_B->SetFillStyle(3002);
 
-  PEALine_L->SetLineStyle(7);
-  PEALine_L->SetLineColor(kOrange+1);
-  PEALine_L->SetLineWidth(2);
+  EALine_L->SetLineStyle(7);
+  EALine_L->SetLineColor(kOrange+1);
+  EALine_L->SetLineWidth(2);
   
-  PEABox_B->SetFillColor(kOrange+1);
-  PEABox_B->SetFillStyle(3002);
+  EABox_B->SetFillColor(kOrange+1);
+  EABox_B->SetFillStyle(3002);
 
   DerivativeReference_L->SetLineStyle(7);
   DerivativeReference_L->SetLineColor(kRed);
@@ -896,9 +896,9 @@ void AAGraphics::PlotCalibration(int Channel)
 }
 
 // Horizontal calibration line
-void AAGraphics::PlotHCalibrationLine(double Y, bool refresh)
+void AAGraphics::PlotHCalibrationLine(double Y, bool Refresh)
 { 
-  if(refresh)
+  if(Refresh)
     PlotSpectrum();
 
   double XMin = gPad->GetFrame()->GetX1();
@@ -906,7 +906,7 @@ void AAGraphics::PlotHCalibrationLine(double Y, bool refresh)
   
   HCalibration_L->DrawLine(XMin, Y, XMax, Y);
   
-  if(refresh)
+  if(Refresh)
     TheCanvas->Update();
 }
 
@@ -959,11 +959,10 @@ void AAGraphics::PlotEdgeBoundingBox(double X0, double Y0, double X1, double Y1)
 }
 
 
-// A line and transparent region for EJ301/9 particle energy analysis
-void AAGraphics::PlotPEALineAndBox(double X, double Error)
+void AAGraphics::PlotEALine(double X, double Error, bool ErrorBox, bool EscapePeaks)
 {
   PlotSpectrum();
-
+  
   double YMin = gPad->GetFrame()->GetY1();
   double YMax = gPad->GetFrame()->GetY2();
   
@@ -974,12 +973,29 @@ void AAGraphics::PlotPEALineAndBox(double X, double Error)
     YMax = pow(10, YMax);
   }
   
-  PEALine_L->DrawLine(X, YMin, X, YMax);
-
+  EALine_L->DrawLine(X, YMin, X, YMax);
+  
   // Convert error from % to decimal
   Error *= 0.01;
   
-  PEABox_B->DrawBox(X*(1-Error), YMin, X*(1+Error), YMax);
+  if(ErrorBox)
+    EABox_B->DrawBox(X*(1-Error), YMin, X*(1+Error), YMax);
+  
+  // The first and double escape peak energy differences below the
+  // full energy gamma energy deposition peak. Be sure to account for
+  // the user's calibration units, keV or MeV.
+
+  double Peak0 = 0.511; // [MeV]
+  double Peak1 = 1.022; // [MeV]
+  if(ADAQSettings->EnergyUnit == 0){
+    Peak0 *= 1000;
+    Peak1 *= 1000;
+  }
+
+  if(EscapePeaks){
+    EALine_L->DrawLine(X-Peak0, YMin, X-Peak0, YMax);
+    EALine_L->DrawLine(X-Peak1, YMin, X-Peak1, YMax);
+  }
   
   TheCanvas->Update();
 }

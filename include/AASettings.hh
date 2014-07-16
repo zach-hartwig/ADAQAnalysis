@@ -13,7 +13,9 @@ class AASettings : public TObject
 {
 public:
 
-  // Waveform frame
+  /////////////////////
+  // Waveform frame  //
+  /////////////////////
   
   int WaveformChannel, WaveformToPlot;
   bool RawWaveform, BSWaveform, ZSWaveform;
@@ -36,7 +38,9 @@ public:
   bool PlotTrigger, WaveformAnalysis;
 
   
-  // Spectrum frame
+  ////////////////////
+  // Spectrum frame //
+  ////////////////////
 
   int WaveformsToHistogram;
   int SpectrumNumBins;
@@ -49,10 +53,15 @@ public:
   bool ACROSpectrumTypeScintCreated;
   bool ACROSpectrumTypeScintCounted;
   bool ACROSpectrumLS, ACROSpectrumES;
-  
-  bool UseManualCalibration, UseEPCalibration;
+
+  int EnergyUnit;
   vector<TGraph *> SpectraCalibrations;
   vector<bool> UseSpectraCalibrations;
+  
+  
+  ////////////////////
+  // Analysis frame //
+  ////////////////////
 
   bool FindBackground;
   int BackgroundIterations;
@@ -69,7 +78,30 @@ public:
   bool SpectrumOverplotDerivative;
   
 
-  // Analysis
+  ////////////////////
+  // Graphics frame //
+  ////////////////////
+  
+  bool WaveformCurve, WaveformMarkers, WaveformBoth;
+  bool SpectrumCurve, SpectrumMarkers, SpectrumError, SpectrumBars;
+  bool HistogramStats, CanvasGrid;
+  bool CanvasXAxisLog, CanvasYAxisLog, CanvasZAxisLog;
+  bool PlotSpectrumDerivativeError, PlotAbsValueSpectrumDerivative, PlotYAxisWithAutoRange;
+  bool OverrideGraphicalDefault;
+
+  string PlotTitle, XAxisTitle, YAxisTitle, ZAxisTitle, PaletteTitle;
+  double XSize, YSize, ZSize, PaletteSize;
+  double XOffset, YOffset, ZOffset, PaletteOffset;
+  int XDivs, YDivs, ZDivs;
+  double PaletteX1, PaletteX2, PaletteY1, PaletteY2;
+
+
+  //////////////////////
+  // Processing frame //
+  //////////////////////
+
+  bool SeqProcessing, ParProcessing;
+  int NumProcessors, UpdateFreq;
 
   bool PSDEnable;
   int PSDChannel, PSDWaveformsToDiscriminate;
@@ -88,28 +120,6 @@ public:
 
   double RFQPulseWidth, RFQRepRate;
   int RFQCountRateWaveforms;
-
-
-  // Graphics
-  
-  bool WaveformCurve, WaveformMarkers, WaveformBoth;
-  bool SpectrumCurve, SpectrumMarkers, SpectrumError, SpectrumBars;
-  bool HistogramStats, CanvasGrid;
-  bool CanvasXAxisLog, CanvasYAxisLog, CanvasZAxisLog;
-  bool PlotSpectrumDerivativeError, PlotAbsValueSpectrumDerivative, PlotYAxisWithAutoRange;
-  bool OverrideGraphicalDefault;
-
-  string PlotTitle, XAxisTitle, YAxisTitle, ZAxisTitle, PaletteTitle;
-  double XSize, YSize, ZSize, PaletteSize;
-  double XOffset, YOffset, ZOffset, PaletteOffset;
-  int XDivs, YDivs, ZDivs;
-  double PaletteX1, PaletteX2, PaletteY1, PaletteY2;
-
-
-  // Processing
-
-  bool SequentialProcessing, ParallelProcessing;
-  int NumProcessors, UpdateFreq;
 
   bool IntegratePearson;
   int PearsonChannel, PearsonPolarity;

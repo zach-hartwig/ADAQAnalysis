@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // name: AAInterface.cc
-// date: 01 Apr 14
+// date: 16 Jul 14
 // auth: Zach Hartwig
 //
 // desc:
@@ -39,7 +39,7 @@ AAInterface::AAInterface(string CmdLineArg)
   : TGMainFrame(gClient->GetRoot()),
     NumDataChannels(8), NumProcessors(boost::thread::hardware_concurrency()),
     CanvasX(700), CanvasY(500), CanvasFrameWidth(700), 
-    SliderBuffer(45), LeftFrameLength(705), TotalX(1125), TotalY(800),
+    SliderBuffer(45), LeftFrameLength(720), TotalX(1125), TotalY(800),
     NumEdgeBoundingPoints(0), EdgeBoundX0(0.), EdgeBoundY0(0.),
     DataDirectory(getenv("PWD")), PrintDirectory(getenv("HOME")),
     DesplicedDirectory(getenv("HOME")), HistogramDirectory(getenv("HOME")),
@@ -420,7 +420,7 @@ void AAInterface::FillWaveformFrame()
   WaveformFrame_VF->AddFrame(WaveformAnalysis_GF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
   
   WaveformAnalysis_GF->AddFrame(WaveformAnalysis_CB = new TGCheckButton(WaveformAnalysis_GF, "Analyze waveform", WaveformAnalysis_CB_ID),
-				new TGLayoutHints(kLHintsLeft, 0,5,5,0));
+				new TGLayoutHints(kLHintsLeft, 0,5,5,5));
   WaveformAnalysis_CB->SetState(kButtonDisabled);
   WaveformAnalysis_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
@@ -592,10 +592,17 @@ void AAInterface::FillSpectrumFrame()
   SpectrumCalibrationPoint_CBL->GetComboBox()->Select(0);
   SpectrumCalibrationPoint_CBL->GetComboBox()->SetEnabled(false);
   SpectrumCalibrationPoint_CBL->GetComboBox()->Connect("Selected(int,int)", "AAInterface", this, "HandleComboBox(int,int)");
-  
+
   TGVerticalFrame *SpectrumCalibrationType_VF = new TGVerticalFrame(SpectrumCalibrationType_HF);
   SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationType_VF);
-  
+
+  SpectrumCalibration_GF->AddFrame(SpectrumCalibrationUnit_CBL = new ADAQComboBoxWithLabel(SpectrumCalibration_GF, "Energy unit", -1),
+				   new TGLayoutHints(kLHintsLeft, 0,0,0,0));
+  SpectrumCalibrationUnit_CBL->GetComboBox()->Resize(72, 20);
+  SpectrumCalibrationUnit_CBL->GetComboBox()->AddEntry("keV", 0);
+  SpectrumCalibrationUnit_CBL->GetComboBox()->AddEntry("MeV", 1);
+  SpectrumCalibrationUnit_CBL->GetComboBox()->Select(1);
+  SpectrumCalibrationUnit_CBL->GetComboBox()->SetEnabled(false);
 
   SpectrumCalibration_GF->AddFrame(SpectrumCalibrationEnergy_NEL = new ADAQNumberEntryWithLabel(SpectrumCalibration_GF, "Energy (keV or MeV)", SpectrumCalibrationEnergy_NEL_ID),
 					  new TGLayoutHints(kLHintsLeft,0,0,0,0));
@@ -681,17 +688,17 @@ void AAInterface::FillAnalysisFrame()
   // Spectrum background fitting 
   
   TGGroupFrame *BackgroundAnalysis_GF = new TGGroupFrame(AnalysisFrame_VF, "Background fitting", kVerticalFrame);
-  AnalysisFrame_VF->AddFrame(BackgroundAnalysis_GF, new TGLayoutHints(kLHintsNormal, 15,5,5,5));
+  AnalysisFrame_VF->AddFrame(BackgroundAnalysis_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
   
   TGHorizontalFrame *SpectrumBackgroundOptions0_HF = new TGHorizontalFrame(BackgroundAnalysis_GF);
   BackgroundAnalysis_GF->AddFrame(SpectrumBackgroundOptions0_HF);
   
   SpectrumBackgroundOptions0_HF->AddFrame(SpectrumFindBackground_CB = new TGCheckButton(SpectrumBackgroundOptions0_HF, "Find background", SpectrumFindBackground_CB_ID),
-					  new TGLayoutHints(kLHintsNormal, 5,5,5,0));
+					  new TGLayoutHints(kLHintsNormal, 5,5,6,0));
   SpectrumFindBackground_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   SpectrumBackgroundOptions0_HF->AddFrame(SpectrumBackgroundIterations_NEL = new ADAQNumberEntryWithLabel(SpectrumBackgroundOptions0_HF, "Iterations", SpectrumBackgroundIterations_NEL_ID),
-					  new TGLayoutHints(kLHintsNormal,15,0,5,0));
+					  new TGLayoutHints(kLHintsNormal,10,0,5,0));
   SpectrumBackgroundIterations_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   SpectrumBackgroundIterations_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   SpectrumBackgroundIterations_NEL->GetEntry()->SetNumber(5);
@@ -794,7 +801,7 @@ void AAInterface::FillAnalysisFrame()
   ////////////////////////////////////////
   // Spectrum integration and peak fitting
   
-  TGGroupFrame *SpectrumAnalysis_GF = new TGGroupFrame(AnalysisFrame_VF, "Spectrum integration and peak fitting", kVerticalFrame);
+  TGGroupFrame *SpectrumAnalysis_GF = new TGGroupFrame(AnalysisFrame_VF, "Integration and peak fitting", kVerticalFrame);
   AnalysisFrame_VF->AddFrame(SpectrumAnalysis_GF, new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
   
   TGHorizontalFrame *Horizontal0_HF = new TGHorizontalFrame(SpectrumAnalysis_GF);
@@ -809,10 +816,6 @@ void AAInterface::FillAnalysisFrame()
   SpectrumIntegralInCounts_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   SpectrumIntegralInCounts_CB->SetState(kButtonDown);
   
-
-  //  TGHorizontalFrame *Horizontal1_HF = new TGHorizontalFrame(SpectrumAnalysis_GF);
-  //  SpectrumAnalysis_GF->AddFrame(Horizontal1_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,5));
-
   SpectrumAnalysis_GF->AddFrame(SpectrumIntegral_NEFL = new ADAQNumberEntryFieldWithLabel(SpectrumAnalysis_GF, "Integral", -1),
 				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumIntegral_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal, TGNumberFormat::kNEANonNegative);
@@ -825,15 +828,6 @@ void AAInterface::FillAnalysisFrame()
   SpectrumIntegralError_NEFL->GetEntry()->Resize(100,20);
   SpectrumIntegralError_NEFL->GetEntry()->SetState(false);
 
-  /*
-  SpectrumAnalysis_GF->AddFrame(SpectrumOverplotDerivative_CB = new TGCheckButton(SpectrumAnalysis_GF, "Overplot spectrum derivative", SpectrumOverplotDerivative_CB_ID),
-				new TGLayoutHints(kLHintsNormal, 5,5,5,0));
-  SpectrumOverplotDerivative_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
-
-  Horizontal1_HF->AddFrame(SpectrumNormalizePeakToCurrent_CB = new TGCheckButton(Horizontal1_HF, "Norm. 2 current", SpectrumNormalizePeakToCurrent_CB_ID),
-			   new TGLayoutHints(kLHintsNormal, 10,5,0,0));
-  SpectrumNormalizePeakToCurrent_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
-  */
 
   TGHorizontalFrame *Horizontal2_HF = new TGHorizontalFrame(SpectrumAnalysis_GF);
   SpectrumAnalysis_GF->AddFrame(Horizontal2_HF, new TGLayoutHints(kLHintsNormal, 0,0,10,5));
@@ -849,12 +843,14 @@ void AAInterface::FillAnalysisFrame()
   Horizontal3_HF->AddFrame(SpectrumFitHeight_NEFL = new ADAQNumberEntryFieldWithLabel(Horizontal3_HF, "Height",-1),
 			   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumFitHeight_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal);
-  SpectrumFitHeight_NEFL->Resize(50,20);
+  SpectrumFitHeight_NEFL->GetEntry()->SetState(false);
+  SpectrumFitHeight_NEFL->GetEntry()->Resize(60, 20);
   
   Horizontal3_HF->AddFrame(SpectrumFitSigma_NEFL = new ADAQNumberEntryFieldWithLabel(Horizontal3_HF, "Sigma  ",-1),
 				new TGLayoutHints(kLHintsNormal, 10,5,0,0));
   SpectrumFitSigma_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal);
-  SpectrumFitSigma_NEFL->Resize(50,20);
+  SpectrumFitSigma_NEFL->GetEntry()->SetState(false);
+  SpectrumFitSigma_NEFL->GetEntry()->Resize(60, 20);
   
   
   TGHorizontalFrame *Horizontal4_HF = new TGHorizontalFrame(SpectrumAnalysis_GF);
@@ -863,81 +859,108 @@ void AAInterface::FillAnalysisFrame()
   Horizontal4_HF->AddFrame(SpectrumFitMean_NEFL = new ADAQNumberEntryFieldWithLabel(Horizontal4_HF, "Mean  ",-1),
 			   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumFitMean_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal);
-  SpectrumFitMean_NEFL->Resize(50,20);
+  SpectrumFitMean_NEFL->GetEntry()->SetState(false);
+  SpectrumFitMean_NEFL->GetEntry()->Resize(60, 20);
 
   Horizontal4_HF->AddFrame(SpectrumFitRes_NEFL = new ADAQNumberEntryFieldWithLabel(Horizontal4_HF, "Res. (%)",-1),
 				new TGLayoutHints(kLHintsNormal, 10,5,0,0));
   SpectrumFitRes_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal);
-  SpectrumFitRes_NEFL->Resize(50,20);
+  SpectrumFitRes_NEFL->GetEntry()->SetState(false);
+  SpectrumFitRes_NEFL->GetEntry()->Resize(60, 20);
 
 
-  // Particle energy analysis (PEA)
-  TGGroupFrame *PEA_GF = new TGGroupFrame(AnalysisFrame_VF, "Particle energy analysis (EJ301/9)", kVerticalFrame);
-  AnalysisFrame_VF->AddFrame(PEA_GF, new TGLayoutHints(kLHintsNormal, 15,5,5,5));
+  ////////////////////////////////
+  // Spectrum energy analysis (EA)
+
+  TGGroupFrame *EA_GF = new TGGroupFrame(AnalysisFrame_VF, "Energy analysis", kVerticalFrame);
+  AnalysisFrame_VF->AddFrame(EA_GF, new TGLayoutHints(kLHintsNormal, 15,5,5,5));
+
+
+  TGHorizontalFrame *EA_HF0 = new TGHorizontalFrame(EA_GF);
+  EA_GF->AddFrame(EA_HF0, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
   
-  PEA_GF->AddFrame(PEAEnable_CB = new TGCheckButton(PEA_GF, "Enable", PEAEnable_CB_ID),
-		   new TGLayoutHints(kLHintsNormal, 5,5,5,5));
-  PEAEnable_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  EA_HF0->AddFrame(EAEnable_CB = new TGCheckButton(EA_HF0, "Enable", EAEnable_CB_ID),
+		   new TGLayoutHints(kLHintsNormal, 0,0,7,5));
+  EAEnable_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  
+  EA_HF0->AddFrame(EASpectrumType_CBL = new ADAQComboBoxWithLabel(EA_HF0, "", EASpectrumType_CBL_ID),
+		   new TGLayoutHints(kLHintsNormal, 20,5,5,5));
+  EASpectrumType_CBL->GetComboBox()->AddEntry("Gamma spectrum", 0);
+  EASpectrumType_CBL->GetComboBox()->AddEntry("Neutron spectrum",1);
+  EASpectrumType_CBL->GetComboBox()->Select(0);
+  EASpectrumType_CBL->GetComboBox()->Resize(130,20);
+  EASpectrumType_CBL->GetComboBox()->SetEnabled(false);
+  EASpectrumType_CBL->GetComboBox()->Connect("Selected(int,int)", "AAInterface", this, "HandleComboBox(int,int)");
+  
 
-  PEA_GF->AddFrame(PEALightConversionFactor_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Conversion factor", PEALightConversionFactor_NEL_ID),
+  EA_GF->AddFrame(EAGammaEDep_NEL = new ADAQNumberEntryWithLabel(EA_GF, "Energy deposited", EAGammaEDep_NEL_ID),
+		  new TGLayoutHints(kLHintsNormal, 5,5,5,0));
+  EAGammaEDep_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  EAGammaEDep_NEL->GetEntry()->SetNumber(0.);
+  EAGammaEDep_NEL->GetEntry()->SetState(false);
+  EAGammaEDep_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+
+  EA_GF->AddFrame(EAEscapePeaks_CB = new TGCheckButton(EA_GF, "Predict escape peaks", EAEscapePeaks_CB_ID),
+		  new TGLayoutHints(kLHintsNormal, 5,5,0,10));
+  EAEscapePeaks_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  EAEscapePeaks_CB->SetState(kButtonDisabled);
+
+
+  EA_GF->AddFrame(EALightConversionFactor_NEL = new ADAQNumberEntryWithLabel(EA_GF, "Conversion factor", EALightConversionFactor_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,5,0));
-  PEALightConversionFactor_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
-  PEALightConversionFactor_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PEALightConversionFactor_NEL->GetEntry()->SetNumber(1.);
-  PEALightConversionFactor_NEL->GetEntry()->SetState(false);
-  PEALightConversionFactor_NEL->GetEntry()->Connect("ValueSet(long", "AAInterface", this, "HandleNumberEntries()");
+  EALightConversionFactor_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  EALightConversionFactor_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  EALightConversionFactor_NEL->GetEntry()->SetNumber(1.);
+  EALightConversionFactor_NEL->GetEntry()->SetState(false);
+  EALightConversionFactor_NEL->GetEntry()->Connect("ValueSet(long", "AAInterface", this, "HandleNumberEntries()");
     
-  PEA_GF->AddFrame(PEAErrorWidth_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Error width [%]", PEAErrorWidth_NEL_ID),
+  EA_GF->AddFrame(EAErrorWidth_NEL = new ADAQNumberEntryWithLabel(EA_GF, "Error width [%]", EAErrorWidth_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,5));
-  PEAErrorWidth_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
-  PEAErrorWidth_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PEAErrorWidth_NEL->GetEntry()->SetNumber(5);
-  PEAErrorWidth_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-  PEAErrorWidth_NEL->GetEntry()->SetState(false);
+  EAErrorWidth_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  EAErrorWidth_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  EAErrorWidth_NEL->GetEntry()->SetNumber(5);
+  EAErrorWidth_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  EAErrorWidth_NEL->GetEntry()->SetState(false);
   
-  PEA_GF->AddFrame(PEAElectronEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Electron [MeV]", PEAElectronEnergy_NEL_ID),
+  EA_GF->AddFrame(EAElectronEnergy_NEL = new ADAQNumberEntryWithLabel(EA_GF, "Electron [MeV]", EAElectronEnergy_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  PEAElectronEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
-  PEAElectronEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PEAElectronEnergy_NEL->GetEntry()->Resize(70,20);
-  PEAElectronEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-  PEAElectronEnergy_NEL->GetEntry()->SetState(false);
+  EAElectronEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
+  EAElectronEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  EAElectronEnergy_NEL->GetEntry()->Resize(70,20);
+  EAElectronEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  EAElectronEnergy_NEL->GetEntry()->SetState(false);
 
-  PEA_GF->AddFrame(PEAGammaEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Gamma [MeV]", PEAGammaEnergy_NEL_ID),
+  EA_GF->AddFrame(EAGammaEnergy_NEL = new ADAQNumberEntryWithLabel(EA_GF, "Gamma [MeV]", EAGammaEnergy_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  PEAGammaEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
-  PEAGammaEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PEAGammaEnergy_NEL->GetEntry()->Resize(70,20);
-  PEAGammaEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-  PEAGammaEnergy_NEL->GetEntry()->SetState(false);
+  EAGammaEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
+  EAGammaEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  EAGammaEnergy_NEL->GetEntry()->Resize(70,20);
+  EAGammaEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  EAGammaEnergy_NEL->GetEntry()->SetState(false);
 
-  PEA_GF->AddFrame(PEAProtonEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Proton (neutron) [MeV]", PEAProtonEnergy_NEL_ID),
+  EA_GF->AddFrame(EAProtonEnergy_NEL = new ADAQNumberEntryWithLabel(EA_GF, "Proton (neutron) [MeV]", EAProtonEnergy_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  PEAProtonEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
-  PEAProtonEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PEAProtonEnergy_NEL->GetEntry()->Resize(70,20);
-  PEAProtonEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-  PEAProtonEnergy_NEL->GetEntry()->SetState(false);
+  EAProtonEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
+  EAProtonEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  EAProtonEnergy_NEL->GetEntry()->Resize(70,20);
+  EAProtonEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  EAProtonEnergy_NEL->GetEntry()->SetState(false);
 
-  PEA_GF->AddFrame(PEAAlphaEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Alpha [MeV]", PEAAlphaEnergy_NEL_ID),
+  EA_GF->AddFrame(EAAlphaEnergy_NEL = new ADAQNumberEntryWithLabel(EA_GF, "Alpha [MeV]", EAAlphaEnergy_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  PEAAlphaEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
-  PEAAlphaEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PEAAlphaEnergy_NEL->GetEntry()->Resize(70,20);
-  PEAAlphaEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-  PEAAlphaEnergy_NEL->GetEntry()->SetState(false);
+  EAAlphaEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
+  EAAlphaEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  EAAlphaEnergy_NEL->GetEntry()->Resize(70,20);
+  EAAlphaEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  EAAlphaEnergy_NEL->GetEntry()->SetState(false);
 
-  PEA_GF->AddFrame(PEACarbonEnergy_NEL = new ADAQNumberEntryWithLabel(PEA_GF, "Carbon [GeV]", PEACarbonEnergy_NEL_ID),
+  EA_GF->AddFrame(EACarbonEnergy_NEL = new ADAQNumberEntryWithLabel(EA_GF, "Carbon [GeV]", EACarbonEnergy_NEL_ID),
 		   new TGLayoutHints(kLHintsNormal, 5,5,0,5));
-  PEACarbonEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
-  PEACarbonEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PEACarbonEnergy_NEL->GetEntry()->Resize(70,20);
-  PEACarbonEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-  PEACarbonEnergy_NEL->GetEntry()->SetState(false);
-
-
-  // Pulse Shape Discrimination (PSD)
-
+  EACarbonEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESRealThree);
+  EACarbonEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  EACarbonEnergy_NEL->GetEntry()->Resize(70,20);
+  EACarbonEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  EACarbonEnergy_NEL->GetEntry()->SetState(false);
 }
 
 
@@ -1046,7 +1069,7 @@ void AAInterface::FillGraphicsFrame()
   
 
   TGHorizontalFrame *PlotButtons_HF1 = new TGHorizontalFrame(GraphicsFrame_VF);
-  GraphicsFrame_VF->AddFrame(PlotButtons_HF1, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
+  GraphicsFrame_VF->AddFrame(PlotButtons_HF1, new TGLayoutHints(kLHintsCenterX, 5,5,5,20));
 
   PlotButtons_HF1->AddFrame(ReplotSpectrumDerivative_TB = new TGTextButton(PlotButtons_HF1, "Plot derivative", ReplotSpectrumDerivative_TB_ID),
 			    new TGLayoutHints(kLHintsCenterX, 5,5,0,0));
@@ -2613,17 +2636,11 @@ void AAInterface::HandleCheckButtons()
   case SpectrumCalibration_CB_ID:{
     
     if(SpectrumCalibration_CB->IsDown()){
-      SpectrumCalibrationStandard_RB->SetState(kButtonUp);
-      SpectrumCalibrationEdgeFinder_RB->SetState(kButtonUp);
-
       SetCalibrationWidgetState(true, kButtonUp);
       
       HandleTripleSliderPointer();
     }
     else{
-      SpectrumCalibrationStandard_RB->SetState(kButtonDisabled);
-      SpectrumCalibrationEdgeFinder_RB->SetState(kButtonDisabled);
-
       SetCalibrationWidgetState(false, kButtonDisabled);
     }
     break;
@@ -2769,26 +2786,8 @@ void AAInterface::HandleCheckButtons()
 	GraphicsMgr->PlotWaveform();
     }
 
-    PSDChannel_CBL->GetComboBox()->SetEnabled(WidgetState);
-    PSDWaveforms_NEL->GetEntry()->SetState(WidgetState);
-    PSDNumTailBins_NEL->GetEntry()->SetState(WidgetState);
-    PSDMinTailBin_NEL->GetEntry()->SetState(WidgetState);
-    PSDMaxTailBin_NEL->GetEntry()->SetState(WidgetState);
-    PSDNumTotalBins_NEL->GetEntry()->SetState(WidgetState);
-    PSDMinTotalBin_NEL->GetEntry()->SetState(WidgetState);
-    PSDMaxTotalBin_NEL->GetEntry()->SetState(WidgetState);
-    PSDThreshold_NEL->GetEntry()->SetState(WidgetState);
-    PSDPeakOffset_NEL->GetEntry()->SetState(WidgetState);
-    PSDTailOffset_NEL->GetEntry()->SetState(WidgetState);
-    PSDPlotType_CBL->GetComboBox()->SetEnabled(WidgetState);
-    PSDPlotTailIntegration_CB->SetState(ButtonState);
-    PSDEnableHistogramSlicing_CB->SetState(ButtonState);
-    PSDEnableFilterCreation_CB->SetState(ButtonState);
-    PSDEnableFilter_CB->SetState(ButtonState);
-    PSDPositiveFilter_RB->SetState(ButtonState);
-    PSDNegativeFilter_RB->SetState(ButtonState);
-    PSDClearFilter_TB->SetState(ButtonState);
-    PSDCalculate_TB->SetState(ButtonState);
+    SetPSDWidgetState(WidgetState, ButtonState);
+
     break;
   }
 
@@ -2844,25 +2843,44 @@ void AAInterface::HandleCheckButtons()
     break;
   }
 
-  case PEAEnable_CB_ID:{
-
+  case EAEnable_CB_ID:{
+    
     int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
-
+    
     bool SpectrumIsCalibrated = ComputationMgr->GetUseSpectraCalibrations()[Channel];
-
-    if(PEAEnable_CB->IsDown() and SpectrumIsCalibrated){
-      SpectrumCalibration_CB->Clicked();
-      SpectrumCalibration_CB->SetState(kButtonUp);
+    
+    int Type = EASpectrumType_CBL->GetComboBox()->GetSelected();
+    
+    if(EAEnable_CB->IsDown() and SpectrumIsCalibrated){
+      SpectrumCalibration_CB->SetState(kButtonUp, true);
       SetCalibrationWidgetState(false, kButtonDisabled);
-
-      SetPEAWidgetState(true, kButtonUp);
+      
+      EASpectrumType_CBL->GetComboBox()->SetEnabled(true);
+      
+      if(Type == 0){
+	SetEAGammaWidgetState(true, kButtonUp);
+	SetEANeutronWidgetState(false, kButtonDisabled);
+      }
+      else if(Type == 1){
+	SetEAGammaWidgetState(false, kButtonDisabled);
+	SetEANeutronWidgetState(true, kButtonUp);
+      }
       HandleTripleSliderPointer();
     }
     else{
-      SetPEAWidgetState(false, kButtonDisabled);
-      GraphicsMgr->PlotSpectrum();
+      EASpectrumType_CBL->GetComboBox()->SetEnabled(false);
+
+      SetEAGammaWidgetState(false, kButtonDisabled);
+      SetEANeutronWidgetState(false, kButtonDisabled);
+      
+      if(SpectrumIsCalibrated)
+	GraphicsMgr->PlotSpectrum();
     }
-    
+    break;
+  }
+
+  case EAEscapePeaks_CB_ID:{
+    HandleTripleSliderPointer();
     break;
   }
 
@@ -3030,26 +3048,41 @@ void AAInterface::HandleTripleSliderPointer()
     const int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
     bool SpectrumIsCalibrated = ComputationMgr->GetUseSpectraCalibrations()[Channel];
     
-    if(PEAEnable_CB->IsDown() and SpectrumIsCalibrated){
+    if(EAEnable_CB->IsDown() and SpectrumIsCalibrated){
+      
+      int Type = EASpectrumType_CBL->GetComboBox()->GetSelected();
 
-      double Error = PEAErrorWidth_NEL->GetEntry()->GetNumber();
+      double Error = 0.;
+      bool ErrorBox = false;
+      bool EscapePeaks = EAEscapePeaks_CB->IsDown();
+      
+      if(Type == 0){
+	GraphicsMgr->PlotEALine(XPos, Error, ErrorBox, EscapePeaks);
+	
+	EAGammaEDep_NEL->GetEntry()->SetNumber(XPos);
+      }
+      else if(Type == 1){
 
-      // Redraw the pulse spectrum with line at XPos
-      GraphicsMgr->PlotPEALineAndBox(XPos, Error);
-      
-      PEAElectronEnergy_NEL->GetEntry()->SetNumber(XPos);
-      
-      double GE = InterpolationMgr->GetGammaEnergy(XPos);
-      PEAGammaEnergy_NEL->GetEntry()->SetNumber(GE);
-      
-       double PE = InterpolationMgr->GetProtonEnergy(XPos);
-      PEAProtonEnergy_NEL->GetEntry()->SetNumber(PE);
-      
-      double AE = InterpolationMgr->GetAlphaEnergy(XPos);
-      PEAAlphaEnergy_NEL->GetEntry()->SetNumber(AE);
-      
-      double CE = InterpolationMgr->GetCarbonEnergy(XPos);
-      PEACarbonEnergy_NEL->GetEntry()->SetNumber(CE);
+	Error = EAErrorWidth_NEL->GetEntry()->GetNumber();
+	ErrorBox = true;
+	EscapePeaks = false;
+	
+	GraphicsMgr->PlotEALine(XPos, Error, ErrorBox, EscapePeaks);
+	
+	EAElectronEnergy_NEL->GetEntry()->SetNumber(XPos);
+	
+	double GE = InterpolationMgr->GetGammaEnergy(XPos);
+	EAGammaEnergy_NEL->GetEntry()->SetNumber(GE);
+	
+	double PE = InterpolationMgr->GetProtonEnergy(XPos);
+	EAProtonEnergy_NEL->GetEntry()->SetNumber(PE);
+	
+	double AE = InterpolationMgr->GetAlphaEnergy(XPos);
+	EAAlphaEnergy_NEL->GetEntry()->SetNumber(AE);
+	
+	double CE = InterpolationMgr->GetCarbonEnergy(XPos);
+	EACarbonEnergy_NEL->GetEntry()->SetNumber(CE);
+      }
     }
   }
 }
@@ -3144,23 +3177,23 @@ void AAInterface::HandleNumberEntries()
     break;
   }
 
-  case PEALightConversionFactor_NEL_ID:{
-    double CF = PEALightConversionFactor_NEL->GetEntry()->GetNumber();
+  case EALightConversionFactor_NEL_ID:{
+    double CF = EALightConversionFactor_NEL->GetEntry()->GetNumber();
     InterpolationMgr->SetConversionFactor(CF);
     InterpolationMgr->ConstructResponses();
     HandleTripleSliderPointer();
     break;
   }
     
-  case PEAErrorWidth_NEL_ID:
+  case EAErrorWidth_NEL_ID:
     HandleTripleSliderPointer();
     break;
 
-  case PEAElectronEnergy_NEL_ID:
-  case PEAGammaEnergy_NEL_ID:
-  case PEAProtonEnergy_NEL_ID:
-  case PEAAlphaEnergy_NEL_ID:
-  case PEACarbonEnergy_NEL_ID:
+  case EAElectronEnergy_NEL_ID:
+  case EAGammaEnergy_NEL_ID:
+  case EAProtonEnergy_NEL_ID:
+  case EAAlphaEnergy_NEL_ID:
+  case EACarbonEnergy_NEL_ID:
     break;
     
   case XAxisSize_NEL_ID:
@@ -3433,6 +3466,17 @@ void AAInterface::HandleComboBox(int ComboBoxID, int SelectedID)
     }
     break;
   }
+
+  case EASpectrumType_CBL_ID:
+    if(SelectedID == 0){
+      SetEAGammaWidgetState(true, kButtonUp);
+      SetEANeutronWidgetState(false, kButtonDisabled);
+    }
+    else if(SelectedID == 1){
+      SetEAGammaWidgetState(false, kButtonDisabled);
+      SetEANeutronWidgetState(true, kButtonUp);
+    }
+    break;
     
   case PSDPlotType_CBL_ID:
     if(ComputationMgr->GetPSDHistogramExists())
@@ -3610,7 +3654,13 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->ACROSpectrumTypeScintCreated = ACROSpectrumTypeScintCreated_RB->IsDown();
   ADAQSettings->ACROSpectrumTypeScintCounted= ACROSpectrumTypeScintCounted_RB->IsDown();
   ADAQSettings->ACROSpectrumLS = ACROSpectrumLS_RB->IsDown();
-  ADAQSettings->ACROSpectrumES= ACROSpectrumES_RB->IsDown();
+  ADAQSettings->ACROSpectrumES = ACROSpectrumES_RB->IsDown();
+
+  ADAQSettings->EnergyUnit = SpectrumCalibrationUnit_CBL->GetComboBox()->GetSelected();
+
+  
+  //////////////////////////////////////////
+  // Values from the "Analysis" tabbed frame 
 
   ADAQSettings->FindBackground = SpectrumFindBackground_CB->IsDown();
   ADAQSettings->BackgroundIterations = SpectrumBackgroundIterations_NEL->GetEntry()->GetIntNumber();
@@ -3628,43 +3678,6 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->SpectrumFindIntegral = SpectrumFindIntegral_CB->IsDown();
   ADAQSettings->SpectrumIntegralInCounts = SpectrumIntegralInCounts_CB->IsDown();
   ADAQSettings->SpectrumUseGaussianFit = SpectrumUseGaussianFit_CB->IsDown();
-  //  ADAQSettings->SpectrumNormalizeToCurrent = SpectrumNormalizePeakToCurrent_CB->IsDown();
-  //  ADAQSettings->SpectrumOverplotDerivative = SpectrumOverplotDerivative_CB->IsDown();
-
-  
-  //////////////////////////////////////////
-  // Values from the "Analysis" tabbed frame 
-
-  ADAQSettings->PSDEnable = PSDEnable_CB->IsDown();
-  ADAQSettings->PSDChannel = PSDChannel_CBL->GetComboBox()->GetSelected();
-  ADAQSettings->PSDWaveformsToDiscriminate = PSDWaveforms_NEL->GetEntry()->GetIntNumber();
-  
-  ADAQSettings->PSDNumTailBins = PSDNumTailBins_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDMinTailBin = PSDMinTailBin_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDMaxTailBin = PSDMaxTailBin_NEL->GetEntry()->GetIntNumber();
-
-  ADAQSettings->PSDNumTotalBins = PSDNumTotalBins_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDMinTotalBin = PSDMinTotalBin_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDMaxTotalBin = PSDMaxTotalBin_NEL->GetEntry()->GetIntNumber();
-
-  ADAQSettings->PSDThreshold = PSDThreshold_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDPeakOffset = PSDPeakOffset_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDTailOffset = PSDTailOffset_NEL->GetEntry()->GetIntNumber();
-
-  ADAQSettings->PSDPlotType = PSDPlotType_CBL->GetComboBox()->GetSelected();
-  ADAQSettings->PSDPlotTailIntegrationRegion = PSDPlotTailIntegration_CB->IsDown();
-
-  if(PSDPositiveFilter_RB->IsDown())
-    ADAQSettings->PSDFilterPolarity = 1.0;
-  else
-    ADAQSettings->PSDFilterPolarity = -1.0;
-
-  ADAQSettings->PSDXSlice = PSDHistogramSliceX_RB->IsDown();
-  ADAQSettings->PSDYSlice = PSDHistogramSliceY_RB->IsDown();
-
-  ADAQSettings->RFQPulseWidth = RFQPulseWidth_NEL->GetEntry()->GetNumber();
-  ADAQSettings->RFQRepRate = RFQRepRate_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->RFQCountRateWaveforms = CountRateWaveforms_NEL->GetEntry()->GetIntNumber();
 
 
   //////////////////////////////////////////
@@ -3720,8 +3733,38 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ////////////////////////////////////////
   // Values from "Processing" tabbed frame
 
+  ADAQSettings->SeqProcessing = ProcessingSeq_RB->IsDown();
+  ADAQSettings->ParProcessing = ProcessingSeq_RB->IsDown();
+
   ADAQSettings->NumProcessors = NumProcessors_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->UpdateFreq = UpdateFreq_NEL->GetEntry()->GetIntNumber();
+
+  ADAQSettings->PSDEnable = PSDEnable_CB->IsDown();
+  ADAQSettings->PSDChannel = PSDChannel_CBL->GetComboBox()->GetSelected();
+  ADAQSettings->PSDWaveformsToDiscriminate = PSDWaveforms_NEL->GetEntry()->GetIntNumber();
+  
+  ADAQSettings->PSDNumTailBins = PSDNumTailBins_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDMinTailBin = PSDMinTailBin_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDMaxTailBin = PSDMaxTailBin_NEL->GetEntry()->GetIntNumber();
+
+  ADAQSettings->PSDNumTotalBins = PSDNumTotalBins_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDMinTotalBin = PSDMinTotalBin_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDMaxTotalBin = PSDMaxTotalBin_NEL->GetEntry()->GetIntNumber();
+
+  ADAQSettings->PSDThreshold = PSDThreshold_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDPeakOffset = PSDPeakOffset_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDTailOffset = PSDTailOffset_NEL->GetEntry()->GetIntNumber();
+
+  ADAQSettings->PSDPlotType = PSDPlotType_CBL->GetComboBox()->GetSelected();
+  ADAQSettings->PSDPlotTailIntegrationRegion = PSDPlotTailIntegration_CB->IsDown();
+
+  if(PSDPositiveFilter_RB->IsDown())
+    ADAQSettings->PSDFilterPolarity = 1.0;
+  else
+    ADAQSettings->PSDFilterPolarity = -1.0;
+
+  ADAQSettings->PSDXSlice = PSDHistogramSliceX_RB->IsDown();
+  ADAQSettings->PSDYSlice = PSDHistogramSliceY_RB->IsDown();
 
   ADAQSettings->IntegratePearson = IntegratePearson_CB->IsDown();
   ADAQSettings->PearsonChannel = PearsonChannel_CBL->GetComboBox()->GetSelected();  
@@ -3739,6 +3782,10 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->PearsonUpperLimit = PearsonUpperLimit_NEL->GetEntry()->GetIntNumber();
 
   ADAQSettings->PlotPearsonIntegration = PlotPearsonIntegration_CB->IsDown();  
+
+  ADAQSettings->RFQPulseWidth = RFQPulseWidth_NEL->GetEntry()->GetNumber();
+  ADAQSettings->RFQRepRate = RFQRepRate_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->RFQCountRateWaveforms = CountRateWaveforms_NEL->GetEntry()->GetIntNumber();
 
   ADAQSettings->WaveformsToDesplice = DesplicedWaveformNumber_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->DesplicedWaveformBuffer = DesplicedWaveformBuffer_NEL->GetEntry()->GetIntNumber();
@@ -4002,6 +4049,31 @@ void AAInterface::UpdateForACRONYMFile()
 }
 
 
+void AAInterface::SetPSDWidgetState(bool WidgetState, EButtonState ButtonState)
+{
+  PSDChannel_CBL->GetComboBox()->SetEnabled(WidgetState);
+  PSDWaveforms_NEL->GetEntry()->SetState(WidgetState);
+  PSDNumTailBins_NEL->GetEntry()->SetState(WidgetState);
+  PSDMinTailBin_NEL->GetEntry()->SetState(WidgetState);
+  PSDMaxTailBin_NEL->GetEntry()->SetState(WidgetState);
+  PSDNumTotalBins_NEL->GetEntry()->SetState(WidgetState);
+  PSDMinTotalBin_NEL->GetEntry()->SetState(WidgetState);
+  PSDMaxTotalBin_NEL->GetEntry()->SetState(WidgetState);
+  PSDThreshold_NEL->GetEntry()->SetState(WidgetState);
+  PSDPeakOffset_NEL->GetEntry()->SetState(WidgetState);
+  PSDTailOffset_NEL->GetEntry()->SetState(WidgetState);
+  PSDPlotType_CBL->GetComboBox()->SetEnabled(WidgetState);
+  PSDPlotTailIntegration_CB->SetState(ButtonState);
+  PSDEnableHistogramSlicing_CB->SetState(ButtonState);
+  PSDEnableFilterCreation_CB->SetState(ButtonState);
+  PSDEnableFilter_CB->SetState(ButtonState);
+  PSDPositiveFilter_RB->SetState(ButtonState);
+  PSDNegativeFilter_RB->SetState(ButtonState);
+  PSDClearFilter_TB->SetState(ButtonState);
+  PSDCalculate_TB->SetState(ButtonState);
+}
+
+
 void AAInterface::SetPearsonWidgetState(bool WidgetState, EButtonState ButtonState)
 {
   IntegratePearson_CB->SetState(ButtonState);
@@ -4019,26 +4091,35 @@ void AAInterface::SetPearsonWidgetState(bool WidgetState, EButtonState ButtonSta
 
 void AAInterface::SetCalibrationWidgetState(bool WidgetState, EButtonState ButtonState)
 {
+  SpectrumCalibrationLoad_TB->SetState(ButtonState);
+  SpectrumCalibrationStandard_RB->SetState(ButtonState);
+  SpectrumCalibrationEdgeFinder_RB->SetState(ButtonState);
   SpectrumCalibrationPoint_CBL->GetComboBox()->SetEnabled(WidgetState);
+  SpectrumCalibrationUnit_CBL->GetComboBox()->SetEnabled(WidgetState);
   SpectrumCalibrationEnergy_NEL->GetEntry()->SetState(WidgetState);
   SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetState(WidgetState);
   SpectrumCalibrationSetPoint_TB->SetState(ButtonState);
   SpectrumCalibrationCalibrate_TB->SetState(ButtonState);
   SpectrumCalibrationPlot_TB->SetState(ButtonState);
   SpectrumCalibrationReset_TB->SetState(ButtonState);
-  SpectrumCalibrationLoad_TB->SetState(ButtonState);
 }
 
 
-void AAInterface::SetPEAWidgetState(bool WidgetState, EButtonState ButtonState)
+void AAInterface::SetEAGammaWidgetState(bool WidgetState, EButtonState ButtonState)
 {
-  PEALightConversionFactor_NEL->GetEntry()->SetState(WidgetState);
-  PEAErrorWidth_NEL->GetEntry()->SetState(WidgetState);
-  PEAElectronEnergy_NEL->GetEntry()->SetState(WidgetState);
-  PEAGammaEnergy_NEL->GetEntry()->SetState(WidgetState);
-  PEAProtonEnergy_NEL->GetEntry()->SetState(WidgetState);
-  PEAAlphaEnergy_NEL->GetEntry()->SetState(WidgetState);
-  PEACarbonEnergy_NEL->GetEntry()->SetState(WidgetState);
+  EAGammaEDep_NEL->GetEntry()->SetState(WidgetState);
+  EAEscapePeaks_CB->SetState(ButtonState);
 }
 
+
+void AAInterface::SetEANeutronWidgetState(bool WidgetState, EButtonState ButtonState)
+{
+  EALightConversionFactor_NEL->GetEntry()->SetState(WidgetState);
+  EAErrorWidth_NEL->GetEntry()->SetState(WidgetState);
+  EAElectronEnergy_NEL->GetEntry()->SetState(WidgetState);
+  EAGammaEnergy_NEL->GetEntry()->SetState(WidgetState);
+  EAProtonEnergy_NEL->GetEntry()->SetState(WidgetState);
+  EAAlphaEnergy_NEL->GetEntry()->SetState(WidgetState);
+  EACarbonEnergy_NEL->GetEntry()->SetState(WidgetState);
+}
 

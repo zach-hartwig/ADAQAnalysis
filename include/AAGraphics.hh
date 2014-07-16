@@ -72,11 +72,12 @@ public:
   // Analysis graphic object plotting methods
   
   void PlotCalibration(int);
-  void PlotHCalibrationLine(double, bool refresh = true);
-  void PlotVCalibrationLine(double, bool refresh = true);
+  void PlotHCalibrationLine(double, bool Refresh = true);
+  void PlotVCalibrationLine(double, bool Refresh = true);
   void PlotCalibrationCross(double, double);
   void PlotEdgeBoundingBox(double, double, double, double);
-  void PlotPEALineAndBox(double, double);
+  
+  void PlotEALine(double, double, bool ErrorBox = false, bool EscapePeaks = false);
   
 private:
   
@@ -102,8 +103,8 @@ private:
 
   TLine *HCalibration_L, *VCalibration_L;
   TBox *EdgeBoundingBox_B;
-  TLine *PEALine_L;
-  TBox *PEABox_B;
+  TLine *EALine_L;
+  TBox *EABox_B;
   TLine *DerivativeReference_L;
   
   AAComputation *ComputationMgr;
