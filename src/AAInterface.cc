@@ -1089,20 +1089,21 @@ void AAInterface::FillGraphicsFrame()
 
   // Override default plot options
   GraphicsFrame_VF->AddFrame(OverrideTitles_CB = new TGCheckButton(GraphicsFrame_VF, "Override default graphical options", OverrideTitles_CB_ID),
-			       new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+			       new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
   OverrideTitles_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
   // Plot title text entry
   GraphicsFrame_VF->AddFrame(Title_TEL = new ADAQTextEntryWithLabel(GraphicsFrame_VF, "Plot title", Title_TEL_ID),
-			       new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+			       new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
 
   // X-axis title options
 
   TGGroupFrame *XAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "X Axis", kVerticalFrame);
-  GraphicsFrame_VF->AddFrame(XAxis_GF, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  GraphicsFrame_VF->AddFrame(XAxis_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
 
   XAxis_GF->AddFrame(XAxisTitle_TEL = new ADAQTextEntryWithLabel(XAxis_GF, "Title", XAxisTitle_TEL_ID),
 		     new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  XAxisTitle_TEL->GetEntry()->Resize(200, 20);
 
   TGHorizontalFrame *XAxisTitleOptions_HF = new TGHorizontalFrame(XAxis_GF);
   XAxis_GF->AddFrame(XAxisTitleOptions_HF, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
@@ -1134,10 +1135,11 @@ void AAInterface::FillGraphicsFrame()
   // Y-axis title options
 
   TGGroupFrame *YAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "Y Axis", kVerticalFrame);
-  GraphicsFrame_VF->AddFrame(YAxis_GF, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  GraphicsFrame_VF->AddFrame(YAxis_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
   
   YAxis_GF->AddFrame(YAxisTitle_TEL = new ADAQTextEntryWithLabel(YAxis_GF, "Title", YAxisTitle_TEL_ID),
 			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  YAxisTitle_TEL->GetEntry()->Resize(200, 20);
   
   TGHorizontalFrame *YAxisTitleOptions_HF = new TGHorizontalFrame(YAxis_GF);
   YAxis_GF->AddFrame(YAxisTitleOptions_HF, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
@@ -1169,10 +1171,11 @@ void AAInterface::FillGraphicsFrame()
   // Z-axis options
 
   TGGroupFrame *ZAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "Z Axis", kVerticalFrame);
-  GraphicsFrame_VF->AddFrame(ZAxis_GF, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  GraphicsFrame_VF->AddFrame(ZAxis_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
 
   ZAxis_GF->AddFrame(ZAxisTitle_TEL = new ADAQTextEntryWithLabel(ZAxis_GF, "Title", ZAxisTitle_TEL_ID),
 			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  ZAxisTitle_TEL->GetEntry()->Resize(200,20);
 
   TGHorizontalFrame *ZAxisTitleOptions_HF = new TGHorizontalFrame(ZAxis_GF);
   ZAxis_GF->AddFrame(ZAxisTitleOptions_HF, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
@@ -1204,10 +1207,11 @@ void AAInterface::FillGraphicsFrame()
   // Color palette options
 
   TGGroupFrame *PaletteAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "Palette Axis", kVerticalFrame);
-  GraphicsFrame_VF->AddFrame(PaletteAxis_GF, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  GraphicsFrame_VF->AddFrame(PaletteAxis_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
 
   PaletteAxis_GF->AddFrame(PaletteAxisTitle_TEL = new ADAQTextEntryWithLabel(PaletteAxis_GF, "Title", PaletteAxisTitle_TEL_ID),
 			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  PaletteAxisTitle_TEL->GetEntry()->Resize(200,20);
   
   // A horizontal frame for the Z-axis title/label size and offset
   TGHorizontalFrame *PaletteAxisTitleOptions_HF = new TGHorizontalFrame(PaletteAxis_GF);
