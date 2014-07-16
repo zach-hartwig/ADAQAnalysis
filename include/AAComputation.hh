@@ -98,6 +98,7 @@ public:
   // Spectrum processing
   void FindSpectrumPeaks();
   void IntegrateSpectrum();
+  void FitSpectrum();
   TGraph *CalculateSpectrumDerivative();
 
   // Spectrum calibration

@@ -1304,13 +1304,13 @@ void AAComputation::IntegrateSpectrum()
   SpectrumIntegral_H->GetXaxis()->SetRangeUser(LowerIntLimit, UpperIntLimit);
   
   // Variable to hold the result of the spectrum integral
-  double Int = 0.;
+  //  double Int = 0.;
   
   // Variable to hold the result of the error in the spectrum integral
   // calculation. Integration error is simply the square root of the
   // sum of the squares of the integration spectrum bin contents. The
   // error is computed with a ROOT TH1 method for robustness.
-  double Err = 0.;
+  //double Err = 0.;
   
   string IntegralArg = "width";
   if(ADAQSettings->SpectrumIntegralInCounts)
@@ -1319,61 +1319,68 @@ void AAComputation::IntegrateSpectrum()
   ///////////////////////////////
   // Gaussian fitting/integration
 
-  if(ADAQSettings->SpectrumUseGaussianFit){
-    if(SpectrumFit_F)
-      delete SpectrumFit_F;
+  if(ADAQSettings->SpectrumUseGaussianFit)
+    FitSpectrum();
 
-    // Create a gaussian fit between the lower/upper limits; fit the
-    // gaussian to the histogram representing the integral region
-    // new TH1F object for analysis
-    SpectrumFit_F = new TF1("PeakFit", "gaus", LowerIntLimit, UpperIntLimit);
-    SpectrumIntegral_H->Fit("PeakFit","R N Q");
-
-    // Project the gaussian fit into a histogram with identical
-    // binning to the original spectrum to make analysis easier
-    TH1F *SpectrumFit_H = (TH1F *)SpectrumIntegral_H->Clone("SpectrumFit_H");
-    SpectrumFit_H->Eval(SpectrumFit_F);
-    
-    // Compute the integral and error between the lower/upper limits
-    // of the histogram that resulted from the gaussian fit
-    Int = SpectrumFit_H->IntegralAndError(SpectrumFit_H->FindBin(LowerIntLimit),
-					  SpectrumFit_H->FindBin(UpperIntLimit),
-					  Err,
-					  IntegralArg.c_str());
-    
-    // Draw the gaussian peak fit
-    SpectrumFit_F->SetLineColor(kGreen+2);
-    SpectrumFit_F->SetLineWidth(3);
-  }
   
   ////////////////////////
   // Histogram integration
-
+  
   else{
     // Set the low and upper bin for the integration
     int StartBin = SpectrumIntegral_H->FindBin(LowerIntLimit);
     int StopBin = SpectrumIntegral_H->FindBin(UpperIntLimit);
     
     // Compute the integral and error
-    Int = SpectrumIntegral_H->IntegralAndError(StartBin,
-						 StopBin,
-						 Err,
-						 IntegralArg.c_str());
+    SpectrumIntegralValue = SpectrumIntegral_H->IntegralAndError(StartBin,
+								 StopBin,
+								 SpectrumIntegralError,
+								 IntegralArg.c_str());
   }
+}
+
+
+void AAComputation::FitSpectrum()
+{
+  double XAxisMin = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
+  double XAxisMax = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
+
+  double LowerIntLimit = (ADAQSettings->SpectrumIntegrationMin * XAxisMax) + XAxisMin;
+  double UpperIntLimit = ADAQSettings->SpectrumIntegrationMax * XAxisMax;
   
-  // The spectrum integral and error may be normalized to the total
-  // computed RFQ current if desired by the user
-  if(ADAQSettings->SpectrumNormalizeToCurrent){
-    if(DeuteronsInTotal == 0)
-      DeuteronsInTotal = 1.0;
-    else{
-      Int /= DeuteronsInTotal;
-      Err /= DeuteronsInTotal;
-    }
-  }
+  // Check to ensure that the lower limit line is always LESS than the
+  // upper limit line
+  if(UpperIntLimit < LowerIntLimit)
+    UpperIntLimit = LowerIntLimit+1;
+
+  string IntegralArg = "width";
+  if(ADAQSettings->SpectrumIntegralInCounts)
+    IntegralArg.assign("");
   
-  SpectrumIntegralValue = Int;
-  SpectrumIntegralError = Err;
+  if(SpectrumFit_F)
+    delete SpectrumFit_F;
+  
+  // Create a gaussian fit between the lower/upper limits; fit the
+  // gaussian to the histogram representing the integral region
+  // new TH1F object for analysis
+  SpectrumFit_F = new TF1("PeakFit", "gaus", LowerIntLimit, UpperIntLimit);
+  SpectrumIntegral_H->Fit("PeakFit","R N Q");
+  
+  // Project the gaussian fit into a histogram with identical
+  // binning to the original spectrum to make analysis easier
+  TH1F *SpectrumFit_H = (TH1F *)SpectrumIntegral_H->Clone("SpectrumFit_H");
+  SpectrumFit_H->Eval(SpectrumFit_F);
+  
+  // Compute the integral and error between the lower/upper limits
+  // of the histogram that resulted from the gaussian fit
+  SpectrumIntegralValue = SpectrumFit_H->IntegralAndError(SpectrumFit_H->FindBin(LowerIntLimit),
+							  SpectrumFit_H->FindBin(UpperIntLimit),
+							  SpectrumIntegralError,
+							  IntegralArg.c_str());
+  
+  // Draw the gaussian peak fit
+  SpectrumFit_F->SetLineColor(kGreen+2);
+  SpectrumFit_F->SetLineWidth(3);
 }
 
 

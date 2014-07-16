@@ -2707,31 +2707,25 @@ void AAInterface::HandleCheckButtons()
     GraphicsMgr->PlotSpectrum();
     break;
     
+
   case SpectrumFindIntegral_CB_ID:
   case SpectrumIntegralInCounts_CB_ID:
-  case SpectrumUseGaussianFit_CB_ID:
-  case SpectrumNormalizePeakToCurrent_CB_ID:
-    
-    if(SpectrumFindIntegral_CB->IsDown()){
-      ComputationMgr->IntegrateSpectrum();
-      GraphicsMgr->PlotSpectrum();
-      
-      SpectrumIntegral_NEFL->GetEntry()->SetNumber( ComputationMgr->GetSpectrumIntegralValue() );
-      SpectrumIntegralError_NEFL->GetEntry()->SetNumber (ComputationMgr->GetSpectrumIntegralError() );
 
-      if(SpectrumUseGaussianFit_CB->IsDown()){
-	double Const = ComputationMgr->GetSpectrumFit()->GetParameter(0);
-	double Mean = ComputationMgr->GetSpectrumFit()->GetParameter(1);
-	double Sigma = ComputationMgr->GetSpectrumFit()->GetParameter(2);
-	
-	SpectrumFitHeight_NEFL->GetEntry()->SetNumber(Const);
-	SpectrumFitMean_NEFL->GetEntry()->SetNumber(Mean);
-	SpectrumFitSigma_NEFL->GetEntry()->SetNumber(Sigma);
-	SpectrumFitRes_NEFL->GetEntry()->SetNumber(2.35 * Sigma / Mean * 100);
-      }
-    }
+    if(SpectrumFindIntegral_CB->IsDown())
+      SpectrumIntegrationLimits_DHS->PositionChanged();
     else
       GraphicsMgr->PlotSpectrum();
+    break;
+    
+  case SpectrumUseGaussianFit_CB_ID:
+    if(SpectrumUseGaussianFit_CB->IsDown())
+      SpectrumIntegrationLimits_DHS->PositionChanged();
+    else{
+      if(SpectrumFindIntegral_CB->IsDown())
+	SpectrumIntegrationLimits_DHS->PositionChanged();
+      else
+	GraphicsMgr->PlotSpectrum();
+    }
     break;
 
   case IntegratePearson_CB_ID:{
@@ -2977,9 +2971,15 @@ void AAInterface::HandleDoubleSliders()
     ComputationMgr->IntegrateSpectrum();
     GraphicsMgr->PlotSpectrum();
     
-    SpectrumIntegral_NEFL->GetEntry()->SetNumber( ComputationMgr->GetSpectrumIntegralValue() );
-    SpectrumIntegralError_NEFL->GetEntry()->SetNumber (ComputationMgr->GetSpectrumIntegralError () );
-   
+    if(SpectrumFindIntegral_CB->IsDown()){
+      SpectrumIntegral_NEFL->GetEntry()->SetNumber( ComputationMgr->GetSpectrumIntegralValue() );
+      SpectrumIntegralError_NEFL->GetEntry()->SetNumber (ComputationMgr->GetSpectrumIntegralError () );
+    }
+    else{
+      SpectrumIntegral_NEFL->GetEntry()->SetNumber(0.);
+      SpectrumIntegralError_NEFL->GetEntry()->SetNumber(0.);
+    }
+    
     if(SpectrumUseGaussianFit_CB->IsDown()){
       double Const = ComputationMgr->GetSpectrumFit()->GetParameter(0);
       double Mean = ComputationMgr->GetSpectrumFit()->GetParameter(1);

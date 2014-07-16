@@ -596,11 +596,11 @@ void AAGraphics::PlotSpectrum()
     TH1F *SpectrumIntegral_H = ComputationMgr->GetSpectrumIntegral();
     SpectrumIntegral_H->Draw("HIST B SAME");
     SpectrumIntegral_H->Draw("HIST C SAME");
+  }
     
-    if(ADAQSettings->SpectrumUseGaussianFit){
-      TF1 *SpectrumFit_F = ComputationMgr->GetSpectrumFit();
-      SpectrumFit_F->Draw("HIST SAME");
-    }
+  if(ADAQSettings->SpectrumUseGaussianFit){
+    TF1 *SpectrumFit_F = ComputationMgr->GetSpectrumFit();
+    SpectrumFit_F->Draw("HIST SAME");
   }
   
   // Update the canvas
