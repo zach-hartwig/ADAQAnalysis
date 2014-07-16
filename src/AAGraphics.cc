@@ -111,10 +111,10 @@ AAGraphics::AAGraphics()
   EdgeBoundingBox_B->SetFillStyle(3002);
 
   EALine_L->SetLineStyle(7);
-  EALine_L->SetLineColor(kOrange+1);
+  EALine_L->SetLineColor(kOrange+7);
   EALine_L->SetLineWidth(2);
   
-  EABox_B->SetFillColor(kOrange+1);
+  EABox_B->SetFillColor(kOrange+7);
   EABox_B->SetFillStyle(3002);
 
   DerivativeReference_L->SetLineStyle(7);
