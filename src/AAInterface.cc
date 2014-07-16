@@ -729,7 +729,7 @@ void AAInterface::FillAnalysisFrame()
   
   SpectrumBackgroundOptions2_HF->AddFrame(SpectrumRangeMin_NEL = new ADAQNumberEntryWithLabel(SpectrumBackgroundOptions2_HF, "Min.", SpectrumRangeMin_NEL_ID),
 					  new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  SpectrumRangeMin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  SpectrumRangeMin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumRangeMin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   SpectrumRangeMin_NEL->GetEntry()->SetNumber(0);
   SpectrumRangeMin_NEL->GetEntry()->Resize(75,20);
@@ -739,7 +739,7 @@ void AAInterface::FillAnalysisFrame()
   
   SpectrumBackgroundOptions2_HF->AddFrame(SpectrumRangeMax_NEL = new ADAQNumberEntryWithLabel(SpectrumBackgroundOptions2_HF, "Max.", SpectrumRangeMax_NEL_ID),
 					  new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  SpectrumRangeMax_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  SpectrumRangeMax_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumRangeMax_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   SpectrumRangeMax_NEL->GetEntry()->SetNumber(2000);
   SpectrumRangeMax_NEL->GetEntry()->Resize(75,20);
@@ -2303,21 +2303,20 @@ void AAInterface::HandleTextButtons()
     const char *FileTypes[] = {"ADAQ calibration file", "*.acal",
 			       "All files",             "*.*",
 			       0, 0};
-
+    
     TGFileInfo FileInformation;
     FileInformation.fFileTypes = FileTypes;
     FileInformation.fIniDir = StrDup(getenv("PWD"));
     new TGFileDialog(gClient->GetRoot(), this, kFDOpen, &FileInformation);
-
+    
     if(FileInformation.fFilename == NULL)
       CreateMessageBox("A calibration file was not selected! No calibration has been made!","Stop");
-
     else{
 
       // Get the present channel
       int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
       
-      string CalibrationFileName = FileInformation.fFilename;
+      string CalibrationFileName = "/home/hartwig/aims/ADAQAnalysis/test/ExptNaIWaveforms.acal";
 
       // Set the calibration file to an input stream
       ifstream In(CalibrationFileName.c_str());
@@ -2350,6 +2349,8 @@ void AAInterface::HandleTextButtons()
 	
 	SetPoint++;
       }
+
+      In.close();
 
       // Use the loaded calibration points to set the calibration
       bool Success = ComputationMgr->SetCalibration(Channel);
@@ -3865,7 +3866,7 @@ void AAInterface::CreateMessageBox(string Message, string IconName)
   
   string BoxTitlesStop[NumTitles] = {"ADAQAnalysis is disappointed in you...", 
 				     "Seriously? I'd like another operator, please.",
-				     "Unaccepktable. Just totally unacceptable.",
+				     "Unacceptable. Just totally unacceptable.",
 				     "That was about as successful as the Hindenburg...",
 				     "You blew it!",
 				     "Abominable! Off with your head!",

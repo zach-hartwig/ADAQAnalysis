@@ -3,6 +3,7 @@
 #include <TF1.h>
 #include <TVector.h>
 #include <TChain.h>
+#include <TDirectory.h>
 
 #ifdef MPI_ENABLED
 #include <mpi.h>
@@ -702,6 +703,17 @@ void AAComputation::FindPeakLimits(TH1F *Histogram_H)
 
 void AAComputation::CreateSpectrum()
 {
+
+  gDirectory->pwd();
+  if(ADAQWaveformTree == NULL)
+
+  return;
+
+
+
+
+
+
   // Delete the previous Spectrum_H TH1F object if it exists to
   // prevent memory leaks
   if(Spectrum_H){
@@ -723,7 +735,6 @@ void AAComputation::CreateSpectrum()
 			ADAQSettings->SpectrumMaxBin);
 
   int Channel = ADAQSettings->WaveformChannel;
-  
   
   // Variables for calculating pulse height and area
   double SampleHeight, PulseHeight, PulseArea;
@@ -761,17 +772,23 @@ void AAComputation::CreateSpectrum()
 
   // Assign the number of waveforms processed by the master
   int MasterEvents = int(ADAQSettings->WaveformsToHistogram-SlaveEvents*(MPI_Size-1));
-  
+
   if(ParallelVerbose and IsMaster)
-    cout << "\nADAQAnalysis_MPI Node[0]: Waveforms allocated to slaves (node != 0) = " << SlaveEvents << "\n"
-	 <<   "                          Waveforms alloced to master (node == 0) =  " << MasterEvents
+    cout << "\nADAQAnalysis_MPI Node[0]: Number waveforms allocated to master (node == 0) : " << MasterEvents << "\n"
+         <<   "                          Number waveforms allocated to slaves (node != 0) : " << SlaveEvents
 	 << endl;
   
-  // Assign each master/slave a range of the total waveforms to
-  // process based on the MPI rank. Note that WaveformEnd holds the
-  // waveform_ID that the loop runs up to but does NOT include
-  WaveformStart = (MPI_Rank * MasterEvents); // Start (include this waveform in the final histogram)
-  WaveformEnd =  (MPI_Rank * MasterEvents) + SlaveEvents; // End (Up to but NOT including this waveform)
+  // Divide up the total number of waveforms to be processed amongst
+  // the master and slaves as evenly as possible. Note that the
+  // 'WaveformStart' value is *included* whereas the 'WaveformEnd'
+  // value _excluded_ from the for loop range 
+  WaveformStart = (MPI_Rank * SlaveEvents) + (ADAQSettings->WaveformsToHistogram % MPI_Size);
+  WaveformEnd = (MPI_Rank * SlaveEvents) + MasterEvents;
+  
+  // The master _always_ starts on waveform zero. This is required
+  // with the waveform allocation algorithm abov.
+  if(IsMaster)
+    WaveformStart = 0;
   
   if(ParallelVerbose)
     cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Handling waveforms " << WaveformStart << " to " << (WaveformEnd-1)
@@ -787,12 +804,12 @@ void AAComputation::CreateSpectrum()
     // the user while the spectrum is being created
     if(SequentialArchitecture)
       gSystem->ProcessEvents();
-    
+
     // Get the data from the ADAQ TTree for the current waveform
     ADAQWaveformTree->GetEntry(waveform);
 
     int Channel = ADAQSettings->WaveformChannel;
-    
+
     // Assign the raw waveform voltage to a class member vector<int>
     RawVoltage = *WaveformVecPtrs[Channel];
     
@@ -808,8 +825,7 @@ void AAComputation::CreateSpectrum()
     // Calculate the total RFQ current for this waveform.
     if(ADAQSettings->IntegratePearson)
       IntegratePearsonWaveform(waveform);
-
-    
+   
     ///////////////////////////////
     // Whole waveform processing //
     ///////////////////////////////
@@ -1494,15 +1510,21 @@ TH2F *AAComputation::CreatePSDHistogram()
   int MasterEvents = int(ADAQSettings->PSDWaveformsToDiscriminate-SlaveEvents*(MPI_Size-1));
   
   if(ParallelVerbose and IsMaster)
-    cout << "\nADAQAnalysis_MPI Node[0]: Waveforms allocated to slaves (node != 0) = " << SlaveEvents << "\n"
-	 <<   "                          Waveforms alloced to master (node == 0) =  " << MasterEvents
+    cout << "\nADAQAnalysis_MPI Node[0]: Number waveforms allocated to master (node == 0) : " << MasterEvents << "\n"
+         <<   "                          Number waveforms allocated to slaves (node != 0) : " << SlaveEvents
 	 << endl;
   
-  // Assign each master/slave a range of the total waveforms to
-  // process based on the MPI rank. Note that WaveformEnd holds the
-  // waveform_ID that the loop runs up to but does NOT include
-  WaveformStart = (MPI_Rank * MasterEvents); // Start (include this waveform in the final histogram)
-  WaveformEnd =  (MPI_Rank * MasterEvents) + SlaveEvents; // End (Up to but NOT including this waveform)
+  // Divide up the total number of waveforms to be processed amongst
+  // the master and slaves as evenly as possible. Note that the
+  // 'WaveformStart' value is *included* whereas the 'WaveformEnd'
+  // value _excluded_ from the for loop range 
+  WaveformStart = (MPI_Rank * SlaveEvents) + (ADAQSettings->WaveformsToHistogram % MPI_Size);
+  WaveformEnd =  (MPI_Rank * SlaveEvents) + MasterEvents;
+
+  // The master _always_ starts on waveform zero. This is required
+  // with the waveform allocation algorithm abov.
+  if(IsMaster)
+    WaveformStart = 0;
   
   if(ParallelVerbose)
     cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Handling waveforms " << WaveformStart << " to " << (WaveformEnd-1)
@@ -2366,14 +2388,21 @@ void AAComputation::CreateDesplicedFile()
   int MasterEvents = int(ADAQSettings->WaveformsToDesplice-SlaveEvents*(MPI_Size-1));
   
   if(ParallelVerbose and IsMaster)
-    cout << "\nADAQAnalysis_MPI Node[0] : Waveforms allocated to slaves (node != 0) = " << SlaveEvents << "\n"
-	 <<   "                           Waveforms alloced to master (node == 0) =  " << MasterEvents
+    cout << "\nADAQAnalysis_MPI Node[0]: Number waveforms allocated to master (node == 0) : " << MasterEvents << "\n"
+         <<   "                          Number waveforms allocated to slaves (node != 0) : " << SlaveEvents
 	 << endl;
+
+  // Divide up the total number of waveforms to be processed amongst
+  // the master and slaves as evenly as possible. Note that the
+  // 'WaveformStart' value is *included* whereas the 'WaveformEnd'
+  // value _excluded_ from the for loop range 
+  WaveformStart = (MPI_Rank * SlaveEvents) + (ADAQSettings->WaveformsToHistogram % MPI_Size);
+  WaveformEnd = (MPI_Rank * SlaveEvents) + MasterEvents;
   
-  // Assign each master/slave a range of the total waveforms to be
-  // process based on each nodes MPI rank
-  WaveformStart = (MPI_Rank * MasterEvents); // Start (and include this waveform in despliced file)
-  WaveformEnd =  (MPI_Rank * MasterEvents) + SlaveEvents; // End (up to but NOT including this waveform)
+  // The master _always_ starts on waveform zero. This is required
+  // with the waveform allocation algorithm abov.
+  if(IsMaster)
+    WaveformStart = 0;
   
   if(ParallelVerbose)
     cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Handling waveforms " << WaveformStart << " to " << (WaveformEnd-1)

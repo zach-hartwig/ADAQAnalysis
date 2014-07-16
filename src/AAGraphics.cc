@@ -669,18 +669,18 @@ void AAGraphics::PlotPSDHistogram()
   int YDivs = ADAQSettings->YDivs;
   int ZDivs = ADAQSettings->ZDivs;
 
-  if(ADAQSettings->HistogramStats)
-    PSDHistogram_H->SetStats(false);
-  else
-    PSDHistogram_H->SetStats(true);
+  PSDHistogram_H->SetStats(ADAQSettings->HistogramStats);
   
   TheCanvas->SetLeftMargin(0.13);
   TheCanvas->SetBottomMargin(0.12);
   TheCanvas->SetRightMargin(0.2);
 
   ////////////////////////////////
+
+  
   // Axis and graphical attributes
 
+  gPad->SetGrid(ADAQSettings->CanvasGrid, ADAQSettings->CanvasGrid);
   gPad->SetLogx(ADAQSettings->CanvasXAxisLog);
   gPad->SetLogy(ADAQSettings->CanvasYAxisLog);
   gPad->SetLogz(ADAQSettings->CanvasZAxisLog);
