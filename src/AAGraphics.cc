@@ -32,7 +32,8 @@ AAGraphics::AAGraphics()
     PSDPeakOffset_L(new TLine), PSDTailOffset_L(new TLine), PSDTailIntegral_B(new TBox),
     PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
     HCalibration_L(new TLine), VCalibration_L(new TLine), EdgeBoundingBox_B(new TBox),
-    PEALine_L(new TLine), PEABox_B(new TBox), DerivativeReference_L(new TLine)
+    PEALine_L(new TLine), PEABox_B(new TBox), DerivativeReference_L(new TLine),
+    CanvasContentType(zEmpty)
 {
   if(TheGraphicsManager)
     cout << "\nERROR! TheGraphicsManager was constructed twice\n" << endl;
@@ -64,7 +65,6 @@ AAGraphics::AAGraphics()
   LPeakDelimiter_L->SetLineStyle(7);
   LPeakDelimiter_L->SetLineColor(kGreen+3);
   LPeakDelimiter_L->SetLineWidth(2);
-
   
   RPeakDelimiter_L->SetLineStyle(7);
   RPeakDelimiter_L->SetLineColor(kGreen+1);
@@ -166,7 +166,7 @@ void AAGraphics::PlotWaveform(int Color)
 
   double YMin, YMax, YAxisSize;
   
-  if(ADAQSettings->PlotVerticalAxisInLog){
+  if(ADAQSettings->CanvasYAxisLog){
     YMin = 4095 * (1 - ADAQSettings->YAxisMax);
     YMax = 4095 * (1 - ADAQSettings->YAxisMin);
     
@@ -204,11 +204,10 @@ void AAGraphics::PlotWaveform(int Color)
   TheCanvas->SetLeftMargin(0.13);
   TheCanvas->SetBottomMargin(0.12);
   TheCanvas->SetRightMargin(0.05);
-  
-  if(ADAQSettings->PlotVerticalAxisInLog)
-    gPad->SetLogy(true);
-  else
-    gPad->SetLogy(false);
+
+  gPad->SetGrid(ADAQSettings->CanvasGrid, ADAQSettings->CanvasGrid);
+  gPad->SetLogx(ADAQSettings->CanvasXAxisLog);
+  gPad->SetLogy(ADAQSettings->CanvasYAxisLog);
 
   Waveform_H->SetTitle(Title.c_str());
 
@@ -472,7 +471,7 @@ void AAGraphics::PlotSpectrum()
   Spectrum_H->GetXaxis()->SetRangeUser(XMin, XMax);
 
   double YMin, YMax;
-  if(ADAQSettings->PlotVerticalAxisInLog and ADAQSettings->YAxisMax==1)
+  if(ADAQSettings->CanvasYAxisLog and ADAQSettings->YAxisMax==1)
     YMin = 1.0;
   else if(ADAQSettings->FindBackground and ADAQSettings->PlotLessBackground)
     YMin = (Spectrum_H->GetMaximumBin() * (1-ADAQSettings->YAxisMax)) - (Spectrum_H->GetMaximumBin()*0.8);
@@ -518,29 +517,21 @@ void AAGraphics::PlotSpectrum()
   int YDivs = ADAQSettings->YDivs;
 
   
-  ////////////////////
-  // Statistics legend
+  ///////////////////////
+  // Histogram statistics
 
-  if(ADAQSettings->StatsOff)
-    Spectrum_H->SetStats(false);
-  else
-    Spectrum_H->SetStats(true);
-
-
-  /////////////////////
-  // Logarithmic Y axis
+  Spectrum_H->SetStats(ADAQSettings->HistogramStats);
   
-  if(ADAQSettings->PlotVerticalAxisInLog)
-    gPad->SetLogy(true);
-  else
-    gPad->SetLogy(false);
-  
+  ////////////////////////////////
+  // Axis and graphical attributes
+
+  gPad->SetGrid(ADAQSettings->CanvasGrid, ADAQSettings->CanvasGrid);
+  gPad->SetLogx(ADAQSettings->CanvasXAxisLog);
+  gPad->SetLogy(ADAQSettings->CanvasYAxisLog);
+
   TheCanvas->SetLeftMargin(0.13);
   TheCanvas->SetBottomMargin(0.12);
   TheCanvas->SetRightMargin(0.05);
-
-  ////////////////////////////////
-  // Axis and graphical attributes
 
   Spectrum_H->SetTitle(Title.c_str());
 
@@ -678,7 +669,7 @@ void AAGraphics::PlotPSDHistogram()
   int YDivs = ADAQSettings->YDivs;
   int ZDivs = ADAQSettings->ZDivs;
 
-  if(ADAQSettings->StatsOff)
+  if(ADAQSettings->HistogramStats)
     PSDHistogram_H->SetStats(false);
   else
     PSDHistogram_H->SetStats(true);
@@ -689,15 +680,10 @@ void AAGraphics::PlotPSDHistogram()
 
   ////////////////////////////////
   // Axis and graphical attributes
-  
-  if(ADAQSettings->PlotVerticalAxisInLog)
-    gPad->SetLogz(true);
-  else
-    gPad->SetLogz(false);
-  
-  // The X and Y axes should never be plotted in log
-  gPad->SetLogx(false);
-  gPad->SetLogy(false);
+
+  gPad->SetLogx(ADAQSettings->CanvasXAxisLog);
+  gPad->SetLogy(ADAQSettings->CanvasYAxisLog);
+  gPad->SetLogz(ADAQSettings->CanvasZAxisLog);
 
   PSDHistogram_H->SetTitle(Title.c_str());
   
@@ -803,13 +789,11 @@ void AAGraphics::PlotSpectrumDerivative()
   int YDivs = ADAQSettings->YDivs;
 
 
-  /////////////////////
-  // Logarithmic Y axis
-  
-  if(ADAQSettings->PlotVerticalAxisInLog)
-    gPad->SetLogy(true);
-  else
-    gPad->SetLogy(false);
+  ///////////////////
+  // Logarithmic axes
+
+  gPad->SetLogx(ADAQSettings->CanvasXAxisLog);
+  gPad->SetLogy(ADAQSettings->CanvasYAxisLog);
 
   TheCanvas->SetLeftMargin(0.13);
   TheCanvas->SetBottomMargin(0.12);
@@ -820,8 +804,6 @@ void AAGraphics::PlotSpectrumDerivative()
   // Create the graph
 
   gStyle->SetEndErrorSize(0);
-
-
 
   SpectrumDerivative_G->SetTitle(Title.c_str());
 
@@ -1040,7 +1022,7 @@ void AAGraphics::PlotPSDHistogramSlice(int XPixel, int YPixel)
   // ... otherwise, create a new canvas
   else{
     PSDSlice_C = new TCanvas(SliceCanvasName.c_str(), "PSD Histogram Slice", 700, 500, 600, 400);
-    PSDSlice_C->SetGrid(true);
+    PSDSlice_C->SetGrid(ADAQSettings->CanvasGrid, ADAQSettings->CanvasGrid);
     PSDSlice_C->SetLeftMargin(0.13);
     PSDSlice_C->SetBottomMargin(0.13);
   }

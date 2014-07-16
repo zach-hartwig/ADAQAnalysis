@@ -13,7 +13,6 @@
 #include <TGClient.h>
 #include <TGFileDialog.h>
 #include <TGButtonGroup.h>
-#include <TGMsgBox.h>
 #include <TFile.h>
 
 // C++
@@ -45,7 +44,7 @@ AAInterface::AAInterface(string CmdLineArg)
     DataDirectory(getenv("PWD")), PrintDirectory(getenv("HOME")),
     DesplicedDirectory(getenv("HOME")), HistogramDirectory(getenv("HOME")),
     ADAQFileLoaded(false), ACRONYMFileLoaded(false),
-    ColorMgr(new TColor)
+    ColorMgr(new TColor), RndmMgr(new TRandom3)
 {
   SetCleanup(kDeepCleanup);
 
@@ -111,7 +110,10 @@ AAInterface::AAInterface(string CmdLineArg)
 
 
 AAInterface::~AAInterface()
-{;}
+{
+  delete RndmMgr;
+  delete ColorMgr;
+}
 
 
 void AAInterface::CreateTheMainFrames()
@@ -979,57 +981,86 @@ void AAInterface::FillGraphicsFrame()
   DrawSpectrumWithBars_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Bars", DrawSpectrumWithBars_RB_ID);
   DrawSpectrumWithBars_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
 
-  GraphicsFrame_VF->AddFrame(SetStatsOff_CB = new TGCheckButton(GraphicsFrame_VF, "Set statistics off", SetStatsOff_CB_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
-  SetStatsOff_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+
+  TGHorizontalFrame *CanvasOptions_HF0 = new TGHorizontalFrame(GraphicsFrame_VF);
+  GraphicsFrame_VF->AddFrame(CanvasOptions_HF0, new TGLayoutHints(kLHintsLeft, 5,5,5,0));
+
+  CanvasOptions_HF0->AddFrame(HistogramStats_CB = new TGCheckButton(CanvasOptions_HF0, "Histogram stats", HistogramStats_CB_ID),
+			      new TGLayoutHints(kLHintsLeft, 0,0,0,0));
+  HistogramStats_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
-  GraphicsFrame_VF->AddFrame(PlotVerticalAxisInLog_CB = new TGCheckButton(GraphicsFrame_VF, "Vertical axis in log.", PlotVerticalAxisInLog_CB_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
-  PlotVerticalAxisInLog_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  CanvasOptions_HF0->AddFrame(CanvasGrid_CB = new TGCheckButton(CanvasOptions_HF0, "Grid", CanvasGrid_CB_ID),
+			      new TGLayoutHints(kLHintsLeft, 25,0,0,0));
+  CanvasGrid_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  CanvasGrid_CB->SetState(kButtonDown);
+
+
+  TGHorizontalFrame *CanvasOptions_HF1 = new TGHorizontalFrame(GraphicsFrame_VF);
+  GraphicsFrame_VF->AddFrame(CanvasOptions_HF1, new TGLayoutHints(kLHintsLeft, 5,5,5,0));
+  
+  CanvasOptions_HF1->AddFrame(CanvasXAxisLog_CB = new TGCheckButton(CanvasOptions_HF1, "X-axis log", CanvasXAxisLog_CB_ID),
+			     new TGLayoutHints(kLHintsLeft, 0,0,0,0));
+  CanvasXAxisLog_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  
+  CanvasOptions_HF1->AddFrame(CanvasYAxisLog_CB = new TGCheckButton(CanvasOptions_HF1, "Y-axis log", CanvasYAxisLog_CB_ID),
+			      new TGLayoutHints(kLHintsLeft, 15,0,0,0));
+  CanvasYAxisLog_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  
+  CanvasOptions_HF1->AddFrame(CanvasZAxisLog_CB = new TGCheckButton(CanvasOptions_HF1, "Z-axis log", CanvasZAxisLog_CB_ID),
+			      new TGLayoutHints(kLHintsLeft, 5,5,0,0));
+  CanvasZAxisLog_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  
 
   GraphicsFrame_VF->AddFrame(PlotSpectrumDerivativeError_CB = new TGCheckButton(GraphicsFrame_VF, "Plot spectrum derivative error", PlotSpectrumDerivativeError_CB_ID),
-			     new TGLayoutHints(kLHintsNormal, 15,5,0,0));
+			     new TGLayoutHints(kLHintsNormal, 5,5,5,0));
   PlotSpectrumDerivativeError_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
   GraphicsFrame_VF->AddFrame(PlotAbsValueSpectrumDerivative_CB = new TGCheckButton(GraphicsFrame_VF, "Plot abs. value of spectrum derivative ", PlotAbsValueSpectrumDerivative_CB_ID),
-			     new TGLayoutHints(kLHintsNormal, 15,5,0,0));
+			     new TGLayoutHints(kLHintsNormal, 5,5,5,0));
   PlotAbsValueSpectrumDerivative_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
   GraphicsFrame_VF->AddFrame(AutoYAxisRange_CB = new TGCheckButton(GraphicsFrame_VF, "Auto. Y Axis Range (waveform only)", -1),
-			       new TGLayoutHints(kLHintsLeft, 15,5,0,5));
+			       new TGLayoutHints(kLHintsLeft, 5,5,5,5));
 
   TGHorizontalFrame *ResetAxesLimits_HF = new TGHorizontalFrame(GraphicsFrame_VF);
   GraphicsFrame_VF->AddFrame(ResetAxesLimits_HF, new TGLayoutHints(kLHintsLeft,15,5,5,5));
+
+  TGHorizontalFrame *PlotButtons_HF0 = new TGHorizontalFrame(GraphicsFrame_VF);
+  GraphicsFrame_VF->AddFrame(PlotButtons_HF0, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
   
-  GraphicsFrame_VF->AddFrame(ReplotWaveform_TB = new TGTextButton(GraphicsFrame_VF, "Plot waveform", ReplotWaveform_TB_ID),
-			       new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
+  PlotButtons_HF0->AddFrame(ReplotWaveform_TB = new TGTextButton(PlotButtons_HF0, "Plot waveform", ReplotWaveform_TB_ID),
+			    new TGLayoutHints(kLHintsCenterX, 5,5,0,0));
   ReplotWaveform_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   ReplotWaveform_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
-  ReplotWaveform_TB->Resize(200,30);
+  ReplotWaveform_TB->Resize(130, 30);
   ReplotWaveform_TB->ChangeOptions(ReplotWaveform_TB->GetOptions() | kFixedSize);
   ReplotWaveform_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
-
-  GraphicsFrame_VF->AddFrame(ReplotSpectrum_TB = new TGTextButton(GraphicsFrame_VF, "Plot spectrum", ReplotSpectrum_TB_ID),
-			     new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
+  
+  PlotButtons_HF0->AddFrame(ReplotSpectrum_TB = new TGTextButton(PlotButtons_HF0, "Plot spectrum", ReplotSpectrum_TB_ID),
+			    new TGLayoutHints(kLHintsCenterX, 5,5,0,0));
   ReplotSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   ReplotSpectrum_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
-  ReplotSpectrum_TB->Resize(200,30);
+  ReplotSpectrum_TB->Resize(130, 30);
   ReplotSpectrum_TB->ChangeOptions(ReplotSpectrum_TB->GetOptions() | kFixedSize);
   ReplotSpectrum_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
   
-  GraphicsFrame_VF->AddFrame(ReplotSpectrumDerivative_TB = new TGTextButton(GraphicsFrame_VF, "Plot spectrum derivative", ReplotSpectrumDerivative_TB_ID),
-			     new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
-  ReplotSpectrumDerivative_TB->Resize(200, 30);
+
+  TGHorizontalFrame *PlotButtons_HF1 = new TGHorizontalFrame(GraphicsFrame_VF);
+  GraphicsFrame_VF->AddFrame(PlotButtons_HF1, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
+
+  PlotButtons_HF1->AddFrame(ReplotSpectrumDerivative_TB = new TGTextButton(PlotButtons_HF1, "Plot derivative", ReplotSpectrumDerivative_TB_ID),
+			    new TGLayoutHints(kLHintsCenterX, 5,5,0,0));
+  ReplotSpectrumDerivative_TB->Resize(130, 30);
   ReplotSpectrumDerivative_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   ReplotSpectrumDerivative_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   ReplotSpectrumDerivative_TB->ChangeOptions(ReplotSpectrumDerivative_TB->GetOptions() | kFixedSize);
   ReplotSpectrumDerivative_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
 
-  GraphicsFrame_VF->AddFrame(ReplotPSDHistogram_TB = new TGTextButton(GraphicsFrame_VF, "Plot PSD histogram", ReplotPSDHistogram_TB_ID),
-			       new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
+  PlotButtons_HF1->AddFrame(ReplotPSDHistogram_TB = new TGTextButton(PlotButtons_HF1, "Plot PSD histogram", ReplotPSDHistogram_TB_ID),
+			    new TGLayoutHints(kLHintsCenterX, 5,5,0,0));
   ReplotPSDHistogram_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   ReplotPSDHistogram_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
-  ReplotPSDHistogram_TB->Resize(200,30);
+  ReplotPSDHistogram_TB->Resize(130, 30);
   ReplotPSDHistogram_TB->ChangeOptions(ReplotPSDHistogram_TB->GetOptions() | kFixedSize);
   ReplotPSDHistogram_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
 
@@ -1698,7 +1729,7 @@ void AAInterface::FillCanvasFrame()
   Canvas_HF->AddFrame(Canvas_EC = new TRootEmbeddedCanvas("TheCanvas_EC", Canvas_HF, CanvasX, CanvasY),
 		      new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
   Canvas_EC->GetCanvas()->SetFillColor(0);
-  Canvas_EC->GetCanvas()->SetFrameFillColor(19);
+  Canvas_EC->GetCanvas()->SetFrameFillColor(0);
   Canvas_EC->GetCanvas()->SetGrid();
   Canvas_EC->GetCanvas()->SetBorderMode(0);
   Canvas_EC->GetCanvas()->SetLeftMargin(0.13);
@@ -2509,7 +2540,7 @@ void AAInterface::HandleCheckButtons()
 {
   if(!ADAQFileLoaded and !ACRONYMFileLoaded)
     return;
-
+  
   TGCheckButton *ActiveCheckButton = (TGCheckButton *) gTQSender;
   int CheckButtonID = ActiveCheckButton->WidgetId();
 
@@ -2551,10 +2582,16 @@ void AAInterface::HandleCheckButtons()
     break;
 
   case OverrideTitles_CB_ID:
-  case PlotVerticalAxisInLog_CB_ID:
-  case SetStatsOff_CB_ID:
-    
+  case HistogramStats_CB_ID:
+  case CanvasGrid_CB_ID:
+  case CanvasXAxisLog_CB_ID:
+  case CanvasYAxisLog_CB_ID:
+  case CanvasZAxisLog_CB_ID:
+
     switch(GraphicsMgr->GetCanvasContentType()){
+    case zEmpty:
+      break;
+
     case zWaveform:
       GraphicsMgr->PlotWaveform();
       break;
@@ -3641,9 +3678,13 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->SpectrumMarkers = DrawSpectrumWithMarkers_RB->IsDown();
   ADAQSettings->SpectrumError = DrawSpectrumWithError_RB->IsDown();
   ADAQSettings->SpectrumBars = DrawSpectrumWithBars_RB->IsDown();
+  
+  ADAQSettings->HistogramStats = HistogramStats_CB->IsDown();
+  ADAQSettings->CanvasGrid = CanvasGrid_CB->IsDown();
+  ADAQSettings->CanvasXAxisLog = CanvasXAxisLog_CB->IsDown();
+  ADAQSettings->CanvasYAxisLog = CanvasYAxisLog_CB->IsDown();
+  ADAQSettings->CanvasZAxisLog = CanvasZAxisLog_CB->IsDown();
 
-  ADAQSettings->StatsOff = SetStatsOff_CB->IsDown();
-  ADAQSettings->PlotVerticalAxisInLog = PlotVerticalAxisInLog_CB->IsDown();
   ADAQSettings->PlotSpectrumDerivativeError = PlotSpectrumDerivativeError_CB->IsDown();
   ADAQSettings->PlotAbsValueSpectrumDerivative = PlotAbsValueSpectrumDerivative_CB->IsDown();
   ADAQSettings->PlotYAxisWithAutoRange = AutoYAxisRange_CB->IsDown();
@@ -3760,25 +3801,28 @@ void AAInterface::CreateMessageBox(string Message, string IconName)
   if(IconName == "Asterisk")
     IconType = kMBIconAsterisk;
   
-  const int NumTitles = 6;
+  const int NumTitles = 8;
 
   string BoxTitlesAsterisk[] = {"ADAQAnalysis says 'good job!", 
 				"Oh, so you are competent!",
 				"This is a triumph of science!",
 				"Excellent work. You're practically a PhD now.",
 				"For you ARE the Kwisatz Haderach!",
-				"There will be a parade in your honor."};
+				"There will be a parade in your honor.",
+				"Oh, well, bra-VO!",
+				"Top notch."};
   
   string BoxTitlesStop[] = {"ADAQAnalysis is disappointed in you...", 
 			    "Seriously? I'd like another operator, please.",
-			    "Unacceptable. Just totally unacceptable.",
+			    "Unaccepktable. Just totally unacceptable.",
 			    "That was about as successful as the Hindenburg...",
 			    "You blew it!",
-			    "Abominable! Off with your head!" };
+			    "Abominable! Off with your head!",
+			    "Do, or do not. There is no try."
+			    "You fucked it up, Walter! You always fuck it up!"};
 
   // Surprise the user!
-  TRandom *RNG = new TRandom;
-  int RndmInt = RNG->Integer(NumTitles);
+  int RndmInt = RndmMgr->Integer(NumTitles);
   
   string Title = BoxTitlesStop[RndmInt];
   if(IconType==kMBIconAsterisk)
@@ -3787,8 +3831,7 @@ void AAInterface::CreateMessageBox(string Message, string IconName)
   
   // Create the message box with the desired message and icon
   new TGMsgBox(gClient->GetRoot(), this, Title.c_str(), Message.c_str(), IconType, kMBOk);
-  
-  delete RNG;
+
 }
 
 

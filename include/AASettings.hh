@@ -94,7 +94,8 @@ public:
   
   bool WaveformCurve, WaveformMarkers, WaveformBoth;
   bool SpectrumCurve, SpectrumMarkers, SpectrumError, SpectrumBars;
-  bool StatsOff, PlotVerticalAxisInLog;
+  bool HistogramStats, CanvasGrid;
+  bool CanvasXAxisLog, CanvasYAxisLog, CanvasZAxisLog;
   bool PlotSpectrumDerivativeError, PlotAbsValueSpectrumDerivative, PlotYAxisWithAutoRange;
   bool OverrideGraphicalDefault;
 

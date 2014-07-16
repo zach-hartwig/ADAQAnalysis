@@ -25,7 +25,7 @@
 #include <TBox.h>
 #include <TGProgressBar.h>
 #include <TObject.h>
-#include <TRandom.h>
+#include <TRandom3.h>
 #include <TGMsgBox.h>
 #include <TGTab.h>
 
@@ -271,8 +271,8 @@ private:
   TGRadioButton *DrawSpectrumWithCurve_RB, *DrawSpectrumWithMarkers_RB;
   TGRadioButton *DrawSpectrumWithError_RB, *DrawSpectrumWithBars_RB;
   
-  TGCheckButton *SetStatsOff_CB;
-  TGCheckButton *PlotVerticalAxisInLog_CB;
+  TGCheckButton *HistogramStats_CB, *CanvasGrid_CB;
+  TGCheckButton *CanvasXAxisLog_CB, *CanvasYAxisLog_CB, *CanvasZAxisLog_CB;
 
   TGCheckButton *PlotSpectrumDerivativeError_CB;
   TGCheckButton *PlotAbsValueSpectrumDerivative_CB;
@@ -380,6 +380,7 @@ private:
   int NumEdgeBoundingPoints;
   double EdgeBoundX0, EdgeBoundY0;
 
+  // Variables for interface colors
   long ThemeForegroundColor, ThemeBackgroundColor;
 
   // Variables relating to files (paths, bools)
@@ -393,6 +394,7 @@ private:
 
   // The managers 
   TColor *ColorMgr;
+  TRandom3 *RndmMgr;
   AAComputation *ComputationMgr;
   AAGraphics *GraphicsMgr;
   AAInterpolation *InterpolationMgr;

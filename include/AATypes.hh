@@ -44,7 +44,7 @@ struct PeakInfoStruct{
 };
 
 
-enum CanvasContentTypes{zWaveform, zSpectrum, zSpectrumDerivative, zPSDHistogram};
+enum CanvasContentTypes{zEmpty, zWaveform, zSpectrum, zSpectrumDerivative, zPSDHistogram};
 
 // Structure that contains information on a single calibration point
 // for a single channel. For each calibration point, a structure is
@@ -247,8 +247,11 @@ enum{
   DrawSpectrumWithError_RB_ID,
   DrawSpectrumWithBars_RB_ID,
 
-  SetStatsOff_CB_ID,
-  PlotVerticalAxisInLog_CB_ID,
+  HistogramStats_CB_ID,
+  CanvasGrid_CB_ID,
+  CanvasXAxisLog_CB_ID,
+  CanvasYAxisLog_CB_ID,
+  CanvasZAxisLog_CB_ID,
 
   PlotSpectrumDerivativeError_CB_ID,
   PlotAbsValueSpectrumDerivative_CB_ID,
