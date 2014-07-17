@@ -4034,10 +4034,11 @@ void AAInterface::UpdateForADAQFile()
   ACROSpectrumLS_RB->SetState(kButtonDisabled);
   ACROSpectrumES_RB->SetState(kButtonDisabled);
   
+  PSDEnable_CB->SetState(kButtonUp);
+
   // Reenable all ADAQ-specific tab frames
 
   WaveformOptionsTab_CF->ShowFrame(WaveformOptions_CF);
-  AnalysisOptionsTab_CF->ShowFrame(AnalysisOptions_CF);
 }
 
 
@@ -4103,10 +4104,7 @@ void AAInterface::UpdateForACRONYMFile()
     WaveformsToHistogram_NEL->GetEntry()->SetNumber( ComputationMgr->GetACRONYMESEntries() );
   }
 
-  // Analysis frame (disabled)
-  AnalysisOptionsTab_CF->HideFrame(AnalysisOptions_CF);
-
-  // Graphics frame
+  PSDEnable_CB->SetState(kButtonDisabled);
   SetPearsonWidgetState(false, kButtonDisabled);
 
   // Processing frame
