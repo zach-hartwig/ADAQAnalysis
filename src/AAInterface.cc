@@ -78,7 +78,15 @@ AAInterface::AAInterface(string CmdLineArg)
       
       if(CmdLineArg.substr(Pos,5) == ".root" or
 	 CmdLineArg.substr(Pos,5) == ".adaq"){
-	ADAQFileName = CmdLineArg;
+	
+	// Ensure that if an ADAQ or ACRO file is specified from the
+	// cmd line with a relative path that the absolute path to the
+	// file is specified to ensure the universal access
+	
+	string CurrentDir = getenv("PWD");
+	string RelativeFilePath = CmdLineArg;
+	
+	ADAQFileName = CurrentDir + "/" + RelativeFilePath;
 	ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(ADAQFileName);
 	
 	if(ADAQFileLoaded)
@@ -2307,8 +2315,9 @@ void AAInterface::HandleTextButtons()
     TGFileInfo FileInformation;
     FileInformation.fFileTypes = FileTypes;
     FileInformation.fIniDir = StrDup(getenv("PWD"));
+
     new TGFileDialog(gClient->GetRoot(), this, kFDOpen, &FileInformation);
-    
+
     if(FileInformation.fFilename == NULL)
       CreateMessageBox("A calibration file was not selected! No calibration has been made!","Stop");
     else{
@@ -2316,7 +2325,8 @@ void AAInterface::HandleTextButtons()
       // Get the present channel
       int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
       
-      string CalibrationFileName = "/home/hartwig/aims/ADAQAnalysis/test/ExptNaIWaveforms.acal";
+      //      string CalibrationFileName = "/home/hartwig/aims/ADAQAnalysis/test/ExptNaIWaveforms.acal";
+      string CalibrationFileName = FileInformation.fFilename;
 
       // Set the calibration file to an input stream
       ifstream In(CalibrationFileName.c_str());

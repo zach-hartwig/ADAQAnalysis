@@ -123,10 +123,9 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
 	   << endl;
       exit(-42);
     }
-    else{
+    else
       // Load the specified ADAQ ROOT file
       LoadADAQRootFile(ADAQSettings->ADAQFileName);
-    }
     
     // Initiate the desired parallel waveform processing algorithm
 
@@ -164,14 +163,13 @@ bool AAComputation::LoadADAQRootFile(string FileName)
   //////////////////////////////////
 
   ADAQFileName = FileName;
-  
+
   // Open the specified ROOT file 
   ADAQRootFile = new TFile(FileName.c_str(), "read");
-  
+
   // If a valid ADAQ ROOT file was NOT opened...
-  if(!ADAQRootFile->IsOpen()){
+  if(!ADAQRootFile->IsOpen())
     ADAQFileLoaded = false;
-  }
   else{
     
     /////////////////////////////////////
@@ -703,17 +701,6 @@ void AAComputation::FindPeakLimits(TH1F *Histogram_H)
 
 void AAComputation::CreateSpectrum()
 {
-
-  gDirectory->pwd();
-  if(ADAQWaveformTree == NULL)
-
-  return;
-
-
-
-
-
-
   // Delete the previous Spectrum_H TH1F object if it exists to
   // prevent memory leaks
   if(Spectrum_H){
