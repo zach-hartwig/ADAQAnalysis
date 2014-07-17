@@ -257,12 +257,14 @@ void AAGraphics::PlotWaveform(int Color)
 			ComputationMgr->GetADAQMeasurementParameters()->TriggerThreshold[Channel], 
 			XMax,
 			ComputationMgr->GetADAQMeasurementParameters()->TriggerThreshold[Channel]);
-
+  
   if(ADAQSettings->PlotBaselineCalcRegion and !ADAQSettings->ZSWaveform){
     double Baseline = ComputationMgr->CalculateBaseline(Waveform_H);
     double BaselinePlotMinValue = Baseline - (0.04 * YAxisSize);
     double BaselinePlotMaxValue = Baseline + (0.04 * YAxisSize);
-    
+
+    double Stuff = ComputationMgr->CalculateBaseline(Waveform_H);
+
     if(ADAQSettings->BSWaveform){
       BaselinePlotMinValue = -0.04 * YAxisSize;
       BaselinePlotMaxValue = 0.04 * YAxisSize;
@@ -470,6 +472,7 @@ void AAGraphics::PlotSpectrum()
   
   Spectrum_H->GetXaxis()->SetRangeUser(XMin, XMax);
 
+
   double YMin, YMax;
   if(ADAQSettings->CanvasYAxisLog and ADAQSettings->YAxisMax==1)
     YMin = 1.0;
@@ -589,11 +592,14 @@ void AAGraphics::PlotSpectrum()
   // Overlay the background spectra if desired
   if(ADAQSettings->FindBackground and ADAQSettings->PlotWithBackground){
     TH1F *SpectrumBackground_H = ComputationMgr->GetSpectrumBackground();
+    SpectrumBackground_H->GetXaxis()->SetRangeUser(XMin, XMax);
     SpectrumBackground_H->Draw("C SAME");
   }
   
   if(ADAQSettings->SpectrumFindIntegral){
     TH1F *SpectrumIntegral_H = ComputationMgr->GetSpectrumIntegral();
+    
+    //SpectrumIntegral_H->GetXaxis()->SetRangeUser(XMin, XMax);
     SpectrumIntegral_H->Draw("HIST B SAME");
     SpectrumIntegral_H->Draw("HIST C SAME");
   }

@@ -91,7 +91,8 @@ public:
 
   // Method to alert the user via a ROOT message box
   void CreateMessageBox(string, string);
-  
+
+  void SetPeakFindingWidgetState(bool, EButtonState);
   void SetPSDWidgetState(bool, EButtonState);
   void SetPearsonWidgetState(bool, EButtonState);
   void SetCalibrationWidgetState(bool, EButtonState);
@@ -136,7 +137,8 @@ private:
   TGRadioButton *PositiveWaveform_RB, *NegativeWaveform_RB;
 
   TGCheckButton *PlotTrigger_CB;
-
+  ADAQNumberEntryFieldWithLabel *TriggerLevel_NEFL;
+  
   // Widgets for controlling baseline calc. and plotting
   TGCheckButton *PlotBaseline_CB;
   ADAQNumberEntryWithLabel *BaselineCalcMin_NEL;

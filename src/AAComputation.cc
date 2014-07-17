@@ -443,27 +443,28 @@ TH1F *AAComputation::CalculateZSWaveform(int Channel, int Waveform, bool Current
 }
 
 
-// Method to calculate the baseline of a waveform. The "baseline" is
-// simply the average of the waveform voltage taken over the specified
-// range in time (in units of samples)
+// The following methods compute the baseline of a waveform (as a
+// vector<int> or as a TH1F *). The baseline is the average of the
+// waveform voltage taken over the specified range in time. The units
+// of the baseline are in [4ns samples]
+
 double AAComputation::CalculateBaseline(vector<int> *Waveform)
 {
   int BaselineCalcLength = ADAQSettings->BaselineCalcMax - ADAQSettings->BaselineCalcMin;
   double Baseline = 0.;
   for(int sample=ADAQSettings->BaselineCalcMin; sample<ADAQSettings->BaselineCalcMax; sample++)
     Baseline += ((*Waveform)[sample]*1.0/BaselineCalcLength);
-  
+
   return Baseline;
 }
-
 
 double AAComputation::CalculateBaseline(TH1F *Waveform)
 {
   int BaselineCalcLength = ADAQSettings->BaselineCalcMax - ADAQSettings->BaselineCalcMin;
   double Baseline = 0.;
-  for(int sample = 0; sample < ADAQSettings->BaselineCalcMax; sample++)
+  for(int sample=ADAQSettings->BaselineCalcMin; sample<ADAQSettings->BaselineCalcMax; sample++)
     Baseline += (Waveform->GetBinContent(sample)*1.0/BaselineCalcLength);
-      
+
   return Baseline;
 }
 

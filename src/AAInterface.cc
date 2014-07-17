@@ -312,88 +312,96 @@ void AAInterface::FillWaveformFrame()
   NegativeWaveform_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
   NegativeWaveform_RB->SetState(kButtonDown);
 
-  // Zero suppression options
 
-  WaveformFrame_VF->AddFrame(PlotZeroSuppressionCeiling_CB = new TGCheckButton(WaveformFrame_VF, "Plot zero suppression ceiling", PlotZeroSuppressionCeiling_CB_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
-  PlotZeroSuppressionCeiling_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+
+TGGroupFrame *PeakFindingOptions_GF = new TGGroupFrame(WaveformFrame_VF, "Peak finding options", kVerticalFrame);
+  WaveformFrame_VF->AddFrame(PeakFindingOptions_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
   
-  WaveformFrame_VF->AddFrame(ZeroSuppressionCeiling_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Zero suppression ceiling", ZeroSuppressionCeiling_NEL_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,0,5));
-  ZeroSuppressionCeiling_NEL->GetEntry()->SetNumber(15);
-  ZeroSuppressionCeiling_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-
-  // Peak finding (ROOT TSpectrum) options
-
-  TGHorizontalFrame *PeakFinding_HF = new TGHorizontalFrame(WaveformFrame_VF);
-  WaveformFrame_VF->AddFrame(PeakFinding_HF, new TGLayoutHints(kLHintsLeft, 0,0,0,5));
-
-  PeakFinding_HF->AddFrame(FindPeaks_CB = new TGCheckButton(PeakFinding_HF, "Find peaks", FindPeaks_CB_ID),
-			   new TGLayoutHints(kLHintsLeft, 15,5,5,0));
+  TGHorizontalFrame *PeakFinding_HF0 = new TGHorizontalFrame(PeakFindingOptions_GF);
+  PeakFindingOptions_GF->AddFrame(PeakFinding_HF0, new TGLayoutHints(kLHintsLeft, 0,0,0,5));
+  
+  PeakFinding_HF0->AddFrame(FindPeaks_CB = new TGCheckButton(PeakFinding_HF0, "Find peaks", FindPeaks_CB_ID),
+			    new TGLayoutHints(kLHintsLeft, 5,5,5,0));
   FindPeaks_CB->SetState(kButtonDisabled);
   FindPeaks_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
-  PeakFinding_HF->AddFrame(UseMarkovSmoothing_CB = new TGCheckButton(PeakFinding_HF, "Use Markov smoothing", UseMarkovSmoothing_CB_ID),
-			   new TGLayoutHints(kLHintsLeft, 15,5,5,0));
+  PeakFinding_HF0->AddFrame(UseMarkovSmoothing_CB = new TGCheckButton(PeakFinding_HF0, "Use Markov smoothing", UseMarkovSmoothing_CB_ID),
+			    new TGLayoutHints(kLHintsLeft, 15,5,5,0));
   UseMarkovSmoothing_CB->SetState(kButtonDown);
   UseMarkovSmoothing_CB->SetState(kButtonDisabled);
 
   UseMarkovSmoothing_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
 
-  WaveformFrame_VF->AddFrame(MaxPeaks_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Maximum peaks", MaxPeaks_NEL_ID),
-		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
+
+  TGHorizontalFrame *PeakFinding_HF1 = new TGHorizontalFrame(PeakFindingOptions_GF);
+  PeakFindingOptions_GF->AddFrame(PeakFinding_HF1, new TGLayoutHints(kLHintsLeft, 0,0,0,5));
+
+  PeakFinding_HF1->AddFrame(MaxPeaks_NEL = new ADAQNumberEntryWithLabel(PeakFinding_HF1, "Max. peaks", MaxPeaks_NEL_ID),
+			    new TGLayoutHints(kLHintsLeft, 5,5,0,0));
   MaxPeaks_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   MaxPeaks_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   MaxPeaks_NEL->GetEntry()->SetNumber(1);
+  MaxPeaks_NEL->GetEntry()->Resize(65, 20);
+  MaxPeaks_NEL->GetEntry()->SetState(false);
   MaxPeaks_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-
-  WaveformFrame_VF->AddFrame(Sigma_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Sigma", Sigma_NEL_ID),
-		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
+  
+  PeakFinding_HF1->AddFrame(Sigma_NEL = new ADAQNumberEntryWithLabel(PeakFinding_HF1, "Sigma", Sigma_NEL_ID),
+			    new TGLayoutHints(kLHintsLeft, 10,5,0,0));
   Sigma_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   Sigma_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  Sigma_NEL->GetEntry()->SetNumber(1);
+  Sigma_NEL->GetEntry()->SetNumber(5);
+  Sigma_NEL->GetEntry()->Resize(65, 20);
+  Sigma_NEL->GetEntry()->SetState(false);
   Sigma_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
-  WaveformFrame_VF->AddFrame(Resolution_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Resolution", Resolution_NEL_ID),
-		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
+
+  TGHorizontalFrame *PeakFinding_HF2 = new TGHorizontalFrame(PeakFindingOptions_GF);
+  PeakFindingOptions_GF->AddFrame(PeakFinding_HF2, new TGLayoutHints(kLHintsLeft, 0,0,0,5));
+
+  PeakFinding_HF2->AddFrame(Resolution_NEL = new ADAQNumberEntryWithLabel(PeakFinding_HF2, "Resolution", Resolution_NEL_ID),
+			    new TGLayoutHints(kLHintsLeft, 5,5,0,0));
   Resolution_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   Resolution_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   Resolution_NEL->GetEntry()->SetNumber(0.005);
+  Resolution_NEL->GetEntry()->Resize(65, 20);
+  Resolution_NEL->GetEntry()->SetState(false);
   Resolution_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-
-  WaveformFrame_VF->AddFrame(Floor_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Floor", Floor_NEL_ID),
-		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
+  
+  PeakFinding_HF2->AddFrame(Floor_NEL = new ADAQNumberEntryWithLabel(PeakFinding_HF2, "Floor", Floor_NEL_ID),
+			    new TGLayoutHints(kLHintsLeft, 10,5,0,0));
   Floor_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   Floor_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  Floor_NEL->GetEntry()->SetNumber(10);
+  Floor_NEL->GetEntry()->SetNumber(50);
+  Floor_NEL->GetEntry()->Resize(65, 20);
+  Floor_NEL->GetEntry()->SetState(false);
   Floor_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
-  
-  TGGroupFrame *PeakPlottingOptions_GF = new TGGroupFrame(WaveformFrame_VF, "Peak finding plotting options", kHorizontalFrame);
-  WaveformFrame_VF->AddFrame(PeakPlottingOptions_GF, new TGLayoutHints(kLHintsLeft, 15,5,0,5));
 
-  PeakPlottingOptions_GF->AddFrame(PlotFloor_CB = new TGCheckButton(PeakPlottingOptions_GF, "Floor", PlotFloor_CB_ID),
-				   new TGLayoutHints(kLHintsLeft, 0,0,5,0));
+  
+  TGVerticalFrame *PeakFinding_VF0 = new TGVerticalFrame(PeakFindingOptions_GF);
+  PeakFindingOptions_GF->AddFrame(PeakFinding_VF0, new TGLayoutHints(kLHintsLeft, 5,5,0,0));
+
+  PeakFinding_VF0->AddFrame(PlotFloor_CB = new TGCheckButton(PeakFinding_VF0, "Plot the floor", PlotFloor_CB_ID),
+			    new TGLayoutHints(kLHintsLeft, 0,0,5,0));
+  PlotFloor_CB->SetState(kButtonDisabled);
   PlotFloor_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
-  PeakPlottingOptions_GF->AddFrame(PlotCrossings_CB = new TGCheckButton(PeakPlottingOptions_GF, "Crossings", PlotCrossings_CB_ID),
-				   new TGLayoutHints(kLHintsLeft, 5,0,5,0));
+  PeakFinding_VF0->AddFrame(PlotCrossings_CB = new TGCheckButton(PeakFinding_VF0, "Plot waveform intersections", PlotCrossings_CB_ID),
+			    new TGLayoutHints(kLHintsLeft, 0,0,5,0));
+  PlotCrossings_CB->SetState(kButtonDisabled);
   PlotCrossings_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
-  PeakPlottingOptions_GF->AddFrame(PlotPeakIntegratingRegion_CB = new TGCheckButton(PeakPlottingOptions_GF, "Int. region", PlotPeakIntegratingRegion_CB_ID),
-		       new TGLayoutHints(kLHintsLeft, 5,0,5,0));
+  PeakFinding_VF0->AddFrame(PlotPeakIntegratingRegion_CB = new TGCheckButton(PeakFinding_VF0, "Plot integration region", PlotPeakIntegratingRegion_CB_ID),
+			    new TGLayoutHints(kLHintsLeft, 0,0,5,0));
+  PlotPeakIntegratingRegion_CB->SetState(kButtonDisabled);
   PlotPeakIntegratingRegion_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  
+  
+  ////////////////////////
+  // Waveform baseline  //
+  ////////////////////////
 
-  // Pileup options
-  
-  WaveformFrame_VF->AddFrame(UsePileupRejection_CB = new TGCheckButton(WaveformFrame_VF, "Use pileup rejection", UsePileupRejection_CB_ID),
-			       new TGLayoutHints(kLHintsNormal, 15,5,5,5));
-  UsePileupRejection_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
-  UsePileupRejection_CB->SetState(kButtonDown);
-			       
-  // Baseline calculation options
-  
-  WaveformFrame_VF->AddFrame(PlotBaseline_CB = new TGCheckButton(WaveformFrame_VF, "Plot baseline calc. region.", PlotBaseline_CB_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
+  WaveformFrame_VF->AddFrame(PlotBaseline_CB = new TGCheckButton(WaveformFrame_VF, "Plot baseline calculation region.", PlotBaseline_CB_ID),
+			     new TGLayoutHints(kLHintsLeft, 15,5,5,0));
   PlotBaseline_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
   
   TGHorizontalFrame *BaselineRegion_HF = new TGHorizontalFrame(WaveformFrame_VF);
@@ -406,6 +414,7 @@ void AAInterface::FillWaveformFrame()
   BaselineCalcMin_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   BaselineCalcMin_NEL->GetEntry()->SetLimitValues(0,1); // Set when ADAQRootFile loaded
   BaselineCalcMin_NEL->GetEntry()->SetNumber(0); // Set when ADAQRootFile loaded
+  BaselineCalcMin_NEL->GetEntry()->Resize(55, 20);
   BaselineCalcMin_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
   
   BaselineRegion_HF->AddFrame(BaselineCalcMax_NEL = new ADAQNumberEntryWithLabel(BaselineRegion_HF, "Max.", BaselineCalcMax_NEL_ID),
@@ -415,14 +424,52 @@ void AAInterface::FillWaveformFrame()
   BaselineCalcMax_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   BaselineCalcMax_NEL->GetEntry()->SetLimitValues(1,2); // Set When ADAQRootFile loaded
   BaselineCalcMax_NEL->GetEntry()->SetNumber(1); // Set when ADAQRootFile loaded
+  BaselineCalcMax_NEL->GetEntry()->Resize(55, 20);
   BaselineCalcMax_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
 
-  // Trigger
+
+  //////////////////////////////
+  // Zero suppression options //
+  //////////////////////////////
+
+  WaveformFrame_VF->AddFrame(PlotZeroSuppressionCeiling_CB = new TGCheckButton(WaveformFrame_VF, "Plot zero suppression ceiling", PlotZeroSuppressionCeiling_CB_ID),
+			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
+  PlotZeroSuppressionCeiling_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  
+  WaveformFrame_VF->AddFrame(ZeroSuppressionCeiling_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Zero suppression ceiling", ZeroSuppressionCeiling_NEL_ID),
+			       new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+  ZeroSuppressionCeiling_NEL->GetEntry()->SetNumber(15);
+  ZeroSuppressionCeiling_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+
+
+  /////////////////////
+  // Trigger options //
+  /////////////////////
 
   WaveformFrame_VF->AddFrame(PlotTrigger_CB = new TGCheckButton(WaveformFrame_VF, "Plot trigger", PlotTrigger_CB_ID),
-		       new TGLayoutHints(kLHintsLeft, 15,5,0,0));
+		       new TGLayoutHints(kLHintsLeft, 15,5,10,0));
   PlotTrigger_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  
+  WaveformFrame_VF->AddFrame(TriggerLevel_NEFL = new ADAQNumberEntryFieldWithLabel(WaveformFrame_VF, "Trigger level (ADC)", -1),
+			     new TGLayoutHints(kLHintsNormal, 15,5,5,5));
+  TriggerLevel_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESInteger, TGNumberFormat::kNEAAnyNumber);
+  TriggerLevel_NEFL->GetEntry()->Resize(70, 20);
+  TriggerLevel_NEFL->GetEntry()->SetState(false);
 
+
+  ////////////////////
+  // Pileup options //
+  ////////////////////
+  
+  WaveformFrame_VF->AddFrame(UsePileupRejection_CB = new TGCheckButton(WaveformFrame_VF, "Use pileup rejection", UsePileupRejection_CB_ID),
+			       new TGLayoutHints(kLHintsNormal, 15,5,5,5));
+  UsePileupRejection_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  UsePileupRejection_CB->SetState(kButtonDown);
+			       
+
+  ///////////////////////
+  // Waveform analysis //
+  ///////////////////////
   
   TGGroupFrame *WaveformAnalysis_GF = new TGGroupFrame(WaveformFrame_VF, "Waveform analysis", kVerticalFrame);
   WaveformFrame_VF->AddFrame(WaveformAnalysis_GF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
@@ -2586,6 +2633,16 @@ void AAInterface::HandleCheckButtons()
   switch(CheckButtonID){
     
   case FindPeaks_CB_ID:
+    if(FindPeaks_CB->IsDown()){
+      ComputationMgr->CreateNewPeakFinder(ADAQSettings->MaxPeaks);
+      SetPeakFindingWidgetState(true, kButtonUp);
+    }
+    else
+      SetPeakFindingWidgetState(false, kButtonDisabled);
+
+    GraphicsMgr->PlotWaveform();
+    break;
+    
   case UseMarkovSmoothing_CB_ID:
     GraphicsMgr->PlotWaveform();
     break;
@@ -3120,7 +3177,7 @@ void AAInterface::HandleNumberEntries()
     // The number entry allows precise selection of waveforms to
     // plot. It also works with the slider to make sure to update the
     // position of slider if the number entry value changes
-  case WaveformSelector_NEL_ID:
+  case WaveformSelector_NEL_ID:{
     WaveformSelector_HS->SetPosition(WaveformSelector_NEL->GetEntry()->GetIntNumber());
     GraphicsMgr->PlotWaveform();
 
@@ -3142,6 +3199,7 @@ void AAInterface::HandleNumberEntries()
       WaveformIntegral_NEL->GetEntry()->SetNumber(Area);
     }
     break;
+  }
     
   case MaxPeaks_NEL_ID:
     ComputationMgr->CreateNewPeakFinder(ADAQSettings->MaxPeaks);
@@ -3262,37 +3320,27 @@ void AAInterface::HandleRadioButtons()
   switch(RadioButtonID){
     
   case RawWaveform_RB_ID:
+    FindPeaks_CB->SetState(kButtonUp);
     FindPeaks_CB->SetState(kButtonDisabled);
-    UseMarkovSmoothing_CB->SetState(kButtonDisabled);
+    WaveformAnalysis_CB->SetState(kButtonUp);
     WaveformAnalysis_CB->SetState(kButtonDisabled);
+
+    SaveSettings();
+
     GraphicsMgr->PlotWaveform();
     break;
     
   case BaselineSubtractedWaveform_RB_ID:
-    if(FindPeaks_CB->IsDown()){
-      FindPeaks_CB->SetState(kButtonDown);
-      UseMarkovSmoothing_CB->SetState(kButtonDown);
-      WaveformAnalysis_CB->SetState(kButtonDown);
-    }
-    else{
-      FindPeaks_CB->SetState(kButtonUp);
-      UseMarkovSmoothing_CB->SetState(kButtonUp);
-      WaveformAnalysis_CB->SetState(kButtonUp);
-    }
+    FindPeaks_CB->SetState(kButtonUp);
+    WaveformAnalysis_CB->SetState(kButtonUp);
+
     GraphicsMgr->PlotWaveform();
     break;
     
   case ZeroSuppressionWaveform_RB_ID:
-    if(FindPeaks_CB->IsDown()){
-      FindPeaks_CB->SetState(kButtonDown);
-      UseMarkovSmoothing_CB->SetState(kButtonDown);
-      WaveformAnalysis_CB->SetState(kButtonDown);
-    }
-    else{
-      FindPeaks_CB->SetState(kButtonUp);
-      UseMarkovSmoothing_CB->SetState(kButtonUp);
-      WaveformAnalysis_CB->SetState(kButtonUp);
-    }
+    FindPeaks_CB->SetState(kButtonUp);
+    WaveformAnalysis_CB->SetState(kButtonUp);
+    
     GraphicsMgr->PlotWaveform();
     break;
     
@@ -3922,6 +3970,11 @@ void AAInterface::UpdateForADAQFile()
   // Set the baseline calculation region to the values used during the
   // data acquisition as the default; user may update afterwards
   int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
+
+  // Update the waveform trigger level display
+  double TriggerLevel = ComputationMgr->GetADAQMeasurementParameters()->TriggerThreshold[Channel];
+  TriggerLevel_NEFL->GetEntry()->SetNumber(TriggerLevel);
+
   BaselineCalcMin_NEL->GetEntry()->SetNumber(AMP->BaselineCalcMin[Channel]);
   BaselineCalcMax_NEL->GetEntry()->SetNumber(AMP->BaselineCalcMax[Channel]);
   
@@ -4061,6 +4114,19 @@ void AAInterface::UpdateForACRONYMFile()
   UpdateFreq_NEL->GetEntry()->SetState(false);
   
   OptionsTabs_T->SetTab("Spectrum");
+}
+
+
+void AAInterface::SetPeakFindingWidgetState(bool WidgetState, EButtonState ButtonState)
+{
+  UseMarkovSmoothing_CB->SetState(ButtonState);
+  MaxPeaks_NEL->GetEntry()->SetState(WidgetState);
+  Sigma_NEL->GetEntry()->SetState(WidgetState);
+  Resolution_NEL->GetEntry()->SetState(WidgetState);
+  Floor_NEL->GetEntry()->SetState(WidgetState);
+  PlotFloor_CB->SetState(ButtonState);
+  PlotCrossings_CB->SetState(ButtonState);
+  PlotPeakIntegratingRegion_CB->SetState(ButtonState);
 }
 
 
