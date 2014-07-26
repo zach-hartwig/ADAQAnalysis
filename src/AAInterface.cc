@@ -32,6 +32,10 @@ using namespace std;
 // ADAQ
 #include "AAInterface.hh"
 #include "AAWaveformSlots.hh"
+#include "AASpectrumSlots.hh"
+#include "AAAnalysisSlots.hh"
+#include "AAGraphicsSlots.hh"
+#include "AAProcessingSlots.hh"
 #include "AAConstants.hh"
 #include "AAVersion.hh"
 
@@ -62,8 +66,10 @@ AAInterface::AAInterface(string CmdLineArg)
   ///////////////
 
   WaveformSlots = new AAWaveformSlots(this);
-
-
+  SpectrumSlots = new AASpectrumSlots(this);
+  AnalysisSlots = new AAAnalysisSlots(this);
+  GraphicsSlots = new AAGraphicsSlots(this);
+  ProcessingSlots = new AAProcessingSlots(this);
 
   //////////////
   

@@ -7,6 +7,11 @@
 // ADAQAnalysis classes
 #pragma link C++ class AAInterface+;
 #pragma link C++ class AAWaveformSlots+;
+#pragma link C++ class AASpectrumSlots+;
+#pragma link C++ class AAAnalysisSlots+;
+#pragma link C++ class AAGraphicsSlots+;
+#pragma link C++ class AAProcessingSlots+;
+#pragma link C++ class AANontabSlots+;
 #pragma link C++ class AAComputation+;
 #pragma link C++ class AAGraphics+;
 #pragma link C++ class AAParallel+;
