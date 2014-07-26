@@ -51,9 +51,12 @@ using namespace std;
 #include "AAGraphics.hh"
 #include "AAInterpolation.hh"
 
+class AAWaveformSlots;
+
 
 class AAInterface : public TGMainFrame
 {
+  friend class AAWaveformSlots;
 
 public:
 
@@ -410,6 +413,8 @@ private:
   AAComputation *ComputationMgr;
   AAGraphics *GraphicsMgr;
   AAInterpolation *InterpolationMgr;
+
+  AAWaveformSlots *WaveformSlots;
   
   // Define the class to ROOT
   ClassDef(AAInterface, 1);

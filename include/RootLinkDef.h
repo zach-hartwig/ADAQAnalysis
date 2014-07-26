@@ -6,6 +6,7 @@
 
 // ADAQAnalysis classes
 #pragma link C++ class AAInterface+;
+#pragma link C++ class AAWaveformSlots+;
 #pragma link C++ class AAComputation+;
 #pragma link C++ class AAGraphics+;
 #pragma link C++ class AAParallel+;

@@ -51,6 +51,9 @@ SRCDIR = src
 # path to ensure the ROOT dictionary files can find the headers
 INCLDIR = $(PWD)/include
 
+# Specify all header files
+INCLS = $(INCLDIR)/*.hh
+
 # Specify all object files (to be built in the build/ directory)
 SRCS = $(wildcard $(SRCDIR)/*.cc)
 TMP = $(patsubst %.cc,%.o,$(SRCS))
@@ -109,7 +112,7 @@ $(SEQ_TARGET) : $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTGLIBS) $(ROOTLIB) $(BOOSTLIBS)
 	@echo -e "\n$@ build is complete!\n"
 
-$(BUILDDIR)/%.o : $(SRCDIR)/%.cc $(DEPS)
+$(BUILDDIR)/%.o : $(SRCDIR)/%.cc $(INCLS)
 	@echo -e "\nBuilding object file '$@' ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
@@ -121,7 +124,7 @@ $(PAR_TARGET) : $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTGLIBS) $(ROOTLIB) $(BOOSTLIBS)
 	@echo -e "\n$@ build is complete!\n"
 
-$(BUILDDIR)/%_MPI.o : $(SRCDIR)/%.cc $(DEPS)
+$(BUILDDIR)/%_MPI.o : $(SRCDIR)/%.cc $(INCLS)
 	@echo -e "\nBuilding object file '$@' ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
@@ -137,7 +140,7 @@ $(BUILDDIR)/ADAQAnalysisDict_MPI.o : $(BUILDDIR)/ADAQAnalysisDict.cc
 	@echo -e "\nBuilding '$@' ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(BUILDDIR)/ADAQAnalysisDict.cc : $(INCLDIR)/*.hh $(INCLDIR)/RootLinkDef.h
+$(BUILDDIR)/ADAQAnalysisDict.cc : $(INCLS) $(INCLDIR)/RootLinkDef.h
 	@echo -e "\nGenerating ROOT dictionary '$@' ..."
 	rootcint -f $@ -c -I$(ADAQHOME)/include $^ 
 

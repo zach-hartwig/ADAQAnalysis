@@ -31,6 +31,7 @@ using namespace std;
 
 // ADAQ
 #include "AAInterface.hh"
+#include "AAWaveformSlots.hh"
 #include "AAConstants.hh"
 #include "AAVersion.hh"
 
@@ -57,6 +58,14 @@ AAInterface::AAInterface(string CmdLineArg)
     TotalX = 950;
     TotalY = 610;
   }
+
+  ///////////////
+
+  WaveformSlots = new AAWaveformSlots(this);
+
+
+
+  //////////////
   
   ThemeForegroundColor = ColorMgr->Number2Pixel(18);
   ThemeBackgroundColor = ColorMgr->Number2Pixel(22);
@@ -283,7 +292,8 @@ void AAInterface::FillWaveformFrame()
 				 new TGLayoutHints(kLHintsLeft, 5,5,5,5));
   WaveformSelector_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   WaveformSelector_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
-  WaveformSelector_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  //  WaveformSelector_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  WaveformSelector_NEL->GetEntry()->Connect("ValueSet(long)", "AAWaveformSlots", WaveformSlots, "HandleNumberEntries()");
   
   // Waveform specification (type and polarity)
 
@@ -3170,7 +3180,6 @@ void AAInterface::HandleNumberEntries()
   int NumberEntryID = ActiveNumberEntry->WidgetId();
   
   SaveSettings();
-
 
   switch(NumberEntryID){
 

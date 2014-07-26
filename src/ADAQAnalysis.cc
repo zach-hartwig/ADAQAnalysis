@@ -24,9 +24,6 @@
 
 int main(int argc, char *argv[])
 {
-  //  TH1::SetDefaultSumw2(true);
-
-
   // Assign the binary architecture (sequential or parallel) to a bool
   // that will be used frequently in the code to determine arch. type
   bool ParallelArchitecture = false;
