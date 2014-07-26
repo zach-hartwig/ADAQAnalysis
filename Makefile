@@ -1,23 +1,26 @@
 #********************************************************************
 #  name: Makefile                  
-#  date: 02 Feb 14
+#  date: 25 Jul 14
 #  auth: Zach Hartwig              
+#  mail: hartwig@psfc.mit.edu
 #
 #  desc: GNUmakefile for building ADAQAnalysis code in seqential and
 #        parallel versions (options for building are provided
 #        below). The intermediary build files are placed in build/;
-#        the final binaries are placed in bin/.
+#        the final binaries are placed in bin/. Note that a list of
+#        object files and build rules are automatically generated
+#        based on the presence of source files.
 #
 #  dpnd: The build system depends on the following:
-#  -- ROOT (mandatory)
-#  -- ADAQ libraries (mandatory)
-#  -- Boost, including Boost thread libraries (mandatory)
-#  -- Open MPI (optional; code will compiles without)
+#        -- ROOT (mandatory)
+#        -- ADAQ libraries (mandatory)
+#        -- Boost, including Boost thread libraries (mandatory)
+#        -- Open MPI (optional)
 # 
 #  To build the sequential binary
 #  $ make 
 #
-#  To build parallel binary (requires Open MPI on system)
+#  To build parallel binary (requires Open MPI)
 #  $ make par
 #
 #  To build both sequential and parallel binaries
@@ -39,26 +42,22 @@ ROOTMAKE:=$(ROOTSYS)/etc/Makefile.arch
 ROOTLIB = -lSpectrum
 include $(ROOTMAKE)
 
-# Get the execution directory of the makefile
-EXECDIR = $(PWD)
+# Specify the the binary, build, and source directories
+BUILDDIR = build
+BINDIR = bin
+SRCDIR = src
 
-# Specify the locatino of the build directory
-BUILDDIR = $(EXECDIR)/build
-
-# Specify the locatino of the binary directory
-BINDIR = $(EXECDIR)/bin
-
-# Specify the location of the source and header files
-SRCDIR = $(EXECDIR)/src
-INCLDIR = $(EXECDIR)/include
+# Specify header files directory. Note that this must be an absolute
+# path to ensure the ROOT dictionary files can find the headers
+INCLDIR = $(PWD)/include
 
 # Specify all object files (to be built in the build/ directory)
-SRCFILES = $(wildcard $(SRCDIR)/*.cc)
-TMP = $(patsubst %.cc,%.o,$(SRCFILES))
-OBJS = $(subst /src/,/build/,$(TMP))
+SRCS = $(wildcard $(SRCDIR)/*.cc)
+TMP = $(patsubst %.cc,%.o,$(SRCS))
+OBJS = $(subst src/,build/,$(TMP))
 
-# Specify the includes for the ROOT dictionary build
-CXXFLAGS += -I$(ADAQHOME)/include -I$(INCLDIR)
+# Add the mandatory ROOT dictionary object file
+OBJS += $(BUILDDIR)/ADAQAnalysisDict.o
 
 # Specify the required Boost libraries. Note that the sws/cmodws
 # cluster recently upgraded GCC, which breaks the ancient fucking
@@ -87,7 +86,7 @@ ifeq ($(ARCH),mpi)
    CXXFLAGS += -DMPI_ENABLED -I.
    MPI_ENABLED := 1
    TMP := $(OBJS)
-   OBJS = $(patsubst %.o, %_MPI.o, $(TMP))
+   OBJS = $(patsubst %.o,%_MPI.o,$(TMP))
 
 # If the user desires to build the sequential version of the binary
 # then set the macros requires for the sequential build
@@ -96,90 +95,50 @@ else
    CXX := clang++ -ferror-limit=5 -w
 endif
 
+# Specify the other necessary header file locations
+CXXFLAGS += -I$(ADAQHOME)/include -I$(INCLDIR)
 
 #***************#
 #**** RULES ****#
 #***************#
 
-$(SEQ_TARGET) : $(OBJS) $(BUILDDIR)/ADAQAnalysisDict.o
-	@echo -e "\nBuilding $@ ..."
+# Rules to build the sequential binary
+
+$(SEQ_TARGET) : $(OBJS) 
+	@echo -e "\nBuilding sequential binary '$@' ..."
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTGLIBS) $(ROOTLIB) $(BOOSTLIBS)
 	@echo -e "\n$@ build is complete!\n"
 
-$(PAR_TARGET) : $(OBJS) $(BUILDDIR)/ADAQAnalysisDict.o
-	@echo -e "\nBuilding $@ ..."
+$(BUILDDIR)/%.o : $(SRCDIR)/%.cc $(DEPS)
+	@echo -e "\nBuilding object file '$@' ..."
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+
+# Rules to build the parallel binary
+
+$(PAR_TARGET) : $(OBJS)
+	@echo -e "\nBuilding parallel binary '$@' ..."
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTGLIBS) $(ROOTLIB) $(BOOSTLIBS)
 	@echo -e "\n$@ build is complete!\n"
 
-#********************************************#
-# Rules to build the sequential object files
-
-$(BUILDDIR)/ADAQAnalysis.o : $(SRCDIR)/ADAQAnalysis.cc 
-	@echo -e "\nBuilding $@ ..."
+$(BUILDDIR)/%_MPI.o : $(SRCDIR)/%.cc $(DEPS)
+	@echo -e "\nBuilding object file '$@' ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(BUILDDIR)/AAInterface.o : $(SRCDIR)/AAInterface.cc $(INCLDIR)/AAInterface.hh
-	@echo -e "\nBuilding $@ ..."
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(BUILDDIR)/AAComputation.o : $(SRCDIR)/AAComputation.cc $(INCLDIR)/AAComputation.hh
-	@echo -e "\nBuilding $@ ..."
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-$(BUILDDIR)/AAGraphics.o : $(SRCDIR)/AAGraphics.cc $(INCLDIR)/AAGraphics.hh
-	@echo -e "\nBuilding $@ ..."
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-$(BUILDDIR)/AAParallel.o : $(SRCDIR)/AAParallel.cc $(INCLDIR)/AAParallel.hh
-	@echo -e "\nBuilding $@ ..."
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-$(BUILDDIR)/AAInterpolation.o : $(SRCDIR)/AAInterpolation.cc $(INCLDIR)/AAInterpolation.hh $(INCLDIR)/AAInterpolationData.hh
-	@echo -e "\nBuilding $@ ..."
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+#***************************************************#
+# Rules to generate the necessary ROOT dictionaries
 
 $(BUILDDIR)/ADAQAnalysisDict.o : $(BUILDDIR)/ADAQAnalysisDict.cc
-	@echo -e "\nBuilding $@ ..."
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-
-#******************************************#
-# Rules to build the parallel object files
-
-$(BUILDDIR)/ADAQAnalysis_MPI.o : $(SRCDIR)/ADAQAnalysis.cc
-	@echo -e "\nBuilding $@ ..."
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-$(BUILDDIR)/AAInterface_MPI.o : $(SRCDIR)/AAInterface.cc $(INCLDIR)/AAInterface.hh
-	@echo -e "\nBuilding $@ ..."
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-$(BUILDDIR)/AAComputation_MPI.o : $(SRCDIR)/AAComputation.cc $(INCLDIR)/AAComputation.hh
-	@echo -e "\nBuilding $@ ..."
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-$(BUILDDIR)/AAGraphics_MPI.o : $(SRCDIR)/AAGraphics.cc $(INCLDIR)/AAGraphics.hh
-	@echo -e "\nBuilding $@ ..."
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-$(BUILDDIR)/AAParallel_MPI.o : $(SRCDIR)/AAParallel.cc $(INCLDIR)/AAParallel.hh
-	@echo -e "\nBuilding $@ ..."
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-$(BUILDDIR)/AAInterpolation_MPI.o : $(SRCDIR)/AAInterpolation.cc $(INCLDIR)/AAInterpolation.hh $(INCLDIR)/AAInterpolationData.hh
-	@echo -e "\nBuilding $@ ..."
+	@echo -e "\nBuilding '$@' ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(BUILDDIR)/ADAQAnalysisDict_MPI.o : $(BUILDDIR)/ADAQAnalysisDict.cc
-	@echo -e "\nBuilding $@ ..."
+	@echo -e "\nBuilding '$@' ..."
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-
-#************************************************#
-# Rule to generate the necessary ROOT dictionary
-
 $(BUILDDIR)/ADAQAnalysisDict.cc : $(INCLDIR)/*.hh $(INCLDIR)/RootLinkDef.h
-	@echo -e "\nGenerating ROOT dictionary $@ ..."
+	@echo -e "\nGenerating ROOT dictionary '$@' ..."
 	rootcint -f $@ -c -I$(ADAQHOME)/include $^ 
 
 
@@ -203,10 +162,6 @@ both:
 	@make -j3
 	@make ARCH=mpi -j2
 	@echo -e ""
-
-.PHONY:
-test:
-	@echo "$(OBJS)"
 
 # Useful notes for the uninitiated:
 #
