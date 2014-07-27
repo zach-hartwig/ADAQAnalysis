@@ -602,12 +602,12 @@ void AAInterface::FillSpectrumFrame()
   ACROSpectrumOptions_HF->AddFrame(ACROSpectrumDetector_BG = new TGButtonGroup(ACROSpectrumOptions_HF, "ACRO detector", kVerticalFrame),
 				   new TGLayoutHints(kLHintsCenterX, 5,5,15,0));
   ACROSpectrumLS_RB = new TGRadioButton(ACROSpectrumDetector_BG, "LaBr3", ACROSpectrumLS_RB_ID);
-  ACROSpectrumLS_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  ACROSpectrumLS_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
   ACROSpectrumLS_RB->SetState(kButtonDown);
   ACROSpectrumLS_RB->SetState(kButtonDisabled);
   
   ACROSpectrumES_RB = new TGRadioButton(ACROSpectrumDetector_BG, "EJ301", ACROSpectrumES_RB_ID);
-  ACROSpectrumES_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  ACROSpectrumES_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
   ACROSpectrumES_RB->SetState(kButtonDisabled);
   
   
@@ -623,13 +623,13 @@ void AAInterface::FillSpectrumFrame()
   // Energy calibration 
   SpectrumCalibration_HF0->AddFrame(SpectrumCalibration_CB = new TGCheckButton(SpectrumCalibration_HF0, "Make it so", SpectrumCalibration_CB_ID),
 				    new TGLayoutHints(kLHintsLeft, 0,0,10,0));
-  SpectrumCalibration_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  SpectrumCalibration_CB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleCheckButtons()");
   SpectrumCalibration_CB->SetState(kButtonUp);
 
   // Load from file text button
   SpectrumCalibration_HF0->AddFrame(SpectrumCalibrationLoad_TB = new TGTextButton(SpectrumCalibration_HF0, "Load from file", SpectrumCalibrationLoad_TB_ID),
 				    new TGLayoutHints(kLHintsRight, 15,0,5,5));
-  SpectrumCalibrationLoad_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  SpectrumCalibrationLoad_TB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleTextButtons()");
   SpectrumCalibrationLoad_TB->Resize(120,25);
   SpectrumCalibrationLoad_TB->ChangeOptions(SpectrumCalibrationLoad_TB->GetOptions() | kFixedSize);
   SpectrumCalibrationLoad_TB->SetState(kButtonDisabled);
@@ -641,12 +641,12 @@ void AAInterface::FillSpectrumFrame()
 				    new TGLayoutHints(kLHintsNormal, 10,5,5,5));
   SpectrumCalibrationStandard_RB->SetState(kButtonDown);
   SpectrumCalibrationStandard_RB->SetState(kButtonDisabled);
-  SpectrumCalibrationStandard_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  SpectrumCalibrationStandard_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
   
   SpectrumCalibration_HF5->AddFrame(SpectrumCalibrationEdgeFinder_RB = new TGRadioButton(SpectrumCalibration_HF5, "Edge finder", SpectrumCalibrationEdgeFinder_RB_ID),
 				       new TGLayoutHints(kLHintsNormal, 30,5,5,5));
   SpectrumCalibrationEdgeFinder_RB->SetState(kButtonDisabled);
-  SpectrumCalibrationEdgeFinder_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  SpectrumCalibrationEdgeFinder_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
 
 
   TGHorizontalFrame *SpectrumCalibrationType_HF = new TGHorizontalFrame(SpectrumCalibration_GF);
@@ -658,7 +658,7 @@ void AAInterface::FillSpectrumFrame()
   SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Calibration point 0",0);
   SpectrumCalibrationPoint_CBL->GetComboBox()->Select(0);
   SpectrumCalibrationPoint_CBL->GetComboBox()->SetEnabled(false);
-  SpectrumCalibrationPoint_CBL->GetComboBox()->Connect("Selected(int,int)", "AAInterface", this, "HandleComboBox(int,int)");
+  SpectrumCalibrationPoint_CBL->GetComboBox()->Connect("Selected(int,int)", "AASpectrumSlots", SpectrumSlots, "HandleComboBoxes(int,int)");
 
   TGVerticalFrame *SpectrumCalibrationType_VF = new TGVerticalFrame(SpectrumCalibrationType_HF);
   SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationType_VF);
@@ -677,7 +677,7 @@ void AAInterface::FillSpectrumFrame()
   SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
   SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);
   SpectrumCalibrationEnergy_NEL->GetEntry()->SetState(false);
-  SpectrumCalibrationEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  SpectrumCalibrationEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AASpectrumSlots", SpectrumSlots, "HandleNumberEntries()");
 
   SpectrumCalibration_GF->AddFrame(SpectrumCalibrationPulseUnit_NEL = new ADAQNumberEntryWithLabel(SpectrumCalibration_GF, "Pulse unit (ADC)", SpectrumCalibrationPulseUnit_NEL_ID),
 				       new TGLayoutHints(kLHintsLeft,0,0,0,5));
@@ -685,7 +685,7 @@ void AAInterface::FillSpectrumFrame()
   SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(1.0);
   SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetState(false);
-  SpectrumCalibrationPulseUnit_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  SpectrumCalibrationPulseUnit_NEL->GetEntry()->Connect("ValueSet(long)", "AASpectrumSlots", SpectrumSlots, "HandleNumberEntries()");
 
   TGHorizontalFrame *SpectrumCalibration_HF1 = new TGHorizontalFrame(SpectrumCalibration_GF);
   SpectrumCalibration_GF->AddFrame(SpectrumCalibration_HF1);
@@ -693,7 +693,7 @@ void AAInterface::FillSpectrumFrame()
   // Set point text button
   SpectrumCalibration_HF1->AddFrame(SpectrumCalibrationSetPoint_TB = new TGTextButton(SpectrumCalibration_HF1, "Set Pt.", SpectrumCalibrationSetPoint_TB_ID),
 				    new TGLayoutHints(kLHintsNormal, 5,5,5,0));
-  SpectrumCalibrationSetPoint_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  SpectrumCalibrationSetPoint_TB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleTextButtons()");
   SpectrumCalibrationSetPoint_TB->Resize(100,25);
   SpectrumCalibrationSetPoint_TB->ChangeOptions(SpectrumCalibrationSetPoint_TB->GetOptions() | kFixedSize);
   SpectrumCalibrationSetPoint_TB->SetState(kButtonDisabled);
@@ -701,7 +701,7 @@ void AAInterface::FillSpectrumFrame()
   // Calibrate text button
   SpectrumCalibration_HF1->AddFrame(SpectrumCalibrationCalibrate_TB = new TGTextButton(SpectrumCalibration_HF1, "Calibrate", SpectrumCalibrationCalibrate_TB_ID),
 				    new TGLayoutHints(kLHintsNormal, 0,0,5,0));
-  SpectrumCalibrationCalibrate_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  SpectrumCalibrationCalibrate_TB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleTextButtons()");
   SpectrumCalibrationCalibrate_TB->Resize(100,25);
   SpectrumCalibrationCalibrate_TB->ChangeOptions(SpectrumCalibrationCalibrate_TB->GetOptions() | kFixedSize);
   SpectrumCalibrationCalibrate_TB->SetState(kButtonDisabled);
@@ -712,7 +712,7 @@ void AAInterface::FillSpectrumFrame()
   // Plot text button
   SpectrumCalibration_HF2->AddFrame(SpectrumCalibrationPlot_TB = new TGTextButton(SpectrumCalibration_HF2, "Plot", SpectrumCalibrationPlot_TB_ID),
 				    new TGLayoutHints(kLHintsNormal, 5,5,5,5));
-  SpectrumCalibrationPlot_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  SpectrumCalibrationPlot_TB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleTextButtons()");
   SpectrumCalibrationPlot_TB->Resize(100,25);
   SpectrumCalibrationPlot_TB->ChangeOptions(SpectrumCalibrationPlot_TB->GetOptions() | kFixedSize);
   SpectrumCalibrationPlot_TB->SetState(kButtonDisabled);
@@ -720,7 +720,7 @@ void AAInterface::FillSpectrumFrame()
   // Reset text button
   SpectrumCalibration_HF2->AddFrame(SpectrumCalibrationReset_TB = new TGTextButton(SpectrumCalibration_HF2, "Reset", SpectrumCalibrationReset_TB_ID),
 					  new TGLayoutHints(kLHintsNormal, 0,0,5,5));
-  SpectrumCalibrationReset_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  SpectrumCalibrationReset_TB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleTextButtons()");
   SpectrumCalibrationReset_TB->Resize(100,25);
   SpectrumCalibrationReset_TB->ChangeOptions(SpectrumCalibrationReset_TB->GetOptions() | kFixedSize);
   SpectrumCalibrationReset_TB->SetState(kButtonDisabled);
@@ -737,7 +737,7 @@ void AAInterface::FillSpectrumFrame()
   CreateSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   CreateSpectrum_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   CreateSpectrum_TB->ChangeOptions(CreateSpectrum_TB->GetOptions() | kFixedSize);
-  CreateSpectrum_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  CreateSpectrum_TB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleTextButtons()");
 
 }
 
@@ -2203,239 +2203,6 @@ void AAInterface::HandleTextButtons()
   switch(ActiveTextButtonID){
 
     ////////////////////
-    // Spectrum frame //
-    ////////////////////
-
-    ///////////////////
-    // Spectra creation
-
-  case CreateSpectrum_TB_ID:{
-    
-    // Alert the user the filtering particles by PSD into the spectra
-    // requires integration type peak finder to be used
-    if(ComputationMgr->GetUsePSDFilters()[ADAQSettings->PSDChannel] and 
-       ADAQSettings->ADAQSpectrumIntTypeWW)
-      CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
-    
-    // Sequential processing
-    if(ProcessingSeq_RB->IsDown()){
-      if(ADAQFileLoaded)
-	ComputationMgr->CreateSpectrum();
-
-      else if(ACRONYMFileLoaded)
-	ComputationMgr->CreateACRONYMSpectrum();
-      
-      if(ComputationMgr->GetSpectrumExists())
-	GraphicsMgr->PlotSpectrum();
-    }
-    
-    // Parallel processing
-    else{
-      if(ADAQFileLoaded){
-	SaveSettings(true);
-	ComputationMgr->ProcessWaveformsInParallel("histogramming");
-	
-	if(ComputationMgr->GetSpectrumExists())
-	  GraphicsMgr->PlotSpectrum();
-      }
-      else if(ACRONYMFileLoaded){
-	CreateMessageBox("Error! ACRONYM files cannot be processed in parallel! Please switch to 'sequential mode'.\n","Stop");
-      }
-    }
-
-    // If the background and integration functions were being used,
-    // cycle them in order to refresh the spectral plotting and analysis
-    if(SpectrumFindBackground_CB->IsDown()){
-      SpectrumFindBackground_CB->SetState(kButtonUp, true);
-      SpectrumFindBackground_CB->SetState(kButtonDown, true);
-    }
-
-    if(SpectrumFindIntegral_CB->IsDown()){
-      SpectrumFindIntegral_CB->SetState(kButtonUp, true);
-      SpectrumFindIntegral_CB->SetState(kButtonDown, true);
-    }
-    
-    if(IntegratePearson_CB->IsDown()){
-      double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
-      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
-    }
-    
-    int SpectrumMinBin = SpectrumMinBin_NEL->GetEntry()->GetNumber();
-    SpectrumRangeMin_NEL->GetEntry()->SetNumber(SpectrumMinBin);
-    
-    int SpectrumMaxBin = SpectrumMaxBin_NEL->GetEntry()->GetNumber();
-    SpectrumRangeMax_NEL->GetEntry()->SetNumber(SpectrumMaxBin);
-    break;
-  }
-
-    
-    //////////////////////
-    // Spectra calibration
-
-  case SpectrumCalibrationSetPoint_TB_ID:{
-
-    // Get the calibration point to be set
-    uint SetPoint = SpectrumCalibrationPoint_CBL->GetComboBox()->GetSelected();
-
-    // Get the energy of the present calibration point
-    double Energy = SpectrumCalibrationEnergy_NEL->GetEntry()->GetNumber();
-   
-    // Get the pulse unit value of the present calibration point
-    double PulseUnit = SpectrumCalibrationPulseUnit_NEL->GetEntry()->GetNumber();
-    
-    // Get the current channel being histogrammed in DGScope
-    int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
-
-    bool NewPoint = ComputationMgr->SetCalibrationPoint(Channel, SetPoint, Energy, PulseUnit);
-    
-    if(NewPoint){
-      // Add a new point to the number of calibration points in case
-      // the user wants to add subsequent points to the calibration
-      stringstream ss;
-      ss << (SetPoint+1);
-      string NewPointLabel = "Calibration point " + ss.str();
-      SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry(NewPointLabel.c_str(),SetPoint+1);
-      
-      // Set the combo box to display the new calibration point...
-      SpectrumCalibrationPoint_CBL->GetComboBox()->Select(SetPoint+1);
-      
-      // ...and set the calibration energy and pulse unit ROOT number
-      // entry widgets to their default "0.0" and "1.0" respectively,
-      SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);
-      SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(1.0);
-    }
-    break;
-  }
-
-  case SpectrumCalibrationCalibrate_TB_ID:{
-    
-    // If there are 2 or more points in the current channel's
-    // calibration data set then create a new TGraph object. The
-    // TGraph object will have pulse units [ADC] on the X-axis and the
-    // corresponding energies [in whatever units the user has entered
-    // the energy] on the Y-axis. A TGraph is used because it provides
-    // very easy but extremely powerful methods for interpolation,
-    // which allows the pulse height/area to be converted in to energy
-    // efficiently in the acquisition loop.
-
-    // Get the current channel being histogrammed in 
-    int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
-
-    bool Success = ComputationMgr->SetCalibration(Channel);
-
-    if(Success){
-      SpectrumCalibrationCalibrate_TB->SetText("Calibrated");
-      SpectrumCalibrationCalibrate_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
-      SpectrumCalibrationCalibrate_TB->SetBackgroundColor(ColorMgr->Number2Pixel(32));
-    }
-    else
-      CreateMessageBox("The calibration could not be set!","Stop");
-
-    break;
-  }
-
-  case SpectrumCalibrationPlot_TB_ID:{
-    
-    int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
-    
-    GraphicsMgr->PlotCalibration(Channel);
-
-    break;
-  }
-
-  case SpectrumCalibrationReset_TB_ID:{
-    
-    // Get the current channel being histogrammed in 
-    int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
-    
-    bool Success = ComputationMgr->ClearCalibration(Channel);
-
-    // Reset the calibration widgets
-    if(Success){
-      SpectrumCalibrationCalibrate_TB->SetText("Calibrate");
-      SpectrumCalibrationCalibrate_TB->SetForegroundColor(ColorMgr->Number2Pixel(1));
-      SpectrumCalibrationCalibrate_TB->SetBackgroundColor(ThemeForegroundColor);
-
-      SpectrumCalibrationPoint_CBL->GetComboBox()->RemoveAll();
-      SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Calibration point 0", 0);
-      SpectrumCalibrationPoint_CBL->GetComboBox()->Select(0);
-      SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);
-      SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(1.0);
-    }
-    break;
-  }
-
-  case SpectrumCalibrationLoad_TB_ID:{
-
-    const char *FileTypes[] = {"ADAQ calibration file", "*.acal",
-			       "All files",             "*.*",
-			       0, 0};
-    
-    TGFileInfo FileInformation;
-    FileInformation.fFileTypes = FileTypes;
-    FileInformation.fIniDir = StrDup(getenv("PWD"));
-
-    new TGFileDialog(gClient->GetRoot(), this, kFDOpen, &FileInformation);
-
-    if(FileInformation.fFilename == NULL)
-      CreateMessageBox("A calibration file was not selected! No calibration has been made!","Stop");
-    else{
-
-      // Get the present channel
-      int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
-      
-      //      string CalibrationFileName = "/home/hartwig/aims/ADAQAnalysis/test/ExptNaIWaveforms.acal";
-      string CalibrationFileName = FileInformation.fFilename;
-
-      // Set the calibration file to an input stream
-      ifstream In(CalibrationFileName.c_str());
-
-      // Reset an preexisting calibration to make way for the new!
-      SpectrumCalibrationReset_TB->Clicked();
-
-      // Iterate through each line in the file and use the data to set
-      // the calibration points sequentially
-      int SetPoint = 0;
-      while(In.good()){
-	double Energy, PulseUnit;
-	In >> Energy >> PulseUnit;
-
-	if(In.eof()) break;
-
-	ComputationMgr->SetCalibrationPoint(Channel, SetPoint, Energy, PulseUnit);
-	
-	// Add a new point to the number of calibration points in case
-	// the user wants to add subsequent points to the calibration
-	stringstream ss;
-	ss << (SetPoint+1);
-	string NewPointLabel = "Calibration point " + ss.str();
-	SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry(NewPointLabel.c_str(),SetPoint+1);
-	
-	// Set the combo box to display the next setable calibration point...
-	SpectrumCalibrationPoint_CBL->GetComboBox()->Select(SetPoint+1);
-	SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);
-	SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(1.0);
-	
-	SetPoint++;
-      }
-
-      In.close();
-
-      // Use the loaded calibration points to set the calibration
-      bool Success = ComputationMgr->SetCalibration(Channel);
-      if(Success){
-	SpectrumCalibrationCalibrate_TB->SetText("Calibrated");
-	SpectrumCalibrationCalibrate_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
-	SpectrumCalibrationCalibrate_TB->SetBackgroundColor(ColorMgr->Number2Pixel(32));
-      }
-      else
-	CreateMessageBox("The calibration could not be set! Please check file format.","Stop");
-    }
-    break;
-  }
-
-
-    ////////////////////
     // Analysis frame //
     ////////////////////
 
@@ -2686,26 +2453,6 @@ void AAInterface::HandleCheckButtons()
     }
     break;
   }
-    
-  case SpectrumFindPeaks_CB_ID:
-    if(!ComputationMgr->GetSpectrumExists())
-      break;
-    
-    if(SpectrumFindPeaks_CB->IsDown()){
-      SpectrumNumPeaks_NEL->GetEntry()->SetState(true);
-      SpectrumSigma_NEL->GetEntry()->SetState(true);
-      SpectrumResolution_NEL->GetEntry()->SetState(true);
-
-      //FindSpectrumPeaks();
-    }
-    else{
-      SpectrumNumPeaks_NEL->GetEntry()->SetState(false);
-      SpectrumSigma_NEL->GetEntry()->SetState(false);
-      SpectrumResolution_NEL->GetEntry()->SetState(false);
-
-      GraphicsMgr->PlotSpectrum();
-    }
-    break;
     
   case SpectrumFindBackground_CB_ID:{
     if(!ComputationMgr->GetSpectrumExists())
@@ -3142,14 +2889,6 @@ void AAInterface::HandleNumberEntries()
 
   switch(NumberEntryID){
     
-  case SpectrumNumPeaks_NEL_ID:
-  case SpectrumSigma_NEL_ID:
-  case SpectrumResolution_NEL_ID:
-    //FindSpectrumPeaks();
-    break;
-
-  case SpectrumRangeMin_NEL_ID:
-  case SpectrumRangeMax_NEL_ID:
   case SpectrumBackgroundIterations_NEL_ID:
     ComputationMgr->CalculateSpectrumBackground();
     GraphicsMgr->PlotSpectrum();
@@ -3240,39 +2979,6 @@ void AAInterface::HandleRadioButtons()
   SaveSettings();
 
   switch(RadioButtonID){
-    
-  case ACROSpectrumLS_RB_ID:
-    if(ACROSpectrumLS_RB->IsDown()){
-      WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, ComputationMgr->GetACRONYMLSEntries() );
-      WaveformsToHistogram_NEL->GetEntry()->SetNumber( ComputationMgr->GetACRONYMLSEntries() );
-    }
-    break;
-
-  case ACROSpectrumES_RB_ID:
-    if(ACROSpectrumES_RB->IsDown()){
-      WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, ComputationMgr->GetACRONYMESEntries() );
-      WaveformsToHistogram_NEL->GetEntry()->SetNumber( ComputationMgr->GetACRONYMESEntries() );
-    }
-    break;
-    
-
-  case SpectrumCalibrationStandard_RB_ID:{
-    if(SpectrumCalibrationStandard_RB->IsDown()){
-      SpectrumCalibrationEdgeFinder_RB->SetState(kButtonUp);
-      HandleTripleSliderPointer();
-    }
-
-    break;
-  }    
-    
-  case SpectrumCalibrationEdgeFinder_RB_ID:{
-    if(SpectrumCalibrationEdgeFinder_RB->IsDown()){
-      GraphicsMgr->PlotSpectrum();
-      SpectrumCalibrationStandard_RB->SetState(kButtonUp);
-    }
-    
-    break;
-  }
   
   case SpectrumWithBackground_RB_ID:
     SpectrumLessBackground_RB->SetState(kButtonUp);
@@ -3388,39 +3094,6 @@ void AAInterface::HandleComboBox(int ComboBoxID, int SelectedID)
   SaveSettings();
 
   switch(ComboBoxID){
-
-    // The user can obtain the values used for each calibration point
-    // by selecting the calibration point with the combo box
-  case SpectrumCalibrationPoint_CBL_ID:{
-
-    const int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
-
-    // Get the vector<TGraph *> of spectra calibrations from the
-    // ComputationMgr (if they are set for this channel) and set the
-    // {Energy,PulseUnit} value to the number entry displays
-    if(ComputationMgr->GetUseSpectraCalibrations()[Channel]){
-      vector<TGraph *> Calibrations = ComputationMgr->GetSpectraCalibrations();
-
-      double *PulseUnit = Calibrations[Channel]->GetX();
-      double *Energy = Calibrations[Channel]->GetY();
-
-      // User selected present point ready for entry (not yet set)
-      if(SelectedID+1 == SpectrumCalibrationPoint_CBL->GetComboBox()->GetNumberOfEntries()){
-	SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);
-	SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(1.0);
-      }
-      
-      // User selected calibration point (already set)
-      else{
-	SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(Energy[SelectedID]);
-	SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(PulseUnit[SelectedID]);
-
-	// Update the position of the calibration line
-	SpectrumCalibrationEnergy_NEL->GetEntry()->ValueSet(0);
-      }
-    }
-    break;
-  }
 
   case EASpectrumType_CBL_ID:
     if(SelectedID == 0){

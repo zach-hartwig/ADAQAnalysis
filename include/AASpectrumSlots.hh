@@ -3,6 +3,9 @@
 
 #include <TObject.h>
 
+#include "AAComputation.hh"
+#include "AAGraphics.hh"
+
 class AAInterface;
 
 class AASpectrumSlots : public TObject
@@ -12,14 +15,18 @@ public:
   ~AASpectrumSlots();
 
   void HandleCheckButtons();
-  void HandleComboBoxes();
+  void HandleComboBoxes(int, int);
   void HandleNumberEntries();
   void HandleRadioButtons();
+  void HandleTextButtons();
 
   ClassDef(AASpectrumSlots, 0);
 
 private:
   AAInterface *TheInterface;
+
+  AAComputation *ComputationMgr;
+  AAGraphics *GraphicsMgr;
 };
 
 #endif

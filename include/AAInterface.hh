@@ -62,6 +62,10 @@ class AANontabSlots;
 class AAInterface : public TGMainFrame
 {
   friend class AAWaveformSlots;
+  friend class AASpectrumSlots;
+  friend class AAAnalysisSlots;
+  friend class AAGraphicsSlots;
+  friend class AAProcessingSlots;
 
 public:
 

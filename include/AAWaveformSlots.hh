@@ -26,7 +26,6 @@ private:
 
   AAComputation *ComputationMgr;
   AAGraphics *GraphicsMgr;
-
 };
 
 #endif
