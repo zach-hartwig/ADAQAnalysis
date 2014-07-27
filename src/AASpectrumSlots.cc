@@ -13,6 +13,7 @@ AASpectrumSlots::AASpectrumSlots(AAInterface *TI)
   GraphicsMgr = AAGraphics::GetInstance();
 }
 
+
 AASpectrumSlots::~AASpectrumSlots()
 {;}
 
