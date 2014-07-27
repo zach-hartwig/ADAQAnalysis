@@ -84,6 +84,7 @@ enum{
   /////////////////////////////////////////
   // Values for the "Waveform" tabbed frame
 
+  ChannelSelector_CBL_ID,
   WaveformSelector_NEL_ID,
 
   RawWaveform_RB_ID,
