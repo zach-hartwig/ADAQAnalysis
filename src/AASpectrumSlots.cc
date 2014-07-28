@@ -93,7 +93,38 @@ void AASpectrumSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
 
 
 void AASpectrumSlots::HandleNumberEntries()
-{;}
+{
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+    return;
+  
+  TGNumberEntry *NumberEntry = (TGNumberEntry *) gTQSender;
+  int NumberEntryID = NumberEntry->WidgetId();
+  
+  TheInterface->SaveSettings();
+
+  switch(NumberEntryID){
+    
+  case SpectrumCalibrationEnergy_NEL_ID:
+  case SpectrumCalibrationPulseUnit_NEL_ID:{
+    // Get the current spectrum
+    TH1F *Spectrum_H = ComputationMgr->GetSpectrum();
+    
+    // Get the value set in the PulseUnit number entry
+    double Value = 0.;
+    if(SpectrumCalibrationEnergy_NEL_ID == NumberEntryID)
+      Value = TheInterface->SpectrumCalibrationEnergy_NEL->GetEntry()->GetNumber();
+    else
+      Value = TheInterface->SpectrumCalibrationPulseUnit_NEL->GetEntry()->GetNumber();
+    
+    // Draw the new calibration line value ontop of the spectrum
+    GraphicsMgr->PlotVCalibrationLine(Value);
+    break;
+  }
+    
+  default:
+    break;
+  }
+}
 
 
 void AASpectrumSlots::HandleRadioButtons()

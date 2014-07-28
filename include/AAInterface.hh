@@ -110,6 +110,7 @@ public:
   void SetCalibrationWidgetState(bool, EButtonState);
   void SetEAGammaWidgetState(bool, EButtonState);
   void SetEANeutronWidgetState(bool, EButtonState);
+  void SetSpectrumBackgroundWidgetState(bool, EButtonState);
   
 
 private:
