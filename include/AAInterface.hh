@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 ////
 // name: AAInterface.hh
 // date: 16 Jul 14
@@ -6,7 +6,7 @@
 //
 // desc: 
 //
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 
 #ifndef __AAInterface_hh__
 #define __AAInterface_hh__ 1
@@ -66,6 +66,7 @@ class AAInterface : public TGMainFrame
   friend class AAAnalysisSlots;
   friend class AAGraphicsSlots;
   friend class AAProcessingSlots;
+  friend class AANontabSlots;
 
 public:
 
@@ -82,14 +83,6 @@ public:
   void FillProcessingFrame();
   void FillCanvasFrame();
 
-  // "Slot" methods to recieve and act upon ROOT widget "signals"
-  void HandleMenu(int);
-  void HandleSliders(int);
-  void HandleDoubleSliders();
-  void HandleTripleSliderPointer();
-  void HandleCanvas(int, int, int, TObject *);
-  void HandleTerminate();
-  
   // Method to save all widget values in a storage class
   void SaveSettings(bool SaveToFile=false);
   
@@ -424,6 +417,7 @@ private:
   AAAnalysisSlots *AnalysisSlots;
   AAGraphicsSlots *GraphicsSlots;
   AAProcessingSlots *ProcessingSlots;
+  AANontabSlots *NontabSlots;
   
   // Define the class to ROOT
   ClassDef(AAInterface, 1);

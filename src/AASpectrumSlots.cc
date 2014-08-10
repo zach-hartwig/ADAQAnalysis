@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "AASpectrumSlots.hh"
+#include "AANontabSlots.hh"
 #include "AAInterface.hh"
 #include "AAGraphics.hh"
 
@@ -34,7 +35,7 @@ void AASpectrumSlots::HandleCheckButtons()
     
     if(TheInterface->SpectrumCalibration_CB->IsDown()){
       TheInterface->SetCalibrationWidgetState(true, kButtonUp);
-      TheInterface->HandleTripleSliderPointer();
+      TheInterface->NontabSlots->HandleTripleSliderPointer();
     }
     else{
       TheInterface->SetCalibrationWidgetState(false, kButtonDisabled);
@@ -158,7 +159,7 @@ void AASpectrumSlots::HandleRadioButtons()
   case SpectrumCalibrationStandard_RB_ID:{
     if(TheInterface->SpectrumCalibrationStandard_RB->IsDown()){
       TheInterface->SpectrumCalibrationEdgeFinder_RB->SetState(kButtonUp);
-      TheInterface->HandleTripleSliderPointer();
+      TheInterface->NontabSlots->HandleTripleSliderPointer();
     }
     break;
   }    

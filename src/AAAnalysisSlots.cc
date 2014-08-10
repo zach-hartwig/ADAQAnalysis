@@ -1,4 +1,5 @@
 #include "AAAnalysisSlots.hh"
+#include "AANontabSlots.hh"
 #include "AAInterface.hh"
 #include "AAGraphics.hh"
 
@@ -23,7 +24,6 @@ void AAAnalysisSlots::HandleCheckButtons()
   int CheckButtonID = CheckButton->WidgetId();
 
   TheInterface->SaveSettings();
-
 
   switch(CheckButtonID){
     
@@ -101,7 +101,7 @@ void AAAnalysisSlots::HandleCheckButtons()
 	TheInterface->SetEAGammaWidgetState(false, kButtonDisabled);
 	TheInterface->SetEANeutronWidgetState(true, kButtonUp);
       }
-      TheInterface->HandleTripleSliderPointer();
+      TheInterface->NontabSlots->HandleTripleSliderPointer();
     }
     else{
       TheInterface->EASpectrumType_CBL->GetComboBox()->SetEnabled(false);
@@ -116,7 +116,7 @@ void AAAnalysisSlots::HandleCheckButtons()
   }
     
   case EAEscapePeaks_CB_ID:
-    TheInterface->HandleTripleSliderPointer();
+    TheInterface->NontabSlots->HandleTripleSliderPointer();
     break;
   }
 }
@@ -179,12 +179,12 @@ void AAAnalysisSlots::HandleNumberEntries()
     double CF = TheInterface->EALightConversionFactor_NEL->GetEntry()->GetNumber();
     InterpolationMgr->SetConversionFactor(CF);
     InterpolationMgr->ConstructResponses();
-    TheInterface->HandleTripleSliderPointer();
+    TheInterface->NontabSlots->HandleTripleSliderPointer();
     break;
   }
     
   case EAErrorWidth_NEL_ID:
-    TheInterface->HandleTripleSliderPointer();
+    TheInterface->NontabSlots->HandleTripleSliderPointer();
     break;
 
   case EAElectronEnergy_NEL_ID:

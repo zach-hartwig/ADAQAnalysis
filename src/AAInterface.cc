@@ -1,4 +1,4 @@
-//////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 //
 // name: AAInterface.cc
 // date: 16 Jul 14
@@ -6,7 +6,7 @@
 //
 // desc:
 //
-//////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 
 // ROOT
 #include <TApplication.h>
@@ -36,6 +36,7 @@ using namespace std;
 #include "AAAnalysisSlots.hh"
 #include "AAGraphicsSlots.hh"
 #include "AAProcessingSlots.hh"
+#include "AANontabSlots.hh"
 #include "AAConstants.hh"
 #include "AAVersion.hh"
 
@@ -70,6 +71,7 @@ AAInterface::AAInterface(string CmdLineArg)
   AnalysisSlots = new AAAnalysisSlots(this);
   GraphicsSlots = new AAGraphicsSlots(this);
   ProcessingSlots = new AAProcessingSlots(this);
+  NontabSlots = new AANontabSlots(this);
 
   //////////////
   
@@ -172,7 +174,7 @@ void AAInterface::CreateTheMainFrames()
   MenuFile->AddEntry("&Print canvas ...", MenuFilePrint_ID);
   MenuFile->AddSeparator();
   MenuFile->AddEntry("E&xit", MenuFileExit_ID);
-  MenuFile->Connect("Activated(int)", "AAInterface", this, "HandleMenu(int)");
+  MenuFile->Connect("Activated(int)", "AANontabSlots", NontabSlots, "HandleMenu(int)");
 
   TGMenuBar *MenuBar = new TGMenuBar(MenuFrame, 100, 20, kHorizontalFrame);
   MenuBar->SetBackgroundColor(ThemeBackgroundColor);
@@ -1823,7 +1825,7 @@ void AAInterface::FillCanvasFrame()
 		      new TGLayoutHints(kLHintsCenterY));
   YAxisLimits_DVS->SetRange(0,1);
   YAxisLimits_DVS->SetPosition(0,1);
-  YAxisLimits_DVS->Connect("PositionChanged()", "AAInterface", this, "HandleDoubleSliders()");
+  YAxisLimits_DVS->Connect("PositionChanged()", "AANontabSlots", NontabSlots, "HandleDoubleSliders()");
   
   Canvas_HF->AddFrame(Canvas_EC = new TRootEmbeddedCanvas("TheCanvas_EC", Canvas_HF, CanvasX, CanvasY),
 		      new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
@@ -1834,15 +1836,15 @@ void AAInterface::FillCanvasFrame()
   Canvas_EC->GetCanvas()->SetLeftMargin(0.13);
   Canvas_EC->GetCanvas()->SetBottomMargin(0.12);
   Canvas_EC->GetCanvas()->SetRightMargin(0.05);
-  Canvas_EC->GetCanvas()->Connect("ProcessedEvent(int, int, int, TObject *)", "AAInterface", this, "HandleCanvas(int, int, int, TObject *)");
+  Canvas_EC->GetCanvas()->Connect("ProcessedEvent(int, int, int, TObject *)", "AANontabSlots", NontabSlots, "HandleCanvas(int, int, int, TObject *)");
 
   Canvas_VF->AddFrame(XAxisLimits_THS = new TGTripleHSlider(Canvas_VF, CanvasX, kDoubleScaleBoth, XAxisLimits_THS_ID),
 		      new TGLayoutHints(kLHintsNormal, SliderBuffer,5,5,0));
   XAxisLimits_THS->SetRange(0,1);
   XAxisLimits_THS->SetPosition(0,1);
   XAxisLimits_THS->SetPointerPosition(0.5);
-  XAxisLimits_THS->Connect("PositionChanged()", "AAInterface", this, "HandleDoubleSliders()");
-  XAxisLimits_THS->Connect("PointerPositionChanged()", "AAInterface", this, "HandleTripleSliderPointer()");
+  XAxisLimits_THS->Connect("PositionChanged()", "AANontabSlots", NontabSlots, "HandleDoubleSliders()");
+  XAxisLimits_THS->Connect("PointerPositionChanged()", "AANontabSlots", NontabSlots, "HandleTripleSliderPointer()");
     
   Canvas_VF->AddFrame(new TGLabel(Canvas_VF, "  Waveform selector  "),
 		      new TGLayoutHints(kLHintsCenterX, 5,5,10,0));
@@ -1851,7 +1853,7 @@ void AAInterface::FillCanvasFrame()
 		      new TGLayoutHints(kLHintsNormal, SliderBuffer,5,0,0));
   WaveformSelector_HS->SetRange(1,100);
   WaveformSelector_HS->SetPosition(1);
-  WaveformSelector_HS->Connect("PositionChanged(int)", "AAInterface", this, "HandleSliders(int)");
+  WaveformSelector_HS->Connect("PositionChanged(int)", "AANontabSlots", NontabSlots, "HandleSliders(int)");
 
   Canvas_VF->AddFrame(new TGLabel(Canvas_VF, "  Spectrum integration limits  "),
 		      new TGLayoutHints(kLHintsCenterX, 5,5,10,0));
@@ -1860,7 +1862,7 @@ void AAInterface::FillCanvasFrame()
 		      new TGLayoutHints(kLHintsNormal, SliderBuffer,5,0,5));
   SpectrumIntegrationLimits_DHS->SetRange(0,1);
   SpectrumIntegrationLimits_DHS->SetPosition(0,1);
-  SpectrumIntegrationLimits_DHS->Connect("PositionChanged()", "AAInterface", this, "HandleDoubleSliders()");
+  SpectrumIntegrationLimits_DHS->Connect("PositionChanged()", "AANontabSlots", NontabSlots, "HandleDoubleSliders()");
 		      
   TGHorizontalFrame *SubCanvas_HF = new TGHorizontalFrame(Canvas_VF);
   SubCanvas_HF->SetBackgroundColor(ThemeBackgroundColor);
@@ -1877,600 +1879,8 @@ void AAInterface::FillCanvasFrame()
   Quit_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   Quit_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   Quit_TB->ChangeOptions(Quit_TB->GetOptions() | kFixedSize);
-  Quit_TB->Connect("Clicked()", "AAInterface", this, "HandleTerminate()");
+  Quit_TB->Connect("Clicked()", "AANontabSlots", NontabSlots, "HandleTerminate()");
 }
-
-
-void AAInterface::HandleMenu(int MenuID)
-{
-  switch(MenuID){
-    
-    // Action that enables the user to select a ROOT file with
-    // waveforms using the nicely prebuilt ROOT interface for file
-    // selection. Only ROOT files are displayed in the dialog.
-  case MenuFileOpenADAQ_ID:
-  case MenuFileOpenACRONYM_ID:{
-
-    string Desc[2], Type[2];
-    if(MenuFileOpenADAQ_ID == MenuID){
-      Desc[0] = "ADAQ ROOT file";
-      Type[0] = "*.adaq";
-
-      Desc[1] = "ADAQ ROOT file";
-      Type[1] = "*.root";
-
-    }
-    else if(MenuFileOpenACRONYM_ID == MenuID){
-      Desc[0] = "ACRONYM ROOT file";
-      Type[0] = "*.acro";
-      
-      Desc[1] = "ACRONYM ROOT file";
-      Type[1] = "*.root";
-    }
-    
-    const char *FileTypes[] = {Desc[0].c_str(), Type[0].c_str(),
-			       Desc[1].c_str(), Type[1].c_str(),
-			       "All files",                    "*",
-			       0,                              0};
-    
-    // Use the ROOT prebuilt file dialog machinery
-    TGFileInfo FileInformation;
-    FileInformation.fFileTypes = FileTypes;
-    FileInformation.fIniDir = StrDup(DataDirectory.c_str());
-    new TGFileDialog(gClient->GetRoot(), this, kFDOpen, &FileInformation);
-    
-    // If the selected file is not found...
-    if(FileInformation.fFilename==NULL)
-      CreateMessageBox("No valid ROOT file was selected so there's nothing to load!\nPlease select a valid file!","Stop");
-    else{
-      // Note that the FileInformation.fFilename variable storeds the
-      // absolute path to the data file selected by the user
-      string FileName = FileInformation.fFilename;
-      
-      // Strip the data file name off the absolute file path and set
-      // the path to the DataDirectory variable. Thus, the "current"
-      // directory from which a file was selected will become the new
-      // default directory that automatically open
-      size_t pos = FileName.find_last_of("/");
-      if(pos != string::npos)
-	DataDirectory  = FileName.substr(0,pos);
-      
-      // Load the ROOT file and set the bool depending on outcome
-      if(MenuID == MenuFileOpenADAQ_ID){
-	ADAQFileName = FileName;
-	ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(FileName);
-	
-	if(ADAQFileLoaded)
-	  UpdateForADAQFile();
-	else
-	  CreateMessageBox("The ADAQ ROOT file that you specified fail to load for some reason!\n","Stop");
-	
-	ACRONYMFileLoaded = false;
-      }
-      else if(MenuID == MenuFileOpenACRONYM_ID){
-	ACRONYMFileName = FileName;
-	ACRONYMFileLoaded = ComputationMgr->LoadACRONYMRootFile(FileName);
-	
-	if(ACRONYMFileLoaded)
-	  UpdateForACRONYMFile();
-	else
-	  CreateMessageBox("The ACRONYM ROOT file that you specified fail to load for some reason!\n","Stop");
-	
-	ADAQFileLoaded = false;
-      }
-    }
-    break;
-  }
-
-  case MenuFileSaveWaveform_ID:
-  case MenuFileSaveSpectrum_ID:
-  case MenuFileSaveSpectrumBackground_ID:
-  case MenuFileSaveSpectrumDerivative_ID:
-  case MenuFileSavePSDHistogram_ID:
-  case MenuFileSavePSDHistogramSlice_ID:{
-
-    // Create character arrays that enable file type selection (.dat
-    // files have data columns separated by spaces and .csv have data
-    // columns separated by commas)
-    const char *FileTypes[] = {"ASCII file",  "*.dat",
-			       "CSV file",    "*.csv",
-			       "ROOT file",   "*.root",
-			       0,             0};
-  
-    TGFileInfo FileInformation;
-    FileInformation.fFileTypeIdx = 4;
-    FileInformation.fFileTypes = FileTypes;
-    FileInformation.fIniDir = StrDup(HistogramDirectory.c_str());
-    
-    new TGFileDialog(gClient->GetRoot(), this, kFDSave, &FileInformation);
-    
-    if(FileInformation.fFilename==NULL)
-      CreateMessageBox("No file was selected! Nothing will be saved to file!","Stop");
-    else{
-      string FileName, FileExtension;
-      size_t Found = string::npos;
-      
-      // Get the file name for the output histogram data. Note that
-      // FileInformation.fFilename is the absolute path to the file.
-      FileName = FileInformation.fFilename;
-
-      // Strip the data file name off the absolute file path and set
-      // the path to the DataDirectory variable. Thus, the "current"
-      // directory from which a file was selected will become the new
-      // default directory that automically opens
-      size_t pos = FileName.find_last_of("/");
-      if(pos != string::npos)
-	HistogramDirectory  = FileName.substr(0,pos);
-
-      // Strip the file extension (the start of the file extension is
-      // assumed here to begin with the final period) to extract just
-      // the save file name.
-      Found = FileName.find_last_of(".");
-      if(Found != string::npos)
-	FileName = FileName.substr(0, Found);
-
-      // Extract only the "." with the file extension. Note that anove
-      // the "*" character precedes the file extension string when
-      // passed to the FileInformation class in order for files
-      // containing that expression to be displaced to the
-      // user. However, I strip the "*" such that the "." plus file
-      // extension can be used by the SaveSpectrumData() function to
-      // determine the format of spectrum save file.
-      FileExtension = FileInformation.fFileTypes[FileInformation.fFileTypeIdx+1];
-      Found = FileExtension.find_last_of("*");
-      
-      if(Found != string::npos)
-	FileExtension = FileExtension.substr(Found+1, FileExtension.size());
-      
-      bool Success = false;
-      
-      if(MenuID == MenuFileSaveWaveform_ID){
-	Success = ComputationMgr->SaveHistogramData("Waveform", FileName, FileExtension);
-      }
-      
-      else if(MenuID == MenuFileSaveSpectrum_ID){
-	if(!ComputationMgr->GetSpectrumExists()){
-	  CreateMessageBox("No spectra have been created yet and, therefore, there is nothing to save!","Stop");
-	  break;
-	}
-	else
-	  Success = ComputationMgr->SaveHistogramData("Spectrum", FileName, FileExtension);
-      }
-      
-      else if(MenuID == MenuFileSaveSpectrumBackground_ID){
-	if(!ComputationMgr->GetSpectrumBackgroundExists()){
-	  CreateMessageBox("No spectrum derivatives have been created yet and, therefore, there is nothing to save!","Stop");
-	  break;
-	}
-	else
-	  Success = ComputationMgr->SaveHistogramData("SpectrumBackground", FileName, FileExtension);
-      }
-
-      else if(MenuID == MenuFileSaveSpectrumDerivative_ID){
-	if(!ComputationMgr->GetSpectrumDerivativeExists()){
-	  CreateMessageBox("No spectrum derivatives have been created yet and, therefore, there is nothing to save!","Stop");
-	  break;
-	}
-	else
-	  Success = ComputationMgr->SaveHistogramData("SpectrumDerivative", FileName, FileExtension);
-      }
-
-      else if(MenuID == MenuFileSavePSDHistogram_ID){
-	if(!ComputationMgr->GetPSDHistogramExists()){
-	  CreateMessageBox("A PSD histogram has not been created yet and, therefore, there is nothing to save!","Stop");
-	  break;
-	}
-
-	if(FileExtension != ".root"){
-	  CreateMessageBox("PSD histograms may only be saved to a ROOT TFile (*.root). Please reselect file type!","Stop");
-	  break;
-	}
-
-	Success = ComputationMgr->SaveHistogramData("PSDHistogram", FileName, FileExtension);
-      }
-      
-      else if(MenuID == MenuFileSavePSDHistogramSlice_ID){
-	if(!ComputationMgr->GetPSDHistogramSliceExists()){
-	  CreateMessageBox("A PSD histogram slice has not been created yet and, therefore, there is nothing to save!","Stop");
-	  break;
-	}
-	else
-	  Success = ComputationMgr->SaveHistogramData("PSDHistogramSlice", FileName, FileExtension);
-      }
-      
-      if(Success){
-	if(FileExtension == ".dat")
-	  CreateMessageBox("The histogram was successfully saved to the .dat file","Asterisk");
-	else if(FileExtension == ".csv")
-	  CreateMessageBox("The histogram was successfully saved to the .csv file","Asterisk");
-	else if(FileExtension == ".root")
-	  CreateMessageBox("The histogram (named 'Waveform','Spectrum',or 'PSDHistogram') \nwas successfully saved to the .root file!\n","Asterisk");
-      }
-      else
-	CreateMessageBox("The histogram failed to save to the file for unknown reasons!","Stop");
-    }
-    break;
-  }
-
-  case MenuFileSaveSpectrumCalibration_ID:{
-    
-    const char *FileTypes[] = {"ADAQ calibration file", "*.acal",
-			       "All files"            , "*.*",
-			       0, 0};
-    
-    TGFileInfo FileInformation;
-    FileInformation.fFileTypes = FileTypes;
-    FileInformation.fIniDir = StrDup(getenv("PWD"));
-
-    new TGFileDialog(gClient->GetRoot(), this, kFDSave, &FileInformation);
-
-    if(FileInformation.fFilename==NULL)
-      CreateMessageBox("No file was selected and, therefore, nothing will be saved!","Stop");
-    else{
-      
-      string FName = FileInformation.fFilename;
-
-      size_t Found = FName.find_last_of(".acal");
-      if(Found == string::npos)
-	FName += ".acal";
-
-      const int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
-      bool Success = ComputationMgr->WriteCalibrationFile(Channel, FName);
-      if(Success)
-	CreateMessageBox("The calibration file was successfully written to file.","Asterisk");
-      else
-	CreateMessageBox("There was an unknown error in writing the calibration file!","Stop");
-    }
-    break;
-  }
-    
-    // Acition that enables the user to print the currently displayed
-    // canvas to a file of the user's choice. But really, it's not a
-    // choice. Vector-based graphics are the only way to go. Do
-    // everyone a favor, use .eps or .ps or .pdf if you want to be a
-    // serious scientist.
-  case MenuFilePrint_ID:{
-    
-    // List the available graphical file options
-    const char *FileTypes[] = {"EPS file",          "*.eps",
-			       "JPG file",          "*.jpeg",
-			       "PS file",           "*.ps",
-			       "PDF file",          "*.pdf",
-			       "PNG file",          "*.png",
-			       0,                  0 };
-
-    // Use the ROOT prebuilt file dialog machinery
-    TGFileInfo FileInformation;
-    FileInformation.fFileTypes = FileTypes;
-    FileInformation.fIniDir = StrDup(PrintDirectory.c_str());
-
-    new TGFileDialog(gClient->GetRoot(), this, kFDSave, &FileInformation);
-    
-    if(FileInformation.fFilename==NULL)
-      CreateMessageBox("No file was selected to the canvas graphics will not be saved!\nSelect a valid file to save the canvas graphis!","Stop");
-    else{
-
-      string GraphicFileName, GraphicFileExtension;
-
-      size_t Found = string::npos;
-      
-      GraphicFileName = FileInformation.fFilename;
-
-      // Strip the data file name off the absolute file path and set
-      // the path to the DataDirectory variable. Thus, the "current"
-      // directory from which a file was selected will become the new
-      // default directory that automically opens
-      Found = GraphicFileName.find_last_of("/");
-      if(Found != string::npos)
-	PrintDirectory  = GraphicFileName.substr(0,Found);
-      
-      Found = GraphicFileName.find_last_of(".");
-      if(Found != string::npos)
-	GraphicFileName = GraphicFileName.substr(0, Found);
-      
-      GraphicFileExtension = FileInformation.fFileTypes[FileInformation.fFileTypeIdx+1];
-      Found = GraphicFileExtension.find_last_of("*");
-      if(Found != string::npos)
-	GraphicFileExtension = GraphicFileExtension.substr(Found+1, GraphicFileExtension.size());
-      
-      string GraphicFile = GraphicFileName+GraphicFileExtension;
-      
-      Canvas_EC->GetCanvas()->Update();
-      Canvas_EC->GetCanvas()->Print(GraphicFile.c_str(), GraphicFileExtension.c_str());
-      
-      string SuccessMessage = "The canvas graphics have been successfully saved to the following file:\n" + GraphicFileName + GraphicFileExtension;
-      CreateMessageBox(SuccessMessage,"Asterisk");
-    }
-    break;
-  }
-    
-    // Action that enables the Quit_TB and File->Exit selections to
-    // quit the ROOT application
-  case MenuFileExit_ID:
-    HandleTerminate();
-    
-  default:
-    break;
-  }
-}
-
-
-void AAInterface::HandleSliders(int SliderPosition)
-{
-  if(!ADAQFileLoaded or ACRONYMFileLoaded)
-    return;
-  
-  SaveSettings();
-  
-  WaveformSelector_NEL->GetEntry()->SetNumber(SliderPosition);
-  
-  GraphicsMgr->PlotWaveform();
-
-  // Update the deuteron/Pearson integration widgets
-  if(IntegratePearson_CB->IsDown()){
-    double DeuteronsInWaveform = ComputationMgr->GetDeuteronsInWaveform();
-    DeuteronsInWaveform_NEFL->GetEntry()->SetNumber(DeuteronsInWaveform);
-    
-    double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
-    DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
-  }
-
-  // Update the waveform analysis widgets
-  if(WaveformAnalysis_CB->IsDown()){
-    double Height = ComputationMgr->GetWaveformAnalysisHeight();
-    WaveformHeight_NEL->GetEntry()->SetNumber(Height);
-    
-    double Area = ComputationMgr->GetWaveformAnalysisArea();
-    WaveformIntegral_NEL->GetEntry()->SetNumber(Area);
-  }
-}
-
-
-void AAInterface::HandleDoubleSliders()
-{
-  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
-    return;
-  
-  SaveSettings();
-  
-  // Get the currently active widget and its ID, i.e. the widget from
-  // which the user has just sent a signal...
-  TGDoubleSlider *ActiveDoubleSlider = (TGDoubleSlider *) gTQSender;
-  int SliderID = ActiveDoubleSlider->WidgetId();
-
-  switch(SliderID){
-    
-  case XAxisLimits_THS_ID:
-  case YAxisLimits_DVS_ID:
-    if(GraphicsMgr->GetCanvasContentType() == zWaveform)
-      GraphicsMgr->PlotWaveform();
-
-    else if(GraphicsMgr->GetCanvasContentType() == zSpectrum and ComputationMgr->GetSpectrumExists())
-      GraphicsMgr->PlotSpectrum();
-    
-    else if(GraphicsMgr->GetCanvasContentType() == zSpectrumDerivative and ComputationMgr->GetSpectrumExists())
-      GraphicsMgr->PlotSpectrumDerivative();
-    
-    else if(GraphicsMgr->GetCanvasContentType() == zPSDHistogram and ComputationMgr->GetSpectrumExists())
-      GraphicsMgr->PlotPSDHistogram();
-    
-    break;
-
-  case SpectrumIntegrationLimits_DHS_ID:
-    ComputationMgr->IntegrateSpectrum();
-    GraphicsMgr->PlotSpectrum();
-    
-    if(SpectrumFindIntegral_CB->IsDown()){
-      SpectrumIntegral_NEFL->GetEntry()->SetNumber( ComputationMgr->GetSpectrumIntegralValue() );
-      SpectrumIntegralError_NEFL->GetEntry()->SetNumber (ComputationMgr->GetSpectrumIntegralError () );
-    }
-    else{
-      SpectrumIntegral_NEFL->GetEntry()->SetNumber(0.);
-      SpectrumIntegralError_NEFL->GetEntry()->SetNumber(0.);
-    }
-    
-    if(SpectrumUseGaussianFit_CB->IsDown()){
-      double Const = ComputationMgr->GetSpectrumFit()->GetParameter(0);
-      double Mean = ComputationMgr->GetSpectrumFit()->GetParameter(1);
-      double Sigma = ComputationMgr->GetSpectrumFit()->GetParameter(2);
-      
-      SpectrumFitHeight_NEFL->GetEntry()->SetNumber(Const);
-      SpectrumFitMean_NEFL->GetEntry()->SetNumber(Mean);
-      SpectrumFitSigma_NEFL->GetEntry()->SetNumber(Sigma);
-      SpectrumFitRes_NEFL->GetEntry()->SetNumber(2.35 * Sigma / Mean * 100);
-    }
-    break;
-  }
-}
-
-
-void AAInterface::HandleTripleSliderPointer()
-{
-  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
-    return;
-
-  if(ComputationMgr->GetSpectrumExists() and
-     GraphicsMgr->GetCanvasContentType() == zSpectrum){
-
-    // Get the current spectrum
-    TH1F *Spectrum_H = ComputationMgr->GetSpectrum();
-
-    // Calculate the position along the X-axis of the pulse spectrum
-    // (the "area" or "height" in ADC units) based on the current
-    // X-axis maximum and the triple slider's pointer position
-    double XPos = XAxisLimits_THS->GetPointerPosition() * Spectrum_H->GetXaxis()->GetXmax();
-
-    // Calculate min. and max. on the Y-axis for plotting
-    float Min, Max;
-    YAxisLimits_DVS->GetPosition(Min, Max);
-    double YMin = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-Max);
-    double YMax = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-Min);
-
-    // To enable easy spectra calibration, the user has the options of
-    // dragging the pointer of the X-axis horizontal slider just below
-    // the canvas, which results in a "calibration line" drawn over
-    // the plotted pulse spectrum. As the user drags the line, the
-    // pulse unit number entry widget in the calibration group frame
-    // is update, allowing the user to easily set the value of pulse
-    // units (in ADC) of a feature that appears in the spectrum with a
-    // known calibration energy, entered in the number entry widget
-    // above.
-
-    // If the pulse spectrum object (Spectrum_H) exists and the user has
-    // selected calibration mode via the appropriate buttons ...
-    if(SpectrumCalibration_CB->IsDown() and SpectrumCalibrationStandard_RB->IsDown()){
-      
-      // Plot the calibration line
-      GraphicsMgr->PlotVCalibrationLine(XPos);
-      
-      // Set the calibration pulse units for the current calibration
-      // point based on the X position of the calibration line
-      SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(XPos);
-    }
-    
-    // The user can drag the triple slider point in order to calculate
-    // the energy deposition from other particle to produce the
-    // equivalent amount of light as electrons. This feature is only
-    // intended for use for EJ301/EJ309 liqoid organic scintillators.
-    // Note that the spectra must be calibrated in MeVee.
-    
-    const int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
-    bool SpectrumIsCalibrated = ComputationMgr->GetUseSpectraCalibrations()[Channel];
-    
-    if(EAEnable_CB->IsDown() and SpectrumIsCalibrated){
-      
-      int Type = EASpectrumType_CBL->GetComboBox()->GetSelected();
-
-      double Error = 0.;
-      bool ErrorBox = false;
-      bool EscapePeaks = EAEscapePeaks_CB->IsDown();
-      
-      if(Type == 0){
-	GraphicsMgr->PlotEALine(XPos, Error, ErrorBox, EscapePeaks);
-	
-	EAGammaEDep_NEL->GetEntry()->SetNumber(XPos);
-      }
-      else if(Type == 1){
-
-	Error = EAErrorWidth_NEL->GetEntry()->GetNumber();
-	ErrorBox = true;
-	EscapePeaks = false;
-	
-	GraphicsMgr->PlotEALine(XPos, Error, ErrorBox, EscapePeaks);
-	
-	EAElectronEnergy_NEL->GetEntry()->SetNumber(XPos);
-	
-	double GE = InterpolationMgr->GetGammaEnergy(XPos);
-	EAGammaEnergy_NEL->GetEntry()->SetNumber(GE);
-	
-	double PE = InterpolationMgr->GetProtonEnergy(XPos);
-	EAProtonEnergy_NEL->GetEntry()->SetNumber(PE);
-	
-	double AE = InterpolationMgr->GetAlphaEnergy(XPos);
-	EAAlphaEnergy_NEL->GetEntry()->SetNumber(AE);
-	
-	double CE = InterpolationMgr->GetCarbonEnergy(XPos);
-	EACarbonEnergy_NEL->GetEntry()->SetNumber(CE);
-      }
-    }
-  }
-}
-
-
-void AAInterface::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *Selected)
-{
-  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
-    return;
-
-  // For an unknown reason, the XPixel value appears (erroneously) to
-  // be two pixels too low for a given cursor selection, I have
-  // examined this issue in detail but cannot determine the reason nor
-  // is it treated in the ROOT forums. At present, the fix is simply
-  // to add two pixels for a given XPixel cursor selection.
-  XPixel += 2;
-
-  // If the user has enabled the creation of a PSD filter and the
-  // canvas event is equal to "1" (which represents a down-click
-  // somewhere on the canvas pad) then send the pixel coordinates of
-  // the down-click to the PSD filter creation function
-  if(PSDEnableFilterCreation_CB->IsDown() and EventID == 1){
-    ComputationMgr->CreatePSDFilter(XPixel, YPixel);
-    GraphicsMgr->PlotPSDFilter();
-  }
-  
-  if(PSDEnableHistogramSlicing_CB->IsDown()){
-    
-    // The user may click the canvas to "freeze" the PSD histogram
-    // slice position, which ensures the PSD histogram slice at that
-    // point remains plotted in the standalone canvas
-    if(EventID == 1){
-      PSDEnableHistogramSlicing_CB->SetState(kButtonUp);
-      return;
-    }
-    else{
-      ComputationMgr->CreatePSDHistogramSlice(XPixel, YPixel);
-      GraphicsMgr->PlotPSDHistogramSlice(XPixel, YPixel);
-    }
-  }
-
-  // The user has the option of using an automated edge location
-  // finder for setting the calibration of EJ301/9 liq. organic
-  // scintillators. The user set two points that must "bound" the
-  // spectral edge:
-  // point 0 : top height of edge; leftmost pulse unit
-  // point 1 : bottom height of edge; rightmost pulse unit
-  if(SpectrumCalibrationEdgeFinder_RB->IsDown()){
-
-    if(ComputationMgr->GetSpectrumExists() and
-       GraphicsMgr->GetCanvasContentType() == zSpectrum){
-
-      // Get the current spectrum
-      TH1F *Spectrum_H = ComputationMgr->GetSpectrum();
-
-      double X = gPad->AbsPixeltoX(XPixel);
-      double Y = gPad->AbsPixeltoY(YPixel);
-
-      // Enables the a semi-transparent box to be drawn over the edge
-      // to be calibrated once the user has clicked for the first point
-      if(NumEdgeBoundingPoints == 1)
-	GraphicsMgr->PlotEdgeBoundingBox(EdgeBoundX0, EdgeBoundY0, X, Y);
-
-      // The bound point is set once the user clicks the canvas at the
-      // desired (X,Y) == (Pulse unit, Counts) location. Note that
-      // AAComputation class automatically keep track of which point
-      // is set and when to calculate the edge
-      if(EventID == 1){
-	ComputationMgr->SetEdgeBound(X, Y);
-
-	// Keep track of the number of times the user has clicked
-	if(NumEdgeBoundingPoints == 0){
-	  EdgeBoundX0 = X;
-	  EdgeBoundY0 = Y;
-	}
-	
-	NumEdgeBoundingPoints++;
-	
-	// Once the edge position is found (after two points are set)
-	// then update the number entry so the user may set a
-	// calibration points and draw the point on screen for
-	// verification. Reset number of edge bounding points.
-	if(ComputationMgr->GetEdgePositionFound()){
-	  double HalfHeight = ComputationMgr->GetHalfHeight();
-	  double EdgePos = ComputationMgr->GetEdgePosition();
-	  SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(EdgePos);
-	  
-	  GraphicsMgr->PlotCalibrationCross(EdgePos, HalfHeight);
-	  
-	  NumEdgeBoundingPoints = 0;
-	}
-      }
-    }
-  }
-}
-
-
-void AAInterface::HandleTerminate()
-{ gApplication->Terminate(); }
 
 
 void AAInterface::SaveSettings(bool SaveToFile)
