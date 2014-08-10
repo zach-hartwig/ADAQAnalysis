@@ -1,12 +1,12 @@
-//////////////////////////////////////////////////////////////////////////////////////////
-//
+////////////////////////////////////////////////////////////////////////////////
+////
 // name: AAInterface.hh
 // date: 16 Jul 14
 // auth: Zach Hartwig
 //
 // desc: 
 //
-//////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 #ifndef __AAInterface_hh__
 #define __AAInterface_hh__ 1
@@ -84,14 +84,9 @@ public:
 
   // "Slot" methods to recieve and act upon ROOT widget "signals"
   void HandleMenu(int);
-  void HandleTextButtons();
-  void HandleCheckButtons();
   void HandleSliders(int);
   void HandleDoubleSliders();
   void HandleTripleSliderPointer();
-  void HandleNumberEntries();
-  void HandleRadioButtons();
-  void HandleComboBox(int, int);
   void HandleCanvas(int, int, int, TObject *);
   void HandleTerminate();
   

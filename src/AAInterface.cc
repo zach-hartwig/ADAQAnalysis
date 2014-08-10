@@ -1361,12 +1361,12 @@ void AAInterface::FillProcessingFrame()
 
   Architecture_HF->AddFrame(ProcessingSeq_RB = new TGRadioButton(Architecture_HF, "Sequential", ProcessingSeq_RB_ID),
 			    new TGLayoutHints(kLHintsLeft, 5,5,0,0));
-  ProcessingSeq_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  ProcessingSeq_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
   ProcessingSeq_RB->SetState(kButtonDown);
 
   Architecture_HF->AddFrame(ProcessingPar_RB = new TGRadioButton(Architecture_HF, "Parallel", ProcessingPar_RB_ID),
 			    new TGLayoutHints(kLHintsLeft, 15,5,0,0));
-  ProcessingPar_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  ProcessingPar_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
   
   ProcessingOptions_GF->AddFrame(NumProcessors_NEL = new ADAQNumberEntryWithLabel(ProcessingOptions_GF, "Number of Processors", -1),
 				 new TGLayoutHints(kLHintsNormal, 0,0,5,0));
@@ -1392,7 +1392,7 @@ void AAInterface::FillProcessingFrame()
   
   PSDAnalysis_GF->AddFrame(PSDEnable_CB = new TGCheckButton(PSDAnalysis_GF, "Discriminate pulse shapes", PSDEnable_CB_ID),
                            new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PSDEnable_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  PSDEnable_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
 
   PSDAnalysis_GF->AddFrame(PSDChannel_CBL = new ADAQComboBoxWithLabel(PSDAnalysis_GF, "", -1),
                            new TGLayoutHints(kLHintsNormal, 0,5,0,0));
@@ -1478,14 +1478,14 @@ void AAInterface::FillProcessingFrame()
   PSDPeakOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDPeakOffset_NEL->GetEntry()->SetNumber(7);
   PSDPeakOffset_NEL->GetEntry()->SetState(false);
-  PSDPeakOffset_NEL->GetEntry()->Connect("ValueSet(long", "AAInterface", this, "HandleNumberEntries()");
+  PSDPeakOffset_NEL->GetEntry()->Connect("ValueSet(long", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
 
   PSDAnalysis_GF->AddFrame(PSDTailOffset_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Tail offset (sample)", PSDTailOffset_NEL_ID),
                            new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDTailOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDTailOffset_NEL->GetEntry()->SetNumber(29);
   PSDTailOffset_NEL->GetEntry()->SetState(false);
-  PSDTailOffset_NEL->GetEntry()->Connect("ValueSet(long", "AAInterface", this, "HandleNumberEntries()");
+  PSDTailOffset_NEL->GetEntry()->Connect("ValueSet(long", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
   
   PSDAnalysis_GF->AddFrame(PSDPlotType_CBL = new ADAQComboBoxWithLabel(PSDAnalysis_GF, "Plot type", PSDPlotType_CBL_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,5));
@@ -1495,17 +1495,17 @@ void AAInterface::FillProcessingFrame()
   PSDPlotType_CBL->GetComboBox()->AddEntry("SURF4",3);
   PSDPlotType_CBL->GetComboBox()->AddEntry("CONT",4);
   PSDPlotType_CBL->GetComboBox()->Select(0);
-  PSDPlotType_CBL->GetComboBox()->Connect("Selected(int,int)", "AAInterface", this, "HandleComboBox(int,int)");
+  PSDPlotType_CBL->GetComboBox()->Connect("Selected(int,int)", "AAProcessingSlots", ProcessingSlots, "HandleComboBox(int,int)");
   PSDPlotType_CBL->GetComboBox()->SetEnabled(false);
 
   PSDAnalysis_GF->AddFrame(PSDPlotTailIntegration_CB = new TGCheckButton(PSDAnalysis_GF, "Plot tail integration region", PSDPlotTailIntegration_CB_ID),
                            new TGLayoutHints(kLHintsNormal, 0,5,0,5));
-  PSDPlotTailIntegration_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  PSDPlotTailIntegration_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
   PSDPlotTailIntegration_CB->SetState(kButtonDisabled);
   
   PSDAnalysis_GF->AddFrame(PSDEnableHistogramSlicing_CB = new TGCheckButton(PSDAnalysis_GF, "Enable histogram slicing", PSDEnableHistogramSlicing_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PSDEnableHistogramSlicing_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  PSDEnableHistogramSlicing_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
   PSDEnableHistogramSlicing_CB->SetState(kButtonDisabled);
 
   TGHorizontalFrame *PSDHistogramSlicing_HF = new TGHorizontalFrame(PSDAnalysis_GF);
@@ -1513,24 +1513,24 @@ void AAInterface::FillProcessingFrame()
   
   PSDHistogramSlicing_HF->AddFrame(PSDHistogramSliceX_RB = new TGRadioButton(PSDHistogramSlicing_HF, "X slice", PSDHistogramSliceX_RB_ID),
 				   new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  PSDHistogramSliceX_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  PSDHistogramSliceX_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
   PSDHistogramSliceX_RB->SetState(kButtonDown);
   PSDHistogramSliceX_RB->SetState(kButtonDisabled);
 
   PSDHistogramSlicing_HF->AddFrame(PSDHistogramSliceY_RB = new TGRadioButton(PSDHistogramSlicing_HF, "Y slice", PSDHistogramSliceY_RB_ID),
 				   new TGLayoutHints(kLHintsNormal, 20,0,0,0));
-  PSDHistogramSliceY_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  PSDHistogramSliceY_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
   PSDHistogramSliceY_RB->SetState(kButtonDisabled);
   
   PSDAnalysis_GF->AddFrame(PSDEnableFilterCreation_CB = new TGCheckButton(PSDAnalysis_GF, "Enable filter creation", PSDEnableFilterCreation_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PSDEnableFilterCreation_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  PSDEnableFilterCreation_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
   PSDEnableFilterCreation_CB->SetState(kButtonDisabled);
 
   
   PSDAnalysis_GF->AddFrame(PSDEnableFilter_CB = new TGCheckButton(PSDAnalysis_GF, "Enable filter use", PSDEnableFilter_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PSDEnableFilter_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  PSDEnableFilter_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
   PSDEnableFilter_CB->SetState(kButtonDisabled);
 
   TGHorizontalFrame *PSDFilterPolarity_HF = new TGHorizontalFrame(PSDAnalysis_GF);
@@ -1538,13 +1538,13 @@ void AAInterface::FillProcessingFrame()
 
   PSDFilterPolarity_HF->AddFrame(PSDPositiveFilter_RB = new TGRadioButton(PSDFilterPolarity_HF, "Positive  ", PSDPositiveFilter_RB_ID),
 				 new TGLayoutHints(kLHintsNormal, 5,5,0,5));
-  PSDPositiveFilter_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  PSDPositiveFilter_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
   PSDPositiveFilter_RB->SetState(kButtonDown);
   PSDPositiveFilter_RB->SetState(kButtonDisabled);
 
   PSDFilterPolarity_HF->AddFrame(PSDNegativeFilter_RB = new TGRadioButton(PSDFilterPolarity_HF, "Negative", PSDNegativeFilter_RB_ID),
 				 new TGLayoutHints(kLHintsNormal, 5,5,0,5));
-  PSDNegativeFilter_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  PSDNegativeFilter_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
   PSDNegativeFilter_RB->SetState(kButtonDisabled);
 
   
@@ -1552,7 +1552,7 @@ void AAInterface::FillProcessingFrame()
 			   new TGLayoutHints(kLHintsLeft, 15,5,0,5));
   PSDClearFilter_TB->Resize(200,30);
   PSDClearFilter_TB->ChangeOptions(PSDClearFilter_TB->GetOptions() | kFixedSize);
-  PSDClearFilter_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  PSDClearFilter_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
   PSDClearFilter_TB->SetState(kButtonDisabled);
   
   PSDAnalysis_GF->AddFrame(PSDCalculate_TB = new TGTextButton(PSDAnalysis_GF, "Create PSD histogram", PSDCalculate_TB_ID),
@@ -1561,7 +1561,7 @@ void AAInterface::FillProcessingFrame()
   PSDCalculate_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   PSDCalculate_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   PSDCalculate_TB->ChangeOptions(PSDCalculate_TB->GetOptions() | kFixedSize);
-  PSDCalculate_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  PSDCalculate_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
   PSDCalculate_TB->SetState(kButtonDisabled);
 
 
@@ -1570,7 +1570,7 @@ void AAInterface::FillProcessingFrame()
   
   PearsonAnalysis_GF->AddFrame(IntegratePearson_CB = new TGCheckButton(PearsonAnalysis_GF, "Integrate signal", IntegratePearson_CB_ID),
 			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  IntegratePearson_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  IntegratePearson_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
   
   PearsonAnalysis_GF->AddFrame(PearsonChannel_CBL = new ADAQComboBoxWithLabel(PearsonAnalysis_GF, "Contains signal", -1),
 			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
@@ -1592,24 +1592,24 @@ void AAInterface::FillProcessingFrame()
 			       new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PearsonPolarityPositive_RB->SetState(kButtonDown);
   PearsonPolarityPositive_RB->SetState(kButtonDisabled);
-  PearsonPolarityPositive_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  PearsonPolarityPositive_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
 
   PearsonPolarity_HF->AddFrame(PearsonPolarityNegative_RB = new TGRadioButton(PearsonPolarity_HF, "Negative", PearsonPolarityNegative_RB_ID),
 			       new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PearsonPolarityNegative_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  PearsonPolarityNegative_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
 
   TGHorizontalFrame *PearsonIntegrationType_HF = new TGHorizontalFrame(PearsonAnalysis_GF);
   PearsonAnalysis_GF->AddFrame(PearsonIntegrationType_HF, new TGLayoutHints(kLHintsNormal));
 
   PearsonIntegrationType_HF->AddFrame(IntegrateRawPearson_RB = new TGRadioButton(PearsonIntegrationType_HF, "Integrate raw", IntegrateRawPearson_RB_ID),
 				      new TGLayoutHints(kLHintsLeft, 0,5,5,0));
-  IntegrateRawPearson_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  IntegrateRawPearson_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
   IntegrateRawPearson_RB->SetState(kButtonDown);
   IntegrateRawPearson_RB->SetState(kButtonDisabled);
 
   PearsonIntegrationType_HF->AddFrame(IntegrateFitToPearson_RB = new TGRadioButton(PearsonIntegrationType_HF, "Integrate fit", IntegrateFitToPearson_RB_ID),
 				      new TGLayoutHints(kLHintsLeft, 10,5,5,0));
-  IntegrateFitToPearson_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  IntegrateFitToPearson_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
   IntegrateFitToPearson_RB->SetState(kButtonDisabled);
   
   PearsonAnalysis_GF->AddFrame(PearsonLowerLimit_NEL = new ADAQNumberEntryWithLabel(PearsonAnalysis_GF, "Lower limit (sample)", PearsonLowerLimit_NEL_ID),
@@ -1618,7 +1618,7 @@ void AAInterface::FillProcessingFrame()
   PearsonLowerLimit_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   PearsonLowerLimit_NEL->GetEntry()->SetLimitValues(0,1); // Updated when ADAQ ROOT file loaded
   PearsonLowerLimit_NEL->GetEntry()->SetNumber(0); // Updated when ADAQ ROOT file loaded
-  PearsonLowerLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  PearsonLowerLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
   PearsonLowerLimit_NEL->GetEntry()->SetState(false);
   
   PearsonAnalysis_GF->AddFrame(PearsonMiddleLimit_NEL = new ADAQNumberEntryWithLabel(PearsonAnalysis_GF, "Middle limit (sample)", PearsonMiddleLimit_NEL_ID),
@@ -1627,7 +1627,7 @@ void AAInterface::FillProcessingFrame()
   PearsonMiddleLimit_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   PearsonMiddleLimit_NEL->GetEntry()->SetLimitValues(0,1); // Updated when ADAQ ROOT file loaded
   PearsonMiddleLimit_NEL->GetEntry()->SetNumber(0); // Updated when ADAQ ROOT file loaded
-  PearsonMiddleLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  PearsonMiddleLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
   PearsonMiddleLimit_NEL->GetEntry()->SetState(false);
   
   PearsonAnalysis_GF->AddFrame(PearsonUpperLimit_NEL = new ADAQNumberEntryWithLabel(PearsonAnalysis_GF, "Upper limit (sample))", PearsonUpperLimit_NEL_ID),
@@ -1636,13 +1636,13 @@ void AAInterface::FillProcessingFrame()
   PearsonUpperLimit_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   PearsonUpperLimit_NEL->GetEntry()->SetLimitValues(0,1); // Updated when ADAQ ROOT file loaded
   PearsonUpperLimit_NEL->GetEntry()->SetNumber(0); // Updated when ADAQ ROOT file loaded
-  PearsonUpperLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  PearsonUpperLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
   PearsonUpperLimit_NEL->GetEntry()->SetState(false);
   
   PearsonAnalysis_GF->AddFrame(PlotPearsonIntegration_CB = new TGCheckButton(PearsonAnalysis_GF, "Plot integration", PlotPearsonIntegration_CB_ID),
 			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
   PlotPearsonIntegration_CB->SetState(kButtonDisabled);
-  PlotPearsonIntegration_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  PlotPearsonIntegration_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
 
   PearsonAnalysis_GF->AddFrame(DeuteronsInWaveform_NEFL = new ADAQNumberEntryFieldWithLabel(PearsonAnalysis_GF, "D+ in waveform", -1),
 			       new TGLayoutHints(kLHintsNormal, 0,5,0,0));
@@ -1688,7 +1688,7 @@ void AAInterface::FillProcessingFrame()
   DesplicedFileSelection_TB->Resize(60,25);
   DesplicedFileSelection_TB->SetBackgroundColor(ThemeForegroundColor);
   DesplicedFileSelection_TB->ChangeOptions(DesplicedFileSelection_TB->GetOptions() | kFixedSize);
-  DesplicedFileSelection_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  DesplicedFileSelection_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
   
   WaveformDesplicerName_HF->AddFrame(DesplicedFileName_TE = new TGTextEntry(WaveformDesplicerName_HF, "<No file currently selected>", -1),
 				     new TGLayoutHints(kLHintsLeft, 5,0,5,5));
@@ -1703,7 +1703,7 @@ void AAInterface::FillProcessingFrame()
   DesplicedFileCreation_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   DesplicedFileCreation_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   DesplicedFileCreation_TB->ChangeOptions(DesplicedFileCreation_TB->GetOptions() | kFixedSize);
-  DesplicedFileCreation_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  DesplicedFileCreation_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
 
 
   // Count rate
@@ -1738,7 +1738,7 @@ void AAInterface::FillProcessingFrame()
   CalculateCountRate_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   CalculateCountRate_TB->Resize(200,30);
   CalculateCountRate_TB->ChangeOptions(CalculateCountRate_TB->GetOptions() | kFixedSize);
-  CalculateCountRate_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  CalculateCountRate_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
 
   CountRate_GF->AddFrame(InstCountRate_NEFL = new ADAQNumberEntryFieldWithLabel(CountRate_GF, "Inst. count rate [1/s]", -1),
                          new TGLayoutHints(kLHintsNormal, 5,5,5,0));
@@ -2195,317 +2195,6 @@ void AAInterface::HandleMenu(int MenuID)
 }
 
 
-void AAInterface::HandleTextButtons()
-{
-  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
-    return;
-
-  TGTextButton *ActiveTextButton = (TGTextButton *) gTQSender;
-  int ActiveTextButtonID  = ActiveTextButton->WidgetId();
-  
-  SaveSettings();
-
-  switch(ActiveTextButtonID){
-
-    ////////////////////
-    // Analysis frame //
-    ////////////////////
-
-    /////////////////////////////
-    // Pulse shape discrimination
-    
-  case PSDCalculate_TB_ID:
-
-    if(ADAQFileLoaded){
-      // Sequential processing
-      if(ProcessingSeq_RB->IsDown())
-	ComputationMgr->CreatePSDHistogram();
-      
-      // Parallel processing
-      else{
-	SaveSettings(true);
-	ComputationMgr->ProcessWaveformsInParallel("discriminating");
-      }
-      GraphicsMgr->PlotPSDHistogram();
-    }
-    else if(ACRONYMFileLoaded)
-      CreateMessageBox("ACRONYM files cannot be processed for pulse shape at this time!","Stop");
-    
-    break;
-
-  case PSDClearFilter_TB_ID:
-
-    if(ADAQFileLoaded){
-
-      ComputationMgr->ClearPSDFilter(ChannelSelector_CBL->GetComboBox()->GetSelected());
-      PSDEnableFilter_CB->SetState(kButtonUp);
-      
-      switch(GraphicsMgr->GetCanvasContentType()){
-      case zWaveform:
-	GraphicsMgr->PlotWaveform();
-	break;
-	
-      case zSpectrum:
-	GraphicsMgr->PlotSpectrum();
-	break;
-	
-      case zPSDHistogram:
-	GraphicsMgr->PlotPSDHistogram();
-	break;
-      }
-    }
-    
-    break;
-
-
-    //////////////
-    // Count rate
-
-  case CountRate_TB_ID:
-    if(ADAQFileLoaded)
-      ComputationMgr->CalculateCountRate();
-    break;
-
-
-
-    ////////////////////
-    // Graphics frame //
-    ////////////////////
-    
-
-    
-    //////////////////////
-    // Processing frame //
-    //////////////////////
-    
-  case DesplicedFileSelection_TB_ID:{
-
-    const char *FileTypes[] = {"ADAQ-formatted ROOT file", "*.root",
-			       "All files",                "*",
-			       0, 0};
-    
-    // Use the presently open ADAQ ROOT file name as the basis for the
-    // default despliced ADAQ ROOT file name presented to the user in
-    // the TGFileDialog. I have begun to denote standard ADAQ ROOT
-    // files with ".root" extension and despliced ADAQ ROOT files with
-    // ".ds.root" extension. 
-    string InitialFileName;
-    size_t Pos = ADAQFileName.find_last_of("/");
-    if(Pos != string::npos){
-      string RawFileName = ADAQFileName.substr(Pos+1, ADAQFileName.size());
-
-      Pos = RawFileName.find_last_of(".");
-      if(Pos != string::npos)
-	InitialFileName = RawFileName.substr(0,Pos) + ".ds.root";
-    }
-
-    TGFileInfo FileInformation;
-    FileInformation.fFileTypes = FileTypes;
-    FileInformation.fFilename = StrDup(InitialFileName.c_str());
-    FileInformation.fIniDir = StrDup(DesplicedDirectory.c_str());
-    new TGFileDialog(gClient->GetRoot(), this, kFDOpen, &FileInformation);
-    
-    if(FileInformation.fFilename==NULL)
-      CreateMessageBox("A file was not selected so the data will not be saved!\nSelect a valid file to save the despliced waveforms","Stop");
-    else{
-      string DesplicedFileName, DesplicedFileExtension;
-      size_t Found = string::npos;
-      
-      // Get the name for the despliced file. Note that
-      // FileInformation.fFilename contains the absolute path to the
-      // despliced file location
-      DesplicedFileName = FileInformation.fFilename;
-      
-      // Strip the data file name off the absolute file path and set
-      // the path to the DataDirectory variable. Thus, the "current"
-      // directory from which a file was selected will become the new
-      // default directory that automically opens
-      Found = DesplicedFileName.find_last_of("/");
-      if(Found != string::npos)
-	DesplicedDirectory = DesplicedFileName.substr(0, Found);
-      
-      Found = DesplicedFileName.find_last_of(".");
-      if(Found != string::npos)
-	DesplicedFileName = DesplicedFileName.substr(0, Found);
-     
-      DesplicedFileExtension = FileInformation.fFileTypes[FileInformation.fFileTypeIdx+1];
-      Found = DesplicedFileExtension.find_last_of("*");
-      if(Found != string::npos)
-	DesplicedFileExtension = DesplicedFileExtension.substr(Found+1, DesplicedFileExtension.size());
-
-      string DesplicedFile = DesplicedFileName + DesplicedFileExtension;
-
-      DesplicedFileName_TE->SetText(DesplicedFile.c_str());
-    }
-    break;
-  }
-    
-  case DesplicedFileCreation_TB_ID:
-    // Alert the user the filtering particles by PSD into the spectra
-    // requires integration type peak finder to be used
-    if(ComputationMgr->GetUsePSDFilters()[ADAQSettings->PSDChannel] and ADAQSettings->ADAQSpectrumIntTypeWW)
-      CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
-
-    if(ACRONYMFileLoaded){
-      CreateMessageBox("Error! ACRONYM files cannot be despliced!","Stop");
-      break;
-    }
-    
-    // Sequential processing
-    if(ProcessingSeq_RB->IsDown())
-      ComputationMgr->CreateDesplicedFile();
-    
-    // Parallel processing
-    else{
-      if(ADAQFileLoaded){
-	SaveSettings(true);
-	ComputationMgr->ProcessWaveformsInParallel("desplicing");
-      }
-    }
-    break;
-    
-    
-    //////////////////
-    // Canvas frame //
-    //////////////////
-
-  case Quit_TB_ID:
-    HandleTerminate();
-    break;
-  }
-}
-
-
-void AAInterface::HandleCheckButtons()
-{
-  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
-    return;
-  
-  TGCheckButton *ActiveCheckButton = (TGCheckButton *) gTQSender;
-  int CheckButtonID = ActiveCheckButton->WidgetId();
-
-  SaveSettings();
-  
-  switch(CheckButtonID){
-    
-    
-    
-  case IntegratePearson_CB_ID:{
-    EButtonState ButtonState = kButtonDisabled;
-    bool WidgetState = false;
-    
-    if(IntegratePearson_CB->IsDown()){
-      // Set states to activate buttons
-      ButtonState = kButtonUp;
-      WidgetState = true;
-    }
-    
-    PlotPearsonIntegration_CB->SetState(ButtonState);
-    PearsonChannel_CBL->GetComboBox()->SetEnabled(WidgetState);
-    PearsonPolarityPositive_RB->SetState(ButtonState);
-    PearsonPolarityNegative_RB->SetState(ButtonState);
-    IntegrateRawPearson_RB->SetState(ButtonState);
-    IntegrateFitToPearson_RB->SetState(ButtonState);
-    PearsonLowerLimit_NEL->GetEntry()->SetState(WidgetState);
-    if(WidgetState==true and IntegrateFitToPearson_RB->IsDown())
-      PearsonMiddleLimit_NEL->GetEntry()->SetState(WidgetState);
-    PearsonUpperLimit_NEL->GetEntry()->SetState(WidgetState);
-
-    if(IntegratePearson_CB->IsDown() and PlotPearsonIntegration_CB->IsDown()){
-
-      GraphicsMgr->PlotWaveform();
-      
-      double DeuteronsInWaveform = ComputationMgr->GetDeuteronsInWaveform();
-      DeuteronsInWaveform_NEFL->GetEntry()->SetNumber(DeuteronsInWaveform);
-      
-      double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
-      DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
-    }
-
-    break;
-  }
-    
-  case PSDEnable_CB_ID:{
-    EButtonState ButtonState = kButtonDisabled;
-    bool WidgetState = false;
-    
-    if(PSDEnable_CB->IsDown()){
-      ButtonState = kButtonUp;
-      WidgetState = true;
-    }
-
-    // Be sure to turn off PSD filtering if the user does not want to
-    // discriminate by pulse shape
-    else{
-      PSDEnableFilter_CB->SetState(kButtonUp);
-      if(GraphicsMgr->GetCanvasContentType() == zWaveform)
-	GraphicsMgr->PlotWaveform();
-    }
-
-    SetPSDWidgetState(WidgetState, ButtonState);
-
-    break;
-  }
-
-  case PSDEnableFilterCreation_CB_ID:{
-    
-    if(PSDEnableFilterCreation_CB->IsDown() and GraphicsMgr->GetCanvasContentType() != zPSDHistogram){
-      CreateMessageBox("The canvas does not presently contain a PSD histogram! PSD filter creation is not possible!","Stop");
-      PSDEnableFilterCreation_CB->SetState(kButtonUp);
-      break;
-    }
-    break;
-  }
-
-  case PSDEnableFilter_CB_ID:{
-    if(PSDEnableFilter_CB->IsDown()){
-      ComputationMgr->SetUsePSDFilter(PSDChannel_CBL->GetComboBox()->GetSelected(), true);
-      FindPeaks_CB->SetState(kButtonDown);
-    }
-    else
-      ComputationMgr->SetUsePSDFilter(PSDChannel_CBL->GetComboBox()->GetSelected(), false);
-    break;
-  }
-    
-  case PSDPlotTailIntegration_CB_ID:{
-    if(!FindPeaks_CB->IsDown())
-      FindPeaks_CB->SetState(kButtonDown);
-    GraphicsMgr->PlotWaveform();
-    break;
-  }
-
-  case PSDEnableHistogramSlicing_CB_ID:{
-    if(PSDEnableHistogramSlicing_CB->IsDown()){
-      PSDHistogramSliceX_RB->SetState(kButtonUp);
-      PSDHistogramSliceY_RB->SetState(kButtonUp);
-      
-      // Temporary hack ZSH 12 Feb 13
-      PSDHistogramSliceX_RB->SetState(kButtonDown);
-    }
-    else{
-      // Disable histogram buttons
-      PSDHistogramSliceX_RB->SetState(kButtonDisabled);
-      PSDHistogramSliceY_RB->SetState(kButtonDisabled);
-
-      // Replot the PSD histogram
-      GraphicsMgr->PlotPSDHistogram();
-      
-      // Delete the canvas containing the PSD slice histogram and
-      // close the window (formerly) containing the canvas
-      TCanvas *PSDSlice_C = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("PSDSlice_C");
-      if(PSDSlice_C)
-	PSDSlice_C->Close();
-    }
-    break;
-  }
-
-
-  default:
-    break;
-  }
-}
-
-
 void AAInterface::HandleSliders(int SliderPosition)
 {
   if(!ADAQFileLoaded or ACRONYMFileLoaded)
@@ -2684,123 +2373,6 @@ void AAInterface::HandleTripleSliderPointer()
 	EACarbonEnergy_NEL->GetEntry()->SetNumber(CE);
       }
     }
-  }
-}
-
-
-void AAInterface::HandleNumberEntries()
-{ 
-  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
-    return;
-
-  // Get the "active" widget object/ID from which a signal has been sent
-  TGNumberEntry *ActiveNumberEntry = (TGNumberEntry *) gTQSender;
-  int NumberEntryID = ActiveNumberEntry->WidgetId();
-  
-  SaveSettings();
-
-  switch(NumberEntryID){
-    
-
-  default:
-    break;
-  }
-}
-
-
-void AAInterface::HandleRadioButtons()
-{
-  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
-    return;
-  
-  TGRadioButton *ActiveRadioButton = (TGRadioButton *) gTQSender;
-  int RadioButtonID = ActiveRadioButton->WidgetId();
-  
-  SaveSettings();
-
-  switch(RadioButtonID){
-  
-  case IntegrateRawPearson_RB_ID:
-    IntegrateFitToPearson_RB->SetState(kButtonUp);
-    PearsonMiddleLimit_NEL->GetEntry()->SetState(false);
-    GraphicsMgr->PlotWaveform();
-    break;
-
-  case IntegrateFitToPearson_RB_ID:
-    IntegrateRawPearson_RB->SetState(kButtonUp);
-    PearsonMiddleLimit_NEL->GetEntry()->SetState(true);
-    GraphicsMgr->PlotWaveform();
-    break;
-
-  case PearsonPolarityPositive_RB_ID:
-    PearsonPolarityNegative_RB->SetState(kButtonUp);
-    GraphicsMgr->PlotWaveform();
-    break;
-
-  case PearsonPolarityNegative_RB_ID:
-    PearsonPolarityPositive_RB->SetState(kButtonUp);
-    GraphicsMgr->PlotWaveform();
-    break;
-
-  case ProcessingSeq_RB_ID:
-    if(ProcessingSeq_RB->IsDown())
-      ProcessingPar_RB->SetState(kButtonUp);
-
-    NumProcessors_NEL->GetEntry()->SetState(false);
-    NumProcessors_NEL->GetEntry()->SetNumber(1);
-    break;
-    
-  case ProcessingPar_RB_ID:
-    if(ProcessingPar_RB->IsDown())
-      ProcessingSeq_RB->SetState(kButtonUp);
-
-    NumProcessors_NEL->GetEntry()->SetState(true);
-    NumProcessors_NEL->GetEntry()->SetNumber(NumProcessors);
-    break;
-
-  case PSDPositiveFilter_RB_ID:
-    if(PSDPositiveFilter_RB->IsDown()){
-      PSDNegativeFilter_RB->SetState(kButtonUp);
-    }
-    break;
-
-  case PSDNegativeFilter_RB_ID:
-    if(PSDNegativeFilter_RB->IsDown()){
-      PSDPositiveFilter_RB->SetState(kButtonUp);
-    }
-    break;
-
-  case PSDHistogramSliceX_RB_ID:
-    if(PSDHistogramSliceX_RB->IsDown())
-      PSDHistogramSliceY_RB->SetState(kButtonUp);
-    
-    if(GraphicsMgr->GetCanvasContentType() == zPSDHistogram)
-      {}//PlotPSDHistogram();
-    break;
-    
-  case PSDHistogramSliceY_RB_ID:
-    if(PSDHistogramSliceY_RB->IsDown())
-      PSDHistogramSliceX_RB->SetState(kButtonUp);
-    if(GraphicsMgr->GetCanvasContentType() == zPSDHistogram)
-      {}//PlotPSDHistogram();
-    break;
-  }
-}
-
-
-void AAInterface::HandleComboBox(int ComboBoxID, int SelectedID)
-{
-  if(!ADAQFileLoaded and !ACRONYMFileLoaded)
-    return;
-
-  SaveSettings();
-
-  switch(ComboBoxID){
-
-  case PSDPlotType_CBL_ID:
-    if(ComputationMgr->GetPSDHistogramExists())
-      {}//PlotPSDHistogram();
-    break;
   }
 }
 
@@ -3404,15 +2976,15 @@ void AAInterface::SetPSDWidgetState(bool WidgetState, EButtonState ButtonState)
 
 void AAInterface::SetPearsonWidgetState(bool WidgetState, EButtonState ButtonState)
 {
-  IntegratePearson_CB->SetState(ButtonState);
+  PlotPearsonIntegration_CB->SetState(ButtonState);
   PearsonChannel_CBL->GetComboBox()->SetEnabled(WidgetState);
   PearsonPolarityPositive_RB->SetState(ButtonState);
   PearsonPolarityNegative_RB->SetState(ButtonState);
-  PlotPearsonIntegration_CB->SetState(ButtonState);
   IntegrateRawPearson_RB->SetState(ButtonState);
   IntegrateFitToPearson_RB->SetState(ButtonState);
   PearsonLowerLimit_NEL->GetEntry()->SetState(WidgetState);
-  PearsonMiddleLimit_NEL->GetEntry()->SetState(WidgetState);
+  if(WidgetState==true and IntegrateFitToPearson_RB->IsDown())
+    PearsonMiddleLimit_NEL->GetEntry()->SetState(WidgetState);
   PearsonUpperLimit_NEL->GetEntry()->SetState(WidgetState);
 }
 
