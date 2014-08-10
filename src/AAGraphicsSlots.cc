@@ -4,23 +4,209 @@
 
 AAGraphicsSlots::AAGraphicsSlots(AAInterface *TI)
   : TheInterface(TI)
-{;}
+{
+  ComputationMgr = AAComputation::GetInstance();
+  GraphicsMgr = AAGraphics::GetInstance();
+  InterpolationMgr = AAInterpolation::GetInstance();
+}
+
 
 AAGraphicsSlots::~AAGraphicsSlots()
 {;}
 
 
 void AAGraphicsSlots::HandleCheckButtons()
-{;}
+{
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+    return;
+  
+  TGCheckButton *CheckButton = (TGCheckButton *) gTQSender;
+  int CheckButtonID = CheckButton->WidgetId();
 
+  TheInterface->SaveSettings();
 
-void AAGraphicsSlots::HandleComboBoxes()
-{;}
+  switch(CheckButtonID){
+
+  case HistogramStats_CB_ID:
+  case CanvasGrid_CB_ID:
+  case OverrideTitles_CB_ID:
+  case CanvasXAxisLog_CB_ID:
+  case CanvasYAxisLog_CB_ID:
+  case CanvasZAxisLog_CB_ID:
+
+    switch(GraphicsMgr->GetCanvasContentType()){
+    case zEmpty:
+      break;
+      
+    case zWaveform:
+      GraphicsMgr->PlotWaveform();
+      break;
+      
+    case zSpectrum:{
+      GraphicsMgr->PlotSpectrum();
+      break;
+    }
+      
+    case zSpectrumDerivative:
+      GraphicsMgr->PlotSpectrumDerivative();
+      break;
+      
+    case zPSDHistogram:
+      GraphicsMgr->PlotPSDHistogram();
+      break;
+    }
+    break;
+
+  case PlotSpectrumDerivativeError_CB_ID:
+  case PlotAbsValueSpectrumDerivative_CB_ID:
+    if(!ComputationMgr->GetSpectrumExists()){
+      TheInterface->CreateMessageBox("A valid spectrum does not yet exists! The calculation of a spectrum derivative is, therefore, moot!", "Stop");
+      break;
+    }
+    else{
+      if(TheInterface->PlotSpectrumDerivativeError_CB->IsDown()){
+	GraphicsMgr->PlotSpectrumDerivative();
+      }
+      else{
+	GraphicsMgr->PlotSpectrum();
+      }
+      break;
+    }
+    
+  default:
+    break;
+  }
+}
 
 
 void AAGraphicsSlots::HandleNumberEntries()
-{;}
+{
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+    return;
+
+  TGNumberEntry *NumberEntry = (TGNumberEntry *) gTQSender;
+  int NumberEntryID = NumberEntry->WidgetId();
+
+  TheInterface->SaveSettings();
+  
+  switch(NumberEntryID){
+  
+  case XAxisSize_NEL_ID:
+  case XAxisOffset_NEL_ID:
+  case XAxisDivs_NEL_ID:
+  case YAxisSize_NEL_ID:
+  case YAxisOffset_NEL_ID:
+  case YAxisDivs_NEL_ID:
+  case ZAxisSize_NEL_ID:
+  case ZAxisOffset_NEL_ID:
+  case ZAxisDivs_NEL_ID:
+  case PaletteAxisSize_NEL_ID:
+  case PaletteAxisOffset_NEL_ID:
+  case PaletteAxisDivs_NEL_ID:  
+  case PaletteX1_NEL_ID:  
+  case PaletteX2_NEL_ID:  
+  case PaletteY1_NEL_ID:  
+  case PaletteY2_NEL_ID:  
+    
+    switch(GraphicsMgr->GetCanvasContentType()){
+    case zWaveform:
+      GraphicsMgr->PlotWaveform();
+      break;
+      
+    case zSpectrum:
+      GraphicsMgr->PlotSpectrum();
+      break;
+
+    case zSpectrumDerivative:
+      GraphicsMgr->PlotSpectrumDerivative();
+      break;
+      
+    case zPSDHistogram:
+      GraphicsMgr->PlotPSDHistogram();
+      break;
+    }
+    break;
+
+  default:
+    break;
+  }
+}
 
 
 void AAGraphicsSlots::HandleRadioButtons()
-{;}
+{
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+    return;
+  
+  TGRadioButton *RadioButton = (TGRadioButton *) gTQSender;
+  int RadioButtonID = RadioButton->WidgetId();
+  
+  TheInterface->SaveSettings();
+
+  switch(RadioButtonID){
+
+  case DrawWaveformWithCurve_RB_ID:
+  case DrawWaveformWithMarkers_RB_ID:
+  case DrawWaveformWithBoth_RB_ID:
+    GraphicsMgr->PlotWaveform();
+    break;
+
+  case DrawSpectrumWithBars_RB_ID:
+  case DrawSpectrumWithCurve_RB_ID:
+  case DrawSpectrumWithError_RB_ID:
+  case DrawSpectrumWithMarkers_RB_ID:
+    if(ComputationMgr->GetSpectrumExists())
+      GraphicsMgr->PlotSpectrum();
+    break;
+
+  default:
+    break;
+  }
+}
+
+
+void AAGraphicsSlots::HandleTextButtons()
+{
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+    return;
+  
+  TGTextButton *TextButton = (TGTextButton *) gTQSender;
+  int TextButtonID  = TextButton->WidgetId();
+  
+  TheInterface->SaveSettings();
+  
+  switch(TextButtonID){
+
+  case ReplotWaveform_TB_ID:
+    GraphicsMgr->PlotWaveform();
+    break;
+    
+  case ReplotSpectrum_TB_ID:
+    if(ComputationMgr->GetSpectrumExists())
+      GraphicsMgr->PlotSpectrum();
+    else
+      TheInterface->CreateMessageBox("A valid spectrum does not yet exist; therefore, it is difficult to replot it!","Stop");
+    break;
+    
+  case ReplotSpectrumDerivative_TB_ID:
+    if(ComputationMgr->GetSpectrumExists()){
+      GraphicsMgr->PlotSpectrumDerivative();
+    }
+    else
+      TheInterface->CreateMessageBox("A valid spectrum does not yet exist; therefore, the spectrum derivative cannot be plotted!","Stop");
+    break;
+    
+  case ReplotPSDHistogram_TB_ID:
+    if(TheInterface->ADAQFileLoaded){
+      if(ComputationMgr->GetPSDHistogramExists())
+	GraphicsMgr->PlotPSDHistogram();
+      else
+	TheInterface->CreateMessageBox("A valid PSD histogram does not yet exist; therefore, replotting cannot be achieved!","Stop");
+    }
+    break;
+
+  default:
+    break;
+  }
+}
+

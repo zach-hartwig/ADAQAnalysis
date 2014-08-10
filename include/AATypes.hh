@@ -110,6 +110,8 @@ enum{
 
   UsePileupRejection_CB_ID,
 
+  AutoYAxisRange_CB_ID,
+
   PlotBaseline_CB_ID,
   BaselineCalcMin_NEL_ID,
   BaselineCalcMax_NEL_ID,
@@ -245,6 +247,10 @@ enum{
   PaletteAxisSize_NEL_ID,
   PaletteAxisOffset_NEL_ID,
   PaletteAxisDivs_NEL_ID,
+  PaletteX1_NEL_ID,
+  PaletteX2_NEL_ID,
+  PaletteY1_NEL_ID,
+  PaletteY2_NEL_ID,
   
   DrawWaveformWithCurve_RB_ID,
   DrawWaveformWithMarkers_RB_ID,

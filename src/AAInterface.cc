@@ -477,6 +477,14 @@ TGGroupFrame *PeakFindingOptions_GF = new TGGroupFrame(WaveformFrame_VF, "Peak f
 			       new TGLayoutHints(kLHintsNormal, 15,5,5,5));
   UsePileupRejection_CB->Connect("Clicked()", "AAWaveformSlots", WaveformSlots, "HandleCheckButtons()");
   UsePileupRejection_CB->SetState(kButtonDown);
+
+  ///////////////////////
+  // Graphical options //
+  ///////////////////////
+  
+  WaveformFrame_VF->AddFrame(AutoYAxisRange_CB = new TGCheckButton(WaveformFrame_VF, "Auto. Y Axis Range", AutoYAxisRange_CB_ID),
+			     new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+  
 			       
 
   ///////////////////////
@@ -1046,30 +1054,30 @@ void AAInterface::FillGraphicsFrame()
 			      new TGLayoutHints(kLHintsNormal, 5,5,5,5));
   
   DrawWaveformWithCurve_RB = new TGRadioButton(WaveformDrawOptions_BG, "Curve   ", DrawWaveformWithCurve_RB_ID);
-  DrawWaveformWithCurve_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  DrawWaveformWithCurve_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
   DrawWaveformWithCurve_RB->SetState(kButtonDown);
   
   DrawWaveformWithMarkers_RB = new TGRadioButton(WaveformDrawOptions_BG, "Markers   ", DrawWaveformWithMarkers_RB_ID);
-  DrawWaveformWithMarkers_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  DrawWaveformWithMarkers_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
   
   DrawWaveformWithBoth_RB = new TGRadioButton(WaveformDrawOptions_BG, "Both", DrawWaveformWithBoth_RB_ID);
-  DrawWaveformWithBoth_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  DrawWaveformWithBoth_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
   
   GraphicsFrame_VF->AddFrame(SpectrumDrawOptions_BG = new TGButtonGroup(GraphicsFrame_VF, "Spectrum draw options", kHorizontalFrame),
 			      new TGLayoutHints(kLHintsNormal, 5,5,5,5));
   
   DrawSpectrumWithCurve_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Curve  ", DrawSpectrumWithCurve_RB_ID);
-  DrawSpectrumWithCurve_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  DrawSpectrumWithCurve_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
   DrawSpectrumWithCurve_RB->SetState(kButtonDown);
   
   DrawSpectrumWithMarkers_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Markers  ", DrawSpectrumWithMarkers_RB_ID);
-  DrawSpectrumWithMarkers_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  DrawSpectrumWithMarkers_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
 
   DrawSpectrumWithError_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Error  ", DrawSpectrumWithError_RB_ID);
-  DrawSpectrumWithError_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  DrawSpectrumWithError_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
 
   DrawSpectrumWithBars_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Bars", DrawSpectrumWithBars_RB_ID);
-  DrawSpectrumWithBars_RB->Connect("Clicked()", "AAInterface", this, "HandleRadioButtons()");
+  DrawSpectrumWithBars_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
 
 
   TGHorizontalFrame *CanvasOptions_HF0 = new TGHorizontalFrame(GraphicsFrame_VF);
@@ -1077,11 +1085,11 @@ void AAInterface::FillGraphicsFrame()
 
   CanvasOptions_HF0->AddFrame(HistogramStats_CB = new TGCheckButton(CanvasOptions_HF0, "Histogram stats", HistogramStats_CB_ID),
 			      new TGLayoutHints(kLHintsLeft, 0,0,0,0));
-  HistogramStats_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  HistogramStats_CB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleCheckButtons()");
   
   CanvasOptions_HF0->AddFrame(CanvasGrid_CB = new TGCheckButton(CanvasOptions_HF0, "Grid", CanvasGrid_CB_ID),
 			      new TGLayoutHints(kLHintsLeft, 25,0,0,0));
-  CanvasGrid_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  CanvasGrid_CB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleCheckButtons()");
   CanvasGrid_CB->SetState(kButtonDown);
 
 
@@ -1090,28 +1098,25 @@ void AAInterface::FillGraphicsFrame()
   
   CanvasOptions_HF1->AddFrame(CanvasXAxisLog_CB = new TGCheckButton(CanvasOptions_HF1, "X-axis log", CanvasXAxisLog_CB_ID),
 			     new TGLayoutHints(kLHintsLeft, 0,0,0,0));
-  CanvasXAxisLog_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  CanvasXAxisLog_CB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleCheckButtons()");
   
   CanvasOptions_HF1->AddFrame(CanvasYAxisLog_CB = new TGCheckButton(CanvasOptions_HF1, "Y-axis log", CanvasYAxisLog_CB_ID),
 			      new TGLayoutHints(kLHintsLeft, 15,0,0,0));
-  CanvasYAxisLog_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  CanvasYAxisLog_CB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleCheckButtons()");
   
   CanvasOptions_HF1->AddFrame(CanvasZAxisLog_CB = new TGCheckButton(CanvasOptions_HF1, "Z-axis log", CanvasZAxisLog_CB_ID),
 			      new TGLayoutHints(kLHintsLeft, 5,5,0,0));
-  CanvasZAxisLog_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  CanvasZAxisLog_CB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleCheckButtons()");
   
 
   GraphicsFrame_VF->AddFrame(PlotSpectrumDerivativeError_CB = new TGCheckButton(GraphicsFrame_VF, "Plot spectrum derivative error", PlotSpectrumDerivativeError_CB_ID),
 			     new TGLayoutHints(kLHintsNormal, 5,5,5,0));
-  PlotSpectrumDerivativeError_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  PlotSpectrumDerivativeError_CB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleCheckButtons()");
   
   GraphicsFrame_VF->AddFrame(PlotAbsValueSpectrumDerivative_CB = new TGCheckButton(GraphicsFrame_VF, "Plot abs. value of spectrum derivative ", PlotAbsValueSpectrumDerivative_CB_ID),
 			     new TGLayoutHints(kLHintsNormal, 5,5,5,0));
-  PlotAbsValueSpectrumDerivative_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  PlotAbsValueSpectrumDerivative_CB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleCheckButtons()");
   
-  GraphicsFrame_VF->AddFrame(AutoYAxisRange_CB = new TGCheckButton(GraphicsFrame_VF, "Auto. Y Axis Range (waveform only)", -1),
-			       new TGLayoutHints(kLHintsLeft, 5,5,5,5));
-
   TGHorizontalFrame *ResetAxesLimits_HF = new TGHorizontalFrame(GraphicsFrame_VF);
   GraphicsFrame_VF->AddFrame(ResetAxesLimits_HF, new TGLayoutHints(kLHintsLeft,15,5,5,5));
 
@@ -1124,7 +1129,7 @@ void AAInterface::FillGraphicsFrame()
   ReplotWaveform_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   ReplotWaveform_TB->Resize(130, 30);
   ReplotWaveform_TB->ChangeOptions(ReplotWaveform_TB->GetOptions() | kFixedSize);
-  ReplotWaveform_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  ReplotWaveform_TB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleTextButtons()");
   
   PlotButtons_HF0->AddFrame(ReplotSpectrum_TB = new TGTextButton(PlotButtons_HF0, "Plot spectrum", ReplotSpectrum_TB_ID),
 			    new TGLayoutHints(kLHintsCenterX, 5,5,0,0));
@@ -1132,7 +1137,7 @@ void AAInterface::FillGraphicsFrame()
   ReplotSpectrum_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   ReplotSpectrum_TB->Resize(130, 30);
   ReplotSpectrum_TB->ChangeOptions(ReplotSpectrum_TB->GetOptions() | kFixedSize);
-  ReplotSpectrum_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  ReplotSpectrum_TB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleTextButtons()");
   
 
   TGHorizontalFrame *PlotButtons_HF1 = new TGHorizontalFrame(GraphicsFrame_VF);
@@ -1144,7 +1149,7 @@ void AAInterface::FillGraphicsFrame()
   ReplotSpectrumDerivative_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   ReplotSpectrumDerivative_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   ReplotSpectrumDerivative_TB->ChangeOptions(ReplotSpectrumDerivative_TB->GetOptions() | kFixedSize);
-  ReplotSpectrumDerivative_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  ReplotSpectrumDerivative_TB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleTextButtons()");
 
   PlotButtons_HF1->AddFrame(ReplotPSDHistogram_TB = new TGTextButton(PlotButtons_HF1, "Plot PSD histogram", ReplotPSDHistogram_TB_ID),
 			    new TGLayoutHints(kLHintsCenterX, 5,5,0,0));
@@ -1152,12 +1157,12 @@ void AAInterface::FillGraphicsFrame()
   ReplotPSDHistogram_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   ReplotPSDHistogram_TB->Resize(130, 30);
   ReplotPSDHistogram_TB->ChangeOptions(ReplotPSDHistogram_TB->GetOptions() | kFixedSize);
-  ReplotPSDHistogram_TB->Connect("Clicked()", "AAInterface", this, "HandleTextButtons()");
+  ReplotPSDHistogram_TB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleTextButtons()");
 
   // Override default plot options
   GraphicsFrame_VF->AddFrame(OverrideTitles_CB = new TGCheckButton(GraphicsFrame_VF, "Override default graphical options", OverrideTitles_CB_ID),
 			       new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
-  OverrideTitles_CB->Connect("Clicked()", "AAInterface", this, "HandleCheckButtons()");
+  OverrideTitles_CB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleCheckButtons()");
 
   // Plot title text entry
   GraphicsFrame_VF->AddFrame(Title_TEL = new ADAQTextEntryWithLabel(GraphicsFrame_VF, "Plot title", Title_TEL_ID),
@@ -1181,7 +1186,7 @@ void AAInterface::FillGraphicsFrame()
   XAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   XAxisSize_NEL->GetEntry()->SetNumber(0.04);
   XAxisSize_NEL->GetEntry()->Resize(50, 20);
-  XAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  XAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
   
   XAxisTitleOptions_HF->AddFrame(XAxisOffset_NEL = new ADAQNumberEntryWithLabel(XAxisTitleOptions_HF, "Offset", XAxisOffset_NEL_ID),		
 				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
@@ -1189,7 +1194,7 @@ void AAInterface::FillGraphicsFrame()
   XAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   XAxisOffset_NEL->GetEntry()->SetNumber(1.5);
   XAxisOffset_NEL->GetEntry()->Resize(50, 20);
-  XAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  XAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   XAxis_GF->AddFrame(XAxisDivs_NEL = new ADAQNumberEntryWithLabel(XAxis_GF, "Divisions", XAxisDivs_NEL_ID),		
 		     new TGLayoutHints(kLHintsNormal, 0,0,0,0));
@@ -1197,7 +1202,7 @@ void AAInterface::FillGraphicsFrame()
   XAxisDivs_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   XAxisDivs_NEL->GetEntry()->SetNumber(510);
   XAxisDivs_NEL->GetEntry()->Resize(50, 20);
-  XAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  XAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   // Y-axis title options
 
@@ -1217,7 +1222,7 @@ void AAInterface::FillGraphicsFrame()
   YAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   YAxisSize_NEL->GetEntry()->SetNumber(0.04);
   YAxisSize_NEL->GetEntry()->Resize(50, 20);
-  YAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  YAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
   
   YAxisTitleOptions_HF->AddFrame(YAxisOffset_NEL = new ADAQNumberEntryWithLabel(YAxisTitleOptions_HF, "Offset", YAxisOffset_NEL_ID),		
 				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
@@ -1225,7 +1230,7 @@ void AAInterface::FillGraphicsFrame()
   YAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   YAxisOffset_NEL->GetEntry()->SetNumber(1.5);
   YAxisOffset_NEL->GetEntry()->Resize(50, 20);
-  YAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  YAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   YAxis_GF->AddFrame(YAxisDivs_NEL = new ADAQNumberEntryWithLabel(YAxis_GF, "Divisions", YAxisDivs_NEL_ID),		
 		     new TGLayoutHints(kLHintsNormal, 0,0,0,0));
@@ -1233,7 +1238,7 @@ void AAInterface::FillGraphicsFrame()
   YAxisDivs_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   YAxisDivs_NEL->GetEntry()->SetNumber(510);
   YAxisDivs_NEL->GetEntry()->Resize(50, 20);
-  YAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  YAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   // Z-axis options
 
@@ -1253,7 +1258,7 @@ void AAInterface::FillGraphicsFrame()
   ZAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   ZAxisSize_NEL->GetEntry()->SetNumber(0.04);
   ZAxisSize_NEL->GetEntry()->Resize(50, 20);
-  ZAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  ZAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
   
   ZAxisTitleOptions_HF->AddFrame(ZAxisOffset_NEL = new ADAQNumberEntryWithLabel(ZAxisTitleOptions_HF, "Offset", ZAxisOffset_NEL_ID),		
 				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
@@ -1261,7 +1266,7 @@ void AAInterface::FillGraphicsFrame()
   ZAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   ZAxisOffset_NEL->GetEntry()->SetNumber(1.5);
   ZAxisOffset_NEL->GetEntry()->Resize(50, 20);
-  ZAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  ZAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   ZAxis_GF->AddFrame(ZAxisDivs_NEL = new ADAQNumberEntryWithLabel(ZAxis_GF, "Divisions", ZAxisDivs_NEL_ID),		
 		     new TGLayoutHints(kLHintsNormal, 0,0,0,0));
@@ -1269,7 +1274,7 @@ void AAInterface::FillGraphicsFrame()
   ZAxisDivs_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   ZAxisDivs_NEL->GetEntry()->SetNumber(510);
   ZAxisDivs_NEL->GetEntry()->Resize(50, 20);
-  ZAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  ZAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   // Color palette options
 
@@ -1290,7 +1295,7 @@ void AAInterface::FillGraphicsFrame()
   PaletteAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PaletteAxisSize_NEL->GetEntry()->SetNumber(0.04);
   PaletteAxisSize_NEL->GetEntry()->Resize(50, 20);
-  PaletteAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  PaletteAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
   
   PaletteAxisTitleOptions_HF->AddFrame(PaletteAxisOffset_NEL = new ADAQNumberEntryWithLabel(PaletteAxisTitleOptions_HF, "Offset", PaletteAxisOffset_NEL_ID),		
 				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
@@ -1298,19 +1303,19 @@ void AAInterface::FillGraphicsFrame()
   PaletteAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PaletteAxisOffset_NEL->GetEntry()->SetNumber(1.1);
   PaletteAxisOffset_NEL->GetEntry()->Resize(50, 20);
-  PaletteAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAInterface", this, "HandleNumberEntries()");
+  PaletteAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   TGHorizontalFrame *PaletteAxisPositions_HF1 = new TGHorizontalFrame(PaletteAxis_GF);
   PaletteAxis_GF->AddFrame(PaletteAxisPositions_HF1, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
 
-  PaletteAxisPositions_HF1->AddFrame(PaletteX1_NEL = new ADAQNumberEntryWithLabel(PaletteAxisPositions_HF1, "X1", -1),
+  PaletteAxisPositions_HF1->AddFrame(PaletteX1_NEL = new ADAQNumberEntryWithLabel(PaletteAxisPositions_HF1, "X1", PaletteX1_NEL_ID),
 				    new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PaletteX1_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PaletteX1_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PaletteX1_NEL->GetEntry()->SetNumber(0.85);
   PaletteX1_NEL->GetEntry()->Resize(50, 20);
 
-  PaletteAxisPositions_HF1->AddFrame(PaletteX2_NEL = new ADAQNumberEntryWithLabel(PaletteAxisPositions_HF1, "X2", -1),
+  PaletteAxisPositions_HF1->AddFrame(PaletteX2_NEL = new ADAQNumberEntryWithLabel(PaletteAxisPositions_HF1, "X2", PaletteX2_NEL_ID),
 				    new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PaletteX2_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PaletteX2_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -1320,14 +1325,14 @@ void AAInterface::FillGraphicsFrame()
   TGHorizontalFrame *PaletteAxisPositions_HF2 = new TGHorizontalFrame(PaletteAxis_GF);
   PaletteAxis_GF->AddFrame(PaletteAxisPositions_HF2, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
 
-  PaletteAxisPositions_HF2->AddFrame(PaletteY1_NEL = new ADAQNumberEntryWithLabel(PaletteAxisPositions_HF2, "Y1", -1),
+  PaletteAxisPositions_HF2->AddFrame(PaletteY1_NEL = new ADAQNumberEntryWithLabel(PaletteAxisPositions_HF2, "Y1", PaletteY1_NEL_ID),
 				    new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PaletteY1_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PaletteY1_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PaletteY1_NEL->GetEntry()->SetNumber(0.05);
   PaletteY1_NEL->GetEntry()->Resize(50, 20);
 
-  PaletteAxisPositions_HF2->AddFrame(PaletteY2_NEL = new ADAQNumberEntryWithLabel(PaletteAxisPositions_HF2, "Y2", -1),
+  PaletteAxisPositions_HF2->AddFrame(PaletteY2_NEL = new ADAQNumberEntryWithLabel(PaletteAxisPositions_HF2, "Y2", PaletteY2_NEL_ID),
 				    new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PaletteY2_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PaletteY2_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -2267,34 +2272,6 @@ void AAInterface::HandleTextButtons()
     // Graphics frame //
     ////////////////////
     
-  case ReplotWaveform_TB_ID:
-    GraphicsMgr->PlotWaveform();
-    break;
-    
-  case ReplotSpectrum_TB_ID:
-    if(ComputationMgr->GetSpectrumExists())
-      GraphicsMgr->PlotSpectrum();
-    else
-      CreateMessageBox("A valid spectrum does not yet exist; therefore, it is difficult to replot it!","Stop");
-    break;
-    
-  case ReplotSpectrumDerivative_TB_ID:
-    if(ComputationMgr->GetSpectrumExists()){
-      //SpectrumOverplotDerivative_CB->SetState(kButtonUp);
-      GraphicsMgr->PlotSpectrumDerivative();
-    }
-    else
-      CreateMessageBox("A valid spectrum does not yet exist; therefore, the spectrum derivative cannot be plotted!","Stop");
-    break;
-    
-  case ReplotPSDHistogram_TB_ID:
-    if(ADAQFileLoaded){
-      if(ComputationMgr->GetPSDHistogramExists())
-	GraphicsMgr->PlotPSDHistogram();
-      else
-CreateMessageBox("A valid PSD histogram does not yet exist; therefore, replotting cannot be achieved!","Stop");
-    }
-    break;
 
     
     //////////////////////
@@ -2411,35 +2388,6 @@ void AAInterface::HandleCheckButtons()
   
   switch(CheckButtonID){
     
-  case OverrideTitles_CB_ID:
-  case HistogramStats_CB_ID:
-  case CanvasGrid_CB_ID:
-  case CanvasXAxisLog_CB_ID:
-  case CanvasYAxisLog_CB_ID:
-  case CanvasZAxisLog_CB_ID:
-
-    switch(GraphicsMgr->GetCanvasContentType()){
-    case zEmpty:
-      break;
-
-    case zWaveform:
-      GraphicsMgr->PlotWaveform();
-      break;
-      
-    case zSpectrum:{
-      GraphicsMgr->PlotSpectrum();
-      break;
-    }
-      
-    case zSpectrumDerivative:
-      GraphicsMgr->PlotSpectrumDerivative();
-      break;
-      
-    case zPSDHistogram:
-      GraphicsMgr->PlotPSDHistogram();
-      break;
-    }
-    break;
     
     
   case IntegratePearson_CB_ID:{
@@ -2551,27 +2499,6 @@ void AAInterface::HandleCheckButtons()
     break;
   }
 
-  case PlotSpectrumDerivativeError_CB_ID:
-  case PlotAbsValueSpectrumDerivative_CB_ID:
-  case SpectrumOverplotDerivative_CB_ID:{
-    if(!ComputationMgr->GetSpectrumExists()){
-      CreateMessageBox("A valid spectrum does not yet exists! The calculation of a spectrum derivative is, therefore, moot!", "Stop");
-      break;
-    }
-    else{
-      //      if(SpectrumOverplotDerivative_CB->IsDown()){
-      //	GraphicsMgr->PlotSpectrum();
-      //	GraphicsMgr->PlotSpectrumDerivative();
-      //      }
-      if(PlotSpectrumDerivativeError_CB->IsDown()){
-	GraphicsMgr->PlotSpectrumDerivative();
-      }
-      else{
-	GraphicsMgr->PlotSpectrum();
-      }
-      break;
-    }
-  }
 
   default:
     break;
@@ -2774,37 +2701,6 @@ void AAInterface::HandleNumberEntries()
 
   switch(NumberEntryID){
     
-  case XAxisSize_NEL_ID:
-  case XAxisOffset_NEL_ID:
-  case XAxisDivs_NEL_ID:
-  case YAxisSize_NEL_ID:
-  case YAxisOffset_NEL_ID:
-  case YAxisDivs_NEL_ID:
-  case ZAxisSize_NEL_ID:
-  case ZAxisOffset_NEL_ID:
-  case ZAxisDivs_NEL_ID:
-  case PaletteAxisSize_NEL_ID:
-  case PaletteAxisOffset_NEL_ID:
-  case PaletteAxisDivs_NEL_ID:  
-    
-    switch(GraphicsMgr->GetCanvasContentType()){
-    case zWaveform:
-      GraphicsMgr->PlotWaveform();
-      break;
-      
-    case zSpectrum:
-      GraphicsMgr->PlotSpectrum();
-      break;
-
-    case zSpectrumDerivative:
-      GraphicsMgr->PlotSpectrumDerivative();
-      break;
-      
-    case zPSDHistogram:
-      GraphicsMgr->PlotPSDHistogram();
-      break;
-    }
-    break;
 
   default:
     break;
@@ -2887,20 +2783,6 @@ void AAInterface::HandleRadioButtons()
       PSDHistogramSliceX_RB->SetState(kButtonUp);
     if(GraphicsMgr->GetCanvasContentType() == zPSDHistogram)
       {}//PlotPSDHistogram();
-    break;
-    
-  case DrawWaveformWithCurve_RB_ID:
-  case DrawWaveformWithMarkers_RB_ID:
-  case DrawWaveformWithBoth_RB_ID:
-    GraphicsMgr->PlotWaveform();
-    break;
-
-  case DrawSpectrumWithBars_RB_ID:
-  case DrawSpectrumWithCurve_RB_ID:
-  case DrawSpectrumWithError_RB_ID:
-  case DrawSpectrumWithMarkers_RB_ID:
-    if(ComputationMgr->GetSpectrumExists())
-      GraphicsMgr->PlotSpectrum();
     break;
   }
 }
