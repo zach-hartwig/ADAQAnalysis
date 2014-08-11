@@ -1,3 +1,17 @@
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AAAnalysisSlots.cc
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AAAnalysisSlots class contains widget slot methods to
+//       handle signals generated from widgets contained on the
+//       "analysis" tab of the ADAQAnalysis GUI
+//
+/////////////////////////////////////////////////////////////////////////////////
+
+// ADAQAnalysis
 #include "AAAnalysisSlots.hh"
 #include "AANontabSlots.hh"
 #include "AAInterface.hh"
@@ -52,7 +66,6 @@ void AAAnalysisSlots::HandleCheckButtons()
     break;
   }
 
-    
   case SpectrumBackgroundCompton_CB_ID:
   case SpectrumBackgroundSmoothing_CB_ID:
     ComputationMgr->CalculateSpectrumBackground();

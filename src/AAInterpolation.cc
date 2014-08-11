@@ -1,8 +1,28 @@
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AAInterpolation.cc
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AAInterpolation class handles the conversion of energy
+//       deposited in liquid organic scintillators (obtained from
+//       calibrated energy deposition spectra) into incident kinetic
+//       energy of various particles. It is constructed as a Meyer's
+//       singleton and made available throughout the code via static
+//       methods. At present, only a single set of response functions
+//       for EJ301/BC501A/NE213 is implemented; future work will
+//       incorporate multiple response functions and multiple
+//       scintillators for a more thorough set of analysis tools.
+//
+/////////////////////////////////////////////////////////////////////////////////
+
+// C++
 #include <iostream>
 #include <cmath>
 using namespace std;
 
-
+// ADAQAnalysis
 #include "AAInterpolation.hh"
 #include "AAInterpolationData.hh"
 

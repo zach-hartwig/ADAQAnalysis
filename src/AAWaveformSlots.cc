@@ -1,6 +1,20 @@
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AAWaveformSlots.cc
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AAWaveformSlots class contains widget slot methods to
+//       handle signals generated from widgets contained on the
+//       "waveform" tab of the ADAQAnalysis GUI
+//
+/////////////////////////////////////////////////////////////////////////////////
+
 #include "AAWaveformSlots.hh"
 #include "AAInterface.hh"
 #include "AAGraphics.hh"
+
 
 AAWaveformSlots::AAWaveformSlots(AAInterface *TI)
   : TheInterface(TI)
@@ -8,6 +22,7 @@ AAWaveformSlots::AAWaveformSlots(AAInterface *TI)
   ComputationMgr = AAComputation::GetInstance();
   GraphicsMgr = AAGraphics::GetInstance();
 }
+
 
 AAWaveformSlots::~AAWaveformSlots()
 {;}
@@ -157,8 +172,6 @@ void AAWaveformSlots::HandleRadioButtons()
   switch(RadioButtonID){
 
   case RawWaveform_RB_ID:
-    break;
-
     TheInterface->FindPeaks_CB->SetState(kButtonUp);
     TheInterface->FindPeaks_CB->SetState(kButtonDisabled);
     TheInterface->WaveformAnalysis_CB->SetState(kButtonUp);

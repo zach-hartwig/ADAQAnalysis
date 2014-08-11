@@ -1,3 +1,23 @@
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AAGraphics.cc
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AAGraphics class is responsible for the plotting of all
+//       graphical objects, including waveforms, spectra, PSD
+//       histograms, and associated fits, lines, fill regions, etc.
+//       It receives a pointer to the main embedded ROOT canvas from
+//       the AAInterface class so that it may populate it with all
+//       required graphical objects. The AASettings object, which
+//       contains all values of the widgets from the GUI, is made
+//       available to the class so that the necessary values may be
+//       used in plotting the various objects.
+//
+/////////////////////////////////////////////////////////////////////////////////
+
+
 // ROOT
 #include <TROOT.h>
 #include <TStyle.h>
@@ -1062,44 +1082,58 @@ void AAGraphics::PlotPSDHistogramSlice(int XPixel, int YPixel)
     PSDSlice_C->SetLeftMargin(0.13);
     PSDSlice_C->SetBottomMargin(0.13);
   }
-  
-  // Ensure the PSD slice canvas is the active canvas
-  PSDSlice_C->cd();
+
+  /////////////////////////
+  // Assign the axis titles
+
+  // Ensure that the 2D PSD histogram canvas is active in order to
+  // extract the correct X and Y values in ADC
+  TheCanvas->cd();
 
   string Title, XTitle;
   stringstream ss;
     
   if(ADAQSettings->PSDXSlice){
-    ss << "PSDHistogram X slice at " << gPad->AbsPixeltoX(XPixel) << " ADC";
+
+    double XPosInADC = gPad->AbsPixeltoX(XPixel);
+
+    ss << "PSDHistogram X slice at " << XPosInADC << " ADC";
+
     Title = ss.str();
     XTitle = "PSD Tail Integral [ADC]";
   }
   else if(ADAQSettings->PSDYSlice){
-    ss << "PSDHistogram Y slice at " << gPad->AbsPixeltoY(YPixel) << " ADC";
+    double YPosInADC = gPad->AbsPixeltoY(YPixel);
+
+    ss << "PSDHistogram Y slice at " << YPosInADC << " ADC";
     Title == ss.str();
     XTitle = "PSD Total Integral [ADC]";
   }
 
-  
   /////////////////////////////////
   // Set slice histogram attributes
-  
+
+  // Ensure that the PSD slice canvas is now active
+  PSDSlice_C->cd();
+    
   PSDHistogramSlice_H->SetName(SliceHistogramName.c_str());
   PSDHistogramSlice_H->SetTitle(Title.c_str());
 
   PSDHistogramSlice_H->GetXaxis()->SetTitle(XTitle.c_str());
-  PSDHistogramSlice_H->GetXaxis()->SetTitleSize(0.05);
+  PSDHistogramSlice_H->GetXaxis()->SetTitleSize(0.06);
   PSDHistogramSlice_H->GetXaxis()->SetTitleOffset(1.1);
-  PSDHistogramSlice_H->GetXaxis()->SetLabelSize(0.05);
+  PSDHistogramSlice_H->GetXaxis()->SetLabelSize(0.06);
+  PSDHistogramSlice_H->GetXaxis()->SetNdivisions(505);
   PSDHistogramSlice_H->GetXaxis()->CenterTitle();
   
   PSDHistogramSlice_H->GetYaxis()->SetTitle("Counts");
-  PSDHistogramSlice_H->GetYaxis()->SetTitleSize(0.05);
+  PSDHistogramSlice_H->GetYaxis()->SetTitleSize(0.06);
   PSDHistogramSlice_H->GetYaxis()->SetTitleOffset(1.1);
-  PSDHistogramSlice_H->GetYaxis()->SetLabelSize(0.05);
+  PSDHistogramSlice_H->GetYaxis()->SetLabelSize(0.06);
+  PSDHistogramSlice_H->GetYaxis()->SetNdivisions(505);
   PSDHistogramSlice_H->GetYaxis()->CenterTitle();
   
-  PSDHistogramSlice_H->SetFillColor(4);
+  PSDHistogramSlice_H->SetFillColor(SpectrumLineColor);
   PSDHistogramSlice_H->Draw("B");
   
   // Update the standalone canvas

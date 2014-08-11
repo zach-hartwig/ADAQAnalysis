@@ -1,3 +1,16 @@
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AASpectrumSlots.hh
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AASpectrumSlots class contains widget slot methods to
+//       handle signals generated from widgets contained on the
+//       "spectrum" tab of the ADAQAnalysis GUI
+//
+/////////////////////////////////////////////////////////////////////////////////
+
 #ifndef __AASpectrumSlots_hh__
 #define __AASpectrumSlots_hh__ 1
 

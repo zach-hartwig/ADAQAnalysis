@@ -1,3 +1,17 @@
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AANontabSlots.hh
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AANontabSlots class contains widget slot methods to
+//       handle signals generated from widgets that are not contained
+//       on one of the five tabs. This includes the file
+//       menu, the sliders, and the canvas amongst others.
+//
+/////////////////////////////////////////////////////////////////////////////////
+
 #ifndef __AANontabSlots_hh__
 #define __AANontabSlots_hh__ 1
 

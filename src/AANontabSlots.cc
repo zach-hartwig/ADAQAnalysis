@@ -1,9 +1,26 @@
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AANontabSlots.hh
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AANontabSlots class contains widget slot methods to
+//       handle signals generated from widgets that are not contained
+//       on one of the five tabs. This includes the file
+//       menu, the sliders, and the canvas amongst others.
+//
+/////////////////////////////////////////////////////////////////////////////////
+
+// ROOT
 #include <TGFileDialog.h>
 #include <TApplication.h>
 
+// ADAQAnalysis
 #include "AANontabSlots.hh"
 #include "AAInterface.hh"
 #include "AAGraphics.hh"
+
 
 AANontabSlots::AANontabSlots(AAInterface *TI)
   : TheInterface(TI)
@@ -139,7 +156,7 @@ void AANontabSlots::HandleDoubleSliders()
     else if(GraphicsMgr->GetCanvasContentType() == zSpectrumDerivative and ComputationMgr->GetSpectrumExists())
       GraphicsMgr->PlotSpectrumDerivative();
     
-    else if(GraphicsMgr->GetCanvasContentType() == zPSDHistogram and ComputationMgr->GetSpectrumExists())
+    else if(GraphicsMgr->GetCanvasContentType() == zPSDHistogram and ComputationMgr->GetPSDHistogramExists())
       GraphicsMgr->PlotPSDHistogram();
     
     break;

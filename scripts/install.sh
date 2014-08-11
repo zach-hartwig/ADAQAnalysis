@@ -3,6 +3,7 @@
 # name: install.sh
 # date: 10 Mar 14
 # auth: Zach Hartwig
+# mail: hartwig@psfc.mit.edu
 #
 # desc: Bash script for installing production version ADAQAnalysis
 #       binaries and the required libraries into the publicly

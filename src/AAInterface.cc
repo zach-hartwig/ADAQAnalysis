@@ -1,15 +1,24 @@
 /////////////////////////////////////////////////////////////////////////////////
-//
+// 
 // name: AAInterface.cc
-// date: 16 Jul 14
+// date: 11 Aug 14
 // auth: Zach Hartwig
-//
-// desc:
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AAInterface class is responsible for building the entire
+//       graphical user interface, including the creation and
+//       organization of all widgets and the connection of the widgets
+//       to the "slot" methods that process the generated widget
+//       "signals". The slot methods are organized into six associated
+//       classes that are named "AA*Slots", where * refers to one of
+//       the five GUI tabs or the remaining non-tab methods. The slot
+//       handler classes are friend class data members of AAInterface
+//       in order that they may manipulate other data members.
 //
 /////////////////////////////////////////////////////////////////////////////////
 
+
 // ROOT
-#include <TApplication.h>
 #include <TGClient.h>
 #include <TGFileDialog.h>
 #include <TGButtonGroup.h>
@@ -64,8 +73,8 @@ AAInterface::AAInterface(string CmdLineArg)
     TotalY = 610;
   }
 
-  ///////////////
-
+  // Create the slot handler classes for the widgets on each of the
+  // five tabs and the remaining nontab widgets
   WaveformSlots = new AAWaveformSlots(this);
   SpectrumSlots = new AASpectrumSlots(this);
   AnalysisSlots = new AAAnalysisSlots(this);
@@ -73,13 +82,14 @@ AAInterface::AAInterface(string CmdLineArg)
   ProcessingSlots = new AAProcessingSlots(this);
   NontabSlots = new AANontabSlots(this);
 
-  //////////////
-  
+  // Set the fore- and background colors
   ThemeForegroundColor = ColorMgr->Number2Pixel(18);
   ThemeBackgroundColor = ColorMgr->Number2Pixel(22);
-  
+
+  // Create the graphical user interface
   CreateTheMainFrames();
  
+  // Get pointers to singleton managers
   ComputationMgr = AAComputation::GetInstance();
   ComputationMgr->SetProgressBarPointer(ProcessingProgress_PB);
   
@@ -87,7 +97,9 @@ AAInterface::AAInterface(string CmdLineArg)
   GraphicsMgr->SetCanvasPointer(Canvas_EC->GetCanvas());
 
   InterpolationMgr = AAInterpolation::GetInstance();
-  
+
+  // If the user has specified an ADAQ or ACRONYM root file on the
+  // command line then automatically process and load it
   if(CmdLineArg != "Unspecified"){
     
     size_t Pos = CmdLineArg.find_last_of(".");
@@ -129,6 +141,8 @@ AAInterface::AAInterface(string CmdLineArg)
       CreateMessageBox("Could not find an acceptable file to open. Please try again.","Stop");
   }
   
+  // Create a personalized temporary file name in /tmp that stores the
+  // GUI widget values for parallel processing
   string USER = getenv("USER");
   ADAQSettingsFileName = "/tmp/ADAQSettings_" + USER + ".root";
 }
@@ -136,6 +150,12 @@ AAInterface::AAInterface(string CmdLineArg)
 
 AAInterface::~AAInterface()
 {
+  delete NontabSlots;
+  delete ProcessingSlots;
+  delete GraphicsSlots;
+  delete AnalysisSlots;
+  delete SpectrumSlots;
+  delete WaveformSlots;
   delete RndmMgr;
   delete ColorMgr;
 }
@@ -264,9 +284,6 @@ void AAInterface::CreateTheMainFrames()
   MapSubwindows();
   Resize(TotalX, TotalY);
   MapWindow();
-
-  WaveformOptionsTab_CF->HideFrame(WaveformOptions_CF);
-  WaveformOptionsTab_CF->ShowFrame(WaveformOptions_CF);
 }
 
 
@@ -748,7 +765,6 @@ void AAInterface::FillSpectrumFrame()
   CreateSpectrum_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   CreateSpectrum_TB->ChangeOptions(CreateSpectrum_TB->GetOptions() | kFixedSize);
   CreateSpectrum_TB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleTextButtons()");
-
 }
 
 
@@ -1251,7 +1267,7 @@ void AAInterface::FillGraphicsFrame()
   ReplotPSDHistogram_TB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleTextButtons()");
 
   // Override default plot options
-  GraphicsFrame_VF->AddFrame(OverrideTitles_CB = new TGCheckButton(GraphicsFrame_VF, "Override default graphical options", OverrideTitles_CB_ID),
+  GraphicsFrame_VF->AddFrame(OverrideTitles_CB = new TGCheckButton(GraphicsFrame_VF, "Override default titles", OverrideTitles_CB_ID),
 			       new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
   OverrideTitles_CB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleCheckButtons()");
 
@@ -1403,15 +1419,17 @@ void AAInterface::FillGraphicsFrame()
 				    new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PaletteX1_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PaletteX1_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PaletteX1_NEL->GetEntry()->SetNumber(0.85);
+  PaletteX1_NEL->GetEntry()->SetNumber(0.82);
   PaletteX1_NEL->GetEntry()->Resize(50, 20);
+  PaletteX1_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   PaletteAxisPositions_HF1->AddFrame(PaletteX2_NEL = new ADAQNumberEntryWithLabel(PaletteAxisPositions_HF1, "X2", PaletteX2_NEL_ID),
 				    new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PaletteX2_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PaletteX2_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PaletteX2_NEL->GetEntry()->SetNumber(0.90);
+  PaletteX2_NEL->GetEntry()->SetNumber(0.87);
   PaletteX2_NEL->GetEntry()->Resize(50, 20);
+  PaletteX2_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   TGHorizontalFrame *PaletteAxisPositions_HF2 = new TGHorizontalFrame(PaletteAxis_GF);
   PaletteAxis_GF->AddFrame(PaletteAxisPositions_HF2, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
@@ -1420,15 +1438,17 @@ void AAInterface::FillGraphicsFrame()
 				    new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PaletteY1_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PaletteY1_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PaletteY1_NEL->GetEntry()->SetNumber(0.05);
+  PaletteY1_NEL->GetEntry()->SetNumber(0.15);
   PaletteY1_NEL->GetEntry()->Resize(50, 20);
+  PaletteY1_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   PaletteAxisPositions_HF2->AddFrame(PaletteY2_NEL = new ADAQNumberEntryWithLabel(PaletteAxisPositions_HF2, "Y2", PaletteY2_NEL_ID),
 				    new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PaletteY2_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PaletteY2_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PaletteY2_NEL->GetEntry()->SetNumber(0.65);
+  PaletteY2_NEL->GetEntry()->SetNumber(0.85);
   PaletteY2_NEL->GetEntry()->Resize(50, 20);
+  PaletteY2_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 }
 
 
@@ -1938,7 +1958,7 @@ void AAInterface::FillCanvasFrame()
   Canvas_VF->AddFrame(new TGLabel(Canvas_VF, "  Waveform selector  "),
 		      new TGLayoutHints(kLHintsCenterX, 5,5,10,0));
 
-  Canvas_VF->AddFrame(WaveformSelector_HS = new TGHSlider(Canvas_VF, CanvasX, kSlider1),
+  Canvas_VF->AddFrame(WaveformSelector_HS = new TGHSlider(Canvas_VF, CanvasX, WaveformSelector_HS_ID),
 		      new TGLayoutHints(kLHintsNormal, SliderBuffer,5,0,0));
   WaveformSelector_HS->SetRange(1,100);
   WaveformSelector_HS->SetPosition(1);

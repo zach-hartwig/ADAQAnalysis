@@ -1,3 +1,19 @@
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AAParallelResults.hh
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AAParallelResults class stores values computed during
+//       parallel processing that are required for analysis or GUI
+//       settings by the sequential ADAQAnalysis GUI and binary. The
+//       provides a method of "persistency" for values computed in
+//       parallel processing.
+//
+/////////////////////////////////////////////////////////////////////////////////
+
+
 #ifndef __AAParallelResults_hh__
 #define __AAParallelResults_hh__  1
 

@@ -1,26 +1,33 @@
-//////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 // 
 // name: ADAQAnalysis.cc
-// date: 21 May 13
+// date: 11 Aug 14
 // auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
 // 
 // desc:
 //
-//////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 
+
+// ROOT
 #include <TApplication.h>
 
+// C++
 #include <iostream>
 #include <string>
 
+// MPI
 #ifdef MPI_ENABLED
 #include <mpi.h>
 #endif
 
+// ADAQAnalysis
 #include "AAInterface.hh"
 #include "AAComputation.hh"
 #include "AAParallel.hh"
 #include "AAGraphics.hh"
+
 
 int main(int argc, char *argv[])
 {
@@ -40,12 +47,11 @@ int main(int argc, char *argv[])
   // A word on the use of the first cmd line arg: the first cmd line
   // arg is used in different ways depending on the binary
   // architecture. For sequential arch, the user may specify a valid
-  // ADAQ ROOT file as the first cmd line arg to open automatically
-  // upon launching the ADAQAnalysis binary. For parallel arch, the
-  // automatic call to the parallel binaries made by ADAQAnalysisGUI
-  // contains the type of processing to be performed in parallel as
-  // the first cmd line arg, which, at present, is "histogramming" for
-  // spectra creation and "desplicing" for despliced file creation.
+  // ADAQ- or ACRONYM-formatted ROOT file as the first cmd line arg to
+  // open automatically upon launching the ADAQAnalysis binary. For
+  // parallel arch, the automatic call to the parallel binaries made
+  // by ADAQAnalysisGUI contains the type of processing to be
+  // performed in parallel as the first cmd line arg.
   
   // Get the zeroth command line arg (the binary name)
   string CmdLineBin = argv[0];
@@ -102,6 +108,8 @@ int main(int argc, char *argv[])
     TheApplication->Run();
     
     delete TheInterface;
+
+    delete TheInterpolation;
 
     delete TheGraphics;
   }

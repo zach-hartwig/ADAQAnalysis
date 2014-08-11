@@ -1,12 +1,17 @@
-//////////////////////////////////////////////////////////////////////////////////////////
-//
-// name: AATypes.hh
-// date: 22 May 13
-// auth: Zach Hartwig
+/////////////////////////////////////////////////////////////////////////////////
 // 
-// desc: 
+// name: AATypes.hh
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: AATypes is a header file that contains global type
+//       definitions that are used in ADAQAnalysis. These include very
+//       useful structs and enumerators, and, in particular, the very
+//       large widget ID enumerator that is used to connect signals
+//       and slots for widgets on the GUI.
 //
-//////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 
 #ifndef __AATypes_hh__
 #define __AATypes_hh__ 1
@@ -16,6 +21,11 @@
 #include <vector>
 #include <string>
 using namespace std;
+
+
+///////////////
+// Stuctures //
+///////////////
 
 // Structure that contains information on a single peak found by the
 // TSpectrum PeakFinder during waveform processing. For each peak
@@ -44,8 +54,6 @@ struct PeakInfoStruct{
 };
 
 
-enum CanvasContentTypes{zEmpty, zWaveform, zSpectrum, zSpectrumDerivative, zPSDHistogram};
-
 // Structure that contains information on a single calibration point
 // for a single channel. For each calibration point, a structure is
 // filled with the relevant information and pushed back into a vector
@@ -57,12 +65,24 @@ struct ADAQChannelCalibrationData{
 };
 
 
+/////////////////
+// Enumerators //
+/////////////////
+
+
+// An enumerator that specifies what type of plot is presently
+// contained in the main embedded canvas
+enum CanvasContentTypes{zEmpty, zWaveform, zSpectrum, zSpectrumDerivative, zPSDHistogram};
+
+
 // The following enumerator is used to create unique integers that
 // will be assigned as the "widget ID" to the ROOT widgets that make
 // up the ADAQ analysis graphical interface. The widget IDs are used
 // to connect the various signals -- issued by each widget when acted
 // upon by the user -- to the appropriate slots -- the "action" that
-// should be associated with each widget.
+// should be associated with each widget. The order of the enumerators
+// is arbitrary from a code perspective but is organized here by tab
+// and then as widgets appear in each tab for convenience.
 enum{
 
   ////////////////////////////
@@ -94,30 +114,26 @@ enum{
   PositiveWaveform_RB_ID,
   NegativeWaveform_RB_ID,
 
-  PlotZeroSuppressionCeiling_CB_ID,
-  ZeroSuppressionCeiling_NEL_ID,
-
   FindPeaks_CB_ID,
   UseMarkovSmoothing_CB_ID,
   MaxPeaks_NEL_ID,
   Sigma_NEL_ID,
   Resolution_NEL_ID,
   Floor_NEL_ID,
-
   PlotFloor_CB_ID,
   PlotCrossings_CB_ID,
   PlotPeakIntegratingRegion_CB_ID,
-
-  UsePileupRejection_CB_ID,
-
-  AutoYAxisRange_CB_ID,
 
   PlotBaseline_CB_ID,
   BaselineCalcMin_NEL_ID,
   BaselineCalcMax_NEL_ID,
 
-  PlotTrigger_CB_ID,
+  PlotZeroSuppressionCeiling_CB_ID,
+  ZeroSuppressionCeiling_NEL_ID,
 
+  PlotTrigger_CB_ID,
+  UsePileupRejection_CB_ID,
+  AutoYAxisRange_CB_ID,
   WaveformAnalysis_CB_ID,
 
   
@@ -125,11 +141,9 @@ enum{
   // Values for the "Spectrum" tabbed frame
 
   WaveformsToHistogram_NEL_ID,
-
   SpectrumNumBins_NEL_ID,
   SpectrumMinBin_NEL_ID,
   SpectrumMaxBin_NEL_ID,
-
 
   ACROSpectrumLS_RB_ID,
   ACROSpectrumES_RB_ID,
@@ -146,61 +160,30 @@ enum{
   SpectrumCalibrationPlot_TB_ID,
   SpectrumCalibrationLoad_TB_ID,
 
-  SpectrumNumPeaks_NEL_ID,
-  SpectrumSigma_NEL_ID,
-  SpectrumResolution_NEL_ID,
-
-  SpectrumRangeMin_NEL_ID,
-  SpectrumRangeMax_NEL_ID,
-  SpectrumFindPeaks_CB_ID,
-
-  SpectrumFindBackground_CB_ID,
-  SpectrumBackgroundIterations_NEL_ID,
-  SpectrumBackgroundCompton_CB_ID,
-  SpectrumBackgroundSmoothing_CB_ID,
-  SpectrumBackgroundDirection_CBL_ID,
-  SpectrumBackgroundFilterOrder_CBL_ID,
-  SpectrumBackgroundSmoothingWidth_CBL_ID,
-
-  SpectrumNoBackground_RB_ID,
-  SpectrumWithBackground_RB_ID,
-  SpectrumLessBackground_RB_ID,
-  SpectrumIntegrationLimits_DHS_ID,
-
-  SpectrumFindIntegral_CB_ID,
-  SpectrumIntegralInCounts_CB_ID,
-  SpectrumUseGaussianFit_CB_ID,
-  SpectrumNormalizePeakToCurrent_CB_ID,
-
-  SpectrumOverplotDerivative_CB_ID,
-
   CreateSpectrum_TB_ID,
 
 
   /////////////////////////////////////////
   // Values for the "Analysis" tabbed frame
 
+  SpectrumFindBackground_CB_ID,
+  SpectrumBackgroundIterations_NEL_ID,
+  SpectrumBackgroundCompton_CB_ID,
+  SpectrumBackgroundSmoothing_CB_ID,
+  SpectrumRangeMin_NEL_ID,
+  SpectrumRangeMax_NEL_ID,
+  SpectrumBackgroundDirection_CBL_ID,
+  SpectrumBackgroundFilterOrder_CBL_ID,
+  SpectrumBackgroundSmoothingWidth_CBL_ID,
+  SpectrumNoBackground_RB_ID,
+  SpectrumWithBackground_RB_ID,
+  SpectrumLessBackground_RB_ID,
 
-  PSDEnable_CB_ID,
+  SpectrumFindIntegral_CB_ID,
+  SpectrumIntegralInCounts_CB_ID,
 
-  PSDPeakOffset_NEL_ID,
-  PSDTailOffset_NEL_ID,
-
-  PSDPlotType_CBL_ID,
-
-  PSDPlotTailIntegration_CB_ID,
-
-  PSDEnableHistogramSlicing_CB_ID,
-  PSDHistogramSliceX_RB_ID,
-  PSDHistogramSliceY_RB_ID,
-
-  PSDEnableFilterCreation_CB_ID,
-  PSDEnableFilter_CB_ID,
-  PSDPositiveFilter_RB_ID,
-  PSDNegativeFilter_RB_ID,
-
-  PSDClearFilter_TB_ID,
-  PSDCalculate_TB_ID,
+  SpectrumUseGaussianFit_CB_ID,
+  SpectrumNormalizePeakToCurrent_CB_ID,
 
   EAEnable_CB_ID,
   EASpectrumType_CBL_ID,
@@ -224,14 +207,34 @@ enum{
   /////////////////////////////////////////
   // Values for the "Graphics" tabbed frame
 
+  DrawWaveformWithCurve_RB_ID,
+  DrawWaveformWithMarkers_RB_ID,
+  DrawWaveformWithBoth_RB_ID,
   WaveformColor_TB_ID,
   WaveformLineWidth_NEL_ID,
   WaveformMarkerSize_NEL_ID,
 
+  DrawSpectrumWithCurve_RB_ID,
+  DrawSpectrumWithMarkers_RB_ID,
+  DrawSpectrumWithError_RB_ID,
+  DrawSpectrumWithBars_RB_ID,
   SpectrumLineColor_TB_ID,
   SpectrumFillColor_TB_ID,
   SpectrumLineWidth_NEL_ID,
   SpectrumFillStyle_NEL_ID,
+
+  HistogramStats_CB_ID,
+  CanvasGrid_CB_ID,
+  CanvasXAxisLog_CB_ID,
+  CanvasYAxisLog_CB_ID,
+  CanvasZAxisLog_CB_ID,
+  PlotSpectrumDerivativeError_CB_ID,
+  PlotAbsValueSpectrumDerivative_CB_ID,
+
+  ReplotWaveform_TB_ID,
+  ReplotSpectrum_TB_ID,
+  ReplotSpectrumDerivative_TB_ID,
+  ReplotPSDHistogram_TB_ID,
 
   OverrideTitles_CB_ID,
 
@@ -261,35 +264,31 @@ enum{
   PaletteY1_NEL_ID,
   PaletteY2_NEL_ID,
   
-  DrawWaveformWithCurve_RB_ID,
-  DrawWaveformWithMarkers_RB_ID,
-  DrawWaveformWithBoth_RB_ID,
-  
-  DrawSpectrumWithCurve_RB_ID,
-  DrawSpectrumWithMarkers_RB_ID,
-  DrawSpectrumWithError_RB_ID,
-  DrawSpectrumWithBars_RB_ID,
-
-  HistogramStats_CB_ID,
-  CanvasGrid_CB_ID,
-  CanvasXAxisLog_CB_ID,
-  CanvasYAxisLog_CB_ID,
-  CanvasZAxisLog_CB_ID,
-
-  PlotSpectrumDerivativeError_CB_ID,
-  PlotAbsValueSpectrumDerivative_CB_ID,
-
-  ReplotWaveform_TB_ID,
-  ReplotSpectrum_TB_ID,
-  ReplotSpectrumDerivative_TB_ID,
-  ReplotPSDHistogram_TB_ID,
-
   
   ///////////////////////////////////////////
   // Values for the "Processing" tabbed frame
 
   ProcessingSeq_RB_ID,
   ProcessingPar_RB_ID,
+
+  PSDEnable_CB_ID,
+
+  PSDPeakOffset_NEL_ID,
+  PSDTailOffset_NEL_ID,
+  PSDPlotType_CBL_ID,
+  PSDPlotTailIntegration_CB_ID,
+
+  PSDEnableHistogramSlicing_CB_ID,
+  PSDHistogramSliceX_RB_ID,
+  PSDHistogramSliceY_RB_ID,
+
+  PSDEnableFilterCreation_CB_ID,
+  PSDEnableFilter_CB_ID,
+  PSDPositiveFilter_RB_ID,
+  PSDNegativeFilter_RB_ID,
+  PSDClearFilter_TB_ID,
+
+  PSDCalculate_TB_ID,
 
   IntegratePearson_CB_ID,
   PlotPearsonIntegration_CB_ID,
@@ -312,6 +311,8 @@ enum{
 
   XAxisLimits_THS_ID,
   YAxisLimits_DVS_ID,
+  WaveformSelector_HS_ID,
+  SpectrumIntegrationLimits_DHS_ID,
 
   Quit_TB_ID
 };

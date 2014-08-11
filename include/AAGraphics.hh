@@ -1,12 +1,21 @@
-//////////////////////////////////////////////////////////////////////////////////////////
-//
+/////////////////////////////////////////////////////////////////////////////////
+// 
 // name: AAGraphics.hh
-// date: 01 Apr 14
+// date: 11 Aug 14
 // auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AAGraphics class is responsible for the plotting of all
+//       graphical objects, including waveforms, spectra, PSD
+//       histograms, and associated fits, lines, fill regions, etc.
+//       It receives a pointer to the main embedded ROOT canvas from
+//       the AAInterface class so that it may populate it with all
+//       required graphical objects. The AASettings object, which
+//       contains all values of the widgets from the GUI, is made
+//       available to the class so that the necessary values may be
+//       used in plotting the various objects.
 //
-// desc: 
-//
-//////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 
 #ifndef __AAGraphics_hh__
 #define __AAGraphics_hh__ 1

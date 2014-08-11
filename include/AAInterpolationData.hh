@@ -2,15 +2,16 @@
 // name: AAInterpolationData.hh
 // date: 28 Mar 14
 // auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
 //
-// desc: This namespace contains the EJ301/EJ309 scintillation light
+// desc: This namespace contains the EJ301 scintillation light
 //       response function data for electrons, protons, alphas, and
 //       carbon ions. The data is used by the AAInterpolation class to
 //       provide on-the-fly calculations of the energy deposited in an
-//       EJ301/EJ309 scintillation detector by different particles
-//       given a known energy in electron equivalent units (usually
-//       keVee or MeVee). The scintillation light output (proton,
-//       alpha carbon) data is taken directly from:
+//       EJ301 scintillation detector by different particles given a
+//       known energy in electron equivalent units (usually keVee or
+//       MeVee). The scintillation light output (proton, alpha carbon)
+//       data is taken directly from:
 //
 //          V.V Verbinski, Nucl. Instr. and Meth. 65 (1968) 8-25, Table 1
 //

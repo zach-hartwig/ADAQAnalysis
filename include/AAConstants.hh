@@ -1,3 +1,16 @@
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AAConstants.hh
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AAContants header file contains a (mostly anemic at this
+//       point!) namespace with constants that are used throughout the
+//       code.
+//
+/////////////////////////////////////////////////////////////////////////////////
+
 #ifndef __AAConstants_hh__
 #define __AAConstants_hh__ 1
 
@@ -16,17 +29,6 @@ namespace{
   const double electron_charge = 1.602e-19;
 
   const double us2s = 1e-6; // Conversion: microseconds to second
-
-
-  // The following variables are used to create the CalibrationManager
-  // TGraph object when the user has selected the "EP detector" option
-  // under spectrum calibration. The two data points define the least
-  // square fit result line to the EP detector calibration. Details
-  // can be found in $ADAQREPO/analysis/root/EPCalibration
-  
-  const int NumCalibrationPoints_FixedEP = 2;
-  const double PulseUnitPoints_FixedEP[2] = {1676.32, 19509.10};
-  const double EnergyPoints_FixedEP[2] = {200., 2500.};
 }
 
 #endif

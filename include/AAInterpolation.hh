@@ -1,12 +1,20 @@
-//////////////////////////////////////////////////////////////////////////////////////////
-//
-// name: AAInterface.hh
-// date: 01 Mar 14
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AAInterpolation.hh
+// date: 11 Aug 14
 // auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AAInterpolation class handles the conversion of energy
+//       deposited in liquid organic scintillators (obtained from
+//       calibrated energy deposition spectra) into incident kinetic
+//       energy of various particles. At present, only a single set of
+//       response functions for EJ301/BC501A/NE213 is implemented;
+//       future work will incorporate multiple response functions and
+//       multiple scintillators for a more thorough set of analysis
+//       tools.
 //
-// desc: 
-//
-//////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 
 #ifndef __AAInterpolation_hh__
 #define __AAInterpolation_hh__ 1

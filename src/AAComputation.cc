@@ -1,3 +1,22 @@
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AAComputation.cc
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AAComputation class is responsible for all waveform
+//       processing, computation, and analysis actions that are
+//       performed during use of ADAQAnalysis. It is constructed as a
+//       Meyer's singleton class and made available throughout the
+//       code via static methods to facilitate its use. The AASettings
+//       object is made available to it so that necessary values from
+//       the GUI widgets can be used in calculations. It is also
+//       responsible for handling parallel processing of waveforms.
+//
+/////////////////////////////////////////////////////////////////////////////////
+
+// ROOT
 #include <TSystem.h>
 #include <TError.h>
 #include <TF1.h>
@@ -5,20 +24,24 @@
 #include <TChain.h>
 #include <TDirectory.h>
 
+// C++
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+// MPI
 #ifdef MPI_ENABLED
 #include <mpi.h>
 #endif
 
+// Boost
 #include <boost/array.hpp>
 #include <boost/thread.hpp>
 
+// ADAQAnalysis
 #include "AAComputation.hh"
 #include "AAParallel.hh"
 #include "AAConstants.hh"
-
-#include <iostream>
-#include <fstream>
-using namespace std;
 
 
 AAComputation *AAComputation::TheComputationManager = 0;
@@ -2325,12 +2348,6 @@ void AAComputation::ClearPSDFilter(int Channel)
 
 void AAComputation::CreateDesplicedFile()
 {
-  cout << ADAQSettings->WaveformsToDesplice << endl;
-
-  
-
-
-
   ////////////////////////////
   // Prepare for processing //
   ////////////////////////////

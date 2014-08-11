@@ -1,11 +1,28 @@
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AASpectrumSlots.cc
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AASpectrumSlots class contains widget slot methods to
+//       handle signals generated from widgets contained on the
+//       "spectrum" tab of the ADAQAnalysis GUI
+//
+/////////////////////////////////////////////////////////////////////////////////
+
+// ROOT
 #include <TGFileDialog.h>
 
+// C++
 #include <sstream>
 
+// ADAQAnalysis
 #include "AASpectrumSlots.hh"
 #include "AANontabSlots.hh"
 #include "AAInterface.hh"
 #include "AAGraphics.hh"
+
 
 AASpectrumSlots::AASpectrumSlots(AAInterface *TI)
   : TheInterface(TI)

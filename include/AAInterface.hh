@@ -1,10 +1,19 @@
 /////////////////////////////////////////////////////////////////////////////////
-////
+// 
 // name: AAInterface.hh
-// date: 16 Jul 14
+// date: 11 Aug 14
 // auth: Zach Hartwig
-//
-// desc: 
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AAInterface class is responsible for building the entire
+//       graphical user interface, including the creation and
+//       organization of all widgets and the connection of the widgets
+//       to the "slot" methods that process the generated widget
+//       "signals". The slot methods are organized into six associated
+//       classes that are named "AA*Slots", where * refers to one of
+//       the five GUI tabs or the remaining non-tab methods. The slot
+//       handler classes are friend class data members of AAInterface
+//       in order that they may manipulate other data members.
 //
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -254,13 +263,6 @@ private:
   ADAQNumberEntryWithLabel *EAElectronEnergy_NEL, *EAGammaEnergy_NEL;
   ADAQNumberEntryWithLabel *EAProtonEnergy_NEL, *EAAlphaEnergy_NEL, *EACarbonEnergy_NEL;
     
-  ADAQNumberEntryWithLabel *RFQPulseWidth_NEL;
-  ADAQNumberEntryWithLabel *RFQRepRate_NEL;
-  ADAQNumberEntryWithLabel *CountRateWaveforms_NEL;
-  TGTextButton *CalculateCountRate_TB;
-  ADAQNumberEntryFieldWithLabel *InstCountRate_NEFL, *AvgCountRate_NEFL;
-
-
   ///////////////////////////////////////////
   // Widgets for the graphics tabbed frame //
   ///////////////////////////////////////////
@@ -351,6 +353,12 @@ private:
   ADAQNumberEntryWithLabel *DesplicedWaveformLength_NEL;
   TGTextButton *DesplicedFileCreation_TB;
 
+  ADAQNumberEntryWithLabel *RFQPulseWidth_NEL;
+  ADAQNumberEntryWithLabel *RFQRepRate_NEL;
+  ADAQNumberEntryWithLabel *CountRateWaveforms_NEL;
+  TGTextButton *CalculateCountRate_TB;
+  ADAQNumberEntryFieldWithLabel *InstCountRate_NEFL, *AvgCountRate_NEFL;
+
 
   ///////////////////////////////////////////
   // Widget objects for the "Canvas" frame //
@@ -372,6 +380,7 @@ private:
   // Slider widget for quickly scrolling through accessible waveforms
   TGHSlider *WaveformSelector_HS;
 
+  // Slider to control spectrum integration and fit limits
   TGDoubleHSlider *SpectrumIntegrationLimits_DHS;
 
   // A progress bar! Hot stuff.

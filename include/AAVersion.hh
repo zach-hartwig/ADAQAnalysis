@@ -1,3 +1,21 @@
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AAVersion.hh
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: AAVersion is a header file that contains a single global
+//       string describing the version of ADAQAnalysis as a
+//       development version or as the production version number. The
+//       string is utilized by AAInterface to create the appropriate
+//       window titles for to inform the user on what version he/she
+//       is using. Whening using the install.sh script to install a
+//       production version, The header file is modified with the
+//       version number at build/install time.
+//       
+/////////////////////////////////////////////////////////////////////////////////
+
 #ifndef __AAVersion_hh__
 #define __AAVersion_hh__ 1
 

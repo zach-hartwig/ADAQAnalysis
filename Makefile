@@ -1,10 +1,11 @@
 #********************************************************************
+#
 #  name: Makefile                  
-#  date: 25 Jul 14
+#  date: 11 Aug 14
 #  auth: Zach Hartwig              
 #  mail: hartwig@psfc.mit.edu
 #
-#  desc: GNUmakefile for building ADAQAnalysis code in seqential and
+#  desc: GNUmakefile for building ADAQAnalysis code in sequential and
 #        parallel versions (options for building are provided
 #        below). The intermediary build files are placed in build/;
 #        the final binaries are placed in bin/. Note that a list of

@@ -1,8 +1,22 @@
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AAGraphicsSlots.cc
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AAGraphicsSlots class contains widget slot methods to
+//       handle signals generated from widgets contained on the
+//       "graphics" tab of the ADAQAnalysis GUI
+//
+/////////////////////////////////////////////////////////////////////////////////
+
 #include <TGClient.h>
 
 #include "AAGraphicsSlots.hh"
 #include "AAInterface.hh"
 #include "AAGraphics.hh"
+
 
 AAGraphicsSlots::AAGraphicsSlots(AAInterface *TI)
   : TheInterface(TI)
@@ -132,9 +146,6 @@ void AAGraphicsSlots::HandleNumberEntries()
       break;
     }
     break;
-
-
-    
 
   default:
     break;

@@ -1,8 +1,24 @@
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AAProcessing.cc
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AAProcessingSlots class contains widget slot methods to
+//       handle signals generated from widgets contained on the
+//       "processing" tab of the ADAQAnalysis GUI
+//
+/////////////////////////////////////////////////////////////////////////////////
+
+// ROOT
 #include <TGFileDialog.h>
 
+// ADAQAnalysis
 #include "AAProcessingSlots.hh"
 #include "AAInterface.hh"
 #include "AAGraphics.hh"
+
 
 AAProcessingSlots::AAProcessingSlots(AAInterface *TI)
   : TheInterface(TI)
@@ -10,6 +26,7 @@ AAProcessingSlots::AAProcessingSlots(AAInterface *TI)
   GraphicsMgr = AAGraphics::GetInstance();
   InterpolationMgr = AAInterpolation::GetInstance();
 }
+
 
 AAProcessingSlots::~AAProcessingSlots()
 {;}
@@ -215,16 +232,11 @@ void AAProcessingSlots::HandleRadioButtons()
   case PSDHistogramSliceX_RB_ID:
     if(TheInterface->PSDHistogramSliceX_RB->IsDown())
       TheInterface->PSDHistogramSliceY_RB->SetState(kButtonUp);
-    
-    if(GraphicsMgr->GetCanvasContentType() == zPSDHistogram)
-      {}//PlotPSDHistogram();
     break;
     
   case PSDHistogramSliceY_RB_ID:
     if(TheInterface->PSDHistogramSliceY_RB->IsDown())
       TheInterface->PSDHistogramSliceX_RB->SetState(kButtonUp);
-    if(GraphicsMgr->GetCanvasContentType() == zPSDHistogram)
-      {}//PlotPSDHistogram();
     break;
 
   case IntegrateRawPearson_RB_ID:
@@ -252,6 +264,7 @@ void AAProcessingSlots::HandleRadioButtons()
   default:
     break;
   }
+  TheInterface->SaveSettings();
 }
 
 

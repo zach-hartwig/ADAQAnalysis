@@ -1,3 +1,18 @@
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AAParallel.hh
+// date: 11 Aug 14
+// auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AAParallel class handles all parallel Open MPI processing
+//       functionality. This includes initializing and finalizing MPI
+//       sessions, set/get methods for important MPI variables like
+//       processing number and node rank, and assignment of the MPI
+//       binary name for execution from the sequential GUI.
+//
+/////////////////////////////////////////////////////////////////////////////////
+
 #ifndef __AAParallel_hh__
 #define __AAParallel_hh__ 1
 

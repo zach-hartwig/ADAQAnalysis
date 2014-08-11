@@ -1,12 +1,20 @@
-//////////////////////////////////////////////////////////////////////////////////////////
-//
-// name: AAComputation.cc
-// date: 22 May 13
+/////////////////////////////////////////////////////////////////////////////////
+// 
+// name: AAComputation.hh
+// date: 11 Aug 14
 // auth: Zach Hartwig
+// mail: hartwig@psfc.mit.edu
+// 
+// desc: The AAComputation class is responsible for all waveform
+//       processing, computation, and analysis actions that are
+//       performed during use of ADAQAnalysis. It is constructed as a
+//       Meyer's singleton class and made available throughout the
+//       code via static methods to facilitate its use. The AASettings
+//       object is made available to it so that necessary values from
+//       the GUI widgets can be used in calculations. It is also
+//       responsible for handling parallel processing of waveforms.
 //
-// desc: 
-//
-//////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 
 #ifndef __AAComputation_hh__
 #define __AAComputation_hh__ 1
