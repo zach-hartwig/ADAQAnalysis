@@ -224,6 +224,15 @@ enum{
   /////////////////////////////////////////
   // Values for the "Graphics" tabbed frame
 
+  WaveformColor_TB_ID,
+  WaveformLineWidth_NEL_ID,
+  WaveformMarkerSize_NEL_ID,
+
+  SpectrumLineColor_TB_ID,
+  SpectrumFillColor_TB_ID,
+  SpectrumLineWidth_NEL_ID,
+  SpectrumFillStyle_NEL_ID,
+
   OverrideTitles_CB_ID,
 
   Title_TEL_ID,

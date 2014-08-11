@@ -1051,35 +1051,124 @@ void AAInterface::FillGraphicsFrame()
   
   TGVerticalFrame *GraphicsFrame_VF = new TGVerticalFrame(GraphicsFrame_C->GetViewPort(), 320, LeftFrameLength);
   GraphicsFrame_C->SetContainer(GraphicsFrame_VF);
+
+  ////////////////////////////
+  // Waveform graphics options
+
+  TGGroupFrame *WaveformDrawOptions_GF = new TGGroupFrame(GraphicsFrame_VF, "Waveform draw options", kVerticalFrame);
+  GraphicsFrame_VF->AddFrame(WaveformDrawOptions_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
+
+
+  TGHorizontalFrame *WaveformDrawOptions_HF0 = new TGHorizontalFrame(WaveformDrawOptions_GF);
+  WaveformDrawOptions_GF->AddFrame(WaveformDrawOptions_HF0, new TGLayoutHints(kLHintsCenterX, 5,5,3,3));
   
-  GraphicsFrame_VF->AddFrame(WaveformDrawOptions_BG = new TGButtonGroup(GraphicsFrame_VF, "Waveform draw options", kHorizontalFrame),
-			      new TGLayoutHints(kLHintsNormal, 5,5,5,5));
-  
-  DrawWaveformWithCurve_RB = new TGRadioButton(WaveformDrawOptions_BG, "Curve   ", DrawWaveformWithCurve_RB_ID);
+  WaveformDrawOptions_HF0->AddFrame(DrawWaveformWithCurve_RB = new TGRadioButton(WaveformDrawOptions_HF0, "Curve   ", DrawWaveformWithCurve_RB_ID),
+				    new TGLayoutHints(kLHintsCenterX, 0,0,0,0));
   DrawWaveformWithCurve_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
   DrawWaveformWithCurve_RB->SetState(kButtonDown);
   
-  DrawWaveformWithMarkers_RB = new TGRadioButton(WaveformDrawOptions_BG, "Markers   ", DrawWaveformWithMarkers_RB_ID);
+  WaveformDrawOptions_HF0->AddFrame(DrawWaveformWithMarkers_RB = new TGRadioButton(WaveformDrawOptions_HF0, "Markers   ", DrawWaveformWithMarkers_RB_ID),
+				    new TGLayoutHints(kLHintsCenterX, 0,0,0,0));
   DrawWaveformWithMarkers_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
   
-  DrawWaveformWithBoth_RB = new TGRadioButton(WaveformDrawOptions_BG, "Both", DrawWaveformWithBoth_RB_ID);
+  WaveformDrawOptions_HF0->AddFrame(DrawWaveformWithBoth_RB = new TGRadioButton(WaveformDrawOptions_HF0, "Both", DrawWaveformWithBoth_RB_ID),
+				    new TGLayoutHints(kLHintsCenterX, 0,0,0,0));
   DrawWaveformWithBoth_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
-  
-  GraphicsFrame_VF->AddFrame(SpectrumDrawOptions_BG = new TGButtonGroup(GraphicsFrame_VF, "Spectrum draw options", kHorizontalFrame),
-			      new TGLayoutHints(kLHintsNormal, 5,5,5,5));
-  
-  DrawSpectrumWithCurve_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Curve  ", DrawSpectrumWithCurve_RB_ID);
+
+
+  TGHorizontalFrame *WaveformDrawOptions_HF1 = new TGHorizontalFrame(WaveformDrawOptions_GF);
+  WaveformDrawOptions_GF->AddFrame(WaveformDrawOptions_HF1, new TGLayoutHints(kLHintsCenterX, 5,5,3,3));
+
+  WaveformDrawOptions_HF1->AddFrame(WaveformColor_TB = new TGTextButton(WaveformDrawOptions_HF1, "Color", WaveformColor_TB_ID),
+				    new TGLayoutHints(kLHintsCenterX, 10,0,0,0));
+  WaveformColor_TB->SetBackgroundColor(ColorMgr->Number2Pixel(kBlue));
+  WaveformColor_TB->SetForegroundColor(ColorMgr->Number2Pixel(kWhite));
+  WaveformColor_TB->Resize(60, 20);
+  WaveformColor_TB->ChangeOptions(WaveformColor_TB->GetOptions() | kFixedSize);
+  WaveformColor_TB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleTextButtons()");
+
+  WaveformDrawOptions_HF1->AddFrame(WaveformLineWidth_NEL = new ADAQNumberEntryWithLabel(WaveformDrawOptions_HF1, "Line", WaveformLineWidth_NEL_ID),
+				    new TGLayoutHints(kLHintsCenterX, 10,0,0,0));
+  WaveformLineWidth_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  WaveformLineWidth_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  WaveformLineWidth_NEL->GetEntry()->SetNumber(1);
+  WaveformLineWidth_NEL->GetEntry()->Resize(40, 20);
+  WaveformLineWidth_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
+
+  WaveformDrawOptions_HF1->AddFrame(WaveformMarkerSize_NEL = new ADAQNumberEntryWithLabel(WaveformDrawOptions_HF1, "Marker", WaveformMarkerSize_NEL_ID),
+				    new TGLayoutHints(kLHintsCenterX, 5,0,0,0));
+  WaveformMarkerSize_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  WaveformMarkerSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  WaveformMarkerSize_NEL->GetEntry()->SetNumber(1);
+  WaveformMarkerSize_NEL->GetEntry()->Resize(40, 20);
+  WaveformMarkerSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
+
+
+  ////////////////////////////
+  // Spectrum graphics options
+
+  TGGroupFrame *SpectrumDrawOptions_GF = new TGGroupFrame(GraphicsFrame_VF, "Waveform draw options", kVerticalFrame);
+  GraphicsFrame_VF->AddFrame(SpectrumDrawOptions_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
+
+  TGHorizontalFrame *SpectrumDrawOptions_HF0 = new TGHorizontalFrame(SpectrumDrawOptions_GF);
+  SpectrumDrawOptions_GF->AddFrame(SpectrumDrawOptions_HF0, new TGLayoutHints(kLHintsCenterX, 3,0,3,0));
+
+  SpectrumDrawOptions_HF0->AddFrame(DrawSpectrumWithCurve_RB = new TGRadioButton(SpectrumDrawOptions_HF0, "Curve  ", DrawSpectrumWithCurve_RB_ID),
+				    new TGLayoutHints(kLHintsCenterX, 10,0,5,5));
   DrawSpectrumWithCurve_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
   DrawSpectrumWithCurve_RB->SetState(kButtonDown);
   
-  DrawSpectrumWithMarkers_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Markers  ", DrawSpectrumWithMarkers_RB_ID);
+  SpectrumDrawOptions_HF0->AddFrame(DrawSpectrumWithMarkers_RB = new TGRadioButton(SpectrumDrawOptions_HF0, "Markers  ", DrawSpectrumWithMarkers_RB_ID),
+				    new TGLayoutHints(kLHintsCenterX, 0,0,5,5));
   DrawSpectrumWithMarkers_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
 
-  DrawSpectrumWithError_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Error  ", DrawSpectrumWithError_RB_ID);
+  SpectrumDrawOptions_HF0->AddFrame(DrawSpectrumWithError_RB = new TGRadioButton(SpectrumDrawOptions_HF0, "Error  ", DrawSpectrumWithError_RB_ID),
+				    new TGLayoutHints(kLHintsCenterX, 0,0,5,5));
   DrawSpectrumWithError_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
 
-  DrawSpectrumWithBars_RB = new TGRadioButton(SpectrumDrawOptions_BG, "Bars", DrawSpectrumWithBars_RB_ID);
+  SpectrumDrawOptions_HF0->AddFrame(DrawSpectrumWithBars_RB = new TGRadioButton(SpectrumDrawOptions_HF0, "Bars", DrawSpectrumWithBars_RB_ID),
+				    new TGLayoutHints(kLHintsCenterX, 0,-10,5,5));
   DrawSpectrumWithBars_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
+
+  
+  TGHorizontalFrame *SpectrumDrawOptions_HF1 = new TGHorizontalFrame(SpectrumDrawOptions_GF);
+  SpectrumDrawOptions_GF->AddFrame(SpectrumDrawOptions_HF1, new TGLayoutHints(kLHintsCenterX, 3,0,3,0));
+
+  SpectrumDrawOptions_HF1->AddFrame(SpectrumLineColor_TB = new TGTextButton(SpectrumDrawOptions_HF1, "Line Color", SpectrumLineColor_TB_ID),
+				    new TGLayoutHints(kLHintsCenterX, 10,0,0,0));
+  SpectrumLineColor_TB->SetBackgroundColor(ColorMgr->Number2Pixel(kBlue));
+  SpectrumLineColor_TB->SetForegroundColor(ColorMgr->Number2Pixel(kWhite));
+  SpectrumLineColor_TB->Resize(80, 20);
+  SpectrumLineColor_TB->ChangeOptions(SpectrumLineColor_TB->GetOptions() | kFixedSize);
+  SpectrumLineColor_TB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleTextButtons()");
+
+  SpectrumDrawOptions_HF1->AddFrame(SpectrumLineWidth_NEL = new ADAQNumberEntryWithLabel(SpectrumDrawOptions_HF1, "Line width", SpectrumLineWidth_NEL_ID),
+				    new TGLayoutHints(kLHintsCenterX, 10,0,0,0));
+  SpectrumLineWidth_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  SpectrumLineWidth_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  SpectrumLineWidth_NEL->GetEntry()->SetNumber(2);
+  SpectrumLineWidth_NEL->GetEntry()->Resize(50, 20);
+  SpectrumLineWidth_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
+
+
+  TGHorizontalFrame *SpectrumDrawOptions_HF2 = new TGHorizontalFrame(SpectrumDrawOptions_GF);
+  SpectrumDrawOptions_GF->AddFrame(SpectrumDrawOptions_HF2, new TGLayoutHints(kLHintsCenterX, 3,0,3,0));
+
+  SpectrumDrawOptions_HF2->AddFrame(SpectrumFillColor_TB = new TGTextButton(SpectrumDrawOptions_HF2, "Fill Color", SpectrumFillColor_TB_ID),
+				    new TGLayoutHints(kLHintsCenterX, 10,0,0,0));
+  SpectrumFillColor_TB->SetBackgroundColor(ColorMgr->Number2Pixel(kRed));
+  SpectrumFillColor_TB->SetForegroundColor(ColorMgr->Number2Pixel(kWhite));
+  SpectrumFillColor_TB->Resize(80, 20);
+  SpectrumFillColor_TB->ChangeOptions(SpectrumFillColor_TB->GetOptions() | kFixedSize);
+  SpectrumFillColor_TB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleTextButtons()");
+
+  SpectrumDrawOptions_HF2->AddFrame(SpectrumFillStyle_NEL = new ADAQNumberEntryWithLabel(SpectrumDrawOptions_HF2, "Fill style", SpectrumFillStyle_NEL_ID),
+				    new TGLayoutHints(kLHintsCenterX, 10,0,0,0));
+  SpectrumFillStyle_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  SpectrumFillStyle_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  SpectrumFillStyle_NEL->GetEntry()->SetNumber(3001);
+  SpectrumFillStyle_NEL->GetEntry()->Resize(50, 20);
+  SpectrumFillStyle_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
 
   TGHorizontalFrame *CanvasOptions_HF0 = new TGHorizontalFrame(GraphicsFrame_VF);
@@ -1980,12 +2069,16 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->WaveformCurve = DrawWaveformWithCurve_RB->IsDown();
   ADAQSettings->WaveformMarkers = DrawWaveformWithMarkers_RB->IsDown();
   ADAQSettings->WaveformBoth = DrawWaveformWithBoth_RB->IsDown();
+  ADAQSettings->WaveformLineWidth = WaveformLineWidth_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->WaveformMarkerSize = WaveformMarkerSize_NEL->GetEntry()->GetNumber();
   
   ADAQSettings->SpectrumCurve = DrawSpectrumWithCurve_RB->IsDown();
   ADAQSettings->SpectrumMarkers = DrawSpectrumWithMarkers_RB->IsDown();
   ADAQSettings->SpectrumError = DrawSpectrumWithError_RB->IsDown();
   ADAQSettings->SpectrumBars = DrawSpectrumWithBars_RB->IsDown();
-  
+  ADAQSettings->SpectrumLineWidth = SpectrumLineWidth_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->SpectrumFillStyle = SpectrumFillStyle_NEL->GetEntry()->GetIntNumber();
+
   ADAQSettings->HistogramStats = HistogramStats_CB->IsDown();
   ADAQSettings->CanvasGrid = CanvasGrid_CB->IsDown();
   ADAQSettings->CanvasXAxisLog = CanvasXAxisLog_CB->IsDown();

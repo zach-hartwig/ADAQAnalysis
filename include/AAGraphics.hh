@@ -20,6 +20,7 @@
 #include <TGraph.h>
 #include <TBox.h>
 #include <TLine.h>
+#include <TColorWheel.h>
 
 
 // AA
@@ -44,6 +45,18 @@ public:
   void SetADAQSettings(AASettings *AAS) { ADAQSettings = AAS; }
 
   CanvasContentTypes GetCanvasContentType() {return CanvasContentType;}
+
+  void SetWaveformColor();
+  int GetWaveformColor() {return WaveformColor;}
+
+  void SetSpectrumLineColor();
+  int GetSpectrumLineColor() {return SpectrumLineColor;}
+
+  void SetSpectrumFillColor();
+  int GetSpectrumFillColor() {return SpectrumFillColor;}
+
+  void CreateColorWheel();
+  void PickColor(int, int, int, TObject *);
 
   
   ////////////////////////////
@@ -110,6 +123,15 @@ private:
   AAComputation *ComputationMgr;
   
   CanvasContentTypes CanvasContentType;
+
+  TColorWheel *ColorWheel;
+  int ColorToSet;
+  int WaveformColor, WaveformLineWidth;
+  double WaveformMarkerSize;
+  int SpectrumLineColor, SpectrumLineWidth;
+  int SpectrumFillColor, SpectrumFillStyle;
+
+  enum{zWaveformColor, zSpectrumLineColor, zSpectrumFillColor};
 
   ClassDef(AAGraphics, 1)
 };

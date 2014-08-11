@@ -1,3 +1,5 @@
+#include <TGClient.h>
+
 #include "AAGraphicsSlots.hh"
 #include "AAInterface.hh"
 #include "AAGraphics.hh"
@@ -90,7 +92,11 @@ void AAGraphicsSlots::HandleNumberEntries()
   TheInterface->SaveSettings();
   
   switch(NumberEntryID){
-  
+
+  case WaveformLineWidth_NEL_ID:
+  case WaveformMarkerSize_NEL_ID:
+  case SpectrumLineWidth_NEL_ID:
+  case SpectrumFillStyle_NEL_ID:
   case XAxisSize_NEL_ID:
   case XAxisOffset_NEL_ID:
   case XAxisDivs_NEL_ID:
@@ -127,6 +133,9 @@ void AAGraphicsSlots::HandleNumberEntries()
     }
     break;
 
+
+    
+
   default:
     break;
   }
@@ -146,15 +155,58 @@ void AAGraphicsSlots::HandleRadioButtons()
   switch(RadioButtonID){
 
   case DrawWaveformWithCurve_RB_ID:
+    TheInterface->DrawWaveformWithMarkers_RB->SetState(kButtonUp);
+    TheInterface->DrawWaveformWithBoth_RB->SetState(kButtonUp);
+    TheInterface->SaveSettings();
+    GraphicsMgr->PlotWaveform();
+    break;
+
   case DrawWaveformWithMarkers_RB_ID:
+    TheInterface->DrawWaveformWithCurve_RB->SetState(kButtonUp);
+    TheInterface->DrawWaveformWithBoth_RB->SetState(kButtonUp);
+    TheInterface->SaveSettings();
+    GraphicsMgr->PlotWaveform();
+    break;
+
   case DrawWaveformWithBoth_RB_ID:
+    TheInterface->DrawWaveformWithMarkers_RB->SetState(kButtonUp);
+    TheInterface->DrawWaveformWithCurve_RB->SetState(kButtonUp);
+    TheInterface->SaveSettings();
     GraphicsMgr->PlotWaveform();
     break;
 
   case DrawSpectrumWithBars_RB_ID:
+    TheInterface->DrawSpectrumWithCurve_RB->SetState(kButtonUp);
+    TheInterface->DrawSpectrumWithError_RB->SetState(kButtonUp);
+    TheInterface->DrawSpectrumWithMarkers_RB->SetState(kButtonUp);
+    TheInterface->SaveSettings();
+    if(ComputationMgr->GetSpectrumExists())
+      GraphicsMgr->PlotSpectrum();
+    break;
+
   case DrawSpectrumWithCurve_RB_ID:
+    TheInterface->DrawSpectrumWithBars_RB->SetState(kButtonUp);
+    TheInterface->DrawSpectrumWithError_RB->SetState(kButtonUp);
+    TheInterface->DrawSpectrumWithMarkers_RB->SetState(kButtonUp);
+    TheInterface->SaveSettings();
+    if(ComputationMgr->GetSpectrumExists())
+      GraphicsMgr->PlotSpectrum();
+    break;
+
   case DrawSpectrumWithError_RB_ID:
+    TheInterface->DrawSpectrumWithCurve_RB->SetState(kButtonUp);
+    TheInterface->DrawSpectrumWithBars_RB->SetState(kButtonUp);
+    TheInterface->DrawSpectrumWithMarkers_RB->SetState(kButtonUp);
+    TheInterface->SaveSettings();
+    if(ComputationMgr->GetSpectrumExists())
+      GraphicsMgr->PlotSpectrum();
+    break;
+
   case DrawSpectrumWithMarkers_RB_ID:
+    TheInterface->DrawSpectrumWithCurve_RB->SetState(kButtonUp);
+    TheInterface->DrawSpectrumWithError_RB->SetState(kButtonUp);
+    TheInterface->DrawSpectrumWithBars_RB->SetState(kButtonUp);
+    TheInterface->SaveSettings();
     if(ComputationMgr->GetSpectrumExists())
       GraphicsMgr->PlotSpectrum();
     break;
@@ -176,6 +228,32 @@ void AAGraphicsSlots::HandleTextButtons()
   TheInterface->SaveSettings();
   
   switch(TextButtonID){
+
+  case WaveformColor_TB_ID:{
+    GraphicsMgr->SetWaveformColor();
+    int Color = GraphicsMgr->GetWaveformColor();
+    TheInterface->WaveformColor_TB->SetBackgroundColor(TheInterface->ColorMgr->Number2Pixel(Color));
+    GraphicsMgr->PlotWaveform();
+    break;
+  }
+
+  case SpectrumLineColor_TB_ID:{
+    GraphicsMgr->SetSpectrumLineColor();
+    int Color = GraphicsMgr->GetSpectrumLineColor();
+    TheInterface->SpectrumLineColor_TB->SetBackgroundColor(TheInterface->ColorMgr->Number2Pixel(Color));
+    if(ComputationMgr->GetSpectrumExists())
+      GraphicsMgr->PlotSpectrum();
+    break;
+  }
+
+  case SpectrumFillColor_TB_ID:{
+    GraphicsMgr->SetSpectrumFillColor();
+    int Color = GraphicsMgr->GetSpectrumFillColor();
+    TheInterface->SpectrumFillColor_TB->SetBackgroundColor(TheInterface->ColorMgr->Number2Pixel(Color));
+    if(ComputationMgr->GetSpectrumExists())
+      GraphicsMgr->PlotSpectrum();
+    break;
+  }
 
   case ReplotWaveform_TB_ID:
     GraphicsMgr->PlotWaveform();

@@ -160,6 +160,8 @@ private:
 
   // Widget to enable/disable pileup rejection algorithm
   TGCheckButton *UsePileupRejection_CB;
+  
+  TGCheckButton *AutoYAxisRange_CB;
 
   TGCheckButton *WaveformAnalysis_CB;
   ADAQNumberEntryWithLabel *WaveformIntegral_NEL, *WaveformHeight_NEL;
@@ -263,39 +265,41 @@ private:
   // Widgets for the graphics tabbed frame //
   ///////////////////////////////////////////
 
-  TGCheckButton *OverrideTitles_CB;
-
-  ADAQTextEntryWithLabel *Title_TEL;
-  ADAQTextEntryWithLabel *XAxisTitle_TEL;
-  ADAQTextEntryWithLabel *YAxisTitle_TEL;
-  ADAQTextEntryWithLabel *ZAxisTitle_TEL;
-  ADAQTextEntryWithLabel *PaletteAxisTitle_TEL;
-
-  ADAQNumberEntryWithLabel *XAxisSize_NEL, *XAxisOffset_NEL, *XAxisDivs_NEL;
-  ADAQNumberEntryWithLabel *YAxisSize_NEL, *YAxisOffset_NEL, *YAxisDivs_NEL;
-  ADAQNumberEntryWithLabel *ZAxisSize_NEL, *ZAxisOffset_NEL, *ZAxisDivs_NEL;
-  ADAQNumberEntryWithLabel *PaletteAxisSize_NEL, *PaletteAxisOffset_NEL;
-  ADAQNumberEntryWithLabel *PaletteX1_NEL, *PaletteX2_NEL, *PaletteY1_NEL, *PaletteY2_NEL;
-  
-  TGButtonGroup *WaveformDrawOptions_BG;
   TGRadioButton *DrawWaveformWithCurve_RB, *DrawWaveformWithMarkers_RB, *DrawWaveformWithBoth_RB;
-  
-  TGButtonGroup *SpectrumDrawOptions_BG;
+  TGTextButton *WaveformColor_TB;
+  ADAQNumberEntryWithLabel *WaveformLineWidth_NEL;
+  ADAQNumberEntryWithLabel *WaveformMarkerSize_NEL;
+
   TGRadioButton *DrawSpectrumWithCurve_RB, *DrawSpectrumWithMarkers_RB;
   TGRadioButton *DrawSpectrumWithError_RB, *DrawSpectrumWithBars_RB;
-  
+  TGTextButton *SpectrumLineColor_TB, *SpectrumFillColor_TB;
+  ADAQNumberEntryWithLabel *SpectrumLineWidth_NEL;
+  ADAQNumberEntryWithLabel *SpectrumFillStyle_NEL;
+
   TGCheckButton *HistogramStats_CB, *CanvasGrid_CB;
   TGCheckButton *CanvasXAxisLog_CB, *CanvasYAxisLog_CB, *CanvasZAxisLog_CB;
-
   TGCheckButton *PlotSpectrumDerivativeError_CB;
   TGCheckButton *PlotAbsValueSpectrumDerivative_CB;
-
-  TGCheckButton *AutoYAxisRange_CB;
   
   TGTextButton *ReplotWaveform_TB;
   TGTextButton *ReplotSpectrum_TB;
   TGTextButton *ReplotSpectrumDerivative_TB;
   TGTextButton *ReplotPSDHistogram_TB;
+
+  TGCheckButton *OverrideTitles_CB;
+  ADAQTextEntryWithLabel *Title_TEL;
+  ADAQTextEntryWithLabel *XAxisTitle_TEL;
+  ADAQNumberEntryWithLabel *XAxisSize_NEL, *XAxisOffset_NEL, *XAxisDivs_NEL;
+
+  ADAQTextEntryWithLabel *YAxisTitle_TEL;
+  ADAQNumberEntryWithLabel *YAxisSize_NEL, *YAxisOffset_NEL, *YAxisDivs_NEL;
+
+  ADAQTextEntryWithLabel *ZAxisTitle_TEL;
+  ADAQNumberEntryWithLabel *ZAxisSize_NEL, *ZAxisOffset_NEL, *ZAxisDivs_NEL;
+
+  ADAQTextEntryWithLabel *PaletteAxisTitle_TEL;
+  ADAQNumberEntryWithLabel *PaletteAxisSize_NEL, *PaletteAxisOffset_NEL;
+  ADAQNumberEntryWithLabel *PaletteX1_NEL, *PaletteX2_NEL, *PaletteY1_NEL, *PaletteY2_NEL;
 
 
   /////////////////////////////////////////////

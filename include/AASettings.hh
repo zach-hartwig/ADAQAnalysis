@@ -83,7 +83,10 @@ public:
   ////////////////////
   
   bool WaveformCurve, WaveformMarkers, WaveformBoth;
+  int WaveformLineWidth;
+  double WaveformMarkerSize;
   bool SpectrumCurve, SpectrumMarkers, SpectrumError, SpectrumBars;
+  int SpectrumLineWidth, SpectrumFillStyle;
   bool HistogramStats, CanvasGrid;
   bool CanvasXAxisLog, CanvasYAxisLog, CanvasZAxisLog;
   bool PlotSpectrumDerivativeError, PlotAbsValueSpectrumDerivative, PlotYAxisWithAutoRange;

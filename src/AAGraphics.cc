@@ -5,6 +5,11 @@
 #include <TPaletteAxis.h>
 #include <TFrame.h>
 #include <TPad.h>
+#include <TColorWheel.h>
+#include <TGClient.h>
+#include <TRootCanvas.h>
+#include <THashList.h>
+
 
 // C++
 #include <iostream>
@@ -33,7 +38,10 @@ AAGraphics::AAGraphics()
     PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
     HCalibration_L(new TLine), VCalibration_L(new TLine), EdgeBoundingBox_B(new TBox),
     EALine_L(new TLine), EABox_B(new TBox), DerivativeReference_L(new TLine),
-    CanvasContentType(zEmpty)
+    CanvasContentType(zEmpty), 
+    WaveformColor(kBlue), WaveformLineWidth(1), WaveformMarkerSize(1.),
+    SpectrumLineColor(kBlue), SpectrumLineWidth(2), 
+    SpectrumFillColor(kRed), SpectrumFillStyle(3002)
 {
   if(TheGraphicsManager)
     cout << "\nERROR! TheGraphicsManager was constructed twice\n" << endl;
@@ -121,9 +129,10 @@ AAGraphics::AAGraphics()
   DerivativeReference_L->SetLineColor(kRed);
   DerivativeReference_L->SetLineWidth(2);
 
-
   // Get the pointer to the computation manager
   ComputationMgr = AAComputation::GetInstance();
+
+  ColorWheel = new TColorWheel;
 }
 
 
@@ -229,12 +238,14 @@ void AAGraphics::PlotWaveform(int Color)
   Waveform_H->SetMinimum(YMin);
   Waveform_H->SetMaximum(YMax);
 
-  Waveform_H->SetLineColor(kBlue);
+  Waveform_H->SetLineColor(WaveformColor);
+  Waveform_H->SetLineWidth(ADAQSettings->WaveformLineWidth);
+
   Waveform_H->SetStats(false);  
   
   Waveform_H->SetMarkerStyle(24);
-  Waveform_H->SetMarkerSize(1.0);
-  Waveform_H->SetMarkerColor(Color);
+  Waveform_H->SetMarkerSize(ADAQSettings->WaveformMarkerSize);
+  Waveform_H->SetMarkerColor(WaveformColor);
   
   string DrawString;
   if(ADAQSettings->WaveformCurve)
@@ -552,8 +563,8 @@ void AAGraphics::PlotSpectrum()
   Spectrum_H->GetYaxis()->CenterTitle();
   Spectrum_H->GetYaxis()->SetNdivisions(YDivs, true);
 
-  Spectrum_H->SetLineColor(4);
-  Spectrum_H->SetLineWidth(2);
+  Spectrum_H->SetLineColor(SpectrumLineColor);
+  Spectrum_H->SetLineWidth(ADAQSettings->SpectrumLineWidth);
 
   /////////////////////////
   // Plot the main spectrum
@@ -565,7 +576,7 @@ void AAGraphics::PlotSpectrum()
   string DrawString;
   if(ADAQSettings->SpectrumBars){
     Spectrum_H->SetFillStyle(4100);
-    Spectrum_H->SetFillColor(4);
+    Spectrum_H->SetFillColor(SpectrumLineColor);
     DrawString = "HIST B";
   }
   else if(ADAQSettings->SpectrumCurve){
@@ -574,13 +585,13 @@ void AAGraphics::PlotSpectrum()
   }
   else if(ADAQSettings->SpectrumMarkers){
     Spectrum_H->SetMarkerStyle(24);
-    Spectrum_H->SetMarkerColor(4);
+    Spectrum_H->SetMarkerColor(SpectrumLineColor);
     Spectrum_H->SetMarkerSize(1.0);
     DrawString = "HIST P";
   }
   else if (ADAQSettings->SpectrumError){
     Spectrum_H->SetMarkerStyle(24);
-    Spectrum_H->SetMarkerColor(kBlue);
+    Spectrum_H->SetMarkerColor(SpectrumLineColor);
     Spectrum_H->SetMarkerSize(0.5);
     gStyle->SetEndErrorSize(4);
     DrawString = "E1";
@@ -598,8 +609,11 @@ void AAGraphics::PlotSpectrum()
   
   if(ADAQSettings->SpectrumFindIntegral){
     TH1F *SpectrumIntegral_H = ComputationMgr->GetSpectrumIntegral();
-    
-    //SpectrumIntegral_H->GetXaxis()->SetRangeUser(XMin, XMax);
+
+    SpectrumIntegral_H->SetLineColor(SpectrumLineColor);
+    SpectrumIntegral_H->SetLineWidth(ADAQSettings->SpectrumLineWidth);
+    SpectrumIntegral_H->SetFillColor(SpectrumFillColor);
+    SpectrumIntegral_H->SetFillStyle(ADAQSettings->SpectrumFillStyle);
     SpectrumIntegral_H->Draw("HIST B SAME");
     SpectrumIntegral_H->Draw("HIST C SAME");
   }
@@ -1096,3 +1110,89 @@ void AAGraphics::PlotPSDHistogramSlice(int XPixel, int YPixel)
   // Reset the main embedded canvas to active
   TheCanvas->cd();
 }
+
+
+void AAGraphics::SetWaveformColor()
+{
+  ColorToSet = zWaveformColor;
+  CreateColorWheel();
+}
+
+
+void AAGraphics::SetSpectrumLineColor()
+{
+  ColorToSet = zSpectrumLineColor;
+  CreateColorWheel();
+}
+
+
+void AAGraphics::SetSpectrumFillColor()
+{
+  ColorToSet = zSpectrumFillColor;
+  CreateColorWheel();
+}
+
+
+void AAGraphics::CreateColorWheel()
+{
+  // Create and draw the standard ROOT color wheel
+
+  ColorWheel = new TColorWheel;
+  ColorWheel->Draw();
+
+  // In order to allow the user to select colors via the mouse, get
+  // the canvas and connect it the AAGraphics::PickColor() slot
+
+  TCanvas *ColorWheelCanvas = (TCanvas *)ColorWheel->GetCanvas();
+  ColorWheelCanvas->Connect("ProcessedEvent(int, int, int, TObject *)", "AAGraphics", this, "PickColor(int, int, int, TObject *)");
+
+  // Obtain a pointer to the default window (a TRootCanvas class,
+  // which is derived from TGWindow) containing the color wheel. This
+  // is not exactly intuitive, but the method works by iterating over
+  // the list of windows to find the only TRootCanvas (which contains
+  // the TColorWheel object) in the list.
+
+  TIter next(gClient->GetListOfWindows());
+  TObject *Object;
+  TRootCanvas *Window;
+
+  while( (Object = next()) ){
+    if(Object->InheritsFrom(TRootCanvas::Class()))
+      Window = (TRootCanvas *)gClient->GetListOfWindows()->FindObject(Object);
+  }
+
+  gClient->WaitFor(Window);
+}
+
+
+void AAGraphics::PickColor(int EventID, int XPixel, int YPixel, TObject *Selected)
+{
+  int PickedColor = 0;
+  if(EventID == 1){
+    PickedColor = ColorWheel->GetColor(XPixel, YPixel);
+    TCanvas *ColorWheelCanvas = (TCanvas *)gROOT->FindObject("wheel");
+    
+    if(PickedColor > 0){
+
+      switch(ColorToSet){
+
+      case zWaveformColor:
+	WaveformColor = PickedColor;
+	break;
+
+      case zSpectrumLineColor:
+	SpectrumLineColor = PickedColor;
+	break;
+
+      case zSpectrumFillColor:
+	SpectrumFillColor = PickedColor;
+	break;
+
+      default:
+	break;
+      }
+      ColorWheelCanvas->Close();
+    }
+  }
+}
+
