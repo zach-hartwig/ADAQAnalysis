@@ -1127,7 +1127,7 @@ void AAInterface::FillGraphicsFrame()
   ////////////////////////////
   // Spectrum graphics options
 
-  TGGroupFrame *SpectrumDrawOptions_GF = new TGGroupFrame(GraphicsFrame_VF, "Waveform draw options", kVerticalFrame);
+  TGGroupFrame *SpectrumDrawOptions_GF = new TGGroupFrame(GraphicsFrame_VF, "Spectrum draw options", kVerticalFrame);
   GraphicsFrame_VF->AddFrame(SpectrumDrawOptions_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
 
   TGHorizontalFrame *SpectrumDrawOptions_HF0 = new TGHorizontalFrame(SpectrumDrawOptions_GF);
