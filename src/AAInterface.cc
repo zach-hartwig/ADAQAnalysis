@@ -140,6 +140,9 @@ AAInterface::AAInterface(string CmdLineArg)
     else
       CreateMessageBox("Could not find an acceptable file to open. Please try again.","Stop");
   }
+
+  // Initial the AASettings data member
+  ADAQSettings = new AASettings;
   
   // Create a personalized temporary file name in /tmp that stores the
   // GUI widget values for parallel processing
@@ -150,6 +153,7 @@ AAInterface::AAInterface(string CmdLineArg)
 
 AAInterface::~AAInterface()
 {
+  delete ADAQSettings;
   delete NontabSlots;
   delete ProcessingSlots;
   delete GraphicsSlots;
@@ -1994,9 +1998,9 @@ void AAInterface::FillCanvasFrame()
 
 void AAInterface::SaveSettings(bool SaveToFile)
 {
-  if(!ADAQSettings)
-    ADAQSettings = new AASettings;
-  
+  delete ADAQSettings;
+  ADAQSettings = new AASettings;
+
   TFile *ADAQSettingsFile = 0;
   if(SaveToFile)
     ADAQSettingsFile = new TFile(ADAQSettingsFileName.c_str(), "recreate");
@@ -2039,6 +2043,7 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->PlotTrigger = PlotTrigger_CB->IsDown();
   
   ADAQSettings->WaveformAnalysis = WaveformAnalysis_CB->IsDown();
+
 
   //////////////////////////////////////
   // Values from "Spectrum" tabbed frame
