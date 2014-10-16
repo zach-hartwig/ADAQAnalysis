@@ -368,13 +368,21 @@ bool AAComputation::LoadACRONYMRootFile(string FileName)
 
 TH1F *AAComputation::CalculateRawWaveform(int Channel, int Waveform)
 {
-  if(Waveform_H[Channel])
-    delete Waveform_H[Channel];
-  Waveform_H[Channel] = new TH1F("Waveform_H", "Raw Waveform", RecordLength-1, 0, RecordLength);
-  
+  // Readout the desired waveform from the tree
   ADAQWaveformTree->GetEntry(Waveform);
 
+  // Set individual channel waveform address
   vector<int> RawVoltage = *WaveformVecPtrs[Channel];
+
+  // Get waveform size. This accounts for the possibility of waveforms
+  // that vary length from event-to-event, such as with ZLE algorithm
+  int Size = RawVoltage.size();
+  
+  // Create a TH1F representing the waveform
+  if(Waveform_H[Channel])
+    delete Waveform_H[Channel];
+  Waveform_H[Channel] = new TH1F("Waveform_H", "Raw Waveform", Size-1, 0, Size);
+  
   if(!RawVoltage.empty()){
     Baseline = CalculateBaseline(&RawVoltage);
     
@@ -393,16 +401,18 @@ TH1F *AAComputation::CalculateRawWaveform(int Channel, int Waveform)
 // Pearson (RFQ current) waveform) should be used in processing
 TH1F* AAComputation::CalculateBSWaveform(int Channel, int Waveform, bool CurrentWaveform)
 {
+  ADAQWaveformTree->GetEntry(Waveform);
+
+  vector<int> RawVoltage = *WaveformVecPtrs[Channel];
+
+  int Size = RawVoltage.size();
+
   if(Waveform_H[Channel])
     delete Waveform_H[Channel];
-  Waveform_H[Channel] = new TH1F("Waveform_H","Baseline-subtracted Waveform", RecordLength-1, 0, RecordLength);
-
-  ADAQWaveformTree->GetEntry(Waveform);
+  Waveform_H[Channel] = new TH1F("Waveform_H","Baseline-subtracted Waveform", Size-1, 0, Size);
   
   double Polarity;
   (CurrentWaveform) ? Polarity = ADAQSettings->PearsonPolarity : Polarity = ADAQSettings->WaveformPolarity;
-  
-  vector<int> RawVoltage = *WaveformVecPtrs[Channel];
 
   if(!RawVoltage.empty()){
     Baseline = CalculateBaseline(&RawVoltage);
