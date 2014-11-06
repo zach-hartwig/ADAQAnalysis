@@ -23,6 +23,7 @@ public:
   
   bool PlotZeroSuppressionCeiling;
   int ZeroSuppressionCeiling;
+  int ZeroSuppressionBuffer;
 
   bool FindPeaks, UseMarkovSmoothing;
   int MaxPeaks, Sigma, Floor;

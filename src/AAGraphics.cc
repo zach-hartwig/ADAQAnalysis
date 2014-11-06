@@ -196,8 +196,8 @@ void AAGraphics::PlotWaveform(int Color)
   double YMin, YMax, YAxisSize;
   
   if(ADAQSettings->CanvasYAxisLog){
-    YMin = 4095 * (1 - ADAQSettings->YAxisMax);
-    YMax = 4095 * (1 - ADAQSettings->YAxisMin);
+    YMin = 16100 * (1 - ADAQSettings->YAxisMax);
+    YMax = 16100 * (1 - ADAQSettings->YAxisMin);
     
     if(YMin == 0)
       YMin = 0.05;
@@ -207,8 +207,8 @@ void AAGraphics::PlotWaveform(int Color)
     YMax = Waveform_H->GetBinContent(Waveform_H->GetMaximumBin()) + 10;
   }
   else{
-    YMin = (4095 * (1 - ADAQSettings->YAxisMax))-30;
-    YMax = 4095 * (1 - ADAQSettings->YAxisMin);
+    YMin = (16100 * (1 - ADAQSettings->YAxisMax))-30;
+    YMax = 16100 * (1 - ADAQSettings->YAxisMin);
   }
 
   YAxisSize = YMax - YMin;
@@ -613,12 +613,22 @@ void AAGraphics::PlotSpectrum()
     Spectrum_H->SetMarkerStyle(24);
     Spectrum_H->SetMarkerColor(SpectrumLineColor);
     Spectrum_H->SetMarkerSize(0.5);
-    gStyle->SetEndErrorSize(4);
+    gStyle->SetEndErrorSize(5);
+    
     DrawString = "E1";
   }
   
   Spectrum_H->Draw(DrawString.c_str());
 
+  // Overplot a thin curve on the error bars to help the user's eye
+  // make sense of what is typically difficult-to-interpret data
+  if(ADAQSettings->SpectrumError){
+    TH1F *SpectrumOverplot_H = (TH1F *)Spectrum_H->Clone("SpectrumOverplot_H");
+    SpectrumOverplot_H->SetLineColor(SpectrumLineColor);
+    SpectrumOverplot_H->SetLineWidth(1);
+    SpectrumOverplot_H->Draw("C SAME");
+  }
+  
   ////////////////////////////////////////////
   // Overlay the background spectra if desired
   if(ADAQSettings->FindBackground and ADAQSettings->PlotWithBackground){

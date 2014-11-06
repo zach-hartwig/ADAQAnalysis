@@ -443,7 +443,6 @@ TH1F *AAComputation::CalculateZSWaveform(int Channel, int Waveform, bool Current
   
   if(Waveform_H[Channel])
     delete Waveform_H[Channel];
-
   
   if(RawVoltage.empty()){
     Waveform_H[Channel] = new TH1F("Waveform_H","Zero Suppression Waveform", RecordLength-1, 0, RecordLength);
@@ -451,19 +450,19 @@ TH1F *AAComputation::CalculateZSWaveform(int Channel, int Waveform, bool Current
   else{
     Baseline = CalculateBaseline(&RawVoltage);
     
-    vector<double> ZSVoltage;
-    vector<int> ZSPosition;
+    vector<double> ZSVoltage(ADAQSettings->ZeroSuppressionBuffer,0);
     
     vector<int>::iterator it;
     for(it=RawVoltage.begin(); it!=RawVoltage.end(); it++){
-      
+
       double VoltageMinusBaseline = Polarity*(*it-Baseline);
       
-      if(VoltageMinusBaseline >= ADAQSettings->ZeroSuppressionCeiling){
+      if(VoltageMinusBaseline >= ADAQSettings->ZeroSuppressionCeiling)
 	ZSVoltage.push_back(VoltageMinusBaseline);
-	ZSPosition.push_back(it - RawVoltage.begin());
-      }
     }
+    
+    for(int sample=0; sample<ADAQSettings->ZeroSuppressionBuffer; sample++)
+      ZSVoltage.push_back(0);
   
     int ZSWaveformSize = ZSVoltage.size();
     Waveform_H[Channel] = new TH1F("Waveform_H","Zero Suppression Waveform", ZSWaveformSize-1, 0, ZSWaveformSize);
@@ -479,8 +478,7 @@ TH1F *AAComputation::CalculateZSWaveform(int Channel, int Waveform, bool Current
 // The following methods compute the baseline of a waveform (as a
 // vector<int> or as a TH1F *). The baseline is the average of the
 // waveform voltage taken over the specified range in time. The units
-// of the baseline are in [4ns samples]
-
+// of the baseline are in [samples]
 double AAComputation::CalculateBaseline(vector<int> *Waveform)
 {
   int BaselineCalcLength = ADAQSettings->BaselineCalcMax - ADAQSettings->BaselineCalcMin;
@@ -837,7 +835,7 @@ void AAComputation::CreateSpectrum()
     // Calculate the selected waveform that will be analyzed into the
     // spectrum histogram. Note that "raw" waveforms may not be
     // analyzed (simply due to how the code is presently setup) and
-    // will default to analyzing the baseline subtracted
+    // will default to analyzing the baseline subtracted waveform
     if(ADAQSettings->RawWaveform or ADAQSettings->BSWaveform)
       CalculateBSWaveform(Channel, waveform);
     else if(ADAQSettings->ZSWaveform)
