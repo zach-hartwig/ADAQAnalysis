@@ -43,8 +43,20 @@ http://www.gnu.org/licenses.
 
 ### Build instructions  ###
 
-On Linux, clone into the repository and then use the provided GNU
-Makefile to build PDF and Postscript:
+The following lines should first be added to your .bashrc file to configure
+your environment correctly:
+
+```bash 
+    # ADAQAnalysis configuration
+    ADAQANALYSIS_HOME = /full/path/to/ADAQAcquisition
+    ADAQANALYSIS_USER = dev # Setting for local install (developer)
+    # ADAQANALYSIS_USER = usr # Setting for global install (user)
+    source $ADAQANALYSIS_HOME/scripts/setup.sh $ADAQANALYSIS_USER >& /dev/null
+```
+Don't forget to open a new terminal for the settings to take effect!
+
+On Linux or MacOS, clone into the repository and then use the provided
+GNU Makefile to build the **ADAQAnalysis** binary:
 
 ```bash
   # Clone ADAQAnalysis source code from GitHub
@@ -66,16 +78,6 @@ Makefile to build PDF and Postscript:
   make clean  
 ```
 
-The following lines should be added to your .bashrc file to configure
-your environment correctly:
-
-```bash 
-    # ADAQAnalysis configuration
-    ADAQANALYSIS_HOME = /full/path/to/ADAQAcquisition
-    ADAQANALYSIS_USER = dev # Setting for local install (developer)
-    # ADAQANALYSIS_USER = usr # Setting for global install (user)
-    source $ADAQANALYSIS_HOME/scripts/setup.sh $ADAQANALYSIS_USER >& /dev/null
-```
 
 ### Code dependencies ###
 
@@ -123,6 +125,19 @@ straightforward and easy to understand:
   - **Makefile**     : GNU makefile for building ADAQAnalysis
 
   - **Readme.md**  : You're reading it
+
+
+### Contact ###
+
+Dr. Zachary S Hartwig  
+
+Department of Nuclear Science and Engineering &  
+Plasma Science and Fusion Center  
+Massachusetts Institute of Technology  
+
+phone: +1 617 253 5471  
+email: [hartwig@psfc.mit.edu](mailto:hartwig@psfc.mit.edu)  
+smail: 77 Massachusetts Ave, NW17-115, Cambridge MA 02139, USA
 
 
 
