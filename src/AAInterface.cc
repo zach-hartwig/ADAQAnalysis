@@ -483,11 +483,17 @@ TGGroupFrame *PeakFindingOptions_GF = new TGGroupFrame(WaveformFrame_VF, "Peak f
 			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
   PlotZeroSuppressionCeiling_CB->Connect("Clicked()", "AAWaveformSlots", WaveformSlots, "HandleCheckButtons()");
   
-  WaveformFrame_VF->AddFrame(ZeroSuppressionCeiling_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Zero suppression ceiling", ZeroSuppressionCeiling_NEL_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+  WaveformFrame_VF->AddFrame(ZeroSuppressionCeiling_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Zero suppression ceiling (ADC)", ZeroSuppressionCeiling_NEL_ID),
+			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
   ZeroSuppressionCeiling_NEL->GetEntry()->SetNumber(15);
   ZeroSuppressionCeiling_NEL->GetEntry()->Connect("ValueSet(long)", "AAWaveformSlots", WaveformSlots, "HandleNumberEntries()");
-
+  
+  WaveformFrame_VF->AddFrame(ZeroSuppressionBuffer_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Zero suppression buffer (sample)", ZeroSuppressionBuffer_NEL_ID),
+			     new TGLayoutHints(kLHintsLeft, 15,5,0,5));
+  ZeroSuppressionBuffer_NEL->GetEntry()->SetNumber(15);
+  ZeroSuppressionBuffer_NEL->GetEntry()->Connect("ValueSet(long)", "AAWaveformSlots", WaveformSlots, "HandleNumberEntries()");
+  
+  
 
   /////////////////////
   // Trigger options //
@@ -2029,6 +2035,7 @@ void AAInterface::SaveSettings(bool SaveToFile)
 
   ADAQSettings->PlotZeroSuppressionCeiling = PlotZeroSuppressionCeiling_CB->IsDown();
   ADAQSettings->ZeroSuppressionCeiling = ZeroSuppressionCeiling_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->ZeroSuppressionBuffer = ZeroSuppressionBuffer_NEL->GetEntry()->GetIntNumber();
   
   if(PositiveWaveform_RB->IsDown())
     ADAQSettings->WaveformPolarity = 1.0;

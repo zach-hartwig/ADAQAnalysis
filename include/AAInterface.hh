@@ -169,6 +169,7 @@ private:
   // Widgets for controlling peak finding and plotting
   TGCheckButton *PlotZeroSuppressionCeiling_CB;
   ADAQNumberEntryWithLabel *ZeroSuppressionCeiling_NEL;
+  ADAQNumberEntryWithLabel *ZeroSuppressionBuffer_NEL;
 
   TGCheckButton *FindPeaks_CB, *UseMarkovSmoothing_CB;
   ADAQNumberEntryWithLabel *MaxPeaks_NEL;

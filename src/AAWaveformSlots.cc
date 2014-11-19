@@ -162,6 +162,7 @@ void AAWaveformSlots::HandleNumberEntries()
   case BaselineCalcMin_NEL_ID:
   case BaselineCalcMax_NEL_ID:
   case ZeroSuppressionCeiling_NEL_ID:
+  case ZeroSuppressionBuffer_NEL_ID:
     GraphicsMgr->PlotWaveform();
     break;
 

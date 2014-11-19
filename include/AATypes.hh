@@ -142,6 +142,7 @@ enum{
 
   PlotZeroSuppressionCeiling_CB_ID,
   ZeroSuppressionCeiling_NEL_ID,
+  ZeroSuppressionBuffer_NEL_ID,
 
   PlotTrigger_CB_ID,
   UsePileupRejection_CB_ID,
