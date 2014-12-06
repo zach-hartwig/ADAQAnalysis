@@ -223,6 +223,7 @@ enum{
   /////////////////////////////////////////
   // Values for the "Graphics" tabbed frame
 
+  DrawWaveformWithLine_RB_ID,
   DrawWaveformWithCurve_RB_ID,
   DrawWaveformWithMarkers_RB_ID,
   DrawWaveformWithBoth_RB_ID,
@@ -230,8 +231,8 @@ enum{
   WaveformLineWidth_NEL_ID,
   WaveformMarkerSize_NEL_ID,
 
+  DrawSpectrumWithLine_RB_ID,
   DrawSpectrumWithCurve_RB_ID,
-  DrawSpectrumWithMarkers_RB_ID,
   DrawSpectrumWithError_RB_ID,
   DrawSpectrumWithBars_RB_ID,
   SpectrumLineColor_TB_ID,

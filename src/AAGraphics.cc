@@ -279,7 +279,9 @@ void AAGraphics::PlotWaveform(int Color)
   Waveform_H->SetMarkerColor(WaveformColor);
   
   string DrawString;
-  if(ADAQSettings->WaveformCurve)
+  if(ADAQSettings->WaveformLine)
+    DrawString = "";
+  else if(ADAQSettings->WaveformCurve)
     DrawString = "C";
   else if(ADAQSettings->WaveformMarkers)
     DrawString = "P";
@@ -610,15 +612,13 @@ void AAGraphics::PlotSpectrum()
     Spectrum_H->SetFillColor(SpectrumLineColor);
     DrawString = "HIST B";
   }
+  else if(ADAQSettings->SpectrumLine){
+    Spectrum_H->SetFillStyle(4000);
+    DrawString = "HIST";
+  }
   else if(ADAQSettings->SpectrumCurve){
     Spectrum_H->SetFillStyle(4000);
     DrawString = "HIST C";
-  }
-  else if(ADAQSettings->SpectrumMarkers){
-    Spectrum_H->SetMarkerStyle(24);
-    Spectrum_H->SetMarkerColor(SpectrumLineColor);
-    Spectrum_H->SetMarkerSize(1.0);
-    DrawString = "HIST P";
   }
   else if (ADAQSettings->SpectrumError){
     Spectrum_H->SetMarkerStyle(24);

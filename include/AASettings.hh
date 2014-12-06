@@ -95,10 +95,10 @@ public:
   // Graphics frame //
   ////////////////////
   
-  bool WaveformCurve, WaveformMarkers, WaveformBoth;
+  bool WaveformLine, WaveformCurve, WaveformMarkers, WaveformBoth;
   int WaveformLineWidth;
   double WaveformMarkerSize;
-  bool SpectrumCurve, SpectrumMarkers, SpectrumError, SpectrumBars;
+  bool SpectrumLine, SpectrumCurve, SpectrumError, SpectrumBars;
   int SpectrumLineWidth, SpectrumFillStyle;
   bool HistogramStats, CanvasGrid;
   bool CanvasXAxisLog, CanvasYAxisLog, CanvasZAxisLog;

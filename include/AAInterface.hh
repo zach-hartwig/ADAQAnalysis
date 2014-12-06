@@ -282,18 +282,19 @@ private:
   ///////////////////////////////////////////
   // Widgets for the graphics tabbed frame //
   ///////////////////////////////////////////
-
-  TGRadioButton *DrawWaveformWithCurve_RB, *DrawWaveformWithMarkers_RB, *DrawWaveformWithBoth_RB;
+  
+  TGRadioButton *DrawWaveformWithLine_RB, *DrawWaveformWithCurve_RB;
+  TGRadioButton *DrawWaveformWithMarkers_RB, *DrawWaveformWithBoth_RB;
   TGTextButton *WaveformColor_TB;
   ADAQNumberEntryWithLabel *WaveformLineWidth_NEL;
   ADAQNumberEntryWithLabel *WaveformMarkerSize_NEL;
-
-  TGRadioButton *DrawSpectrumWithCurve_RB, *DrawSpectrumWithMarkers_RB;
+  
+  TGRadioButton *DrawSpectrumWithCurve_RB, *DrawSpectrumWithLine_RB;
   TGRadioButton *DrawSpectrumWithError_RB, *DrawSpectrumWithBars_RB;
   TGTextButton *SpectrumLineColor_TB, *SpectrumFillColor_TB;
   ADAQNumberEntryWithLabel *SpectrumLineWidth_NEL;
   ADAQNumberEntryWithLabel *SpectrumFillStyle_NEL;
-
+  
   TGCheckButton *HistogramStats_CB, *CanvasGrid_CB;
   TGCheckButton *CanvasXAxisLog_CB, *CanvasYAxisLog_CB, *CanvasZAxisLog_CB;
   TGCheckButton *PlotSpectrumDerivativeError_CB;

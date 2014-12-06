@@ -177,7 +177,16 @@ void AAGraphicsSlots::HandleRadioButtons()
 
   switch(RadioButtonID){
 
+  case DrawWaveformWithLine_RB_ID:
+    TheInterface->DrawWaveformWithCurve_RB->SetState(kButtonUp);
+    TheInterface->DrawWaveformWithMarkers_RB->SetState(kButtonUp);
+    TheInterface->DrawWaveformWithBoth_RB->SetState(kButtonUp);
+    TheInterface->SaveSettings();
+    GraphicsMgr->PlotWaveform();
+    break;
+
   case DrawWaveformWithCurve_RB_ID:
+    TheInterface->DrawWaveformWithLine_RB->SetState(kButtonUp);
     TheInterface->DrawWaveformWithMarkers_RB->SetState(kButtonUp);
     TheInterface->DrawWaveformWithBoth_RB->SetState(kButtonUp);
     TheInterface->SaveSettings();
@@ -185,6 +194,7 @@ void AAGraphicsSlots::HandleRadioButtons()
     break;
 
   case DrawWaveformWithMarkers_RB_ID:
+    TheInterface->DrawWaveformWithLine_RB->SetState(kButtonUp);
     TheInterface->DrawWaveformWithCurve_RB->SetState(kButtonUp);
     TheInterface->DrawWaveformWithBoth_RB->SetState(kButtonUp);
     TheInterface->SaveSettings();
@@ -192,8 +202,9 @@ void AAGraphicsSlots::HandleRadioButtons()
     break;
 
   case DrawWaveformWithBoth_RB_ID:
-    TheInterface->DrawWaveformWithMarkers_RB->SetState(kButtonUp);
+    TheInterface->DrawWaveformWithLine_RB->SetState(kButtonUp);
     TheInterface->DrawWaveformWithCurve_RB->SetState(kButtonUp);
+    TheInterface->DrawWaveformWithMarkers_RB->SetState(kButtonUp);
     TheInterface->SaveSettings();
     GraphicsMgr->PlotWaveform();
     break;
@@ -201,7 +212,7 @@ void AAGraphicsSlots::HandleRadioButtons()
   case DrawSpectrumWithBars_RB_ID:
     TheInterface->DrawSpectrumWithCurve_RB->SetState(kButtonUp);
     TheInterface->DrawSpectrumWithError_RB->SetState(kButtonUp);
-    TheInterface->DrawSpectrumWithMarkers_RB->SetState(kButtonUp);
+    TheInterface->DrawSpectrumWithLine_RB->SetState(kButtonUp);
     TheInterface->SaveSettings();
     if(ComputationMgr->GetSpectrumExists())
       GraphicsMgr->PlotSpectrum();
@@ -210,7 +221,7 @@ void AAGraphicsSlots::HandleRadioButtons()
   case DrawSpectrumWithCurve_RB_ID:
     TheInterface->DrawSpectrumWithBars_RB->SetState(kButtonUp);
     TheInterface->DrawSpectrumWithError_RB->SetState(kButtonUp);
-    TheInterface->DrawSpectrumWithMarkers_RB->SetState(kButtonUp);
+    TheInterface->DrawSpectrumWithLine_RB->SetState(kButtonUp);
     TheInterface->SaveSettings();
     if(ComputationMgr->GetSpectrumExists())
       GraphicsMgr->PlotSpectrum();
@@ -219,13 +230,13 @@ void AAGraphicsSlots::HandleRadioButtons()
   case DrawSpectrumWithError_RB_ID:
     TheInterface->DrawSpectrumWithCurve_RB->SetState(kButtonUp);
     TheInterface->DrawSpectrumWithBars_RB->SetState(kButtonUp);
-    TheInterface->DrawSpectrumWithMarkers_RB->SetState(kButtonUp);
+    TheInterface->DrawSpectrumWithLine_RB->SetState(kButtonUp);
     TheInterface->SaveSettings();
     if(ComputationMgr->GetSpectrumExists())
       GraphicsMgr->PlotSpectrum();
     break;
 
-  case DrawSpectrumWithMarkers_RB_ID:
+  case DrawSpectrumWithLine_RB_ID:
     TheInterface->DrawSpectrumWithCurve_RB->SetState(kButtonUp);
     TheInterface->DrawSpectrumWithError_RB->SetState(kButtonUp);
     TheInterface->DrawSpectrumWithBars_RB->SetState(kButtonUp);

@@ -1126,19 +1126,23 @@ void AAInterface::FillGraphicsFrame()
 
 
   TGHorizontalFrame *WaveformDrawOptions_HF0 = new TGHorizontalFrame(WaveformDrawOptions_GF);
-  WaveformDrawOptions_GF->AddFrame(WaveformDrawOptions_HF0, new TGLayoutHints(kLHintsCenterX, 5,5,3,3));
+  WaveformDrawOptions_GF->AddFrame(WaveformDrawOptions_HF0, new TGLayoutHints(kLHintsCenterX, 3,-10,3,0));
   
+  WaveformDrawOptions_HF0->AddFrame(DrawWaveformWithLine_RB = new TGRadioButton(WaveformDrawOptions_HF0, "Line   ", DrawWaveformWithLine_RB_ID),
+				    new TGLayoutHints(kLHintsLeft, 0,0,5,5));
+  DrawWaveformWithLine_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
+  DrawWaveformWithLine_RB->SetState(kButtonDown);
+
   WaveformDrawOptions_HF0->AddFrame(DrawWaveformWithCurve_RB = new TGRadioButton(WaveformDrawOptions_HF0, "Curve   ", DrawWaveformWithCurve_RB_ID),
-				    new TGLayoutHints(kLHintsCenterX, 0,0,0,0));
+				    new TGLayoutHints(kLHintsLeft, 0,0,5,5));
   DrawWaveformWithCurve_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
-  DrawWaveformWithCurve_RB->SetState(kButtonDown);
   
   WaveformDrawOptions_HF0->AddFrame(DrawWaveformWithMarkers_RB = new TGRadioButton(WaveformDrawOptions_HF0, "Markers   ", DrawWaveformWithMarkers_RB_ID),
-				    new TGLayoutHints(kLHintsCenterX, 0,0,0,0));
+				    new TGLayoutHints(kLHintsLeft, 0,0,5,5));
   DrawWaveformWithMarkers_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
   
   WaveformDrawOptions_HF0->AddFrame(DrawWaveformWithBoth_RB = new TGRadioButton(WaveformDrawOptions_HF0, "Both", DrawWaveformWithBoth_RB_ID),
-				    new TGLayoutHints(kLHintsCenterX, 0,0,0,0));
+				    new TGLayoutHints(kLHintsLeft, 0,0,5,-10));
   DrawWaveformWithBoth_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
 
 
@@ -1179,21 +1183,21 @@ void AAInterface::FillGraphicsFrame()
   TGHorizontalFrame *SpectrumDrawOptions_HF0 = new TGHorizontalFrame(SpectrumDrawOptions_GF);
   SpectrumDrawOptions_GF->AddFrame(SpectrumDrawOptions_HF0, new TGLayoutHints(kLHintsCenterX, 3,0,3,0));
 
-  SpectrumDrawOptions_HF0->AddFrame(DrawSpectrumWithCurve_RB = new TGRadioButton(SpectrumDrawOptions_HF0, "Curve  ", DrawSpectrumWithCurve_RB_ID),
-				    new TGLayoutHints(kLHintsCenterX, 10,0,5,5));
-  DrawSpectrumWithCurve_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
-  DrawSpectrumWithCurve_RB->SetState(kButtonDown);
-  
-  SpectrumDrawOptions_HF0->AddFrame(DrawSpectrumWithMarkers_RB = new TGRadioButton(SpectrumDrawOptions_HF0, "Markers  ", DrawSpectrumWithMarkers_RB_ID),
-				    new TGLayoutHints(kLHintsCenterX, 0,0,5,5));
-  DrawSpectrumWithMarkers_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
+  SpectrumDrawOptions_HF0->AddFrame(DrawSpectrumWithLine_RB = new TGRadioButton(SpectrumDrawOptions_HF0, "Line  ", DrawSpectrumWithLine_RB_ID),
+				    new TGLayoutHints(kLHintsCenterX, 15,0,5,5));
+  DrawSpectrumWithLine_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
+  DrawSpectrumWithLine_RB->SetState(kButtonDown);
 
+  SpectrumDrawOptions_HF0->AddFrame(DrawSpectrumWithCurve_RB = new TGRadioButton(SpectrumDrawOptions_HF0, "Curve  ", DrawSpectrumWithCurve_RB_ID),
+				    new TGLayoutHints(kLHintsCenterX, 5,0,5,5));
+  DrawSpectrumWithCurve_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
+  
   SpectrumDrawOptions_HF0->AddFrame(DrawSpectrumWithError_RB = new TGRadioButton(SpectrumDrawOptions_HF0, "Error  ", DrawSpectrumWithError_RB_ID),
-				    new TGLayoutHints(kLHintsCenterX, 0,0,5,5));
+				    new TGLayoutHints(kLHintsCenterX, 5,0,5,5));
   DrawSpectrumWithError_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
 
   SpectrumDrawOptions_HF0->AddFrame(DrawSpectrumWithBars_RB = new TGRadioButton(SpectrumDrawOptions_HF0, "Bars", DrawSpectrumWithBars_RB_ID),
-				    new TGLayoutHints(kLHintsCenterX, 0,-10,5,5));
+				    new TGLayoutHints(kLHintsCenterX, 5,-10,5,5));
   DrawSpectrumWithBars_RB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleRadioButtons()");
 
   
@@ -2138,14 +2142,15 @@ void AAInterface::SaveSettings(bool SaveToFile)
   //////////////////////////////////////////
   // Values from the "Graphics" tabbed frame
 
+  ADAQSettings->WaveformLine = DrawWaveformWithLine_RB->IsDown();
   ADAQSettings->WaveformCurve = DrawWaveformWithCurve_RB->IsDown();
   ADAQSettings->WaveformMarkers = DrawWaveformWithMarkers_RB->IsDown();
   ADAQSettings->WaveformBoth = DrawWaveformWithBoth_RB->IsDown();
   ADAQSettings->WaveformLineWidth = WaveformLineWidth_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->WaveformMarkerSize = WaveformMarkerSize_NEL->GetEntry()->GetNumber();
   
+  ADAQSettings->SpectrumLine = DrawSpectrumWithLine_RB->IsDown();
   ADAQSettings->SpectrumCurve = DrawSpectrumWithCurve_RB->IsDown();
-  ADAQSettings->SpectrumMarkers = DrawSpectrumWithMarkers_RB->IsDown();
   ADAQSettings->SpectrumError = DrawSpectrumWithError_RB->IsDown();
   ADAQSettings->SpectrumBars = DrawSpectrumWithBars_RB->IsDown();
   ADAQSettings->SpectrumLineWidth = SpectrumLineWidth_NEL->GetEntry()->GetIntNumber();
