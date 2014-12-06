@@ -196,6 +196,23 @@ void AANontabSlots::HandleDoubleSliders()
       TheInterface->SpectrumFitSigma_NEFL->GetEntry()->SetNumber(Sigma);
       TheInterface->SpectrumFitRes_NEFL->GetEntry()->SetNumber(2.35 * Sigma / Mean * 100);
     }
+
+    // Update the NEL's that are used for manual entry of the analysis
+    // range with the current value of the double slider
+
+    double MinBin = TheInterface->SpectrumMinBin_NEL->GetEntry()->GetNumber();
+    double MaxBin = TheInterface->SpectrumMaxBin_NEL->GetEntry()->GetNumber();
+    double Range = MaxBin - MinBin;
+
+    float Min,Max;
+    TheInterface->SpectrumIntegrationLimits_DHS->GetPosition(Min, Max);
+
+    double Lower = MinBin + (Range * Min);
+    double Upper = MinBin + (Range * Max);
+
+    TheInterface->SpectrumAnalysisLowerLimit_NEL->GetEntry()->SetNumber(Lower);
+    TheInterface->SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetNumber(Upper);
+
     break;
   }
 }

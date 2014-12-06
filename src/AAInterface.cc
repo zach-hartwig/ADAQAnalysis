@@ -596,13 +596,16 @@ void AAInterface::FillSpectrumFrame()
   SpectrumMinBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumMinBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
   SpectrumMinBin_NEL->GetEntry()->SetNumber(0);
+  SpectrumMinBin_NEL->GetEntry()->Connect("ValueSet(long)", "AASpectrumSlots", SpectrumSlots, "HandleNumberEntries()");
+
 
   // Maximum spectrum bin number entry
   SpectrumBinning_HF->AddFrame(SpectrumMaxBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Maximum", SpectrumMaxBin_NEL_ID),
 		       new TGLayoutHints(kLHintsRight, 15,0,0,0));
   SpectrumMaxBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumMaxBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  SpectrumMaxBin_NEL->GetEntry()->SetNumber(22000);
+  SpectrumMaxBin_NEL->GetEntry()->SetNumber(20000);
+  SpectrumMaxBin_NEL->GetEntry()->Connect("ValueSet(long)", "AASpectrumSlots", SpectrumSlots, "HandleNumberEntries()");
 
 
   ///////////////////////
@@ -982,6 +985,26 @@ void AAInterface::FillAnalysisFrame()
   SpectrumFitRes_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal);
   SpectrumFitRes_NEFL->GetEntry()->SetState(false);
   SpectrumFitRes_NEFL->GetEntry()->Resize(60, 20);
+
+
+  SpectrumAnalysis_GF->AddFrame(new TGLabel(SpectrumAnalysis_GF, "Analysis limits"),
+				new TGLayoutHints(kLHintsNormal,5,10,5,5));
+
+  TGHorizontalFrame *Horizontal5_HF = new TGHorizontalFrame(SpectrumAnalysis_GF);
+  SpectrumAnalysis_GF->AddFrame(Horizontal5_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,5));
+
+  Horizontal5_HF->AddFrame(SpectrumAnalysisLowerLimit_NEL = new ADAQNumberEntryWithLabel(Horizontal5_HF, "Lower", SpectrumAnalysisLowerLimit_NEL_ID),
+				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
+  SpectrumAnalysisLowerLimit_NEL->GetEntry()->SetFormat(TGNumberFormat::kNESReal);
+  SpectrumAnalysisLowerLimit_NEL->GetEntry()->Resize(80, 20);
+  SpectrumAnalysisLowerLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAAnalysisSlots", AnalysisSlots, "HandleNumberEntries()");
+
+  Horizontal5_HF->AddFrame(SpectrumAnalysisUpperLimit_NEL = new ADAQNumberEntryWithLabel(Horizontal5_HF, "Upper", SpectrumAnalysisUpperLimit_NEL_ID),
+				new TGLayoutHints(kLHintsNormal, 10,5,0,0));
+  SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetFormat(TGNumberFormat::kNESReal);
+  SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetNumber(20000);
+  SpectrumAnalysisUpperLimit_NEL->GetEntry()->Resize(80, 20);
+  SpectrumAnalysisUpperLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAAnalysisSlots", AnalysisSlots, "HandleNumberEntries()");
 
 
   ////////////////////////////////

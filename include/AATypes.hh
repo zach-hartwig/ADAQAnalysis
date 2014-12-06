@@ -198,6 +198,9 @@ enum{
   SpectrumUseGaussianFit_CB_ID,
   SpectrumNormalizePeakToCurrent_CB_ID,
 
+  SpectrumAnalysisLowerLimit_NEL_ID,
+  SpectrumAnalysisUpperLimit_NEL_ID,
+
   EAEnable_CB_ID,
   EASpectrumType_CBL_ID,
 

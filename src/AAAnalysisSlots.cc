@@ -199,6 +199,21 @@ void AAAnalysisSlots::HandleNumberEntries()
     ComputationMgr->CalculateSpectrumBackground();
     GraphicsMgr->PlotSpectrum();
     break;
+
+  case SpectrumAnalysisLowerLimit_NEL_ID:
+  case SpectrumAnalysisUpperLimit_NEL_ID:{
+
+    double MinBin = TheInterface->SpectrumMinBin_NEL->GetEntry()->GetNumber();
+    double MaxBin = TheInterface->SpectrumMaxBin_NEL->GetEntry()->GetNumber();
+    double Range = MaxBin - MinBin;
+
+    double Lower = TheInterface->SpectrumAnalysisLowerLimit_NEL->GetEntry()->GetNumber();
+    double Upper = TheInterface->SpectrumAnalysisUpperLimit_NEL->GetEntry()->GetNumber();
+
+    TheInterface->SpectrumIntegrationLimits_DHS->SetPosition(Lower/Range, Upper/Range);
+    TheInterface->SpectrumIntegrationLimits_DHS->PositionChanged();
+    break;
+  }
     
   case EALightConversionFactor_NEL_ID:{
     double CF = TheInterface->EALightConversionFactor_NEL->GetEntry()->GetNumber();

@@ -133,6 +133,18 @@ void AASpectrumSlots::HandleNumberEntries()
   TheInterface->SaveSettings();
 
   switch(NumberEntryID){
+
+  case SpectrumMinBin_NEL_ID:
+  case SpectrumMaxBin_NEL_ID:
+    
+    TheInterface->SpectrumAnalysisLowerLimit_NEL->GetEntry()->
+      SetNumber(TheInterface->SpectrumMinBin_NEL->GetEntry()->GetNumber());
+    
+    TheInterface->SpectrumAnalysisUpperLimit_NEL->GetEntry()->
+      SetNumber(TheInterface->SpectrumMaxBin_NEL->GetEntry()->GetNumber());
+    
+    break;
+    
     
   case SpectrumCalibrationEnergy_NEL_ID:
   case SpectrumCalibrationPulseUnit_NEL_ID:{

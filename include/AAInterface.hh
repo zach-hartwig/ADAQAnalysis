@@ -255,6 +255,9 @@ private:
   ADAQNumberEntryFieldWithLabel *SpectrumFitSigma_NEFL;
   ADAQNumberEntryFieldWithLabel *SpectrumFitRes_NEFL;
 
+  ADAQNumberEntryWithLabel *SpectrumAnalysisLowerLimit_NEL;
+  ADAQNumberEntryWithLabel *SpectrumAnalysisUpperLimit_NEL;
+
   TGCheckButton *SpectrumFindIntegral_CB;
   TGCheckButton *SpectrumIntegralInCounts_CB;
   TGCheckButton *SpectrumUseGaussianFit_CB;
