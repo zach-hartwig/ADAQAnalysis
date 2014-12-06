@@ -1322,11 +1322,19 @@ void AAComputation::CalculateSpectrumBackground()//TH1F *Spectrum_H)
 // Method used to integrate a pulse / energy spectrum
 void AAComputation::IntegrateSpectrum()
 {
-  double XAxisMin = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
-  double XAxisMax = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
+  // Get the spectrum binning min/max/total range
+  double Min = ADAQSettings->SpectrumMinBin;
+  double Max = ADAQSettings->SpectrumMaxBin;
+  double Range = Max-Min;
 
-  double LowerIntLimit = (ADAQSettings->SpectrumIntegrationMin * XAxisMax) + XAxisMin;
-  double UpperIntLimit = ADAQSettings->SpectrumIntegrationMax * XAxisMax;
+  // Get the spectrum integration slider fractional position 
+  double LowerFraction = ADAQSettings->SpectrumIntegrationMin;
+  double UpperFraction = ADAQSettings->SpectrumIntegrationMax;
+
+  // Compute the integration range, ensuring to account for case where
+  // the lowest spectrum bin is non-zero.
+  double LowerIntLimit = LowerFraction * Range + Min;
+  double UpperIntLimit = UpperFraction * Range + Min;
   
   // Check to ensure that the lower limit line is always LESS than the
   // upper limit line
@@ -1377,6 +1385,11 @@ void AAComputation::IntegrateSpectrum()
     // Set the low and upper bin for the integration
     int StartBin = SpectrumIntegral_H->FindBin(LowerIntLimit);
     int StopBin = SpectrumIntegral_H->FindBin(UpperIntLimit);
+
+    // Ensure that the underflow bin (== 0) is included if the lowest
+    // valid bin (==1) is within the integration range
+    if(StartBin == 1)
+      StartBin = 0;
     
     // Compute the integral and error
     SpectrumIntegralValue = SpectrumIntegral_H->IntegralAndError(StartBin,

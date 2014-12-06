@@ -282,12 +282,17 @@ void AASpectrumSlots::HandleTextButtons()
       double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
       TheInterface->DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
     }
-    
+
     int SpectrumMinBin = TheInterface->SpectrumMinBin_NEL->GetEntry()->GetNumber();
     TheInterface->SpectrumRangeMin_NEL->GetEntry()->SetNumber(SpectrumMinBin);
     
     int SpectrumMaxBin = TheInterface->SpectrumMaxBin_NEL->GetEntry()->GetNumber();
     TheInterface->SpectrumRangeMax_NEL->GetEntry()->SetNumber(SpectrumMaxBin);
+
+
+    TheInterface->SpectrumAnalysisLowerLimit_NEL->GetEntry()->SetLimitValues(SpectrumMinBin, SpectrumMaxBin);
+    TheInterface->SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetLimitValues(SpectrumMinBin, SpectrumMaxBin);
+
     break;
   }
 

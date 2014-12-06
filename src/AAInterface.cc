@@ -987,7 +987,7 @@ void AAInterface::FillAnalysisFrame()
   SpectrumFitRes_NEFL->GetEntry()->Resize(60, 20);
 
 
-  SpectrumAnalysis_GF->AddFrame(new TGLabel(SpectrumAnalysis_GF, "Analysis limits"),
+  SpectrumAnalysis_GF->AddFrame(new TGLabel(SpectrumAnalysis_GF, "Spectrum analysis limits"),
 				new TGLayoutHints(kLHintsNormal,5,10,5,5));
 
   TGHorizontalFrame *Horizontal5_HF = new TGHorizontalFrame(SpectrumAnalysis_GF);
@@ -996,12 +996,17 @@ void AAInterface::FillAnalysisFrame()
   Horizontal5_HF->AddFrame(SpectrumAnalysisLowerLimit_NEL = new ADAQNumberEntryWithLabel(Horizontal5_HF, "Lower", SpectrumAnalysisLowerLimit_NEL_ID),
 				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumAnalysisLowerLimit_NEL->GetEntry()->SetFormat(TGNumberFormat::kNESReal);
+  SpectrumAnalysisLowerLimit_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
+  SpectrumAnalysisLowerLimit_NEL->GetEntry()->SetLimitValues(0,20000);
+  SpectrumAnalysisLowerLimit_NEL->GetEntry()->SetNumber(0);
   SpectrumAnalysisLowerLimit_NEL->GetEntry()->Resize(80, 20);
   SpectrumAnalysisLowerLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAAnalysisSlots", AnalysisSlots, "HandleNumberEntries()");
 
   Horizontal5_HF->AddFrame(SpectrumAnalysisUpperLimit_NEL = new ADAQNumberEntryWithLabel(Horizontal5_HF, "Upper", SpectrumAnalysisUpperLimit_NEL_ID),
 				new TGLayoutHints(kLHintsNormal, 10,5,0,0));
   SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetFormat(TGNumberFormat::kNESReal);
+  SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
+  SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetLimitValues(0,20000);
   SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetNumber(20000);
   SpectrumAnalysisUpperLimit_NEL->GetEntry()->Resize(80, 20);
   SpectrumAnalysisUpperLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAAnalysisSlots", AnalysisSlots, "HandleNumberEntries()");
@@ -2009,7 +2014,7 @@ void AAInterface::FillCanvasFrame()
   WaveformSelector_HS->SetPosition(1);
   WaveformSelector_HS->Connect("PositionChanged(int)", "AANontabSlots", NontabSlots, "HandleSliders(int)");
 
-  Canvas_VF->AddFrame(new TGLabel(Canvas_VF, "  Spectrum integration limits  "),
+  Canvas_VF->AddFrame(new TGLabel(Canvas_VF, "  Spectrum analysis limits  "),
 		      new TGLayoutHints(kLHintsCenterX, 5,5,10,0));
 
   Canvas_VF->AddFrame(SpectrumIntegrationLimits_DHS = new TGDoubleHSlider(Canvas_VF, CanvasX, kDoubleScaleBoth, SpectrumIntegrationLimits_DHS_ID),

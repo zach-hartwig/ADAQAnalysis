@@ -203,14 +203,19 @@ void AAAnalysisSlots::HandleNumberEntries()
   case SpectrumAnalysisLowerLimit_NEL_ID:
   case SpectrumAnalysisUpperLimit_NEL_ID:{
 
+    // Get the min, max, and absolute range of the spectrum histogram binning
     double MinBin = TheInterface->SpectrumMinBin_NEL->GetEntry()->GetNumber();
     double MaxBin = TheInterface->SpectrumMaxBin_NEL->GetEntry()->GetNumber();
     double Range = MaxBin - MinBin;
 
+    // Get the lower/upper values for analysis
     double Lower = TheInterface->SpectrumAnalysisLowerLimit_NEL->GetEntry()->GetNumber();
     double Upper = TheInterface->SpectrumAnalysisUpperLimit_NEL->GetEntry()->GetNumber();
 
-    TheInterface->SpectrumIntegrationLimits_DHS->SetPosition(Lower/Range, Upper/Range);
+    double LowerPos = (Lower-MinBin)/Range;
+    double UpperPos = (Upper-MinBin)/Range;
+
+    TheInterface->SpectrumIntegrationLimits_DHS->SetPosition(LowerPos, UpperPos);
     TheInterface->SpectrumIntegrationLimits_DHS->PositionChanged();
     break;
   }
