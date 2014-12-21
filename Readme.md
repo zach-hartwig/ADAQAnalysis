@@ -4,19 +4,25 @@
 
 ## ADAQAnalysis ##
 
-**ADAQAnalysis** is a program that provides comprehensive offline
-analysis of digitized detector waveforms that were created and stored
-with the **ADAQAcquisition** program. The program enables the user to
-completely inspect and operate on raw waveforms (view, baseline
-calculation, peak finding, pulse shape discriminate, etc), create and
-analyze pulse spectra (calibrate, background subtraction, peak
-finding, integration, etc), and to create publication quality graphics
-in vector (EPS, PDF) and raster (JPG, PNG) formats. Methods are
-provided to save all objects (waveforms, spectra, pulse shape
-discrimination histograms, etc) to either ROOT files, ASCII files, or
-CSV files for further analysis outside of **ADAQAnalysis**. Optically,
-processing of waveforms can be performed in parallel to significantly
-reduce computation time on systems where multiple cores are available.
+ADAQAnalysis is a program that provides comprehensive offline analysis
+of digitized detector waveforms that were created and stored with the
+[ADAQAcquisition](http://github.com/zach-hartwig/ADAQAcquisition)
+program. It is built on top of the [ROOT](http://root.cern.ch/drupal/)
+data analysis framework. The program enables the user to completely
+inspect and operate on raw waveforms (view, baseline calculation, peak
+finding, pulse shape discriminate, etc), create and analyze pulse
+spectra (calibrate, background subtraction, peak finding, integration,
+etc), and to create publication quality graphics in vector (EPS, PDF)
+and raster (JPG, PNG) formats. Methods are provided to save all
+objects (waveforms, spectra, pulse shape discrimination histograms,
+etc) to either ROOT files, ASCII files, or CSV files for further
+analysis outside of ADAQAnalysis. The ability to analyze simulated
+detector data - using a Monte Carlo code like [Geant4], for example -
+with the identical algorithms used on experimental data is provided by
+via special classes in the [ADAQ](http://github.com/zach-hartwig/ADAQ)
+libraries. Finally, processing of waveforms can be performed in
+parallel to significantly reduce computation time on systems where
+multiple cores are available.
 
 
 ### License and disclaimer ###
@@ -56,7 +62,7 @@ your environment correctly:
 Don't forget to open a new terminal for the settings to take effect!
 
 On Linux or MacOS, clone into the repository and then use the provided
-GNU Makefile to build the **ADAQAnalysis** binary:
+GNU Makefile to build the ADAQAnalysis binary:
 
 ```bash
   # Clone ADAQAnalysis source code from GitHub
@@ -78,21 +84,20 @@ GNU Makefile to build the **ADAQAnalysis** binary:
   make clean  
 ```
 
-
 ### Code dependencies ###
 
-**ADAQAnalysis** depends on the following external codes and
+ADAQAnalysis depends on the following external codes and
 libraries. Note that all *mandatory* dependencies mustbe properly
 configured on the user's system prior to building ADAQAnalysis. Note
 that the use of Open MPI to enable parallel processing of waveforms
-with **ADAQAnalysis** is *optional*, as the code will compile
-successfully with or without parallelization.
+with ADAQAnalysis is *optional*, as the code will compile successfully
+with or without parallelization.
 
 1. [GNU make](http://www.gnu.org/software/make/) : Mandatory
 
 2. [ROOT](http://root.cern.ch/drupal/) : Mandatory
 
-3. The ADAQ libraries : Mandatory
+3. [ADAQ](http://github.com/zach-hartwig/ADAQ) : Mandatory
 
 4. [Boost](http://www.boost.org/) : Mandatory
 
@@ -129,15 +134,13 @@ straightforward and easy to understand:
 
 ### Contact ###
 
-Dr. Zachary S Hartwig  
+Zach Hartwig
 
-Department of Nuclear Science and Engineering &  
-Plasma Science and Fusion Center  
-Massachusetts Institute of Technology  
+[Dept. of Nuclear Science and
+Engineering](http://web.mit.edu/nse/http://web.mit.edu/nse/) &  
+[Plasma Science and Fusion Center](http://www.psfc.mit.edu)  
+[Massachusetts Institute of Technology](http://mit.edu)  
 
 phone: +1 617 253 5471  
 email: [hartwig@psfc.mit.edu](mailto:hartwig@psfc.mit.edu)  
 smail: 77 Massachusetts Ave, NW17-115, Cambridge MA 02139, USA
-
-
-
