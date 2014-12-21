@@ -71,7 +71,9 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PearsonIntegralValue(0),
     PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
     WaveformStart(0), WaveformEnd(0),
-    Spectrum_H(new TH1F), SpectrumBackground_H(new TH1F), SpectrumDeconvolved_H(new TH1F),
+    Spectrum_H(new TH1F), SpectrumDerivative_H(new TH1F), SpectrumDerivative_G(new TGraph),
+    SpectrumBackground_H(new TH1F), SpectrumDeconvolved_H(new TH1F), 
+    SpectrumIntegral_H(new TH1F), SpectrumFit_F(new TF1),
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), 
     Verbose(false), ParallelVerbose(true),
     Baseline(0.), PSDFilterPolarity(1.),
@@ -1340,7 +1342,7 @@ void AAComputation::IntegrateSpectrum()
   // the lowest spectrum bin is non-zero.
   double LowerIntLimit = LowerFraction * Range + Min;
   double UpperIntLimit = UpperFraction * Range + Min;
-  
+
   // Check to ensure that the lower limit line is always LESS than the
   // upper limit line
   if(UpperIntLimit < LowerIntLimit)
@@ -1348,13 +1350,18 @@ void AAComputation::IntegrateSpectrum()
 
   // Clone the appropriate spectrum object depending on user's
   // selection into a new TH1F object for integration
+  cout << "0" << endl;
   if(SpectrumIntegral_H)
     delete SpectrumIntegral_H;
+
+  cout << "1" << endl;
 
   if(ADAQSettings->PlotLessBackground)
     SpectrumIntegral_H = (TH1F *)SpectrumDeconvolved_H->Clone("SpectrumToIntegrate_H");
   else
     SpectrumIntegral_H = (TH1F *)Spectrum_H->Clone("SpectrumToIntegrate_H");
+
+  cout << "2" << endl;
   
   // Set the integration TH1F object attributes and draw it
   SpectrumIntegral_H->SetLineColor(4);
@@ -1375,6 +1382,7 @@ void AAComputation::IntegrateSpectrum()
   string IntegralArg = "width";
   if(ADAQSettings->SpectrumIntegralInCounts)
     IntegralArg.assign("");
+
   
   ///////////////////////////////
   // Gaussian fitting/integration
@@ -1520,7 +1528,7 @@ bool AAComputation::SaveHistogramData(string Type, string FileName, string FileE
 
 TH2F *AAComputation::CreatePSDHistogram()
 {
-  if(PSDHistogram_H){
+  if(PSDHistogramExists){
     delete PSDHistogram_H;
     PSDHistogramExists = false;
   }

@@ -296,7 +296,6 @@ private:
   ////////////////
   // PSD variables
 
-
   // Variables for PSD histograms and filter
   TH2F *PSDHistogram_H, *MasterPSDHistogram_H;
   TH1D *PSDHistogramSlice_H;
