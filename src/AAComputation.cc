@@ -223,7 +223,7 @@ bool AAComputation::LoadADAQRootFile(string FileName)
       ADAQFileLoaded = false;
       return false;
     }
-
+    
     // Attempt to get the class containing results that were calculated
     // in a parallel run of ADAQAnalysisGUI and stored persistently
     // along with data in the ROOT file. At present, this is only the
@@ -256,7 +256,7 @@ bool AAComputation::LoadADAQRootFile(string FileName)
     // plotted waveform, is used for plotting 
     for(int sample=0; sample<RecordLength; sample++)
       Time.push_back(sample);
-  
+
     // The ADAQ Waveform TTree stores digitized waveforms into
     // vector<int>s of length RecordLength. Recall that the "record
     // length" is the width of the acquisition window in time in units
@@ -277,6 +277,11 @@ bool AAComputation::LoadADAQRootFile(string FileName)
       // Activate the branch in the ADAQ TTree
       ADAQWaveformTree->SetBranchStatus(BranchName.c_str(), 1);
 
+      // Initialize the vector<int> pointers! No initialization worked
+      // in ROOT v5.34.19 and below but created a very difficult to
+      // track seg. fault for higher versions.
+      WaveformVecPtrs[ch] = 0;
+
       // Set the present channels' class object vector pointer to the
       // address of that chennel's vector<int> stored in the TTree
       ADAQWaveformTree->SetBranchAddress(BranchName.c_str(), &WaveformVecPtrs[ch]);
@@ -284,7 +289,7 @@ bool AAComputation::LoadADAQRootFile(string FileName)
       // Clear the string for the next channel.
       ss.str("");
     }
-   
+
 
     //////////////////////////////////////////////
     // Output summary of measurement parameters //

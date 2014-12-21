@@ -48,8 +48,8 @@ your environment correctly:
 
 ```bash 
     # ADAQAnalysis configuration
-    ADAQANALYSIS_HOME = /full/path/to/ADAQAcquisition
-    ADAQANALYSIS_USER = dev # Setting for local install (developer)
+    export ADAQANALYSIS_HOME = /full/path/to/ADAQAcquisition
+    export ADAQANALYSIS_USER = dev # Setting for local install (developer)
     # ADAQANALYSIS_USER = usr # Setting for global install (user)
     source $ADAQANALYSIS_HOME/scripts/setup.sh $ADAQANALYSIS_USER >& /dev/null
 ```
