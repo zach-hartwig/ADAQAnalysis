@@ -1350,18 +1350,14 @@ void AAComputation::IntegrateSpectrum()
 
   // Clone the appropriate spectrum object depending on user's
   // selection into a new TH1F object for integration
-  cout << "0" << endl;
+
   if(SpectrumIntegral_H)
     delete SpectrumIntegral_H;
-
-  cout << "1" << endl;
 
   if(ADAQSettings->PlotLessBackground)
     SpectrumIntegral_H = (TH1F *)SpectrumDeconvolved_H->Clone("SpectrumToIntegrate_H");
   else
     SpectrumIntegral_H = (TH1F *)Spectrum_H->Clone("SpectrumToIntegrate_H");
-
-  cout << "2" << endl;
   
   // Set the integration TH1F object attributes and draw it
   SpectrumIntegral_H->SetLineColor(4);
