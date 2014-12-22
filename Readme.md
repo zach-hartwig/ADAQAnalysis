@@ -17,12 +17,13 @@ and raster (JPG, PNG) formats. Methods are provided to save all
 objects (waveforms, spectra, pulse shape discrimination histograms,
 etc) to either ROOT files, ASCII files, or CSV files for further
 analysis outside of ADAQAnalysis. The ability to analyze simulated
-detector data - using a Monte Carlo code like [Geant4], for example -
-with the identical algorithms used on experimental data is provided by
-via special classes in the [ADAQ](http://github.com/zach-hartwig/ADAQ)
+detector data - using a Monte Carlo code like
+[Geant4](http://geant4.cern.ch/)- with the identical algorithms used
+on experimental data is provided by via special ADAQ-compatible data
+storage classes from the [ADAQ](http://github.com/zach-hartwig/ADAQ)
 libraries. Finally, processing of waveforms can be performed in
-parallel to significantly reduce computation time on systems where
-multiple cores are available.
+parallel using MPI to significantly reduce computation time on systems
+where multiple cores are available.
 
 
 ### License and disclaimer ###
@@ -121,7 +122,7 @@ straightforward and easy to understand:
 
   - **src/**       : C++ source code 
   
-  - **test/**      : Collection of test files in ADAQ format used in demo'ing, development, debugging
+  - **test/**      : ADAQ-formated files to used in development and testing (see below)
 
   - **Changelog.md** : List of major content updates and fixes for each Formulary release
   
@@ -131,6 +132,34 @@ straightforward and easy to understand:
 
   - **Readme.md**  : You're reading it
 
+
+### Test files ###
+
+ADAQAnalysis includes (at present) three ADAQ-formatted files in the
+test/ directory that can be used with the program. The files are
+intended to be used to familiarize oneself with the various waveform
+analysis features of the program or to be used in the development and
+debugging of the code.
+
+- **NaIWaveforms_22Na.adaq** : ~13 000 waveforms acquired with a 4"x4"
+    sodium iodide crystal coupled to a 2" photomultiplier tube. A
+    sodium-22 source (0.511, 1.274 MeV gammas) was placed
+    nearby. Intended for general code testing with a common,
+    representative inorganic scintillator.
+
+- **EJ309Waveforms_22Na.adaq** : ~38 000 waveforms acquired with a 2"
+    diam x 2" EJ309 liquid organic scintillator coupled to a 2" PMT. A
+    sodium-22 source (0.511, 1.274 MeV) was placed nearby.  Intended
+    for general code testing with a common, representative liquid
+    organic scintillator.
+
+- **EJ309Waveforms_AmBe.adaq** : ~17 000 waveforms acquired with a 2"
+    diam x 2" EJ309 liqruid organic scintillator coupled to a 2"
+    PMT. A Americium-241/Beryllium-9 source (4.44 MeV gammas; 2-12 MeV
+    neutrons) was placed nearby. Intended to be used for development
+    of detector pulse-shape discrimination algorithms and features.
+    Note that energy calibration for this data file may be obtained
+    from the EJ309Waveforms_22Na.adaq file.
 
 ### Contact ###
 
