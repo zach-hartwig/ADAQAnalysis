@@ -67,6 +67,8 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
   : SequentialArchitecture(!PA), ParallelArchitecture(PA),
     ADAQFileLoaded(false), ACRONYMFileLoaded(false), 
     ADAQParResults(NULL), ADAQParResultsLoaded(false),
+    LSDetectorTree(new TTree), ESDetectorTree(new TTree),
+    LSDetectorEvent(new acroEvent), ESDetectorEvent(new acroEvent),
     Time(0), RawVoltage(0), RecordLength(0),
     PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PearsonIntegralValue(0),
     PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
@@ -330,20 +332,30 @@ bool AAComputation::LoadADAQRootFile(string FileName)
     
 bool AAComputation::LoadACRONYMRootFile(string FileName)
 {
+  cout << "0" << endl;
+
+
   ACRONYMFileName = FileName;
 
   TFile *ACRONYMRootFile = new TFile(FileName.c_str(), "read");
 
+  cout << "1" << endl;
+
   if(!ACRONYMRootFile->IsOpen()){
     ACRONYMFileLoaded = false;
+    cout << "2" << endl;
   }
   else{
 
     //////////////
     // LS Detector 
+
+    cout << "2.5" << endl;
     
     if(LSDetectorTree) delete LSDetectorTree;
     LSDetectorTree = dynamic_cast<TTree *>(ACRONYMRootFile->Get("LSDetectorTree"));
+
+    cout << "3" << endl;
 
     if(!LSDetectorTree){
       cout << "\nERROR! Could not find the LSDetectorTree in the ACRONYM ROOT file!\n"
@@ -354,6 +366,8 @@ bool AAComputation::LoadACRONYMRootFile(string FileName)
       LSDetectorEvent = new acroEvent;
       LSDetectorTree->SetBranchAddress("LSDetectorEvents", &LSDetectorEvent);
     }
+
+    cout << "4" << endl;
 
     //////////////
     // ES Detector
