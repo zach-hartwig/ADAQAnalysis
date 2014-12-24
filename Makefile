@@ -10,11 +10,11 @@
 #        below). The intermediary build files are placed in build/;
 #        the final binaries are placed in bin/. Note that a list of
 #        object files and build rules are automatically generated
-#        based on the presence of source files.
+#        based on the presence of source files for convenience.
 #
 #  dpnd: The build system depends on the following:
 #        -- ROOT (mandatory)
-#        -- ADAQ libraries (mandatory)
+#        -- The ADAQ{Hardware,Simulation}Readout libraries (mandatory)
 #        -- Boost, including Boost thread libraries (mandatory)
 #        -- Open MPI (optional)
 # 
@@ -36,21 +36,24 @@
 #**** MACRO DEFINITIONS ****#
 #***************************#
 
-# Include the Makefile for ROOT-based projects
+# Include the ROOT makefile and tack on the TSpectrum library to
+# ROOTGLIBS (general usage libraries plus graphics)
 RC:=root-config
 ROOTSYS:=$(shell $(RC) --prefix)
 ROOTMAKE:=$(ROOTSYS)/etc/Makefile.arch
-ROOTLIB = -lSpectrum
 include $(ROOTMAKE)
+ROOTGLIBS+=-lSpectrum
 
 # Specify the the binary, build, and source directories
 BUILDDIR = build
 BINDIR = bin
 SRCDIR = src
 
-# Specify header files directory. Note that this must be an absolute
-# path to ensure the ROOT dictionary files can find the headers
+# Specify header files directory and tack it on to the CXXFLAGS. Note
+# that this must be an absolute path to ensure the ROOT dictionary
+# files can find the headers
 INCLDIR = $(PWD)/include
+CXXFLAGS += -I$(INCLDIR)
 
 # Specify all header files
 INCLS = $(INCLDIR)/*.hh
@@ -99,8 +102,9 @@ else
    CXX := clang++ -ferror-limit=5 -w
 endif
 
-# Specify the other necessary header file locations
-CXXFLAGS += -I$(ADAQHOME)/include -I$(INCLDIR)
+# Include ADAQ header files; link against the ADAQSimulationReadout library
+CXXFLAGS += -I$(ADAQHOME)/include
+ADAQLIBS = -L$(ADAQHOME)/lib/$(HOSTTYPE) -lADAQSimulationReadout
 
 #***************#
 #**** RULES ****#
@@ -110,7 +114,7 @@ CXXFLAGS += -I$(ADAQHOME)/include -I$(INCLDIR)
 
 $(SEQ_TARGET) : $(OBJS) 
 	@echo -e "\nBuilding sequential binary '$@' ..."
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTGLIBS) $(ROOTLIB) $(BOOSTLIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(ADAQLIBS) $(ROOTGLIBS) $(BOOSTLIBS)
 	@echo -e "\n$@ build is complete!\n"
 
 $(BUILDDIR)/%.o : $(SRCDIR)/%.cc $(INCLS)
@@ -122,7 +126,7 @@ $(BUILDDIR)/%.o : $(SRCDIR)/%.cc $(INCLS)
 
 $(PAR_TARGET) : $(OBJS)
 	@echo -e "\nBuilding parallel binary '$@' ..."
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTGLIBS) $(ROOTLIB) $(BOOSTLIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(ADAQLIBS) $(ROOTGLIBS) $(BOOSTLIBS)
 	@echo -e "\n$@ build is complete!\n"
 
 $(BUILDDIR)/%_MPI.o : $(SRCDIR)/%.cc $(INCLS)
@@ -154,13 +158,11 @@ clean:
 	rm -f $(BUILDDIR)/* $(BINDIR)/*
 	@echo -e ""
 
-.PHONY:	
 par:
 	@echo -e "\nBuilding parallel version of ADAQAnalysis ...\n"
 	@make ARCH=mpi -j2
 	@echo -e ""
 
-.PHONY:
 both:
 	@echo -e "\nBuilding sequential and parallel versions of ADAQAnalysis ...\n"
 	@make -j3
