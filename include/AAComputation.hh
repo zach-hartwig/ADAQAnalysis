@@ -89,7 +89,7 @@ public:
   
   // File I/O methods
   bool LoadADAQRootFile(string);
-  bool LoadACRONYMRootFile(string);
+  bool LoadASIMFile(string);
   bool SaveHistogramData(string, string, string);
   void CreateDesplicedFile();
 

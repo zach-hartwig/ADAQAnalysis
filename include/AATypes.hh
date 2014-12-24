@@ -157,9 +157,15 @@ enum{
   SpectrumNumBins_NEL_ID,
   SpectrumMinBin_NEL_ID,
   SpectrumMaxBin_NEL_ID,
+  
+  ADAQSpectrumTypePAS_RB_ID,
+  ADAQSpectrumTypePHS_RB_ID,
+  ADAQSpectrumIntTypeWW_RB_ID,
+  ADAQSpectrumIntTypePF_RB_ID,
 
-  ACROSpectrumLS_RB_ID,
-  ACROSpectrumES_RB_ID,
+  ASIMSpectrumTypeEnergy_RB_ID,
+  ASIMSpectrumTypePhotonsCreated_RB_ID,
+  ASIMSpectrumTypePhotonsDetected_RB_ID,
 
   SpectrumCalibration_CB_ID,
   SpectrumCalibrationStandard_RB_ID,

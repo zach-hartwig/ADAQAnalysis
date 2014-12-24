@@ -544,11 +544,11 @@ void AAGraphics::PlotSpectrum()
   else if(ComputationMgr->GetACRONYMFileLoaded()){
     Title = "ACRONYM Spectrum";    
     
-    if(ADAQSettings->ACROSpectrumTypeEnergy)
+    if(ADAQSettings->ASIMSpectrumTypeEnergy)
       XTitle = "Energy [keV]";
-    else if(ADAQSettings->ACROSpectrumTypeScintCreated)
+    else if(ADAQSettings->ASIMSpectrumTypeScintCreated)
       XTitle = "Scintillation photons created [#]";
-    else if(ADAQSettings->ACROSpectrumTypeScintCounted)
+    else if(ADAQSettings->ASIMSpectrumTypeScintCounted)
       XTitle = "Scintillation photons detected [#]";
     
     YTitle = "Counts";

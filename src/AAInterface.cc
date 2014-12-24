@@ -35,6 +35,7 @@
 #include <TGFileDialog.h>
 #include <TGButtonGroup.h>
 #include <TFile.h>
+#include <TGText.h>
 
 // C++
 #include <iostream>
@@ -139,7 +140,7 @@ AAInterface::AAInterface(string CmdLineArg)
       }
       else if(CmdLineArg.substr(Pos,5) == ".acro"){
 	ACRONYMFileName = CmdLineArg;
-	ACRONYMFileLoaded = ComputationMgr->LoadACRONYMRootFile(ACRONYMFileName);
+	ACRONYMFileLoaded = ComputationMgr->LoadASIMFile(ACRONYMFileName);
 	
 	if(ACRONYMFileLoaded)
 	  UpdateForACRONYMFile();
@@ -611,58 +612,90 @@ void AAInterface::FillSpectrumFrame()
   ///////////////////////
   // ADAQ spectra options
 
-  TGHorizontalFrame *ADAQSpectrumOptions_HF = new TGHorizontalFrame(SpectrumFrame_VF);
-  SpectrumFrame_VF->AddFrame(ADAQSpectrumOptions_HF, new TGLayoutHints(kLHintsNormal, 15,0,0,0));
+  TGGroupFrame *ADAQSpectrumOptions_GF = new TGGroupFrame(SpectrumFrame_VF, "ADAQ Experimental Spectra", kHorizontalFrame);
+  SpectrumFrame_VF->AddFrame(ADAQSpectrumOptions_GF, new TGLayoutHints(kLHintsNormal, 15,0,10,0));
 
-  // Spectrum type radio buttons
-  ADAQSpectrumOptions_HF->AddFrame(ADAQSpectrumType_BG = new TGButtonGroup(ADAQSpectrumOptions_HF, "ADAQ spectra", kVerticalFrame),
-				   new TGLayoutHints(kLHintsCenterX, 5,5,15,0));
-  ADAQSpectrumTypePAS_RB = new TGRadioButton(ADAQSpectrumType_BG, "Pulse area", -1);
+  TGVerticalFrame *ADAQSpectrumQuantities_VF = new TGVerticalFrame(ADAQSpectrumOptions_GF);
+  ADAQSpectrumOptions_GF->AddFrame(ADAQSpectrumQuantities_VF, new TGLayoutHints(kLHintsNormal, 5,15,5,0));
+
+  // Spectrum quantity radio buttons
+
+  ADAQSpectrumQuantities_VF->AddFrame(new TGLabel(ADAQSpectrumQuantities_VF, "Quantity"),
+				      new TGLayoutHints(kLHintsNormal, 0,0,0,0));  
+
+  ADAQSpectrumQuantities_VF->AddFrame(ADAQSpectrumTypePAS_RB = new TGRadioButton(ADAQSpectrumQuantities_VF, "Pulse area", ADAQSpectrumTypePAS_RB_ID),
+				      new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  ADAQSpectrumTypePAS_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
   ADAQSpectrumTypePAS_RB->SetState(kButtonDown);
   
-  ADAQSpectrumTypePHS_RB = new TGRadioButton(ADAQSpectrumType_BG, "Pulse height", -1);
+  ADAQSpectrumQuantities_VF->AddFrame(ADAQSpectrumTypePHS_RB = new TGRadioButton(ADAQSpectrumQuantities_VF, "Pulse height", ADAQSpectrumTypePHS_RB_ID),
+				      new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  ADAQSpectrumTypePHS_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
 
   // Integration type radio buttons
-  ADAQSpectrumOptions_HF->AddFrame(ADAQSpectrumIntType_BG = new TGButtonGroup(ADAQSpectrumOptions_HF, "ADAQ integration", kVerticalFrame),
-				   new TGLayoutHints(kLHintsCenterX, 5,5,15,0));
-  ADAQSpectrumIntTypeWW_RB = new TGRadioButton(ADAQSpectrumIntType_BG, "Whole waveform", -1);
+
+  TGVerticalFrame *ADAQSpectrumType_VF = new TGVerticalFrame(ADAQSpectrumOptions_GF);
+  ADAQSpectrumOptions_GF->AddFrame(ADAQSpectrumType_VF, new TGLayoutHints(kLHintsNormal, 15,5,5,0));
+
+  ADAQSpectrumType_VF->AddFrame(new TGLabel(ADAQSpectrumType_VF, "Type"),
+				new TGLayoutHints(kLHintsNormal, 0,0,0,0));  
+
+  ADAQSpectrumType_VF->AddFrame(ADAQSpectrumIntTypeWW_RB = new TGRadioButton(ADAQSpectrumType_VF, "Whole waveform", ADAQSpectrumIntTypeWW_RB_ID),
+				new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   ADAQSpectrumIntTypeWW_RB->SetState(kButtonDown);
+  ADAQSpectrumIntTypeWW_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
   
-  ADAQSpectrumIntTypePF_RB = new TGRadioButton(ADAQSpectrumIntType_BG, "Peak finder", -1);
+  ADAQSpectrumType_VF->AddFrame(ADAQSpectrumIntTypePF_RB = new TGRadioButton(ADAQSpectrumType_VF, "Peak finder", ADAQSpectrumIntTypePF_RB_ID),
+				new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  ADAQSpectrumIntTypePF_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
 
 
   //////////////////////////
   // ACRONYM spectra options
 
-  TGHorizontalFrame *ACROSpectrumOptions_HF = new TGHorizontalFrame(SpectrumFrame_VF);
-  SpectrumFrame_VF->AddFrame(ACROSpectrumOptions_HF, new TGLayoutHints(kLHintsNormal, 15,0,0,0));
-  
+  TGGroupFrame *ASIMSpectrumOptions_GF = new TGGroupFrame(SpectrumFrame_VF, "ASIM Simulation Spectra", kHorizontalFrame);
+  SpectrumFrame_VF->AddFrame(ASIMSpectrumOptions_GF, new TGLayoutHints(kLHintsNormal, 15,0,5,0));
+
+  TGVerticalFrame *ASIMSpectrumQuantities_VF = new TGVerticalFrame(ASIMSpectrumOptions_GF);
+  ASIMSpectrumOptions_GF->AddFrame(ASIMSpectrumQuantities_VF, new TGLayoutHints(kLHintsNormal, 5,15,5,0));
+
   // Spectrum type radio buttons
-  ACROSpectrumOptions_HF->AddFrame(ACROSpectrumType_BG = new TGButtonGroup(ACROSpectrumOptions_HF, "ACRO spectra", kVerticalFrame),
-				   new TGLayoutHints(kLHintsCenterX, 5,5,15,0));
-  ACROSpectrumTypeEnergy_RB = new TGRadioButton(ACROSpectrumType_BG, "Energy deposited", -1);
-  ACROSpectrumTypeEnergy_RB->SetState(kButtonDown);
-  ACROSpectrumTypeEnergy_RB->SetState(kButtonDisabled);
+
+  ASIMSpectrumQuantities_VF->AddFrame(new TGLabel(ASIMSpectrumQuantities_VF, "Type"),
+				      new TGLayoutHints(kLHintsNormal, 0,0,0,0));  
   
-  ACROSpectrumTypeScintCreated_RB = new TGRadioButton(ACROSpectrumType_BG, "Photons created", -1);
-  ACROSpectrumTypeScintCreated_RB->SetState(kButtonDisabled);
+  ASIMSpectrumQuantities_VF->AddFrame(ASIMSpectrumTypeEnergy_RB = new TGRadioButton(ASIMSpectrumQuantities_VF, "Energy dep.", ASIMSpectrumTypeEnergy_RB_ID),
+				      new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  ASIMSpectrumTypeEnergy_RB->SetState(kButtonDown);
+  ASIMSpectrumTypeEnergy_RB->SetState(kButtonDisabled);
+  ASIMSpectrumTypeEnergy_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
+  
+  ASIMSpectrumQuantities_VF->AddFrame(ASIMSpectrumTypeScintCreated_RB = new TGRadioButton(ASIMSpectrumQuantities_VF, "Photons cre.", ASIMSpectrumTypePhotonsCreated_RB_ID),
+				      new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  ASIMSpectrumTypeScintCreated_RB->SetState(kButtonDisabled);
+  ASIMSpectrumTypeScintCreated_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
 
-  ACROSpectrumTypeScintCounted_RB = new TGRadioButton(ACROSpectrumType_BG, "Photons counted", -1);
-  ACROSpectrumTypeScintCounted_RB->SetState(kButtonDisabled);
-
+  ASIMSpectrumQuantities_VF->AddFrame(ASIMSpectrumTypeScintCounted_RB = new TGRadioButton(ASIMSpectrumQuantities_VF, "Photons det.", ASIMSpectrumTypePhotonsDetected_RB_ID),
+				      new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  ASIMSpectrumTypeScintCounted_RB->SetState(kButtonDisabled);
+  ASIMSpectrumTypeScintCounted_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
+				      
   // Detector type radio buttons
-  ACROSpectrumOptions_HF->AddFrame(ACROSpectrumDetector_BG = new TGButtonGroup(ACROSpectrumOptions_HF, "ACRO detector", kVerticalFrame),
-				   new TGLayoutHints(kLHintsCenterX, 5,5,15,0));
-  ACROSpectrumLS_RB = new TGRadioButton(ACROSpectrumDetector_BG, "LaBr3", ACROSpectrumLS_RB_ID);
-  ACROSpectrumLS_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
-  ACROSpectrumLS_RB->SetState(kButtonDown);
-  ACROSpectrumLS_RB->SetState(kButtonDisabled);
+
+  TGVerticalFrame *ASIMEventTree_VF = new TGVerticalFrame(ASIMSpectrumOptions_GF);
+  ASIMSpectrumOptions_GF->AddFrame(ASIMEventTree_VF, new TGLayoutHints(kLHintsNormal, 5,5,5,0));
+
+  ASIMEventTree_VF->AddFrame(new TGLabel(ASIMEventTree_VF, "Event Tree"),
+			     new TGLayoutHints(kLHintsNormal, 0,0,0,0));  
+
+  ASIMEventTree_VF->AddFrame(ASIMEventTree_CB = new TGComboBox(ASIMEventTree_VF,-1),
+			     new TGLayoutHints(kLHintsNormal, 0,0,0,0));  
+  ASIMEventTree_CB->AddEntry("None available!",0);
+  ASIMEventTree_CB->Select(0);
+  ASIMEventTree_CB->Resize(120,20);
+  ASIMEventTree_CB->SetEnabled(false);
   
-  ACROSpectrumES_RB = new TGRadioButton(ACROSpectrumDetector_BG, "EJ301", ACROSpectrumES_RB_ID);
-  ACROSpectrumES_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
-  ACROSpectrumES_RB->SetState(kButtonDisabled);
-  
-  
+
   //////////////////////////////
   // Spectrum energy calibration
 
@@ -706,7 +739,8 @@ void AAInterface::FillSpectrumFrame()
   
   SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationPoint_CBL = new ADAQComboBoxWithLabel(SpectrumCalibrationType_HF, "", SpectrumCalibrationPoint_CBL_ID),
 				       new TGLayoutHints(kLHintsNormal, 0,0,10,3));
-  SpectrumCalibrationPoint_CBL->GetComboBox()->Resize(150,20);
+  SpectrumCalibrationPoint_CBL->
+GetComboBox()->Resize(150,20);
   SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Calibration point 0",0);
   SpectrumCalibrationPoint_CBL->GetComboBox()->Select(0);
   SpectrumCalibrationPoint_CBL->GetComboBox()->SetEnabled(false);
@@ -2109,11 +2143,11 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->ADAQSpectrumIntTypeWW = ADAQSpectrumIntTypeWW_RB->IsDown();
   ADAQSettings->ADAQSpectrumIntTypePF = ADAQSpectrumIntTypePF_RB->IsDown();
 
-  ADAQSettings->ACROSpectrumTypeEnergy = ACROSpectrumTypeEnergy_RB->IsDown();
-  ADAQSettings->ACROSpectrumTypeScintCreated = ACROSpectrumTypeScintCreated_RB->IsDown();
-  ADAQSettings->ACROSpectrumTypeScintCounted= ACROSpectrumTypeScintCounted_RB->IsDown();
-  ADAQSettings->ACROSpectrumLS = ACROSpectrumLS_RB->IsDown();
-  ADAQSettings->ACROSpectrumES = ACROSpectrumES_RB->IsDown();
+  ADAQSettings->ASIMSpectrumTypeEnergy = ASIMSpectrumTypeEnergy_RB->IsDown();
+  ADAQSettings->ASIMSpectrumTypeScintCreated = ASIMSpectrumTypeScintCreated_RB->IsDown();
+  ADAQSettings->ASIMSpectrumTypeScintCounted= ASIMSpectrumTypeScintCounted_RB->IsDown();
+  //ADAQSettings->ACROSpectrumLS = ACROSpectrumLS_RB->IsDown();
+  //ADAQSettings->ACROSpectrumES = ACROSpectrumES_RB->IsDown();
 
   ADAQSettings->EnergyUnit = SpectrumCalibrationUnit_CBL->GetComboBox()->GetSelected();
 
@@ -2428,12 +2462,10 @@ void AAInterface::UpdateForADAQFile()
   
   // Disable all ACRONYM-specific analysis widgets
 
-  ACROSpectrumTypeEnergy_RB->SetEnabled(false);
-  ACROSpectrumTypeScintCounted_RB->SetEnabled(false);
-  ACROSpectrumTypeScintCreated_RB->SetEnabled(false);
 
-  ACROSpectrumLS_RB->SetState(kButtonDisabled);
-  ACROSpectrumES_RB->SetState(kButtonDisabled);
+  ASIMSpectrumTypeEnergy_RB->SetEnabled(false);
+  ASIMSpectrumTypeScintCounted_RB->SetEnabled(false);
+  ASIMSpectrumTypeScintCreated_RB->SetEnabled(false);
   
   PSDEnable_CB->SetState(kButtonUp);
 
@@ -2461,49 +2493,37 @@ void AAInterface::UpdateForACRONYMFile()
   ADAQSpectrumIntTypeWW_RB->SetState(kButtonDisabled);
   ADAQSpectrumIntTypePF_RB->SetState(kButtonDisabled);
 
-  if(ACROSpectrumTypeEnergy_RB->IsDown()){
-    ACROSpectrumTypeEnergy_RB->SetEnabled(true);
-    ACROSpectrumTypeEnergy_RB->SetState(kButtonDown);
+  if(ASIMSpectrumTypeEnergy_RB->IsDown()){
+    ASIMSpectrumTypeEnergy_RB->SetEnabled(true);
+    ASIMSpectrumTypeEnergy_RB->SetState(kButtonDown);
   }
   else
-    ACROSpectrumTypeEnergy_RB->SetEnabled(true);
+    ASIMSpectrumTypeEnergy_RB->SetEnabled(true);
     
-  if(ACROSpectrumTypeScintCounted_RB->IsDown()){
-    ACROSpectrumTypeScintCounted_RB->SetEnabled(true);
-    ACROSpectrumTypeScintCounted_RB->SetState(kButtonDown);
+  if(ASIMSpectrumTypeScintCounted_RB->IsDown()){
+    ASIMSpectrumTypeScintCounted_RB->SetEnabled(true);
+    ASIMSpectrumTypeScintCounted_RB->SetState(kButtonDown);
   }
   else
-    ACROSpectrumTypeScintCounted_RB->SetEnabled(true);
+    ASIMSpectrumTypeScintCounted_RB->SetEnabled(true);
    
-  if(ACROSpectrumTypeScintCreated_RB->IsDown()){
-    ACROSpectrumTypeScintCreated_RB->SetEnabled(true);
-    ACROSpectrumTypeScintCreated_RB->SetState(kButtonDown);
+  if(ASIMSpectrumTypeScintCreated_RB->IsDown()){
+    ASIMSpectrumTypeScintCreated_RB->SetEnabled(true);
+    ASIMSpectrumTypeScintCreated_RB->SetState(kButtonDown);
   }
   else
-    ACROSpectrumTypeScintCreated_RB->SetEnabled(true);
+    ASIMSpectrumTypeScintCreated_RB->SetEnabled(true);
 
-  if(ACROSpectrumLS_RB->IsDown()){
-    ACROSpectrumLS_RB->SetEnabled(true);
-    ACROSpectrumLS_RB->SetState(kButtonDown);
-  }
-  else
-    ACROSpectrumLS_RB->SetEnabled(true);
-
-  if(ACROSpectrumES_RB->IsDown()){
-    ACROSpectrumES_RB->SetEnabled(true);
-    ACROSpectrumES_RB->SetState(kButtonDown);
-  }
-  else
-    ACROSpectrumES_RB->SetEnabled(true);
-
-  if(ACROSpectrumLS_RB->IsDown()){
+  /*
+  if(ASIMSpectrumLS_RB->IsDown()){
     WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, ComputationMgr->GetACRONYMLSEntries() );
     WaveformsToHistogram_NEL->GetEntry()->SetNumber( ComputationMgr->GetACRONYMLSEntries() );
   }
-  else if (ACROSpectrumES_RB->IsDown()){
+  else if (ASIMSpectrumES_RB->IsDown()){
     WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, ComputationMgr->GetACRONYMESEntries() );
     WaveformsToHistogram_NEL->GetEntry()->SetNumber( ComputationMgr->GetACRONYMESEntries() );
   }
+  */
 
   PSDEnable_CB->SetState(kButtonDisabled);
   SetPearsonWidgetState(false, kButtonDisabled);

@@ -181,6 +181,27 @@ void AASpectrumSlots::HandleRadioButtons()
 
   switch(RadioButtonID){
 
+  case ADAQSpectrumTypePAS_RB_ID:
+    if(RadioButton->IsDown())
+      TheInterface->ADAQSpectrumTypePHS_RB->SetState(kButtonUp);
+    break;
+
+  case ADAQSpectrumTypePHS_RB_ID:
+    if(RadioButton->IsDown())
+      TheInterface->ADAQSpectrumTypePAS_RB->SetState(kButtonUp);
+    break;
+
+  case ADAQSpectrumIntTypeWW_RB_ID:
+    if(RadioButton->IsDown())
+      TheInterface->ADAQSpectrumIntTypePF_RB->SetState(kButtonUp);
+    break;
+
+  case ADAQSpectrumIntTypePF_RB_ID:
+    if(RadioButton->IsDown())
+      TheInterface->ADAQSpectrumIntTypeWW_RB->SetState(kButtonUp);
+    break;
+
+    /*
   case ACROSpectrumLS_RB_ID:
     if(TheInterface->ACROSpectrumLS_RB->IsDown()){
       int Entries = ComputationMgr->GetACRONYMLSEntries();
@@ -196,6 +217,7 @@ void AASpectrumSlots::HandleRadioButtons()
       TheInterface->WaveformsToHistogram_NEL->GetEntry()->SetNumber(Entries);
     }
     break;
+    */
     
   case SpectrumCalibrationStandard_RB_ID:{
     if(TheInterface->SpectrumCalibrationStandard_RB->IsDown()){

@@ -50,6 +50,11 @@ using namespace std;
 #include <boost/array.hpp>
 #include <boost/thread.hpp>
 
+// ADAQ
+#include <ADAQSimulationReadout.hh>
+#include <ADAQSimulationEvent.hh>
+#include <ADAQSimulationRun.hh>
+
 // ADAQAnalysis
 #include "AAComputation.hh"
 #include "AAParallel.hh"
@@ -330,8 +335,11 @@ bool AAComputation::LoadADAQRootFile(string FileName)
 }
 
     
-bool AAComputation::LoadACRONYMRootFile(string FileName)
+bool AAComputation::LoadASIMFile(string FileName)
 {
+  cout << "\nAAComputation::LoadASIMFile() is under heavy construction!\n"
+       << endl;
+  /*
   cout << "0" << endl;
 
 
@@ -396,6 +404,8 @@ bool AAComputation::LoadACRONYMRootFile(string FileName)
   }
 
   return ACRONYMFileLoaded;
+  */
+  return false;
 }
 
 
@@ -3005,6 +3015,10 @@ void AAComputation::CreatePSDHistogramSlice(int XPixel, int YPixel)
 
 void AAComputation::CreateACRONYMSpectrum()
 {
+  cout << "\nAAComputation::CreateACRONYMSpectrum() is under serious construction!\n"
+       << endl;
+  /*
+
   if(!Spectrum_H){
     delete Spectrum_H;
     SpectrumExists = false;
@@ -3052,6 +3066,7 @@ void AAComputation::CreateACRONYMSpectrum()
     Spectrum_H->Fill(Quantity);
   }
   SpectrumExists = true;
+  */
 }
 
 

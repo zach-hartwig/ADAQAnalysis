@@ -62,10 +62,10 @@ public:
   bool ADAQSpectrumTypePAS, ADAQSpectrumTypePHS;
   bool ADAQSpectrumIntTypeWW, ADAQSpectrumIntTypePF;
   
-  bool ACROSpectrumTypeEnergy;
-  bool ACROSpectrumTypeScintCreated;
-  bool ACROSpectrumTypeScintCounted;
-  bool ACROSpectrumLS, ACROSpectrumES;
+  bool ASIMSpectrumTypeEnergy;
+  bool ASIMSpectrumTypeScintCreated;
+  bool ASIMSpectrumTypeScintCounted;
+  bool ASIMSpectrumLS, ASIMSpectrumES;
 
   int EnergyUnit;
   vector<TGraph *> SpectraCalibrations;

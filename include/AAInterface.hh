@@ -206,15 +206,13 @@ private:
   TGRadioButton *ADAQSpectrumIntTypePF_RB;
   TGRadioButton *ADAQSpectrumIntTypeWW_RB;
 
-  TGButtonGroup *ACROSpectrumType_BG;
-  TGRadioButton *ACROSpectrumTypeEnergy_RB;
-  TGRadioButton *ACROSpectrumTypeScintCreated_RB;
-  TGRadioButton *ACROSpectrumTypeScintCounted_RB;
-  
-  TGButtonGroup *ACROSpectrumDetector_BG;
-  TGRadioButton *ACROSpectrumLS_RB;
-  TGRadioButton *ACROSpectrumES_RB;
+  TGButtonGroup *ASIMSpectrumType_BG;
+  TGRadioButton *ASIMSpectrumTypeEnergy_RB;
+  TGRadioButton *ASIMSpectrumTypeScintCreated_RB;
+  TGRadioButton *ASIMSpectrumTypeScintCounted_RB;
 
+  TGComboBox *ASIMEventTree_CB;
+  
   TGCheckButton *SpectrumCalibration_CB;
   TGRadioButton *SpectrumCalibrationStandard_RB, *SpectrumCalibrationEdgeFinder_RB;
   ADAQComboBoxWithLabel *SpectrumCalibrationPoint_CBL;

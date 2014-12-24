@@ -286,7 +286,7 @@ void AANontabSlots::HandleMenu(int MenuID)
       }
       else if(MenuID == MenuFileOpenACRONYM_ID){
 	TheInterface->ACRONYMFileName = FileName;
-	TheInterface->ACRONYMFileLoaded = ComputationMgr->LoadACRONYMRootFile(FileName);
+	TheInterface->ACRONYMFileLoaded = ComputationMgr->LoadASIMFile(FileName);
 	
 	if(TheInterface->ACRONYMFileLoaded)
 	  TheInterface->UpdateForACRONYMFile();
