@@ -63,9 +63,9 @@ public:
   bool ADAQSpectrumIntTypeWW, ADAQSpectrumIntTypePF;
   
   bool ASIMSpectrumTypeEnergy;
-  bool ASIMSpectrumTypeScintCreated;
-  bool ASIMSpectrumTypeScintCounted;
-  bool ASIMSpectrumLS, ASIMSpectrumES;
+  bool ASIMSpectrumTypePhotonsCreated;
+  bool ASIMSpectrumTypePhotonsDetected;
+  string ASIMEventTreeName;
 
   int EnergyUnit;
   vector<TGraph *> SpectraCalibrations;
@@ -161,7 +161,7 @@ public:
   // General
   
   string ADAQFileName;
-  string ACRONYMFileName;
+  string ASIMFileName;
   
   ClassDef(AASettings, 1);
 };

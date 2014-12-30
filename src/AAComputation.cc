@@ -35,6 +35,7 @@
 #include <TVector.h>
 #include <TChain.h>
 #include <TDirectory.h>
+#include <TKey.h>
 
 // C++
 #include <iostream>
@@ -51,7 +52,6 @@ using namespace std;
 #include <boost/thread.hpp>
 
 // ADAQ
-#include <ADAQSimulationReadout.hh>
 #include <ADAQSimulationEvent.hh>
 #include <ADAQSimulationRun.hh>
 
@@ -70,10 +70,9 @@ AAComputation *AAComputation::GetInstance()
 
 AAComputation::AAComputation(string CmdLineArg, bool PA)
   : SequentialArchitecture(!PA), ParallelArchitecture(PA),
-    ADAQFileLoaded(false), ACRONYMFileLoaded(false), 
+    ADAQFileLoaded(false), ASIMFileLoaded(false), 
+    ASIMEventTreeList(new TList), ASIMEvent(new ADAQSimulationEvent),
     ADAQParResults(NULL), ADAQParResultsLoaded(false),
-    LSDetectorTree(new TTree), ESDetectorTree(new TTree),
-    LSDetectorEvent(new acroEvent), ESDetectorEvent(new acroEvent),
     Time(0), RawVoltage(0), RecordLength(0),
     PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PearsonIntegralValue(0),
     PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
@@ -337,75 +336,40 @@ bool AAComputation::LoadADAQRootFile(string FileName)
     
 bool AAComputation::LoadASIMFile(string FileName)
 {
-  cout << "\nAAComputation::LoadASIMFile() is under heavy construction!\n"
-       << endl;
-  /*
-  cout << "0" << endl;
+  // Set the ASIM File name
+  ASIMFileName = FileName;
+  
+  // Open the ASIM ROOT file in read-only mode
+  ASIMRootFile = new TFile(FileName.c_str(), "read");
 
-
-  ACRONYMFileName = FileName;
-
-  TFile *ACRONYMRootFile = new TFile(FileName.c_str(), "read");
-
-  cout << "1" << endl;
-
-  if(!ACRONYMRootFile->IsOpen()){
-    ACRONYMFileLoaded = false;
-    cout << "2" << endl;
+  // Recreate the TList that contains TTrees with ADAQSimulationEvents
+  if(ASIMEventTreeList) delete ASIMEventTreeList;
+  ASIMEventTreeList = new TList;
+  
+  if(!ASIMRootFile->IsOpen()){
+    ASIMFileLoaded = false;
   }
   else{
+    // Iterate over the TFile using the TObject keys to search for
+    // TTrees to add to the EventTreeList. The EventTreeList will be
+    // access later for analysis. Note that the only TTrees that
+    // should be present in ASIM files are those that contain
+    // event-level information in branches with ADAQSimulationEvent
+    // objects.
 
-    //////////////
-    // LS Detector 
-
-    cout << "2.5" << endl;
-    
-    if(LSDetectorTree) delete LSDetectorTree;
-    LSDetectorTree = dynamic_cast<TTree *>(ACRONYMRootFile->Get("LSDetectorTree"));
-
-    cout << "3" << endl;
-
-    if(!LSDetectorTree){
-      cout << "\nERROR! Could not find the LSDetectorTree in the ACRONYM ROOT file!\n"
-	   << endl;
+    TIter It(ASIMRootFile->GetListOfKeys());
+    TKey *Key;
+    while((Key = (TKey *)It.Next())){
+      TString ClassType = ASIMRootFile->Get(Key->GetName())->ClassName();
+      
+      if(ClassType == "TTree"){
+	TTree *Tree = (TTree *)ASIMRootFile->Get(Key->GetName());
+	ASIMEventTreeList->Add(Tree);
+      }
     }
-    else{
-      // if(LSDetectorEvent) delete LSDetectorEvent;
-      LSDetectorEvent = new acroEvent;
-      LSDetectorTree->SetBranchAddress("LSDetectorEvents", &LSDetectorEvent);
-    }
-
-    cout << "4" << endl;
-
-    //////////////
-    // ES Detector
-
-    if(ESDetectorTree) delete ESDetectorTree;
-    ESDetectorTree = dynamic_cast<TTree *>(ACRONYMRootFile->Get("ESDetectorTree"));
-    
-    if(!ESDetectorTree){
-      cout << "\nERROR! Could not find the ESDetectorTree in the ACRONYM ROOT file!\n"
-	   << endl;
-    }
-    else{
-      // if(ESDetectorEvent) delete ESDetectorEvent;
-      ESDetectorEvent = new acroEvent;
-      ESDetectorTree->SetBranchAddress("ESDetectorEvents", &ESDetectorEvent);
-    }
-
-
-    //////////////
-    // Run Summary
-    
-    // if(RunSummary) delete RunSummary;
-    RunSummary = dynamic_cast<acroRun *>(ACRONYMRootFile->Get("RunSummary"));
-
-    ACRONYMFileLoaded = true;
+    ASIMFileLoaded = true;
   }
-
-  return ACRONYMFileLoaded;
-  */
-  return false;
+  return ASIMFileLoaded;
 }
 
 
@@ -3013,60 +2977,60 @@ void AAComputation::CreatePSDHistogramSlice(int XPixel, int YPixel)
 }
 
 
-void AAComputation::CreateACRONYMSpectrum()
+void AAComputation::CreateASIMSpectrum()
 {
-  cout << "\nAAComputation::CreateACRONYMSpectrum() is under serious construction!\n"
-       << endl;
-  /*
-
-  if(!Spectrum_H){
+  if(SpectrumExists){
     delete Spectrum_H;
     SpectrumExists = false;
   }
   
-  Spectrum_H = new TH1F("Spectrum_H", "ACRONYM Spectrum",
+  Spectrum_H = new TH1F("Spectrum_H", "ADAQ Simulation (ASIM) Spectrum",
 			ADAQSettings->SpectrumNumBins,
 			ADAQSettings->SpectrumMinBin,
 			ADAQSettings->SpectrumMaxBin);
   
-  TTree *Tree = 0;
-  acroEvent *Event = 0;
-
-  int Entries = 0;
-  if(ADAQSettings->ACROSpectrumLS){
-    Entries = LSDetectorTree->GetEntries();
-    Tree = LSDetectorTree;
-    Event = LSDetectorEvent;
-  }
-  else if(ADAQSettings->ACROSpectrumES){
-    Entries = ESDetectorTree->GetEntries();
-    Tree = ESDetectorTree;
-    Event = ESDetectorEvent;
-  }
-
-  // Number to histogram is automatically updated in AAInterface when
-  // the LaBr3/EJ301 radio buttons are clicked
-  int MaxEntriesToPlot = ADAQSettings->WaveformsToHistogram;
+  // Get the name of the ASIM event tree to be analyzed as specified
+  // by the associated combo box setting.
+  TString ASIMEventTreeName = ADAQSettings->ASIMEventTreeName;
+  TTree *ASIMEventTree = (TTree *)ASIMEventTreeList->FindObject(ASIMEventTreeName);
   
+  // Bail out if the TTree cannot be found!
+  if(ASIMEventTree == NULL){
+    cout << "Warning: The TTree named '" << ASIMEventTreeName << "' cannot be found!\n"
+	 << endl;
+    return;
+  }
+  
+  // Set the branch address of the ASIM event
+  ASIMEventTree->SetBranchAddress("ADAQSimulationEventBranch", &ASIMEvent);
+  
+  int ASIMEvents = ASIMEventTree->GetEntries();
+  
+  // When the user selected an ASIM EventTree via the combo box, the
+  // ADAQSettings::WaveformsToHistogram NEL is updated to reflect the
+  // total number of events contained within the TTree. This enables
+  // the user to select a smaller number than the total entries via
+  // this value without exceeding the maximum
+  int MaxEntriesToPlot = ADAQSettings->WaveformsToHistogram;
+
   for(int entry=0; entry<MaxEntriesToPlot; entry++){
     
-    Tree->GetEvent(entry);
+    ASIMEventTree->GetEvent(entry);
 
     double Quantity = 0.;
-    if(ADAQSettings->ACROSpectrumTypeEnergy)
-      Quantity = Event->recoilEnergyDep;
-    else if(ADAQSettings->ACROSpectrumTypeScintCreated)
-      Quantity = Event->scintPhotonsCreated;
-    else if(ADAQSettings->ACROSpectrumTypeScintCounted)
-      Quantity = Event->scintPhotonsCounted;
-    
+    if(ADAQSettings->ASIMSpectrumTypeEnergy)
+      Quantity = ASIMEvent->GetEnergyDep();
+    else if(ADAQSettings->ASIMSpectrumTypePhotonsCreated)
+      Quantity = ASIMEvent->GetPhotonsCreated();
+    else if(ADAQSettings->ASIMSpectrumTypePhotonsDetected)
+      Quantity = ASIMEvent->GetPhotonsDetected();
+
     if(ADAQSettings->UseSpectraCalibrations[ADAQSettings->WaveformChannel])
       Quantity = SpectraCalibrations[ADAQSettings->WaveformChannel]->Eval(Quantity);
     
     Spectrum_H->Fill(Quantity);
   }
   SpectrumExists = true;
-  */
 }
 
 

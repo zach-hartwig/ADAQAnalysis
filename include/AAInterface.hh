@@ -108,7 +108,7 @@ public:
   void SaveSettings(bool SaveToFile=false);
   
   void UpdateForADAQFile();
-  void UpdateForACRONYMFile();
+  void UpdateForASIMFile();
 
   // Method to alert the user via a ROOT message box
   void CreateMessageBox(string, string);
@@ -199,17 +199,17 @@ private:
   ADAQNumberEntryWithLabel *SpectrumMinBin_NEL;
   ADAQNumberEntryWithLabel *SpectrumMaxBin_NEL;
 
-  TGButtonGroup *ADAQSpectrumType_BG;
+  //TGButtonGroup *ADAQSpectrumType_BG;
   TGRadioButton *ADAQSpectrumTypePAS_RB, *ADAQSpectrumTypePHS_RB;
 
-  TGButtonGroup *ADAQSpectrumIntType_BG;
+  //TGButtonGroup *ADAQSpectrumIntType_BG;
   TGRadioButton *ADAQSpectrumIntTypePF_RB;
   TGRadioButton *ADAQSpectrumIntTypeWW_RB;
 
-  TGButtonGroup *ASIMSpectrumType_BG;
+  //TGButtonGroup *ASIMSpectrumType_BG;
   TGRadioButton *ASIMSpectrumTypeEnergy_RB;
-  TGRadioButton *ASIMSpectrumTypeScintCreated_RB;
-  TGRadioButton *ASIMSpectrumTypeScintCounted_RB;
+  TGRadioButton *ASIMSpectrumTypePhotonsCreated_RB;
+  TGRadioButton *ASIMSpectrumTypePhotonsDetected_RB;
 
   TGComboBox *ASIMEventTree_CB;
   
@@ -426,8 +426,8 @@ private:
 
   // Variables relating to files (paths, bools)
   string DataDirectory, PrintDirectory, DesplicedDirectory, HistogramDirectory;
-  bool ADAQFileLoaded, ACRONYMFileLoaded;
-  string ADAQFileName, ACRONYMFileName;
+  bool ADAQFileLoaded, ASIMFileLoaded;
+  string ADAQFileName, ASIMFileName;
 
   // The class which holds all ROOT widget settings
   AASettings *ADAQSettings;

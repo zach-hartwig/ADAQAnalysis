@@ -42,7 +42,7 @@ AAWaveformSlots::~AAWaveformSlots()
 
 void AAWaveformSlots::HandleCheckButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
   
   TGCheckButton *CheckButton = (TGCheckButton *) gTQSender;
@@ -99,7 +99,7 @@ void AAWaveformSlots::HandleCheckButtons()
 
 void AAWaveformSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
 
   TheInterface->SaveSettings();
@@ -117,7 +117,7 @@ void AAWaveformSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
 
 void AAWaveformSlots::HandleNumberEntries()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
 
   TheInterface->SaveSettings();
@@ -174,7 +174,7 @@ void AAWaveformSlots::HandleNumberEntries()
 
 void AAWaveformSlots::HandleRadioButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
 
   TGRadioButton *RadioButton = (TGRadioButton *) gTQSender;

@@ -541,15 +541,15 @@ void AAGraphics::PlotSpectrum()
     XTitle = ADAQSettings->XAxisTitle;
     YTitle = ADAQSettings->YAxisTitle;
   }
-  else if(ComputationMgr->GetACRONYMFileLoaded()){
-    Title = "ACRONYM Spectrum";    
+  else if(ComputationMgr->GetASIMFileLoaded()){
+    Title = "ASIM Spectrum";    
     
     if(ADAQSettings->ASIMSpectrumTypeEnergy)
       XTitle = "Energy [keV]";
-    else if(ADAQSettings->ASIMSpectrumTypeScintCreated)
-      XTitle = "Scintillation photons created [#]";
-    else if(ADAQSettings->ASIMSpectrumTypeScintCounted)
-      XTitle = "Scintillation photons detected [#]";
+    else if(ADAQSettings->ASIMSpectrumTypePhotonsCreated)
+      XTitle = "Visible photons created [#]";
+    else if(ADAQSettings->ASIMSpectrumTypePhotonsDetected)
+      XTitle = "Visible photons detected [#]";
     
     YTitle = "Counts";
   }

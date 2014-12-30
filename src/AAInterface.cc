@@ -71,7 +71,7 @@ AAInterface::AAInterface(string CmdLineArg)
     NumEdgeBoundingPoints(0), EdgeBoundX0(0.), EdgeBoundY0(0.),
     DataDirectory(getenv("PWD")), PrintDirectory(getenv("HOME")),
     DesplicedDirectory(getenv("HOME")), HistogramDirectory(getenv("HOME")),
-    ADAQFileLoaded(false), ACRONYMFileLoaded(false),
+    ADAQFileLoaded(false), ASIMFileLoaded(false),
     ColorMgr(new TColor), RndmMgr(new TRandom3)
 {
   SetCleanup(kDeepCleanup);
@@ -111,17 +111,17 @@ AAInterface::AAInterface(string CmdLineArg)
 
   InterpolationMgr = AAInterpolation::GetInstance();
 
-  // If the user has specified an ADAQ or ACRONYM root file on the
+  // If the user has specified an ADAQ or ASIM root file on the
   // command line then automatically process and load it
   if(CmdLineArg != "Unspecified"){
     
     size_t Pos = CmdLineArg.find_last_of(".");
     if(Pos != string::npos){
       
-      if(CmdLineArg.substr(Pos,5) == ".root" or
+      if(CmdLineArg.substr(Pos,10) == ".adaq.root" or
 	 CmdLineArg.substr(Pos,5) == ".adaq"){
 	
-	// Ensure that if an ADAQ or ACRO file is specified from the
+	// Ensure that if an ADAQ or ASIM file is specified from the
 	// cmd line with a relative path that the absolute path to the
 	// file is specified to ensure the universal access
 	
@@ -136,19 +136,21 @@ AAInterface::AAInterface(string CmdLineArg)
 	else
 	  CreateMessageBox("The ADAQ ROOT file that you specified fail to load for some reason!\n","Stop");
 	
-	ACRONYMFileLoaded = false;
+	ASIMFileLoaded = false;
       }
-      else if(CmdLineArg.substr(Pos,5) == ".acro"){
-	ACRONYMFileName = CmdLineArg;
-	ACRONYMFileLoaded = ComputationMgr->LoadASIMFile(ACRONYMFileName);
+      else if(CmdLineArg.substr(Pos,10) == ".asim.root" or
+	      CmdLineArg.substr(Pos,5) == ".root"){
 	
-	if(ACRONYMFileLoaded)
-	  UpdateForACRONYMFile();
+	ASIMFileName = CmdLineArg;
+	ASIMFileLoaded = ComputationMgr->LoadASIMFile(ASIMFileName);
+	
+	if(ASIMFileLoaded)
+	  UpdateForASIMFile();
 	else
-	  CreateMessageBox("The ACRONYM ROOT file that you specified fail to load for some reason!\n","Stop");
+	  CreateMessageBox("The ADAQ Simulation (ASIM) ROOT file that you specified fail to load for some reason!\n","Stop");
       }
       else
-	CreateMessageBox("Recognized files must end in '.root or '.adaq' (ADAQ) or '.acro' (ACRONYM)","Stop");
+	CreateMessageBox("Recognized files should end in '.adaq.root' / '.adaq' / '.root' (ADAQ) or '.asim.root' (ASIM)","Stop");
     }
     else
       CreateMessageBox("Could not find an acceptable file to open. Please try again.","Stop");
@@ -201,7 +203,7 @@ void AAInterface::CreateTheMainFrames()
   
   TGPopupMenu *MenuFile = new TGPopupMenu(gClient->GetRoot());
   MenuFile->AddEntry("&Open ADAQ ROOT file ...", MenuFileOpenADAQ_ID);
-  MenuFile->AddEntry("Ope&n ACRONYM ROOT file ...", MenuFileOpenACRONYM_ID);
+  MenuFile->AddEntry("Ope&n ASIM ROOT file ...", MenuFileOpenASIM_ID);
   MenuFile->AddSeparator();
   MenuFile->AddEntry("Save &waveform ...", MenuFileSaveWaveform_ID);
   MenuFile->AddPopup("Save &spectrum ...", SaveSpectrumSubMenu);
@@ -612,7 +614,7 @@ void AAInterface::FillSpectrumFrame()
   ///////////////////////
   // ADAQ spectra options
 
-  TGGroupFrame *ADAQSpectrumOptions_GF = new TGGroupFrame(SpectrumFrame_VF, "ADAQ Experimental Spectra", kHorizontalFrame);
+  TGGroupFrame *ADAQSpectrumOptions_GF = new TGGroupFrame(SpectrumFrame_VF, "Experimental Spectra (ADAQ)", kHorizontalFrame);
   SpectrumFrame_VF->AddFrame(ADAQSpectrumOptions_GF, new TGLayoutHints(kLHintsNormal, 15,0,10,0));
 
   TGVerticalFrame *ADAQSpectrumQuantities_VF = new TGVerticalFrame(ADAQSpectrumOptions_GF);
@@ -651,9 +653,9 @@ void AAInterface::FillSpectrumFrame()
 
 
   //////////////////////////
-  // ACRONYM spectra options
+  // ASIM spectra options
 
-  TGGroupFrame *ASIMSpectrumOptions_GF = new TGGroupFrame(SpectrumFrame_VF, "ASIM Simulation Spectra", kHorizontalFrame);
+  TGGroupFrame *ASIMSpectrumOptions_GF = new TGGroupFrame(SpectrumFrame_VF, "Simulated Spectra (ASIM)", kHorizontalFrame);
   SpectrumFrame_VF->AddFrame(ASIMSpectrumOptions_GF, new TGLayoutHints(kLHintsNormal, 15,0,5,0));
 
   TGVerticalFrame *ASIMSpectrumQuantities_VF = new TGVerticalFrame(ASIMSpectrumOptions_GF);
@@ -670,15 +672,15 @@ void AAInterface::FillSpectrumFrame()
   ASIMSpectrumTypeEnergy_RB->SetState(kButtonDisabled);
   ASIMSpectrumTypeEnergy_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
   
-  ASIMSpectrumQuantities_VF->AddFrame(ASIMSpectrumTypeScintCreated_RB = new TGRadioButton(ASIMSpectrumQuantities_VF, "Photons cre.", ASIMSpectrumTypePhotonsCreated_RB_ID),
+  ASIMSpectrumQuantities_VF->AddFrame(ASIMSpectrumTypePhotonsCreated_RB = new TGRadioButton(ASIMSpectrumQuantities_VF, "Photons cre.", ASIMSpectrumTypePhotonsCreated_RB_ID),
 				      new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  ASIMSpectrumTypeScintCreated_RB->SetState(kButtonDisabled);
-  ASIMSpectrumTypeScintCreated_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
+  ASIMSpectrumTypePhotonsCreated_RB->SetState(kButtonDisabled);
+  ASIMSpectrumTypePhotonsCreated_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
 
-  ASIMSpectrumQuantities_VF->AddFrame(ASIMSpectrumTypeScintCounted_RB = new TGRadioButton(ASIMSpectrumQuantities_VF, "Photons det.", ASIMSpectrumTypePhotonsDetected_RB_ID),
+  ASIMSpectrumQuantities_VF->AddFrame(ASIMSpectrumTypePhotonsDetected_RB = new TGRadioButton(ASIMSpectrumQuantities_VF, "Photons det.", ASIMSpectrumTypePhotonsDetected_RB_ID),
 				      new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  ASIMSpectrumTypeScintCounted_RB->SetState(kButtonDisabled);
-  ASIMSpectrumTypeScintCounted_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
+  ASIMSpectrumTypePhotonsDetected_RB->SetState(kButtonDisabled);
+  ASIMSpectrumTypePhotonsDetected_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
 				      
   // Detector type radio buttons
 
@@ -687,13 +689,14 @@ void AAInterface::FillSpectrumFrame()
 
   ASIMEventTree_VF->AddFrame(new TGLabel(ASIMEventTree_VF, "Event Tree"),
 			     new TGLayoutHints(kLHintsNormal, 0,0,0,0));  
-
-  ASIMEventTree_VF->AddFrame(ASIMEventTree_CB = new TGComboBox(ASIMEventTree_VF,-1),
+  
+  ASIMEventTree_VF->AddFrame(ASIMEventTree_CB = new TGComboBox(ASIMEventTree_VF, ASIMEventTree_CB_ID),
 			     new TGLayoutHints(kLHintsNormal, 0,0,0,0));  
   ASIMEventTree_CB->AddEntry("None available!",0);
   ASIMEventTree_CB->Select(0);
   ASIMEventTree_CB->Resize(120,20);
   ASIMEventTree_CB->SetEnabled(false);
+  ASIMEventTree_CB->Connect("Selected(int,int)", "AASpectrumSlots", SpectrumSlots, "HandleComboBoxes(int,int)");
   
 
   //////////////////////////////
@@ -2084,7 +2087,7 @@ void AAInterface::SaveSettings(bool SaveToFile)
 {
   delete ADAQSettings;
   ADAQSettings = new AASettings;
-
+  
   TFile *ADAQSettingsFile = 0;
   if(SaveToFile)
     ADAQSettingsFile = new TFile(ADAQSettingsFileName.c_str(), "recreate");
@@ -2144,11 +2147,10 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->ADAQSpectrumIntTypePF = ADAQSpectrumIntTypePF_RB->IsDown();
 
   ADAQSettings->ASIMSpectrumTypeEnergy = ASIMSpectrumTypeEnergy_RB->IsDown();
-  ADAQSettings->ASIMSpectrumTypeScintCreated = ASIMSpectrumTypeScintCreated_RB->IsDown();
-  ADAQSettings->ASIMSpectrumTypeScintCounted= ASIMSpectrumTypeScintCounted_RB->IsDown();
-  //ADAQSettings->ACROSpectrumLS = ACROSpectrumLS_RB->IsDown();
-  //ADAQSettings->ACROSpectrumES = ACROSpectrumES_RB->IsDown();
-
+  ADAQSettings->ASIMSpectrumTypePhotonsCreated = ASIMSpectrumTypePhotonsCreated_RB->IsDown();
+  ADAQSettings->ASIMSpectrumTypePhotonsDetected = ASIMSpectrumTypePhotonsDetected_RB->IsDown();
+  ADAQSettings->ASIMEventTreeName = ASIMEventTree_CB->GetSelectedEntry()->GetTitle();
+  
   ADAQSettings->EnergyUnit = SpectrumCalibrationUnit_CBL->GetComboBox()->GetSelected();
 
   
@@ -2460,12 +2462,12 @@ void AAInterface::UpdateForADAQFile()
   else
     ADAQSpectrumIntTypePF_RB->SetEnabled(true);
   
-  // Disable all ACRONYM-specific analysis widgets
+  // Disable all ASIM-specific analysis widgets
 
 
   ASIMSpectrumTypeEnergy_RB->SetEnabled(false);
-  ASIMSpectrumTypeScintCounted_RB->SetEnabled(false);
-  ASIMSpectrumTypeScintCreated_RB->SetEnabled(false);
+  ASIMSpectrumTypePhotonsDetected_RB->SetEnabled(false);
+  ASIMSpectrumTypePhotonsCreated_RB->SetEnabled(false);
   
   PSDEnable_CB->SetState(kButtonUp);
 
@@ -2476,15 +2478,16 @@ void AAInterface::UpdateForADAQFile()
 
 
 // Method to update all the relevant widget settings for operating on
-// an ACRONYM-formatted ROOT file
-void AAInterface::UpdateForACRONYMFile()
+// an ASIM-formatted ROOT file
+void AAInterface::UpdateForASIMFile()
 {
-  FileName_TE->SetText(ACRONYMFileName.c_str());
+  // Update header widgets appropriately
+  FileName_TE->SetText(ASIMFileName.c_str());
   Waveforms_NEL->SetNumber(0);
   WaveformsToHistogram_NEL->GetEntry()->SetNumber(0);
   RecordLength_NEL->SetNumber(0);
  
-  // Waveform frame (disabled)
+  // Disable the waveform frame since we have no need of it (at present)
   WaveformOptionsTab_CF->HideFrame(WaveformOptions_CF);
 
   // Disable all ADAQ-specific analysis widgets
@@ -2500,31 +2503,46 @@ void AAInterface::UpdateForACRONYMFile()
   else
     ASIMSpectrumTypeEnergy_RB->SetEnabled(true);
     
-  if(ASIMSpectrumTypeScintCounted_RB->IsDown()){
-    ASIMSpectrumTypeScintCounted_RB->SetEnabled(true);
-    ASIMSpectrumTypeScintCounted_RB->SetState(kButtonDown);
+  if(ASIMSpectrumTypePhotonsDetected_RB->IsDown()){
+    ASIMSpectrumTypePhotonsDetected_RB->SetEnabled(true);
+    ASIMSpectrumTypePhotonsDetected_RB->SetState(kButtonDown);
   }
   else
-    ASIMSpectrumTypeScintCounted_RB->SetEnabled(true);
+    ASIMSpectrumTypePhotonsDetected_RB->SetEnabled(true);
    
-  if(ASIMSpectrumTypeScintCreated_RB->IsDown()){
-    ASIMSpectrumTypeScintCreated_RB->SetEnabled(true);
-    ASIMSpectrumTypeScintCreated_RB->SetState(kButtonDown);
+  if(ASIMSpectrumTypePhotonsCreated_RB->IsDown()){
+    ASIMSpectrumTypePhotonsCreated_RB->SetEnabled(true);
+    ASIMSpectrumTypePhotonsCreated_RB->SetState(kButtonDown);
   }
   else
-    ASIMSpectrumTypeScintCreated_RB->SetEnabled(true);
+    ASIMSpectrumTypePhotonsCreated_RB->SetEnabled(true);
 
-  /*
-  if(ASIMSpectrumLS_RB->IsDown()){
-    WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, ComputationMgr->GetACRONYMLSEntries() );
-    WaveformsToHistogram_NEL->GetEntry()->SetNumber( ComputationMgr->GetACRONYMLSEntries() );
-  }
-  else if (ASIMSpectrumES_RB->IsDown()){
-    WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, ComputationMgr->GetACRONYMESEntries() );
-    WaveformsToHistogram_NEL->GetEntry()->SetNumber( ComputationMgr->GetACRONYMESEntries() );
-  }
-  */
+  TList *ASIMEventTreeList = ComputationMgr->GetASIMEventTreeList();
 
+  ASIMEventTree_CB->SetEnabled(true);
+  ASIMEventTree_CB->RemoveAll();
+
+  TIter It(ASIMEventTreeList);
+  TTree *EventTree = NULL;
+  int EventTreeID = 0;
+  int EventTreeEntries = 0;
+  while((EventTree = (TTree *)It.Next())){
+    // Add the event tree name to the combo box with integer ID
+    ASIMEventTree_CB->AddEntry(EventTree->GetName(), EventTreeID);
+
+    // Get the total entries in the first TTree
+    if(EventTreeID == 0)
+      EventTreeEntries = EventTree->GetEntries();
+
+    // Increment the integer ID
+    EventTreeID++;
+  }
+
+  ASIMEventTree_CB->Select(0,false);
+
+  WaveformsToHistogram_NEL->GetEntry()->SetNumber(EventTreeEntries);
+  WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(0, EventTreeEntries);
+ 
   PSDEnable_CB->SetState(kButtonDisabled);
   SetPearsonWidgetState(false, kButtonDisabled);
 

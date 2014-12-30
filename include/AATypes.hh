@@ -101,7 +101,7 @@ enum{
   // Values for the menu frame
   
   MenuFileOpenADAQ_ID,
-  MenuFileOpenACRONYM_ID,
+  MenuFileOpenASIM_ID,
   MenuFileSaveWaveform_ID,
   MenuFileSaveSpectrum_ID,
   MenuFileSaveSpectrumBackground_ID,
@@ -166,6 +166,7 @@ enum{
   ASIMSpectrumTypeEnergy_RB_ID,
   ASIMSpectrumTypePhotonsCreated_RB_ID,
   ASIMSpectrumTypePhotonsDetected_RB_ID,
+  ASIMEventTree_CB_ID,
 
   SpectrumCalibration_CB_ID,
   SpectrumCalibrationStandard_RB_ID,

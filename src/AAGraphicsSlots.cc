@@ -45,7 +45,7 @@ AAGraphicsSlots::~AAGraphicsSlots()
 
 void AAGraphicsSlots::HandleCheckButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
   
   TGCheckButton *CheckButton = (TGCheckButton *) gTQSender;
@@ -109,7 +109,7 @@ void AAGraphicsSlots::HandleCheckButtons()
 
 void AAGraphicsSlots::HandleNumberEntries()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
 
   TGNumberEntry *NumberEntry = (TGNumberEntry *) gTQSender;
@@ -167,7 +167,7 @@ void AAGraphicsSlots::HandleNumberEntries()
 
 void AAGraphicsSlots::HandleRadioButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
   
   TGRadioButton *RadioButton = (TGRadioButton *) gTQSender;
@@ -253,7 +253,7 @@ void AAGraphicsSlots::HandleRadioButtons()
 
 void AAGraphicsSlots::HandleTextButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
   
   TGTextButton *TextButton = (TGTextButton *) gTQSender;

@@ -25,6 +25,7 @@
 
 // ROOT
 #include <TGFileDialog.h>
+#include <TList.h>
 
 // C++
 #include <sstream>
@@ -50,7 +51,7 @@ AASpectrumSlots::~AASpectrumSlots()
 
 void AASpectrumSlots::HandleCheckButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
   
   TGCheckButton *CheckButton = (TGCheckButton *) gTQSender;
@@ -77,13 +78,27 @@ void AASpectrumSlots::HandleCheckButtons()
 
 void AASpectrumSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
-  
+
   TheInterface->SaveSettings();
 
   switch(ComboBoxID){
-        // The user can obtain the values used for each calibration point
+
+  case ASIMEventTree_CB_ID:{
+    
+    TList *ASIMEventTreeList = ComputationMgr->GetASIMEventTreeList();
+    TString EventTreeName = TheInterface->ASIMEventTree_CB->GetSelectedEntry()->GetTitle();
+    TTree *EventTree = (TTree *)ASIMEventTreeList->FindObject(EventTreeName);
+    if(EventTree == NULL)
+      return;
+    
+    TheInterface->WaveformsToHistogram_NEL->GetEntry()->SetNumber(EventTree->GetEntries());
+    TheInterface->WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(0, EventTree->GetEntries());
+    break;
+  }
+
+    // The user can obtain the values used for each calibration point
     // by selecting the calibration point with the combo box
   case SpectrumCalibrationPoint_CBL_ID:{
 
@@ -124,7 +139,7 @@ void AASpectrumSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
 
 void AASpectrumSlots::HandleNumberEntries()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
   
   TGNumberEntry *NumberEntry = (TGNumberEntry *) gTQSender;
@@ -171,7 +186,7 @@ void AASpectrumSlots::HandleNumberEntries()
 
 void AASpectrumSlots::HandleRadioButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
   
   TGRadioButton *RadioButton = (TGRadioButton *) gTQSender;
@@ -201,23 +216,26 @@ void AASpectrumSlots::HandleRadioButtons()
       TheInterface->ADAQSpectrumIntTypeWW_RB->SetState(kButtonUp);
     break;
 
-    /*
-  case ACROSpectrumLS_RB_ID:
-    if(TheInterface->ACROSpectrumLS_RB->IsDown()){
-      int Entries = ComputationMgr->GetACRONYMLSEntries();
-      TheInterface->WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, Entries);
-      TheInterface->WaveformsToHistogram_NEL->GetEntry()->SetNumber(Entries);
+  case ASIMSpectrumTypeEnergy_RB_ID:
+    if(RadioButton->IsDown()){
+      TheInterface->ASIMSpectrumTypePhotonsCreated_RB->SetState(kButtonUp);
+      TheInterface->ASIMSpectrumTypePhotonsDetected_RB->SetState(kButtonUp);
     }
     break;
 
-  case ACROSpectrumES_RB_ID:
-    if(TheInterface->ACROSpectrumES_RB->IsDown()){
-      int Entries = ComputationMgr->GetACRONYMESEntries();
-      TheInterface->WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(1, Entries);
-      TheInterface->WaveformsToHistogram_NEL->GetEntry()->SetNumber(Entries);
+  case ASIMSpectrumTypePhotonsCreated_RB_ID:
+    if(RadioButton->IsDown()){
+      TheInterface->ASIMSpectrumTypeEnergy_RB->SetState(kButtonUp);
+      TheInterface->ASIMSpectrumTypePhotonsDetected_RB->SetState(kButtonUp);
     }
     break;
-    */
+
+  case ASIMSpectrumTypePhotonsDetected_RB_ID:
+    if(RadioButton->IsDown()){
+      TheInterface->ASIMSpectrumTypeEnergy_RB->SetState(kButtonUp);
+      TheInterface->ASIMSpectrumTypePhotonsCreated_RB->SetState(kButtonUp);
+    }
+    break;
     
   case SpectrumCalibrationStandard_RB_ID:{
     if(TheInterface->SpectrumCalibrationStandard_RB->IsDown()){
@@ -240,7 +258,7 @@ void AASpectrumSlots::HandleRadioButtons()
 
 void AASpectrumSlots::HandleTextButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
   
   TGTextButton *TextButton = (TGTextButton *) gTQSender;
@@ -267,8 +285,8 @@ void AASpectrumSlots::HandleTextButtons()
       if(TheInterface->ADAQFileLoaded)
 	ComputationMgr->CreateSpectrum();
 
-      else if(TheInterface->ACRONYMFileLoaded)
-	ComputationMgr->CreateACRONYMSpectrum();
+      else if(TheInterface->ASIMFileLoaded)
+	ComputationMgr->CreateASIMSpectrum();
       
       if(ComputationMgr->GetSpectrumExists())
 	GraphicsMgr->PlotSpectrum();
@@ -283,8 +301,8 @@ void AASpectrumSlots::HandleTextButtons()
 	if(ComputationMgr->GetSpectrumExists())
 	  GraphicsMgr->PlotSpectrum();
       }
-      else if(TheInterface->ACRONYMFileLoaded){
-	TheInterface->CreateMessageBox("Error! ACRONYM files cannot be processed in parallel! Please switch to 'sequential mode'.\n","Stop");
+      else if(TheInterface->ASIMFileLoaded){
+	TheInterface->CreateMessageBox("Error! ASIM files cannot be processed in parallel! Please switch to 'sequential mode'.\n","Stop");
       }
     }
 

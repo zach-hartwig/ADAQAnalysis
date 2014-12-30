@@ -46,7 +46,7 @@ AAProcessingSlots::~AAProcessingSlots()
 
 void AAProcessingSlots::HandleCheckButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
   
   TGCheckButton *CheckButton = (TGCheckButton *) gTQSender;
@@ -166,7 +166,7 @@ case IntegratePearson_CB_ID:{
 
 void AAProcessingSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
   
   TheInterface->SaveSettings();
@@ -185,7 +185,7 @@ void AAProcessingSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
 
 void AAProcessingSlots::HandleNumberEntries()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
 
   TGNumberEntry *NumberEntry = (TGNumberEntry *) gTQSender;
@@ -203,7 +203,7 @@ void AAProcessingSlots::HandleNumberEntries()
 
 void AAProcessingSlots::HandleRadioButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
   
   TGRadioButton *RadioButton = (TGRadioButton *) gTQSender;
@@ -282,7 +282,7 @@ void AAProcessingSlots::HandleRadioButtons()
 
 void AAProcessingSlots::HandleTextButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
   
   TGTextButton *TextButton = (TGTextButton *) gTQSender;
@@ -306,8 +306,8 @@ void AAProcessingSlots::HandleTextButtons()
       }
       GraphicsMgr->PlotPSDHistogram();
     }
-    else if(TheInterface->ACRONYMFileLoaded)
-      TheInterface->CreateMessageBox("ACRONYM files cannot be processed for pulse shape at this time!","Stop");
+    else if(TheInterface->ASIMFileLoaded)
+      TheInterface->CreateMessageBox("ASIM files cannot be processed for pulse shape at this time!","Stop");
     
     break;
 
@@ -410,8 +410,8 @@ void AAProcessingSlots::HandleTextButtons()
        TheInterface->ADAQSettings->ADAQSpectrumIntTypeWW)
       TheInterface->CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
 
-    if(TheInterface->ACRONYMFileLoaded){
-      TheInterface->CreateMessageBox("Error! ACRONYM files cannot be despliced!","Stop");
+    if(TheInterface->ASIMFileLoaded){
+      TheInterface->CreateMessageBox("Error! ASIM files cannot be despliced!","Stop");
       break;
     }
     

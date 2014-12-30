@@ -49,7 +49,7 @@ AANontabSlots::~AANontabSlots()
 
 void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *Selected)
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
 
   // For an unknown reason, the XPixel value appears (erroneously) to
@@ -144,7 +144,7 @@ void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *S
 
 void AANontabSlots::HandleDoubleSliders()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
   
   TheInterface->SaveSettings();
@@ -226,22 +226,22 @@ void AANontabSlots::HandleMenu(int MenuID)
     // waveforms using the nicely prebuilt ROOT interface for file
     // selection. Only ROOT files are displayed in the dialog.
   case MenuFileOpenADAQ_ID:
-  case MenuFileOpenACRONYM_ID:{
+  case MenuFileOpenASIM_ID:{
 
     string Desc[2], Type[2];
     if(MenuFileOpenADAQ_ID == MenuID){
-      Desc[0] = "ADAQ ROOT file";
+      Desc[0] = "ADAQ Experiment ROOT file";
       Type[0] = "*.adaq";
 
       Desc[1] = "ADAQ ROOT file";
       Type[1] = "*.root";
 
     }
-    else if(MenuFileOpenACRONYM_ID == MenuID){
-      Desc[0] = "ACRONYM ROOT file";
-      Type[0] = "*.acro";
+    else if(MenuFileOpenASIM_ID == MenuID){
+      Desc[0] = "ADAQ Simulation (ASIM) ROOT file";
+      Type[0] = "*.asim.root";
       
-      Desc[1] = "ACRONYM ROOT file";
+      Desc[1] = "ADAQ Simulation (ASIM) ROOT file";
       Type[1] = "*.root";
     }
     
@@ -282,16 +282,16 @@ void AANontabSlots::HandleMenu(int MenuID)
 	else
 	  TheInterface->CreateMessageBox("The ADAQ ROOT file that you specified fail to load for some reason!\n","Stop");
 	
-	TheInterface->ACRONYMFileLoaded = false;
+	TheInterface->ASIMFileLoaded = false;
       }
-      else if(MenuID == MenuFileOpenACRONYM_ID){
-	TheInterface->ACRONYMFileName = FileName;
-	TheInterface->ACRONYMFileLoaded = ComputationMgr->LoadASIMFile(FileName);
+      else if(MenuID == MenuFileOpenASIM_ID){
+	TheInterface->ASIMFileName = FileName;
+	TheInterface->ASIMFileLoaded = ComputationMgr->LoadASIMFile(FileName);
 	
-	if(TheInterface->ACRONYMFileLoaded)
-	  TheInterface->UpdateForACRONYMFile();
+	if(TheInterface->ASIMFileLoaded)
+	  TheInterface->UpdateForASIMFile();
 	else
-	  TheInterface->CreateMessageBox("The ACRONYM ROOT file that you specified fail to load for some reason!\n","Stop");
+	  TheInterface->CreateMessageBox("The ADAQ Simulation (ASIM) ROOT file that you specified fail to load for some reason!\n","Stop");
 	
 	TheInterface->ADAQFileLoaded = false;
       }
@@ -534,7 +534,7 @@ void AANontabSlots::HandleMenu(int MenuID)
 
 void AANontabSlots::HandleSliders(int SliderPosition)
 {
-  if(!TheInterface->ADAQFileLoaded or TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded or TheInterface->ASIMFileLoaded)
     return;
   
   TheInterface->SaveSettings();
@@ -569,7 +569,7 @@ void AANontabSlots::HandleTerminate()
 
 void AANontabSlots::HandleTripleSliderPointer()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ACRONYMFileLoaded)
+  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
     return;
 
   if(ComputationMgr->GetSpectrumExists() and

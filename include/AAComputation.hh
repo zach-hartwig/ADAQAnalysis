@@ -56,14 +56,12 @@ using namespace std;
 
 // ADAQ
 #include "ADAQRootClasses.hh"
+#include "ADAQSimulationReadout.hh"
 
 // ADAQAnalysis
 #include "AASettings.hh"
 #include "AAParallelResults.hh"
 #include "AATypes.hh"
-
-#include "acroEvent.hh"
-#include "acroRun.hh"
 
 #ifndef __CINT__
 #include <boost/array.hpp>
@@ -112,7 +110,7 @@ public:
 
   // Spectrum creation
   void CreateSpectrum();
-  void CreateACRONYMSpectrum();
+  void CreateASIMSpectrum();
   void CalculateSpectrumBackground();
 
   // Spectrum processing
@@ -194,15 +192,16 @@ public:
   string GetADAQFileName() { return ADAQFileName; }
   int GetADAQNumberOfWaveforms() {return ADAQWaveformTree->GetEntries();}
   ADAQRootMeasParams *GetADAQMeasurementParameters() {return ADAQMeasParams;}
-
+  
   // ACRONYM file data
-  string GetACRONYMFileName() { return ACRONYMFileName; }
-  int GetACRONYMLSEntries() { return LSDetectorTree->GetEntries(); }
-  int GetACRONYMESEntries() { return ESDetectorTree->GetEntries(); }
+  string GetASIMFileName() { return ASIMFileName; }
+  TList *GetASIMEventTreeList() { return ASIMEventTreeList; }
+  //int GetASIMCRONYMLSEntries() { return LSDetectorTree->GetEntries(); }
+  //int GetACRONYMESEntries() { return ESDetectorTree->GetEntries(); }
   
   // Booleans
   bool GetADAQFileLoaded() { return ADAQFileLoaded; }
-  bool GetACRONYMFileLoaded() { return ACRONYMFileLoaded; }
+  bool GetASIMFileLoaded() { return ASIMFileLoaded; }
   bool GetSpectrumExists() { return SpectrumExists; }
   bool GetSpectrumBackgroundExists() { return SpectrumBackgroundExists; }
   bool GetSpectrumDerivativeExists() { return SpectrumDerivativeExists; }
@@ -235,12 +234,12 @@ private:
 
   ADAQRootMeasParams *ADAQMeasParams;
   TTree *ADAQWaveformTree;
-  TFile *ADAQRootFile, *ACRONYMRootFile;
-  string ADAQFileName, ACRONYMFileName;
-  bool ADAQFileLoaded, ACRONYMFileLoaded;
-  TTree *LSDetectorTree, *ESDetectorTree;
-  acroEvent *LSDetectorEvent, *ESDetectorEvent;
-  acroRun *RunSummary;
+  TFile *ADAQRootFile, *ASIMRootFile;
+  string ADAQFileName, ASIMFileName;
+  bool ADAQFileLoaded, ASIMFileLoaded;
+  TList *ASIMEventTreeList;
+  ADAQSimulationEvent *ASIMEvent;
+
   AAParallelResults *ADAQParResults;
   bool ADAQParResultsLoaded;
 
