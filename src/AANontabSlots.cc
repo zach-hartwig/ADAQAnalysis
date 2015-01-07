@@ -275,7 +275,7 @@ void AANontabSlots::HandleMenu(int MenuID)
       // Load the ROOT file and set the bool depending on outcome
       if(MenuID == MenuFileOpenADAQ_ID){
 	TheInterface->ADAQFileName = FileName;
-	TheInterface->ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(FileName);
+	TheInterface->ADAQFileLoaded = ComputationMgr->LoadADAQFile(FileName);
 	
 	if(TheInterface->ADAQFileLoaded)
 	  TheInterface->UpdateForADAQFile();

@@ -68,6 +68,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
   : SequentialArchitecture(!PA), ParallelArchitecture(PA),
     ADAQFileLoaded(false), ASIMFileLoaded(false), 
     ASIMEventTreeList(new TList), ASIMEvt(new ASIMEvent),
+    LegacyADAQFileLoaded(false),
     ADAQParResults(NULL), ADAQParResultsLoaded(false),
     Time(0), RawVoltage(0), RecordLength(0),
     PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PearsonIntegralValue(0),
@@ -164,7 +165,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     }
     else
       // Load the specified ADAQ ROOT file
-      LoadADAQRootFile(ADAQSettings->ADAQFileName);
+      LoadADAQFile(ADAQSettings->ADAQFileName);
     
     // Initiate the desired parallel waveform processing algorithm
 
@@ -195,17 +196,13 @@ AAComputation::~AAComputation()
 {;}
 
 
-bool AAComputation::LoadADAQRootFile(string FileName)
+bool AAComputation::LoadADAQFile(string FileName)
 {
   //////////////////////////////////
   // Open the specified ROOT file //
   //////////////////////////////////
 
   ADAQFileName = FileName;
-
-  cout << ADAQFileName << endl;
-
-  exit(-42);
 
   // Open the specified ROOT file 
   ADAQRootFile = new TFile(FileName.c_str(), "read");
@@ -215,122 +212,111 @@ bool AAComputation::LoadADAQRootFile(string FileName)
     ADAQFileLoaded = false;
   else{
     
-    /////////////////////////////////////
-    // Extract data from the ROOT file //
-    /////////////////////////////////////
-
-    // Get the ADAQRootMeasParams objects stored in the ROOT file
-    ADAQMeasParams = (ADAQRootMeasParams *)ADAQRootFile->Get("MeasParams");
-
-    // Get the TTree with waveforms stored in the ROOT file
-    ADAQWaveformTree = (TTree *)ADAQRootFile->Get("WaveformTree");
-
-    // Seg fault protection against valid ROOT files that are missing
-    // the essential ADAQ objects.
-    if(ADAQMeasParams == NULL || ADAQWaveformTree == NULL){
-      ADAQFileLoaded = false;
-      return false;
+    TObjString *FileVersion = NULL;
+    FileVersion = (TObjString *)ADAQRootFile->Get("FileVersion");
+    
+    if(FileVersion == NULL){
+      LoadLegacyADAQFile();
+      LegacyADAQFileLoaded = true;
     }
-    
-    // Attempt to get the class containing results that were calculated
-    // in a parallel run of ADAQAnalysisGUI and stored persistently
-    // along with data in the ROOT file. At present, this is only the
-    // despliced waveform files. For standard ADAQ ROOT files, the
-    // ADAQParResults class member will be a NULL pointer
-    ADAQParResults = dynamic_cast<AAParallelResults *>(ADAQRootFile->Get("ParResults"));
-
-    // If a valid class with the parallel parameters was found
-    // (despliced ADAQ ROOT files, etc) then set the bool to true; if no
-    // class with parallel parameters was found (standard ADAQ ROOT
-    // files) then set the bool to false. This bool will be used
-    // appropriately throughout the code to import parallel results.
-    (ADAQParResults) ? ADAQParResultsLoaded = true : ADAQParResultsLoaded = false;
-    
-    // If the ADAQParResults class was loaded then ...
-    if(ADAQParResultsLoaded){
-      // Load the total integrated RFQ current and update the number
-      // entry field widget in the "Analysis" tab frame accordingly
-      DeuteronsInTotal = ADAQParResults->DeuteronsInTotal;
-      
-      if(Verbose)
-	cout << "Total RFQ current from despliced file: " << ADAQParResults->DeuteronsInTotal << endl;
-    }
-    
-    // Get the record length (acquisition window)
-    RecordLength = ADAQMeasParams->RecordLength;
-  
-    // Create the Time vector<int> with size equal to the acquisition
-    // RecordLength. The Time vector, which represents the X-axis of a
-    // plotted waveform, is used for plotting 
-    for(int sample=0; sample<RecordLength; sample++)
-      Time.push_back(sample);
-
-    // The ADAQ Waveform TTree stores digitized waveforms into
-    // vector<int>s of length RecordLength. Recall that the "record
-    // length" is the width of the acquisition window in time in units
-    // of 4 ns samples. There are 8 vectors<int>s corresponding to the 8
-    // channels on the V1720 digitizer board. The following code
-    // initializes the member object WaveformVecPtrs to be vector of
-    // vectors (outer vector size 8 = 8 V1720 channels; inner vector of
-    // size RecordLength = RecordLength samples). Each of the outer
-    // vectors is assigned to point to the address of the vector<int> in
-    // the ADAQ TTree representing the appopriate V1720 channel data.
-
-    stringstream ss;
-    for(int ch=0; ch<NumDataChannels; ch++){
-      // Create the correct ADAQ TTree branch name
-      ss << "VoltageInADC_Ch" << ch;
-      string BranchName = ss.str();
-
-      // Activate the branch in the ADAQ TTree
-      ADAQWaveformTree->SetBranchStatus(BranchName.c_str(), 1);
-
-      // Initialize the vector<int> pointers! No initialization worked
-      // in ROOT v5.34.19 and below but created a very difficult to
-      // track seg. fault for higher versions.
-      WaveformVecPtrs[ch] = 0;
-
-      // Set the present channels' class object vector pointer to the
-      // address of that chennel's vector<int> stored in the TTree
-      ADAQWaveformTree->SetBranchAddress(BranchName.c_str(), &WaveformVecPtrs[ch]);
-
-      // Clear the string for the next channel.
-      ss.str("");
+    else{
+      cout << "New ADAQ file version!" << endl;
+      LegacyADAQFileLoaded = false;
+      exit(-42);
     }
 
-
-    //////////////////////////////////////////////
-    // Output summary of measurement parameters //
-    //////////////////////////////////////////////
-
-    if(Verbose){
-    
-      cout << "\n\nMEASUREMENT SUMMARY:\n";
-    
-      cout  << "Record Length = " << ADAQMeasParams->RecordLength << "\n"
-	    << "Number of waveforms = " << ADAQWaveformTree->GetEntries() << "\n"
-	    << endl;
-    
-      cout << "\nHIGH VOLTAGE CHANNEL SUMMARY: \n";
-    
-      for(int ch=0; ch<6; ch++){
-	cout << "Detector HV[" << ch << "] = " << ADAQMeasParams->DetectorVoltage[ch] << " V\n"
-	     << "Detector I[" << ch << "] = " << ADAQMeasParams->DetectorCurrent[ch] << " uA\n\n";
-      }
-    
-      cout << "\nDIGITIZER CHANNEL SUMMARY: \n";
-    
-      for(int ch=0; ch<NumDataChannels; ch++)
-	cout << "DC Offset[" << ch << "] = 0x" << ADAQMeasParams->DCOffset[ch] << " ADC\n"
-	     << "Trigger Threshold[" << ch << "] = " << ADAQMeasParams->TriggerThreshold[ch] << " ADC\n"
-	     << "Baseline Calc. Min.[" << ch << "] = " << ADAQMeasParams->BaselineCalcMin[ch] << " ADC\n"
-	     << "Baseline Calc. Max.[" << ch << "] = " << ADAQMeasParams->BaselineCalcMax[ch] << " ADC\n"
-	     << endl;
-    }
-    // Update the bool that determines if a valid ROOT file is loaded
     ADAQFileLoaded = true;
   }
+
   return ADAQFileLoaded;
+}
+
+void AAComputation::LoadLegacyADAQFile()
+{
+  /////////////////////////////////////
+  // Extract data from the ROOT file //
+  /////////////////////////////////////
+  
+  // Get the ADAQRootMeasParams objects stored in the ROOT file
+  ADAQMeasParams = (ADAQRootMeasParams *)ADAQRootFile->Get("MeasParams");
+  
+  // Get the TTree with waveforms stored in the ROOT file
+  ADAQWaveformTree = (TTree *)ADAQRootFile->Get("WaveformTree");
+  
+  // Seg fault protection against valid ROOT files that are missing
+  // the essential ADAQ objects.
+  if(ADAQMeasParams == NULL || ADAQWaveformTree == NULL){
+    ADAQFileLoaded = false;
+  }
+  
+  // Attempt to get the class containing results that were calculated
+  // in a parallel run of ADAQAnalysisGUI and stored persistently
+  // along with data in the ROOT file. At present, this is only the
+  // despliced waveform files. For standard ADAQ ROOT files, the
+  // ADAQParResults class member will be a NULL pointer
+  ADAQParResults = dynamic_cast<AAParallelResults *>(ADAQRootFile->Get("ParResults"));
+  
+  // If a valid class with the parallel parameters was found
+  // (despliced ADAQ ROOT files, etc) then set the bool to true; if no
+  // class with parallel parameters was found (standard ADAQ ROOT
+  // files) then set the bool to false. This bool will be used
+  // appropriately throughout the code to import parallel results.
+  (ADAQParResults) ? ADAQParResultsLoaded = true : ADAQParResultsLoaded = false;
+  
+  // If the ADAQParResults class was loaded then ...
+  if(ADAQParResultsLoaded){
+    // Load the total integrated RFQ current and update the number
+    // entry field widget in the "Analysis" tab frame accordingly
+    DeuteronsInTotal = ADAQParResults->DeuteronsInTotal;
+    
+    if(Verbose)
+      cout << "Total RFQ current from despliced file: " << ADAQParResults->DeuteronsInTotal << endl;
+  }
+  
+  // Get the record length (acquisition window)
+  RecordLength = ADAQMeasParams->RecordLength;
+  
+  // Create the Time vector<int> with size equal to the acquisition
+  // RecordLength. The Time vector, which represents the X-axis of a
+  // plotted waveform, is used for plotting 
+  for(int sample=0; sample<RecordLength; sample++)
+    Time.push_back(sample);
+  
+  // The ADAQ Waveform TTree stores digitized waveforms into
+  // vector<int>s of length RecordLength. Recall that the "record
+  // length" is the width of the acquisition window in time in units
+  // of 4 ns samples. There are 8 vectors<int>s corresponding to the 8
+  // channels on the V1720 digitizer board. The following code
+  // initializes the member object WaveformVecPtrs to be vector of
+  // vectors (outer vector size 8 = 8 V1720 channels; inner vector of
+  // size RecordLength = RecordLength samples). Each of the outer
+  // vectors is assigned to point to the address of the vector<int> in
+  // the ADAQ TTree representing the appopriate V1720 channel data.
+  
+  stringstream ss;
+  for(int ch=0; ch<NumDataChannels; ch++){
+    // Create the correct ADAQ TTree branch name
+    ss << "VoltageInADC_Ch" << ch;
+    string BranchName = ss.str();
+    
+    // Activate the branch in the ADAQ TTree
+    ADAQWaveformTree->SetBranchStatus(BranchName.c_str(), 1);
+    
+    // Initialize the vector<int> pointers! No initialization worked
+      // in ROOT v5.34.19 and below but created a very difficult to
+      // track seg. fault for higher versions.
+    WaveformVecPtrs[ch] = 0;
+    
+    // Set the present channels' class object vector pointer to the
+    // address of that chennel's vector<int> stored in the TTree
+    ADAQWaveformTree->SetBranchAddress(BranchName.c_str(), &WaveformVecPtrs[ch]);
+    
+    // Clear the string for the next channel.
+    ss.str("");
+  }
+
+  // Update the bool that determines if a valid ROOT file is loaded
+  ADAQFileLoaded = true;
 }
 
     

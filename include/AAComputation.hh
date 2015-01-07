@@ -86,7 +86,8 @@ public:
   // Data computation methods
   
   // File I/O methods
-  bool LoadADAQRootFile(string);
+  bool LoadADAQFile(string);
+  void LoadLegacyADAQFile();
   bool LoadASIMFile(string);
   bool SaveHistogramData(string, string, string);
   void CreateDesplicedFile();
@@ -244,6 +245,8 @@ private:
 
   AAParallelResults *ADAQParResults;
   bool ADAQParResultsLoaded;
+
+  bool LegacyADAQFileLoaded;
 
 
   //////////////////////

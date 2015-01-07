@@ -114,22 +114,26 @@ AAInterface::AAInterface(string CmdLineArg)
   // If the user has specified an ADAQ or ASIM root file on the
   // command line then automatically process and load it
   if(CmdLineArg != "Unspecified"){
+
+    // The following file name extensions are mandatory:
+    //   ADAQ: .adaq.root (preferred), .adaq (legacy)
+    //   ASIM: .asim.root (preferred), 
     
-    size_t Pos = CmdLineArg.find_last_of(".");
+    size_t Pos = CmdLineArg.find_last_of(".adaq");
     if(Pos != string::npos){
-      
-      if(CmdLineArg.substr(Pos,10) == ".adaq.root" or
-	 CmdLineArg.substr(Pos,5) == ".adaq"){
+
+      if(CmdLineArg.substr(Pos-5,10) == ".adaq.root" or
+	 CmdLineArg.substr(Pos-4,5) == ".adaq"){
 	
 	// Ensure that if an ADAQ or ASIM file is specified from the
 	// cmd line with a relative path that the absolute path to the
 	// file is specified to ensure the universal access
-	
+
 	string CurrentDir = getenv("PWD");
 	string RelativeFilePath = CmdLineArg;
 	
 	ADAQFileName = CurrentDir + "/" + RelativeFilePath;
-	ADAQFileLoaded = ComputationMgr->LoadADAQRootFile(ADAQFileName);
+	ADAQFileLoaded = ComputationMgr->LoadADAQFile(ADAQFileName);
 	
 	if(ADAQFileLoaded)
 	  UpdateForADAQFile();
@@ -150,7 +154,7 @@ AAInterface::AAInterface(string CmdLineArg)
 	  CreateMessageBox("The ADAQ Simulation (ASIM) ROOT file that you specified fail to load for some reason!\n","Stop");
       }
       else
-	CreateMessageBox("Recognized files should end in '.adaq.root' / '.adaq' / '.root' (ADAQ) or '.asim.root' (ASIM)","Stop");
+	CreateMessageBox("Compatible files must end in: '.adaq.root' / '.adaq' (ADAQ); '.asim.root' (ASIM)","Stop");
     }
     else
       CreateMessageBox("Could not find an acceptable file to open. Please try again.","Stop");
