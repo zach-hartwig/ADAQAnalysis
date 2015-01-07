@@ -56,7 +56,7 @@ using namespace std;
 
 // ADAQ
 #include "ADAQRootClasses.hh"
-#include "ADAQSimulationReadout.hh"
+#include "ASIMReadoutManager.hh"
 
 // ADAQAnalysis
 #include "AASettings.hh"
@@ -237,8 +237,10 @@ private:
   TFile *ADAQRootFile, *ASIMRootFile;
   string ADAQFileName, ASIMFileName;
   bool ADAQFileLoaded, ASIMFileLoaded;
+
+
   TList *ASIMEventTreeList;
-  ADAQSimulationEvent *ASIMEvent;
+  ASIMEvent *ASIMEvt;
 
   AAParallelResults *ADAQParResults;
   bool ADAQParResultsLoaded;

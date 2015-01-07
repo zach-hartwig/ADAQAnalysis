@@ -51,10 +51,6 @@ using namespace std;
 #include <boost/array.hpp>
 #include <boost/thread.hpp>
 
-// ADAQ
-#include <ADAQSimulationEvent.hh>
-#include <ADAQSimulationRun.hh>
-
 // ADAQAnalysis
 #include "AAComputation.hh"
 #include "AAParallel.hh"
@@ -71,7 +67,7 @@ AAComputation *AAComputation::GetInstance()
 AAComputation::AAComputation(string CmdLineArg, bool PA)
   : SequentialArchitecture(!PA), ParallelArchitecture(PA),
     ADAQFileLoaded(false), ASIMFileLoaded(false), 
-    ASIMEventTreeList(new TList), ASIMEvent(new ADAQSimulationEvent),
+    ASIMEventTreeList(new TList), ASIMEvt(new ASIMEvent),
     ADAQParResults(NULL), ADAQParResultsLoaded(false),
     Time(0), RawVoltage(0), RecordLength(0),
     PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PearsonIntegralValue(0),
@@ -206,6 +202,10 @@ bool AAComputation::LoadADAQRootFile(string FileName)
   //////////////////////////////////
 
   ADAQFileName = FileName;
+
+  cout << ADAQFileName << endl;
+
+  exit(-42);
 
   // Open the specified ROOT file 
   ADAQRootFile = new TFile(FileName.c_str(), "read");
@@ -3002,7 +3002,7 @@ void AAComputation::CreateASIMSpectrum()
   }
   
   // Set the branch address of the ASIM event
-  ASIMEventTree->SetBranchAddress("ADAQSimulationEventBranch", &ASIMEvent);
+  ASIMEventTree->SetBranchAddress("ADAQSimulationEventBranch", &ASIMEvt);
   
   int ASIMEvents = ASIMEventTree->GetEntries();
   
@@ -3019,11 +3019,11 @@ void AAComputation::CreateASIMSpectrum()
 
     double Quantity = 0.;
     if(ADAQSettings->ASIMSpectrumTypeEnergy)
-      Quantity = ASIMEvent->GetEnergyDep();
+      Quantity = ASIMEvt->GetEnergyDep();
     else if(ADAQSettings->ASIMSpectrumTypePhotonsCreated)
-      Quantity = ASIMEvent->GetPhotonsCreated();
+      Quantity = ASIMEvt->GetPhotonsCreated();
     else if(ADAQSettings->ASIMSpectrumTypePhotonsDetected)
-      Quantity = ASIMEvent->GetPhotonsDetected();
+      Quantity = ASIMEvt->GetPhotonsDetected();
 
     if(ADAQSettings->UseSpectraCalibrations[ADAQSettings->WaveformChannel])
       Quantity = SpectraCalibrations[ADAQSettings->WaveformChannel]->Eval(Quantity);
