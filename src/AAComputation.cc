@@ -2988,7 +2988,7 @@ void AAComputation::CreateASIMSpectrum()
   }
   
   // Set the branch address of the ASIM event
-  ASIMEventTree->SetBranchAddress("ADAQSimulationEventBranch", &ASIMEvt);
+  ASIMEventTree->SetBranchAddress("ASIMEventBranch", &ASIMEvt);
   
   int ASIMEvents = ASIMEventTree->GetEntries();
   
