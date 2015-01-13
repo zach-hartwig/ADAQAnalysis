@@ -212,22 +212,41 @@ bool AAComputation::LoadADAQFile(string FileName)
     ADAQFileLoaded = false;
   else{
     
+    // At present (13 Jan 15) there are two main types of ADAQ file:
+
+    // The "legacy" file format that was the original file format used
+    // between 2012 and 2015. These file types were produced for a
+    // number of experiments (AIMS, DNDO/ARI, and other projects), and
+    // thus, support must be enabled for backwards
+    // compatibility. Typically, these files will have the .root or
+    // .adaq extension.
+    //
+    // The new "production" ADAQ file format that is far more
+    // comprehensive, flexible, and standardized in all senses. These
+    // files are denoted with the extension .adaq.root by force if
+    // created with ADAQAcquisition.
+
+    // Determine whether the specified ADAQ file format is "legacy" or
+    // "production" by the presence of the FileVersion TObjString
+
     TObjString *FileVersion = NULL;
     FileVersion = (TObjString *)ADAQRootFile->Get("FileVersion");
+    
+    // Handle loading the ADAQ file with format-appropriate methods
     
     if(FileVersion == NULL){
       LoadLegacyADAQFile();
       LegacyADAQFileLoaded = true;
     }
     else{
-      cout << "New ADAQ file version!" << endl;
       LegacyADAQFileLoaded = false;
       exit(-42);
     }
-
+    
+    // An ADAQ file should be successfull loaded at this point
     ADAQFileLoaded = true;
   }
-
+  
   return ADAQFileLoaded;
 }
 
