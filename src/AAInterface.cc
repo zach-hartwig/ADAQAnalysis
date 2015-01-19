@@ -1601,7 +1601,7 @@ void AAInterface::FillProcessingFrame()
   PSDEnable_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
 
   PSDAnalysis_GF->AddFrame(PSDChannel_CBL = new ADAQComboBoxWithLabel(PSDAnalysis_GF, "", -1),
-                           new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+                           new TGLayoutHints(kLHintsNormal, 0,5,5,0));
 
   stringstream ss;
   string entry;
@@ -1704,18 +1704,23 @@ void AAInterface::FillProcessingFrame()
   PSDPlotType_CBL->GetComboBox()->Connect("Selected(int,int)", "AAProcessingSlots", ProcessingSlots, "HandleComboBox(int,int)");
   PSDPlotType_CBL->GetComboBox()->SetEnabled(false);
 
-  PSDAnalysis_GF->AddFrame(PSDPlotTailIntegration_CB = new TGCheckButton(PSDAnalysis_GF, "Plot tail integration region", PSDPlotTailIntegration_CB_ID),
-                           new TGLayoutHints(kLHintsNormal, 0,5,0,5));
-  PSDPlotTailIntegration_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
-  PSDPlotTailIntegration_CB->SetState(kButtonDisabled);
-  
+  PSDAnalysis_GF->AddFrame(PSDCalculate_TB = new TGTextButton(PSDAnalysis_GF, "Create PSD histogram", PSDCalculate_TB_ID),
+                           new TGLayoutHints(kLHintsLeft, 30,5,5,5));
+  PSDCalculate_TB->Resize(200,30);
+  PSDCalculate_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  PSDCalculate_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
+  PSDCalculate_TB->ChangeOptions(PSDCalculate_TB->GetOptions() | kFixedSize);
+  PSDCalculate_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
+  PSDCalculate_TB->SetState(kButtonDisabled);
+
+
   PSDAnalysis_GF->AddFrame(PSDEnableHistogramSlicing_CB = new TGCheckButton(PSDAnalysis_GF, "Enable histogram slicing", PSDEnableHistogramSlicing_CB_ID),
-			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+			   new TGLayoutHints(kLHintsNormal, 0,5,10,0));
   PSDEnableHistogramSlicing_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
   PSDEnableHistogramSlicing_CB->SetState(kButtonDisabled);
 
   TGHorizontalFrame *PSDHistogramSlicing_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSDHistogramSlicing_HF, new TGLayoutHints(kLHintsCenterX, 0,5,0,5));
+  PSDAnalysis_GF->AddFrame(PSDHistogramSlicing_HF, new TGLayoutHints(kLHintsNormal, 15,5,0,5));
   
   PSDHistogramSlicing_HF->AddFrame(PSDHistogramSliceX_RB = new TGRadioButton(PSDHistogramSlicing_HF, "X slice", PSDHistogramSliceX_RB_ID),
 				   new TGLayoutHints(kLHintsNormal, 0,0,0,0));
@@ -1733,41 +1738,47 @@ void AAInterface::FillProcessingFrame()
   PSDEnableRegionCreation_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
   PSDEnableRegionCreation_CB->SetState(kButtonDisabled);
 
+  TGHorizontalFrame *PSDCreateClear_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSDCreateClear_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  
+  PSDCreateClear_HF->AddFrame(PSDCreateRegion_TB = new TGTextButton(PSDCreateClear_HF, "Create PSD region", PSDCreateRegion_TB_ID),
+			   new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+  PSDCreateRegion_TB->Resize(115,30);
+  PSDCreateRegion_TB->ChangeOptions(PSDCreateRegion_TB->GetOptions() | kFixedSize);
+  PSDCreateRegion_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
+  PSDCreateRegion_TB->SetState(kButtonDisabled);
+
+  PSDCreateClear_HF->AddFrame(PSDClearRegion_TB = new TGTextButton(PSDCreateClear_HF, "Clear PSD region", PSDClearRegion_TB_ID),
+			   new TGLayoutHints(kLHintsLeft, 5,5,5,5));
+  PSDClearRegion_TB->Resize(115,30);
+  PSDClearRegion_TB->ChangeOptions(PSDClearRegion_TB->GetOptions() | kFixedSize);
+  PSDClearRegion_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
+  PSDClearRegion_TB->SetState(kButtonDisabled);
+
   
   PSDAnalysis_GF->AddFrame(PSDEnableRegion_CB = new TGCheckButton(PSDAnalysis_GF, "Enable PSD region", PSDEnableRegion_CB_ID),
-			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+			   new TGLayoutHints(kLHintsNormal, 0,5,10,0));
   PSDEnableRegion_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
   PSDEnableRegion_CB->SetState(kButtonDisabled);
 
   TGHorizontalFrame *PSDRegionPolarity_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSDRegionPolarity_HF, new TGLayoutHints(kLHintsCenterX, 0,5,0,5));
-
+  PSDAnalysis_GF->AddFrame(PSDRegionPolarity_HF, new TGLayoutHints(kLHintsNormal, 15,5,0,5));
+  
   PSDRegionPolarity_HF->AddFrame(PSDInsideRegion_RB = new TGRadioButton(PSDRegionPolarity_HF, "Inside  ", PSDInsideRegion_RB_ID),
-				 new TGLayoutHints(kLHintsNormal, 5,5,0,5));
+				 new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   PSDInsideRegion_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
   PSDInsideRegion_RB->SetState(kButtonDown);
   PSDInsideRegion_RB->SetState(kButtonDisabled);
 
   PSDRegionPolarity_HF->AddFrame(PSDOutsideRegion_RB = new TGRadioButton(PSDRegionPolarity_HF, "Outside", PSDOutsideRegion_RB_ID),
-				 new TGLayoutHints(kLHintsNormal, 5,5,0,5));
+				 new TGLayoutHints(kLHintsNormal, 20,0,0,0));
   PSDOutsideRegion_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
   PSDOutsideRegion_RB->SetState(kButtonDisabled);
-  
-  PSDAnalysis_GF->AddFrame(PSDClearRegion_TB = new TGTextButton(PSDAnalysis_GF, "Clear PSD region", PSDClearRegion_TB_ID),
-			   new TGLayoutHints(kLHintsLeft, 15,5,0,5));
-  PSDClearRegion_TB->Resize(200,30);
-  PSDClearRegion_TB->ChangeOptions(PSDClearRegion_TB->GetOptions() | kFixedSize);
-  PSDClearRegion_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
-  PSDClearRegion_TB->SetState(kButtonDisabled);
-  
-  PSDAnalysis_GF->AddFrame(PSDCalculate_TB = new TGTextButton(PSDAnalysis_GF, "Create PSD histogram", PSDCalculate_TB_ID),
-                           new TGLayoutHints(kLHintsLeft, 15,5,5,5));
-  PSDCalculate_TB->Resize(200,30);
-  PSDCalculate_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
-  PSDCalculate_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
-  PSDCalculate_TB->ChangeOptions(PSDCalculate_TB->GetOptions() | kFixedSize);
-  PSDCalculate_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
-  PSDCalculate_TB->SetState(kButtonDisabled);
+
+  PSDAnalysis_GF->AddFrame(PSDPlotTailIntegration_CB = new TGCheckButton(PSDAnalysis_GF, "Plot tail integration region", PSDPlotTailIntegration_CB_ID),
+                           new TGLayoutHints(kLHintsNormal, 0,5,5,5));
+  PSDPlotTailIntegration_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
+  PSDPlotTailIntegration_CB->SetState(kButtonDisabled);
 
 
   TGGroupFrame *PearsonAnalysis_GF = new TGGroupFrame(ProcessingFrame_VF, "Pearson (RFQ current) integration", kVerticalFrame);
