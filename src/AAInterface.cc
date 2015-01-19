@@ -745,7 +745,7 @@ void AAInterface::FillSpectrumFrame()
   SpectrumCalibration_GF->AddFrame(SpectrumCalibrationType_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   
   SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationPoint_CBL = new ADAQComboBoxWithLabel(SpectrumCalibrationType_HF, "", SpectrumCalibrationPoint_CBL_ID),
-				       new TGLayoutHints(kLHintsNormal, 0,0,10,3));
+				       new TGLayoutHints(kLHintsNormal, 0,0,10,0));
   SpectrumCalibrationPoint_CBL->
 GetComboBox()->Resize(150,20);
   SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Calibration point 0",0);
@@ -755,7 +755,7 @@ GetComboBox()->Resize(150,20);
 
   TGVerticalFrame *SpectrumCalibrationType_VF = new TGVerticalFrame(SpectrumCalibrationType_HF);
   SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationType_VF);
-
+  
   SpectrumCalibration_GF->AddFrame(SpectrumCalibrationUnit_CBL = new ADAQComboBoxWithLabel(SpectrumCalibration_GF, "Energy unit", -1),
 				   new TGLayoutHints(kLHintsLeft, 0,0,0,0));
   SpectrumCalibrationUnit_CBL->GetComboBox()->Resize(72, 20);
@@ -1643,7 +1643,7 @@ void AAInterface::FillProcessingFrame()
 			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMaxTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDMaxTotalBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDMaxTotalBin_NEL->GetEntry()->SetNumber(20000);
+  PSDMaxTotalBin_NEL->GetEntry()->SetNumber(10000);
   PSDMaxTotalBin_NEL->GetEntry()->SetState(false);
   
   PSDAnalysis_GF->AddFrame(PSDNumTailBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. tail bins (Y axis)", -1),
@@ -1667,7 +1667,7 @@ void AAInterface::FillProcessingFrame()
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMaxTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDMaxTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDMaxTailBin_NEL->GetEntry()->SetNumber(5000);
+  PSDMaxTailBin_NEL->GetEntry()->SetNumber(2000);
   PSDMaxTailBin_NEL->GetEntry()->SetState(false);
 
 
@@ -1675,8 +1675,7 @@ void AAInterface::FillProcessingFrame()
                            new TGLayoutHints(kLHintsNormal, 0,5,5,0));
   PSDThreshold_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDThreshold_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
-  PSDThreshold_NEL->GetEntry()->SetLimitValues(0,4095); // Updated when ADAQ ROOT file loaded
-  PSDThreshold_NEL->GetEntry()->SetNumber(1500); // Updated when ADAQ ROOT file loaded
+  PSDThreshold_NEL->GetEntry()->SetNumber(100);
   PSDThreshold_NEL->GetEntry()->SetState(false);
   
   PSDAnalysis_GF->AddFrame(PSDPeakOffset_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Peak offset (sample)", PSDPeakOffset_NEL_ID),
@@ -2596,6 +2595,7 @@ void AAInterface::SetPSDWidgetState(bool WidgetState, EButtonState ButtonState)
   PSDEnableRegion_CB->SetState(ButtonState);
   PSDInsideRegion_RB->SetState(ButtonState);
   PSDOutsideRegion_RB->SetState(ButtonState);
+  PSDCreateRegion_TB->SetState(ButtonState);
   PSDClearRegion_TB->SetState(ButtonState);
   PSDCalculate_TB->SetState(ButtonState);
 }

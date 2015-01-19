@@ -99,7 +99,8 @@ public:
 
   void PlotPSDHistogram();
   void PlotPSDHistogramSlice(int, int);
-  void PlotPSDFilter();
+  void PlotPSDRegionProgress();
+  void PlotPSDRegion();
 
 
   ///////////////////////////////////////////
@@ -140,6 +141,9 @@ private:
   TLine *EALine_L;
   TBox *EABox_B;
   TLine *DerivativeReference_L;
+
+  // Objects for PSD analysis
+  TGraph *PSDRegionProgress_G;
   
   AAComputation *ComputationMgr;
   

@@ -64,8 +64,8 @@ void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *S
   // somewhere on the canvas pad) then send the pixel coordinates of
   // the down-click to the PSD filter creation function
   if(TheInterface->PSDEnableRegionCreation_CB->IsDown() and EventID == 1){
-    ComputationMgr->CreatePSDRegion(XPixel, YPixel);
-    GraphicsMgr->PlotPSDFilter();
+    ComputationMgr->AddPSDRegionPoint(XPixel, YPixel);
+    GraphicsMgr->PlotPSDRegionProgress();
   }
   
   if(TheInterface->PSDEnableHistogramSlicing_CB->IsDown()){

@@ -70,6 +70,7 @@ AAGraphics::AAGraphics()
     PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
     HCalibration_L(new TLine), VCalibration_L(new TLine), EdgeBoundingBox_B(new TBox),
     EALine_L(new TLine), EABox_B(new TBox), DerivativeReference_L(new TLine),
+    PSDRegionProgress_G(new TGraph),
     CanvasContentType(zEmpty), 
     WaveformColor(kBlue), WaveformLineWidth(1), WaveformMarkerSize(1.),
     SpectrumLineColor(kBlue), SpectrumLineWidth(2), 
@@ -769,6 +770,8 @@ void AAGraphics::PlotPSDHistogram()
   PSDHistogram_H->GetZaxis()->CenterTitle();
   PSDHistogram_H->GetZaxis()->SetNdivisions(ZDivs, true);
 
+  gStyle->SetPalette(55);
+
   switch(ADAQSettings->PSDPlotType){
 
   case 0:
@@ -1062,18 +1065,51 @@ void AAGraphics::PlotEALine(double X, double Error, bool ErrorBox, bool EscapePe
 }
 
 
-
-void AAGraphics::PlotPSDFilter()
+void AAGraphics::PlotPSDRegionProgress()
 {
+  vector<Double_t> X = ComputationMgr->GetPSDRegionXPoints();
+  vector<Double_t> Y = ComputationMgr->GetPSDRegionYPoints();
+  
+  if(PSDRegionProgress_G != NULL)
+    delete PSDRegionProgress_G;
+  
+  PSDRegionProgress_G = new TGraph(X.size(), &X[0], &Y[0]);
+  PSDRegionProgress_G->SetMarkerStyle(20);
+  PSDRegionProgress_G->SetMarkerSize(1.);
+  PSDRegionProgress_G->SetMarkerColor(kMagenta);
+  PSDRegionProgress_G->SetLineStyle(7);
+  PSDRegionProgress_G->SetLineWidth(2);
+  PSDRegionProgress_G->SetLineColor(kMagenta);  
+  PSDRegionProgress_G->Draw("LP");
+
+  TheCanvas->Update();
+}
+
+void AAGraphics::PlotPSDRegion()
+{
+  // Delete the TGraph that shows the user's progress of creating the
+  // PSDRegion in order to remove it from the canvas
+
+  if(PSDRegionProgress_G != NULL){
+    delete PSDRegionProgress_G;
+    PSDRegionProgress_G = new TGraph;
+  }
+
+  // Get the TCutG object from the computation manager and draw it
+
   vector<TCutG *> PSDRegions = ComputationMgr->GetPSDRegions();
-
-  int PSDChannel = ADAQSettings->PSDChannel;
-
-  PSDRegions[PSDChannel]->SetLineColor(2);
-  PSDRegions[PSDChannel]->SetLineWidth(2);
-  PSDRegions[PSDChannel]->SetMarkerStyle(20);
-  PSDRegions[PSDChannel]->SetMarkerColor(2);
-  PSDRegions[PSDChannel]->Draw("LP SAME");
+  
+  int Channel = ADAQSettings->PSDChannel;
+  
+  PSDRegions[Channel]->SetMarkerStyle(20);
+  PSDRegions[Channel]->SetMarkerSize(1.);
+  PSDRegions[Channel]->SetMarkerColor(kMagenta);
+  PSDRegions[Channel]->SetLineStyle(1);
+  PSDRegions[Channel]->SetLineWidth(2);
+  PSDRegions[Channel]->SetLineColor(kMagenta);
+  PSDRegions[Channel]->SetFillColor(kMagenta);
+  PSDRegions[Channel]->SetFillStyle(3002);
+  PSDRegions[Channel]->Draw("LPF SAME");
   
   TheCanvas->Update();
 }

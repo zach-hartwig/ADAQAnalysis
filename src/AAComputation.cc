@@ -1804,11 +1804,11 @@ bool AAComputation::ApplyPSDRegion(double TailIntegral, double TotalIntegral)
   if(ADAQSettings->PSDInsideRegion and
      ADAQSettings->PSDRegions[ADAQSettings->PSDChannel]->IsInside(TotalIntegral, TailIntegral))
     return false;
-
+  
   else if(ADAQSettings->PSDOutsideRegion and 
 	  !ADAQSettings->PSDRegions[ADAQSettings->PSDChannel]->IsInside(TotalIntegral, TailIntegral))
     return false;
-
+  
   else
     return true;
 }
@@ -2311,64 +2311,47 @@ void AAComputation::FindEdge()
 }
 
 
-// Method to create a pulse shape discrimination (PSD) filter, which
-// is a TGraph composed of points defined by the user clicking on the
-// active canvas to define a line used to delinate regions. This
-// function is called by ::HandleCanvas() each time that the user
-// clicks on the active pad, passing the x- and y-pixel click
-// location to the function
-void AAComputation::CreatePSDRegion(int XPixel, int YPixel)
+void AAComputation::AddPSDRegionPoint(Int_t XPixel, Int_t YPixel)
 {
-  // Pixel coordinates: (x,y) = (0,0) at the top left of the canvas
-  // User coordinates: (x,y) at any point on the canvas corresponds to
-  //                   that point's location on the plotted TGraph or
-  //                   TH1/TH2
+  // Convert the x and y pixel values into absolute x and y
+  // coordinates and then push them into the appropriate vectors. Note
+  // that for the PSD region, the absolute x values correspond to the
+  // PSD total integral and the absolute y values correspond to the
+  // PSD tail integral values. Both are in units of ADC.
+  PSDRegionXPoints.push_back(gPad->AbsPixeltoX(XPixel));
+  PSDRegionYPoints.push_back(gPad->AbsPixeltoY(YPixel));
+}
 
-  // For some reason, it is necessary to correct the pixel-to-user Y
-  // coordinate returned by ROOT; the X value seems slightly off as
-  // well but only by a very small amount so it will be ignored.
 
-  // Get the start and end positions of the TCanvas object in user
-  // coordinates (the very bottom and top y extent values)
-  double CanvasStart_YPos = gPad->GetY1();
-  double CanvasEnd_YPos = gPad->GetY2();
-    
-  // Convert the clicked position in the pad pixel coordinates
-  // (point on the pad in screen pixels starting in the top-left
-  // corner) to data coordinates (point on the pad in coordinates
-  // corresponding to the X and Y axis ranges of whatever is
-  // currently plotted/histogrammed in the pad . Note that the Y
-  // conversion requires obtaining the start and end vertical
-  // positions of canvas and using them to get the exact number if
-  // data coordinates. 
-  double XPos = gPad->PixeltoX(XPixel);
-  double YPos = gPad->PixeltoY(YPixel) + abs(CanvasStart_YPos) + abs(CanvasEnd_YPos);
+void AAComputation::CreatePSDRegion()
+{
+  if(PSDRegionXPoints.size() < 3)
+    return;
 
-  // Increment the number of points to be used with the TGraph
-  PSDNumRegionPoints++;
-    
-  // Add the X and Y position in data coordinates to the vectors to
-  // be used with the TGraph
-  PSDRegionXPoints.push_back(XPos);
-  PSDRegionYPoints.push_back(YPos);
+  Int_t Channel = ADAQSettings->PSDChannel;
   
-  // Recreate the TGraph representing the "PSDFilter" 
-  if(PSDRegions[ADAQSettings->PSDChannel]) delete PSDRegions[ADAQSettings->PSDChannel];
-  //PSDRegions[ADAQSettings->PSDChannel] = new TCutG("PSDRegion", PSDNumRegionPoints, &PSDRegionXPoints[0], &PSDRegionYPoints[0]);
+  // Delete the previous TCutG object to prevent memory leaks
+  if(PSDRegions[Channel] != NULL) 
+    delete PSDRegions[Channel];
+  
+  // Create a new TCutG object representing a PSD region
+  PSDRegions[Channel] = new TCutG("PSDRegion", PSDRegionXPoints.size(), &PSDRegionXPoints[0], &PSDRegionYPoints[0]);
   
   UsePSDRegions[ADAQSettings->PSDChannel] = true;
 }
 
 
-void AAComputation::ClearPSDRegion(int Channel)
+void AAComputation::ClearPSDRegion()
 {
-  PSDNumRegionPoints = 0;
   PSDRegionXPoints.clear();
   PSDRegionYPoints.clear();
   
-  if(PSDRegions[ADAQSettings->PSDChannel]) delete PSDRegions[ADAQSettings->PSDChannel];
-  PSDRegions[ADAQSettings->PSDChannel] = new TCutG;
+  Int_t Channel = ADAQSettings->PSDChannel;
   
+  if(PSDRegions[Channel] != NULL)
+    delete PSDRegions[Channel];
+  
+  PSDRegions[Channel] = new TCutG;
   UsePSDRegions[ADAQSettings->PSDChannel] = false;
 }
 

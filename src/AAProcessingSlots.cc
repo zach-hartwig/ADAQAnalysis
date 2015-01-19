@@ -238,7 +238,7 @@ void AAProcessingSlots::HandleRadioButtons()
 
   case PSDOutsideRegion_RB_ID:
     if(TheInterface->PSDOutsideRegion_RB->IsDown()){
-      TheInterface->PSDOutsideRegion_RB->SetState(kButtonUp);
+      TheInterface->PSDInsideRegion_RB->SetState(kButtonUp);
     }
     break;
 
@@ -312,11 +312,21 @@ void AAProcessingSlots::HandleTextButtons()
     
     break;
 
+  case PSDCreateRegion_TB_ID:
+
+    if(TheInterface->ADAQFileLoaded){
+      ComputationMgr->CreatePSDRegion();
+      GraphicsMgr->PlotPSDRegion();
+      TheInterface->PSDEnableRegionCreation_CB->SetState(kButtonUp);
+    }
+
+    break;
+
   case PSDClearRegion_TB_ID:
 
     if(TheInterface->ADAQFileLoaded){
-
-      ComputationMgr->ClearPSDRegion(TheInterface->ChannelSelector_CBL->GetComboBox()->GetSelected());
+      
+      ComputationMgr->ClearPSDRegion();
       TheInterface->PSDEnableRegion_CB->SetState(kButtonUp);
       
       switch(GraphicsMgr->GetCanvasContentType()){

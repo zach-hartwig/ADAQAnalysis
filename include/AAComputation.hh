@@ -134,10 +134,12 @@ public:
   TH2F *CreatePSDHistogram();
   void CalculatePSDIntegrals(bool);
   bool ApplyPSDRegion(double, double);
-  void CreatePSDRegion(int, int);
-  void ClearPSDRegion(int);
-  void CreatePSDHistogramSlice(int, int);
 
+  void AddPSDRegionPoint(Int_t, Int_t);
+  void CreatePSDRegion();
+  void ClearPSDRegion();
+  void CreatePSDHistogramSlice(int, int);
+  
   // Processing methods
   void UpdateProcessingProgress(int);
   void ProcessWaveformsInParallel(string);
@@ -185,10 +187,12 @@ public:
   TH2F *GetPSDHistogram() { return PSDHistogram_H; }
   TH1D *GetPSDHistogramSlice() { return PSDHistogramSlice_H; }
   
-  // Pulse shape discrimination filters
+  // Pulse shape discrimination regions
   vector<TCutG *> GetPSDRegions() { return PSDRegions; }
   vector<bool> GetUsePSDRegions() { return UsePSDRegions; }
   void SetUsePSDRegions(int Channel, bool Use) {UsePSDRegions[Channel] = Use;}
+  vector<Double_t> &GetPSDRegionXPoints() {return PSDRegionXPoints;}
+  vector<Double_t> &GetPSDRegionYPoints() {return PSDRegionYPoints;}
 
   // ADAQ file data
   string GetADAQFileName() { return ADAQFileName; }
@@ -305,11 +309,11 @@ private:
   TH2F *PSDHistogram_H, *MasterPSDHistogram_H;
   TH1D *PSDHistogramSlice_H;
 
-  double PSDRegionPolarity;
+  Double_t PSDRegionPolarity;
   vector<TCutG *> PSDRegions;
-  vector<bool> UsePSDRegions;
-  int PSDNumRegionPoints;
-  vector<int> PSDRegionXPoints, PSDRegionYPoints;
+  vector<Bool_t> UsePSDRegions;
+  Int_t PSDNumRegionPoints;
+  vector<Double_t> PSDRegionXPoints, PSDRegionYPoints;
 
 
   ///////////
