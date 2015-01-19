@@ -77,6 +77,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     Spectrum_H(new TH1F), SpectrumDerivative_H(new TH1F), SpectrumDerivative_G(new TGraph),
     SpectrumBackground_H(new TH1F), SpectrumDeconvolved_H(new TH1F), 
     SpectrumIntegral_H(new TH1F), SpectrumFit_F(new TF1),
+    PSDHistogram_H(new TH2F), MasterPSDHistogram_H(new TH2F), PSDHistogramSlice_H(new TH1D),
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), 
     Verbose(false), ParallelVerbose(true),
     Baseline(0.), PSDRegionPolarity(1.),
@@ -2901,7 +2902,6 @@ void AAComputation::CreatePSDHistogramSlice(int XPixel, int YPixel)
     gPad->SetUniqueID(YPixel);
   }
 
-  
   ////////////////////////////////////////
   // Draw the TH1D PSDHistogram_H slice //
   ////////////////////////////////////////
@@ -2950,10 +2950,12 @@ void AAComputation::CreatePSDHistogramSlice(int XPixel, int YPixel)
   }
 
   // Save the histogram  to a class member TH1F object
-  if(PSDHistogramSlice_H) delete PSDHistogramSlice_H;
+
+  if(PSDHistogramSliceExists)
+    delete PSDHistogramSlice_H;
+  
   PSDHistogramSlice_H = (TH1D *)PSDSlice_H->Clone("PSDHistogramSlice_H");
   PSDHistogramSliceExists = true;
-
 }
 
 
