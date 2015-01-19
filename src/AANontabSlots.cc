@@ -63,8 +63,8 @@ void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *S
   // canvas event is equal to "1" (which represents a down-click
   // somewhere on the canvas pad) then send the pixel coordinates of
   // the down-click to the PSD filter creation function
-  if(TheInterface->PSDEnableFilterCreation_CB->IsDown() and EventID == 1){
-    ComputationMgr->CreatePSDFilter(XPixel, YPixel);
+  if(TheInterface->PSDEnableRegionCreation_CB->IsDown() and EventID == 1){
+    ComputationMgr->CreatePSDRegion(XPixel, YPixel);
     GraphicsMgr->PlotPSDFilter();
   }
   

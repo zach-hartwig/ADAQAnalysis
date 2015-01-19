@@ -325,7 +325,7 @@ void AAGraphics::PlotWaveform(int Color)
   if(ADAQSettings->FindPeaks){
     ComputationMgr->FindPeaks(Waveform_H);
     
-    if(ADAQSettings->UsePSDFilters[ADAQSettings->PSDChannel])
+    if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel])
       ComputationMgr->CalculatePSDIntegrals(false);
     
     vector<PeakInfoStruct> PeakInfoVec = ComputationMgr->GetPeakInfoVec();
@@ -336,7 +336,7 @@ void AAGraphics::PlotWaveform(int Color)
       ////////////////////////
       // Color waveform by PSD 
 
-      if(ADAQSettings->UsePSDFilters[ADAQSettings->PSDChannel]){
+      if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
 	
 	if((*it).PSDFilterFlag)
 	  Waveform_H->SetLineColor(kRed);
@@ -816,7 +816,7 @@ void AAGraphics::PlotPSDHistogram()
     ColorPalette->Draw("SAME");
   }
   
-  if(ADAQSettings->PSDEnableFilterCreation)
+  if(ADAQSettings->PSDEnableRegionCreation)
     {}//PlotPSDFilter();
 
   CanvasContentType = zPSDHistogram;
@@ -1065,15 +1065,15 @@ void AAGraphics::PlotEALine(double X, double Error, bool ErrorBox, bool EscapePe
 
 void AAGraphics::PlotPSDFilter()
 {
-  vector<TGraph *> PSDFilters = ComputationMgr->GetPSDFilters();
+  vector<TCutG *> PSDRegions = ComputationMgr->GetPSDRegions();
 
   int PSDChannel = ADAQSettings->PSDChannel;
 
-  PSDFilters[PSDChannel]->SetLineColor(2);
-  PSDFilters[PSDChannel]->SetLineWidth(2);
-  PSDFilters[PSDChannel]->SetMarkerStyle(20);
-  PSDFilters[PSDChannel]->SetMarkerColor(2);
-  PSDFilters[PSDChannel]->Draw("LP SAME");
+  PSDRegions[PSDChannel]->SetLineColor(2);
+  PSDRegions[PSDChannel]->SetLineWidth(2);
+  PSDRegions[PSDChannel]->SetMarkerStyle(20);
+  PSDRegions[PSDChannel]->SetMarkerColor(2);
+  PSDRegions[PSDChannel]->Draw("LP SAME");
   
   TheCanvas->Update();
 }

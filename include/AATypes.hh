@@ -306,11 +306,12 @@ enum{
   PSDHistogramSliceX_RB_ID,
   PSDHistogramSliceY_RB_ID,
 
-  PSDEnableFilterCreation_CB_ID,
-  PSDEnableFilter_CB_ID,
-  PSDPositiveFilter_RB_ID,
-  PSDNegativeFilter_RB_ID,
-  PSDClearFilter_TB_ID,
+  PSDEnableRegionCreation_CB_ID,
+  PSDEnableRegion_CB_ID,
+  PSDInsideRegion_RB_ID,
+  PSDOutsideRegion_RB_ID,
+  PSDCreateRegion_TB_ID,
+  PSDClearRegion_TB_ID,
 
   PSDCalculate_TB_ID,
 

@@ -1728,38 +1728,37 @@ void AAInterface::FillProcessingFrame()
   PSDHistogramSliceY_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
   PSDHistogramSliceY_RB->SetState(kButtonDisabled);
   
-  PSDAnalysis_GF->AddFrame(PSDEnableFilterCreation_CB = new TGCheckButton(PSDAnalysis_GF, "Enable filter creation", PSDEnableFilterCreation_CB_ID),
+  PSDAnalysis_GF->AddFrame(PSDEnableRegionCreation_CB = new TGCheckButton(PSDAnalysis_GF, "Enable PSD region creation", PSDEnableRegionCreation_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PSDEnableFilterCreation_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
-  PSDEnableFilterCreation_CB->SetState(kButtonDisabled);
+  PSDEnableRegionCreation_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
+  PSDEnableRegionCreation_CB->SetState(kButtonDisabled);
 
   
-  PSDAnalysis_GF->AddFrame(PSDEnableFilter_CB = new TGCheckButton(PSDAnalysis_GF, "Enable filter use", PSDEnableFilter_CB_ID),
+  PSDAnalysis_GF->AddFrame(PSDEnableRegion_CB = new TGCheckButton(PSDAnalysis_GF, "Enable PSD region", PSDEnableRegion_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PSDEnableFilter_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
-  PSDEnableFilter_CB->SetState(kButtonDisabled);
+  PSDEnableRegion_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
+  PSDEnableRegion_CB->SetState(kButtonDisabled);
 
-  TGHorizontalFrame *PSDFilterPolarity_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSDFilterPolarity_HF, new TGLayoutHints(kLHintsCenterX, 0,5,0,5));
+  TGHorizontalFrame *PSDRegionPolarity_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSDRegionPolarity_HF, new TGLayoutHints(kLHintsCenterX, 0,5,0,5));
 
-  PSDFilterPolarity_HF->AddFrame(PSDPositiveFilter_RB = new TGRadioButton(PSDFilterPolarity_HF, "Positive  ", PSDPositiveFilter_RB_ID),
+  PSDRegionPolarity_HF->AddFrame(PSDInsideRegion_RB = new TGRadioButton(PSDRegionPolarity_HF, "Inside  ", PSDInsideRegion_RB_ID),
 				 new TGLayoutHints(kLHintsNormal, 5,5,0,5));
-  PSDPositiveFilter_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-  PSDPositiveFilter_RB->SetState(kButtonDown);
-  PSDPositiveFilter_RB->SetState(kButtonDisabled);
+  PSDInsideRegion_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDInsideRegion_RB->SetState(kButtonDown);
+  PSDInsideRegion_RB->SetState(kButtonDisabled);
 
-  PSDFilterPolarity_HF->AddFrame(PSDNegativeFilter_RB = new TGRadioButton(PSDFilterPolarity_HF, "Negative", PSDNegativeFilter_RB_ID),
+  PSDRegionPolarity_HF->AddFrame(PSDOutsideRegion_RB = new TGRadioButton(PSDRegionPolarity_HF, "Outside", PSDOutsideRegion_RB_ID),
 				 new TGLayoutHints(kLHintsNormal, 5,5,0,5));
-  PSDNegativeFilter_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-  PSDNegativeFilter_RB->SetState(kButtonDisabled);
-
+  PSDOutsideRegion_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDOutsideRegion_RB->SetState(kButtonDisabled);
   
-  PSDAnalysis_GF->AddFrame(PSDClearFilter_TB = new TGTextButton(PSDAnalysis_GF, "Clear filter", PSDClearFilter_TB_ID),
+  PSDAnalysis_GF->AddFrame(PSDClearRegion_TB = new TGTextButton(PSDAnalysis_GF, "Clear PSD region", PSDClearRegion_TB_ID),
 			   new TGLayoutHints(kLHintsLeft, 15,5,0,5));
-  PSDClearFilter_TB->Resize(200,30);
-  PSDClearFilter_TB->ChangeOptions(PSDClearFilter_TB->GetOptions() | kFixedSize);
-  PSDClearFilter_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
-  PSDClearFilter_TB->SetState(kButtonDisabled);
+  PSDClearRegion_TB->Resize(200,30);
+  PSDClearRegion_TB->ChangeOptions(PSDClearRegion_TB->GetOptions() | kFixedSize);
+  PSDClearRegion_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
+  PSDClearRegion_TB->SetState(kButtonDisabled);
   
   PSDAnalysis_GF->AddFrame(PSDCalculate_TB = new TGTextButton(PSDAnalysis_GF, "Create PSD histogram", PSDCalculate_TB_ID),
                            new TGLayoutHints(kLHintsLeft, 15,5,5,5));
@@ -2258,15 +2257,10 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->PSDThreshold = PSDThreshold_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->PSDPeakOffset = PSDPeakOffset_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->PSDTailOffset = PSDTailOffset_NEL->GetEntry()->GetIntNumber();
-
   ADAQSettings->PSDPlotType = PSDPlotType_CBL->GetComboBox()->GetSelected();
   ADAQSettings->PSDPlotTailIntegrationRegion = PSDPlotTailIntegration_CB->IsDown();
-
-  if(PSDPositiveFilter_RB->IsDown())
-    ADAQSettings->PSDFilterPolarity = 1.0;
-  else
-    ADAQSettings->PSDFilterPolarity = -1.0;
-
+  ADAQSettings->PSDInsideRegion = PSDInsideRegion_RB->IsDown();
+  ADAQSettings->PSDOutsideRegion = PSDOutsideRegion_RB->IsDown();
   ADAQSettings->PSDXSlice = PSDHistogramSliceX_RB->IsDown();
   ADAQSettings->PSDYSlice = PSDHistogramSliceY_RB->IsDown();
 
@@ -2325,8 +2319,8 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->SpectraCalibrations = ComputationMgr->GetSpectraCalibrations();
   
   // PSD filter objects
-  ADAQSettings->UsePSDFilters = ComputationMgr->GetUsePSDFilters();
-  ADAQSettings->PSDFilters = ComputationMgr->GetPSDFilters();
+  ADAQSettings->UsePSDRegions = ComputationMgr->GetUsePSDRegions();
+  ADAQSettings->PSDRegions = ComputationMgr->GetPSDRegions();
 
   // Update the settings object pointer in the manager classes
   ComputationMgr->SetADAQSettings(ADAQSettings);
@@ -2587,11 +2581,11 @@ void AAInterface::SetPSDWidgetState(bool WidgetState, EButtonState ButtonState)
   PSDPlotType_CBL->GetComboBox()->SetEnabled(WidgetState);
   PSDPlotTailIntegration_CB->SetState(ButtonState);
   PSDEnableHistogramSlicing_CB->SetState(ButtonState);
-  PSDEnableFilterCreation_CB->SetState(ButtonState);
-  PSDEnableFilter_CB->SetState(ButtonState);
-  PSDPositiveFilter_RB->SetState(ButtonState);
-  PSDNegativeFilter_RB->SetState(ButtonState);
-  PSDClearFilter_TB->SetState(ButtonState);
+  PSDEnableRegionCreation_CB->SetState(ButtonState);
+  PSDEnableRegion_CB->SetState(ButtonState);
+  PSDInsideRegion_RB->SetState(ButtonState);
+  PSDOutsideRegion_RB->SetState(ButtonState);
+  PSDClearRegion_TB->SetState(ButtonState);
   PSDCalculate_TB->SetState(ButtonState);
 }
 

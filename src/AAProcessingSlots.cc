@@ -34,7 +34,8 @@
 
 AAProcessingSlots::AAProcessingSlots(AAInterface *TI)
   : TheInterface(TI)
-{  ComputationMgr = AAComputation::GetInstance();
+{
+  ComputationMgr = AAComputation::GetInstance();
   GraphicsMgr = AAGraphics::GetInstance();
   InterpolationMgr = AAInterpolation::GetInstance();
 }
@@ -68,7 +69,7 @@ void AAProcessingSlots::HandleCheckButtons()
     // Be sure to turn off PSD filtering if the user does not want to
     // discriminate by pulse shape
     else{
-      TheInterface->PSDEnableFilter_CB->SetState(kButtonUp);
+      TheInterface->PSDEnableRegion_CB->SetState(kButtonUp);
       if(GraphicsMgr->GetCanvasContentType() == zWaveform)
 	GraphicsMgr->PlotWaveform();
     }
@@ -78,24 +79,24 @@ void AAProcessingSlots::HandleCheckButtons()
     break;
   }
 
-  case PSDEnableFilterCreation_CB_ID:{
+  case PSDEnableRegionCreation_CB_ID:{
     
-    if(TheInterface->PSDEnableFilterCreation_CB->IsDown() and 
+    if(TheInterface->PSDEnableRegionCreation_CB->IsDown() and 
        GraphicsMgr->GetCanvasContentType() != zPSDHistogram){
       TheInterface->CreateMessageBox("The canvas does not presently contain a PSD histogram! PSD filter creation is not possible!","Stop");
-      TheInterface->PSDEnableFilterCreation_CB->SetState(kButtonUp);
+      TheInterface->PSDEnableRegionCreation_CB->SetState(kButtonUp);
       break;
     }
     break;
   }
 
-  case PSDEnableFilter_CB_ID:{
-    if(TheInterface->PSDEnableFilter_CB->IsDown()){
-      ComputationMgr->SetUsePSDFilter(TheInterface->PSDChannel_CBL->GetComboBox()->GetSelected(), true);
+  case PSDEnableRegion_CB_ID:{
+    if(TheInterface->PSDEnableRegion_CB->IsDown()){
+      ComputationMgr->SetUsePSDRegions(TheInterface->PSDChannel_CBL->GetComboBox()->GetSelected(), true);
       TheInterface->FindPeaks_CB->SetState(kButtonDown);
     }
     else
-      ComputationMgr->SetUsePSDFilter(TheInterface->PSDChannel_CBL->GetComboBox()->GetSelected(), false);
+      ComputationMgr->SetUsePSDRegions(TheInterface->PSDChannel_CBL->GetComboBox()->GetSelected(), false);
     break;
   }
     
@@ -229,15 +230,15 @@ void AAProcessingSlots::HandleRadioButtons()
     TheInterface->NumProcessors_NEL->GetEntry()->SetNumber(TheInterface->NumProcessors);
     break;
 
-  case PSDPositiveFilter_RB_ID:
-    if(TheInterface->PSDPositiveFilter_RB->IsDown()){
-      TheInterface->PSDNegativeFilter_RB->SetState(kButtonUp);
+  case PSDInsideRegion_RB_ID:
+    if(TheInterface->PSDInsideRegion_RB->IsDown()){
+      TheInterface->PSDOutsideRegion_RB->SetState(kButtonUp);
     }
     break;
 
-  case PSDNegativeFilter_RB_ID:
-    if(TheInterface->PSDNegativeFilter_RB->IsDown()){
-      TheInterface->PSDPositiveFilter_RB->SetState(kButtonUp);
+  case PSDOutsideRegion_RB_ID:
+    if(TheInterface->PSDOutsideRegion_RB->IsDown()){
+      TheInterface->PSDOutsideRegion_RB->SetState(kButtonUp);
     }
     break;
 
@@ -311,12 +312,12 @@ void AAProcessingSlots::HandleTextButtons()
     
     break;
 
-  case PSDClearFilter_TB_ID:
+  case PSDClearRegion_TB_ID:
 
     if(TheInterface->ADAQFileLoaded){
 
-      ComputationMgr->ClearPSDFilter(TheInterface->ChannelSelector_CBL->GetComboBox()->GetSelected());
-      TheInterface->PSDEnableFilter_CB->SetState(kButtonUp);
+      ComputationMgr->ClearPSDRegion(TheInterface->ChannelSelector_CBL->GetComboBox()->GetSelected());
+      TheInterface->PSDEnableRegion_CB->SetState(kButtonUp);
       
       switch(GraphicsMgr->GetCanvasContentType()){
       case zWaveform:
@@ -406,7 +407,7 @@ void AAProcessingSlots::HandleTextButtons()
   case DesplicedFileCreation_TB_ID:
     // Alert the user the filtering particles by PSD into the spectra
     // requires integration type peak finder to be used
-    if(ComputationMgr->GetUsePSDFilters()[TheInterface->ADAQSettings->PSDChannel] and 
+    if(ComputationMgr->GetUsePSDRegions()[TheInterface->ADAQSettings->PSDChannel] and 
        TheInterface->ADAQSettings->ADAQSpectrumIntTypeWW)
       TheInterface->CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
 

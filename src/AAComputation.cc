@@ -79,7 +79,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     SpectrumIntegral_H(new TH1F), SpectrumFit_F(new TF1),
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), 
     Verbose(false), ParallelVerbose(true),
-    Baseline(0.), PSDFilterPolarity(1.),
+    Baseline(0.), PSDRegionPolarity(1.),
     V1720MaximumBit(4095), NumDataChannels(8),
     SpectrumExists(false), SpectrumBackgroundExists(false), SpectrumDerivativeExists(false), 
     PSDHistogramExists(false), PSDHistogramSliceExists(false),
@@ -100,12 +100,12 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
   for(int ch=0; ch<NumDataChannels; ch++){
     // All 8 channel's managers are set "off" by default
     UseSpectraCalibrations.push_back(false);
-    UsePSDFilters.push_back(false);
+    UsePSDRegions.push_back(false);
     
-    // Store empty TGraph pointers in std::vectors to hold space and
+    // Store empty TCutG pointers in std::vectors to hold space and
     // prevent seg. faults later when we test/delete unused objects
     SpectraCalibrations.push_back(new TGraph);
-    PSDFilters.push_back(new TGraph);
+    PSDRegions.push_back(new TCutG);
     
     // Assign a blank initial structure for channel calibration data
     ADAQChannelCalibrationData Init;
@@ -947,7 +947,7 @@ void AAComputation::CreateSpectrum()
       
       // Calculate the PSD integrals and determine if they pass
       // the pulse-shape filterthrough the pulse-shape filter
-      if(ADAQSettings->UsePSDFilters[ADAQSettings->PSDChannel])
+      if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel])
       	CalculatePSDIntegrals(false);
       
       // If a PAS is to be created ...
@@ -1104,7 +1104,7 @@ void AAComputation::IntegratePeaks()
     // If the PSD filter is desired, examine the PSD filter flag
     // stored in each PeakInfoStruct to determine whether or not this
     // peak should be filtered out of the spectrum.
-    if(ADAQSettings->UsePSDFilters[ADAQSettings->PSDChannel] and (*it).PSDFilterFlag==true)
+    if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel] and (*it).PSDFilterFlag==true)
       continue;
     
     // ...and use the lower and upper peak limits to calculate the
@@ -1140,7 +1140,7 @@ void AAComputation::FindPeakHeights()
     // If the PSD filter is desired, examine the PSD filter flag
     // stored in each PeakInfoStruct to determine whether or not this
     // peak should be filtered out of the spectrum.
-    if(ADAQSettings->UsePSDFilters[ADAQSettings->PSDChannel] and (*it).PSDFilterFlag==true)
+    if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel] and (*it).PSDFilterFlag==true)
       continue;
     
     // Initialize the peak height for each peak region
@@ -1764,12 +1764,12 @@ void AAComputation::CalculatePSDIntegrals(bool FillPSDHistogram)
 	   << endl;
     
     // If the user has enabled a PSD filter ...
-    if(ADAQSettings->UsePSDFilters[ADAQSettings->PSDChannel])
+    if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel])
       
       // ... then apply the PSD filter to the waveform. If the
       // waveform does not pass the filter, mark the flag indicating
       // that it should be filtered out due to its pulse shap
-      if(ApplyPSDFilter(TailIntegral, TotalIntegral))
+      if(ApplyPSDRegion(TailIntegral, TotalIntegral))
 	(*it).PSDFilterFlag = true;
     
     // The total integral of the waveform must exceed the PSDThreshold
@@ -1791,32 +1791,24 @@ void AAComputation::CalculatePSDIntegrals(bool FillPSDHistogram)
 // - uniform throughout the code - is used for the return value:true =
 // waveform should be filtered; false = waveform should not be
 // filtered
-bool AAComputation::ApplyPSDFilter(double TailIntegral, double TotalIntegral)
+bool AAComputation::ApplyPSDRegion(double TailIntegral, double TotalIntegral)
 {
-  // The PSDFilter uses a TGraph created by the user in order to
-  // filter events out of the PSDHistogram_H. The events to be
-  // filtered must fall either above ("positive filter") or below
-  // ("negative filter) the line defined by the TGraph object. The
-  // tail integral of the pulse is compared to an interpolated
-  // value (using the total integral) to decide whether to filter.
+  // The PSD region is a channel-specific TCutG object that is used to
+  // discriminate particle-induced waveform shapes based on the user's
+  // graphical cut of a PSD 2D histogram. The user can define
+  // "accepted" waveforms to be either "inside" or "outside" the 2D
+  // region defined by the TCutG object. The function returns true is
+  // the waveform is "accepted" and false is the waveform is
+  // "rejected".
 
-
-  // Waveform passed the criterion for a positive PSD filter (point in
-  // tail/total PSD integral space fell "above" the TGraph; therefore,
-  // it should not be filtered so return false
-  if(ADAQSettings->PSDFilterPolarity > 0 and 
-     TailIntegral >= ADAQSettings->PSDFilters[ADAQSettings->PSDChannel]->Eval(TotalIntegral))
+  if(ADAQSettings->PSDInsideRegion and
+     ADAQSettings->PSDRegions[ADAQSettings->PSDChannel]->IsInside(TotalIntegral, TailIntegral))
     return false;
 
-  // Waveform passed the criterion for a negative PSD filter (point in
-  // tail/total PSD integral space fell "below" the TGraph; therefore,
-  // it should not be filtered so return false
-  else if(ADAQSettings->PSDFilterPolarity < 0 and 
-	  TailIntegral <= ADAQSettings->PSDFilters[ADAQSettings->PSDChannel]->Eval(TotalIntegral))
+  else if(ADAQSettings->PSDOutsideRegion and 
+	  !ADAQSettings->PSDRegions[ADAQSettings->PSDChannel]->IsInside(TotalIntegral, TailIntegral))
     return false;
 
-  // Waveform did not pass the PSD filter tests; therefore it should
-  // be filtered so return true
   else
     return true;
 }
@@ -2325,7 +2317,7 @@ void AAComputation::FindEdge()
 // function is called by ::HandleCanvas() each time that the user
 // clicks on the active pad, passing the x- and y-pixel click
 // location to the function
-void AAComputation::CreatePSDFilter(int XPixel, int YPixel)
+void AAComputation::CreatePSDRegion(int XPixel, int YPixel)
 {
   // Pixel coordinates: (x,y) = (0,0) at the top left of the canvas
   // User coordinates: (x,y) at any point on the canvas corresponds to
@@ -2353,31 +2345,31 @@ void AAComputation::CreatePSDFilter(int XPixel, int YPixel)
   double YPos = gPad->PixeltoY(YPixel) + abs(CanvasStart_YPos) + abs(CanvasEnd_YPos);
 
   // Increment the number of points to be used with the TGraph
-  PSDNumFilterPoints++;
+  PSDNumRegionPoints++;
     
   // Add the X and Y position in data coordinates to the vectors to
   // be used with the TGraph
-  PSDFilterXPoints.push_back(XPos);
-  PSDFilterYPoints.push_back(YPos);
+  PSDRegionXPoints.push_back(XPos);
+  PSDRegionYPoints.push_back(YPos);
   
   // Recreate the TGraph representing the "PSDFilter" 
-  if(PSDFilters[ADAQSettings->PSDChannel]) delete PSDFilters[ADAQSettings->PSDChannel];
-  PSDFilters[ADAQSettings->PSDChannel] = new TGraph(PSDNumFilterPoints, &PSDFilterXPoints[0], &PSDFilterYPoints[0]);
+  if(PSDRegions[ADAQSettings->PSDChannel]) delete PSDRegions[ADAQSettings->PSDChannel];
+  //PSDRegions[ADAQSettings->PSDChannel] = new TCutG("PSDRegion", PSDNumRegionPoints, &PSDRegionXPoints[0], &PSDRegionYPoints[0]);
   
-  UsePSDFilters[ADAQSettings->PSDChannel] = true;
+  UsePSDRegions[ADAQSettings->PSDChannel] = true;
 }
 
 
-void AAComputation::ClearPSDFilter(int Channel)
+void AAComputation::ClearPSDRegion(int Channel)
 {
-  PSDNumFilterPoints = 0;
-  PSDFilterXPoints.clear();
-  PSDFilterYPoints.clear();
+  PSDNumRegionPoints = 0;
+  PSDRegionXPoints.clear();
+  PSDRegionYPoints.clear();
   
-  if(PSDFilters[ADAQSettings->PSDChannel]) delete PSDFilters[ADAQSettings->PSDChannel];
-  PSDFilters[ADAQSettings->PSDChannel] = new TGraph;
+  if(PSDRegions[ADAQSettings->PSDChannel]) delete PSDRegions[ADAQSettings->PSDChannel];
+  PSDRegions[ADAQSettings->PSDChannel] = new TCutG;
   
-  UsePSDFilters[ADAQSettings->PSDChannel] = false;
+  UsePSDRegions[ADAQSettings->PSDChannel] = false;
 }
 
 
@@ -2587,7 +2579,7 @@ void AAComputation::CreateDesplicedFile()
     
     // Calculate the PSD integrals and determine if they pass through
     // the pulse-shape filter 
-    if(UsePSDFilters[ADAQSettings->PSDChannel])
+    if(UsePSDRegions[ADAQSettings->PSDChannel])
       CalculatePSDIntegrals(false);
     
 

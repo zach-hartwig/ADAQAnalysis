@@ -15,6 +15,7 @@
 
 #include <TObject.h>
 #include <TGraph.h>
+#include <TCutG.h>
 
 #include <vector>
 #include <string>
@@ -128,11 +129,11 @@ public:
   int PSDPlotType;
   bool PSDPlotTailIntegrationRegion, EnableHistogramSlicing, PSDXSlice, PSDYSlice;
 
-  bool PSDEnableFilterCreation, PSDEnableFilterUse;
-  int PSDFilterPolarity;
+  bool PSDEnableRegionCreation, PSDEnableFilterUse;
+  bool PSDInsideRegion, PSDOutsideRegion;
 
-  vector<TGraph *> PSDFilters;
-  vector<bool> UsePSDFilters;
+  vector<TCutG *> PSDRegions;
+  vector<bool> UsePSDRegions;
 
   double RFQPulseWidth, RFQRepRate;
   int RFQCountRateWaveforms;

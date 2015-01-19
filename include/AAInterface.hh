@@ -347,10 +347,10 @@ private:
   
   TGTextButton *PSDCalculate_TB;
   
-  TGCheckButton *PSDEnableFilterCreation_CB;
-  TGCheckButton *PSDEnableFilter_CB;
-  TGRadioButton *PSDPositiveFilter_RB, *PSDNegativeFilter_RB;
-  TGTextButton *PSDClearFilter_TB;
+  TGCheckButton *PSDEnableRegionCreation_CB;
+  TGCheckButton *PSDEnableRegion_CB;
+  TGRadioButton *PSDInsideRegion_RB, *PSDOutsideRegion_RB;
+  TGTextButton *PSDCreateRegion_TB, *PSDClearRegion_TB;
 
   TGCheckButton *IntegratePearson_CB;
   ADAQComboBoxWithLabel *PearsonChannel_CBL;

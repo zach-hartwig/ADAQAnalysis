@@ -276,7 +276,7 @@ void AASpectrumSlots::HandleTextButtons()
     // Alert the user the filtering particles by PSD into the spectra
     // requires integration type peak finder to be used
     int PSDChannel = TheInterface->ADAQSettings->PSDChannel;
-    if(ComputationMgr->GetUsePSDFilters()[PSDChannel] and 
+    if(ComputationMgr->GetUsePSDRegions()[PSDChannel] and 
        TheInterface->ADAQSettings->ADAQSpectrumIntTypeWW)
       TheInterface->CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
     

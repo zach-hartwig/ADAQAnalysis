@@ -48,6 +48,7 @@
 #include <TColor.h>
 #include <TGProgressBar.h>
 #include <TF1.h>
+#include <TCutG.h>
 
 // C++
 #include <string>
@@ -132,9 +133,9 @@ public:
   // Pulse shape discrimination processing
   TH2F *CreatePSDHistogram();
   void CalculatePSDIntegrals(bool);
-  bool ApplyPSDFilter(double, double);
-  void CreatePSDFilter(int, int);
-  void ClearPSDFilter(int);
+  bool ApplyPSDRegion(double, double);
+  void CreatePSDRegion(int, int);
+  void ClearPSDRegion(int);
   void CreatePSDHistogramSlice(int, int);
 
   // Processing methods
@@ -183,11 +184,11 @@ public:
   // Pulse shape discrimination histograms
   TH2F *GetPSDHistogram() { return PSDHistogram_H; }
   TH1D *GetPSDHistogramSlice() { return PSDHistogramSlice_H; }
-
+  
   // Pulse shape discrimination filters
-  vector<TGraph *> GetPSDFilters() { return PSDFilters; }
-  vector<bool> GetUsePSDFilters() { return UsePSDFilters; }
-  void SetUsePSDFilter(int Channel, bool Use) {UsePSDFilters[Channel] = Use;}
+  vector<TCutG *> GetPSDRegions() { return PSDRegions; }
+  vector<bool> GetUsePSDRegions() { return UsePSDRegions; }
+  void SetUsePSDRegions(int Channel, bool Use) {UsePSDRegions[Channel] = Use;}
 
   // ADAQ file data
   string GetADAQFileName() { return ADAQFileName; }
@@ -304,11 +305,11 @@ private:
   TH2F *PSDHistogram_H, *MasterPSDHistogram_H;
   TH1D *PSDHistogramSlice_H;
 
-  double PSDFilterPolarity;
-  vector<TGraph *> PSDFilters;
-  vector<bool> UsePSDFilters;
-  int PSDNumFilterPoints;
-  vector<int> PSDFilterXPoints, PSDFilterYPoints;
+  double PSDRegionPolarity;
+  vector<TCutG *> PSDRegions;
+  vector<bool> UsePSDRegions;
+  int PSDNumRegionPoints;
+  vector<int> PSDRegionXPoints, PSDRegionYPoints;
 
 
   ///////////
