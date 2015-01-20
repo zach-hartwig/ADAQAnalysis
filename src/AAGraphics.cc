@@ -772,56 +772,25 @@ void AAGraphics::PlotPSDHistogram()
 
   gStyle->SetPalette(55);
 
-  switch(ADAQSettings->PSDPlotType){
+  PSDHistogram_H->Draw(ADAQSettings->PSDPlotType.c_str());
 
-  case 0:
-    PSDHistogram_H->Draw("COL Z");
-    break;
-
-  case 1:
-    PSDHistogram_H->Draw("LEGO2 0Z");
-    break;
-
-  case 2:
-    PSDHistogram_H->Draw("SURF3 Z");
-    break;
-
-  case 3:
-    PSDHistogram_H->SetFillColor(kOrange);
-    PSDHistogram_H->Draw("SURF4");
-    break;
-
-  case 4:
-    PSDHistogram_H->Draw("CONT Z");
-    break;
-  }
-
-
-  // Modify the histogram color palette only for the histograms that
-  // actually create a palette
-  if(ADAQSettings->PSDPlotType != 3){
+  // The canvas must be updated before the TPaletteAxis is accessed
+  TheCanvas->Update();
     
-    // The canvas must be updated before the TPaletteAxis is accessed
-    TheCanvas->Update();
-    
-    TPaletteAxis *ColorPalette = (TPaletteAxis *)PSDHistogram_H->GetListOfFunctions()->FindObject("palette");
-    ColorPalette->GetAxis()->SetTitle(PaletteTitle.c_str());
-    ColorPalette->GetAxis()->SetTitleSize(ADAQSettings->PaletteSize);
-    ColorPalette->GetAxis()->SetTitleOffset(ADAQSettings->PaletteOffset);
-    ColorPalette->GetAxis()->CenterTitle();
-    ColorPalette->GetAxis()->SetLabelSize(ADAQSettings->PaletteSize);
-    
-    ColorPalette->SetX1NDC(ADAQSettings->PaletteX1);
-    ColorPalette->SetX2NDC(ADAQSettings->PaletteX2);
-    ColorPalette->SetY1NDC(ADAQSettings->PaletteY1);
-    ColorPalette->SetY2NDC(ADAQSettings->PaletteY2);
-    
-    ColorPalette->Draw("SAME");
-  }
+  TPaletteAxis *ColorPalette = (TPaletteAxis *)PSDHistogram_H->GetListOfFunctions()->FindObject("palette");
+  ColorPalette->GetAxis()->SetTitle(PaletteTitle.c_str());
+  ColorPalette->GetAxis()->SetTitleSize(ADAQSettings->PaletteSize);
+  ColorPalette->GetAxis()->SetTitleOffset(ADAQSettings->PaletteOffset);
+  ColorPalette->GetAxis()->CenterTitle();
+  ColorPalette->GetAxis()->SetLabelSize(ADAQSettings->PaletteSize);
   
-  if(ADAQSettings->PSDEnableRegionCreation)
-    {}//PlotPSDFilter();
+  ColorPalette->SetX1NDC(ADAQSettings->PaletteX1);
+  ColorPalette->SetX2NDC(ADAQSettings->PaletteX2);
+  ColorPalette->SetY1NDC(ADAQSettings->PaletteY1);
+  ColorPalette->SetY2NDC(ADAQSettings->PaletteY2);
 
+  ColorPalette->Draw("SAME");
+  
   CanvasContentType = zPSDHistogram;
   
   TheCanvas->Update();

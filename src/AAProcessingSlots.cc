@@ -230,6 +230,18 @@ void AAProcessingSlots::HandleRadioButtons()
     TheInterface->NumProcessors_NEL->GetEntry()->SetNumber(TheInterface->NumProcessors);
     break;
 
+  case PSDYAxisTail_RB_ID:
+    if(TheInterface->PSDYAxisTail_RB->IsDown()){
+      TheInterface->PSDYAxisTailTotal_RB->SetState(kButtonUp);
+    }
+    break;
+
+  case PSDYAxisTailTotal_RB_ID:
+    if(TheInterface->PSDYAxisTailTotal_RB->IsDown()){
+      TheInterface->PSDYAxisTail_RB->SetState(kButtonUp);
+    }
+    break;
+
   case PSDInsideRegion_RB_ID:
     if(TheInterface->PSDInsideRegion_RB->IsDown()){
       TheInterface->PSDOutsideRegion_RB->SetState(kButtonUp);

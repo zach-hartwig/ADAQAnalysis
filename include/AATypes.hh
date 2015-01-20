@@ -301,6 +301,8 @@ enum{
   PSDTailOffset_NEL_ID,
   PSDPlotType_CBL_ID,
   PSDPlotTailIntegration_CB_ID,
+  PSDYAxisTail_RB_ID,
+  PSDYAxisTailTotal_RB_ID,
 
   PSDEnableHistogramSlicing_CB_ID,
   PSDHistogramSliceX_RB_ID,

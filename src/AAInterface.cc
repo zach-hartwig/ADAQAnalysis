@@ -1600,9 +1600,13 @@ void AAInterface::FillProcessingFrame()
                            new TGLayoutHints(kLHintsNormal, 0,5,5,0));
   PSDEnable_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
 
-  PSDAnalysis_GF->AddFrame(PSDChannel_CBL = new ADAQComboBoxWithLabel(PSDAnalysis_GF, "", -1),
-                           new TGLayoutHints(kLHintsNormal, 0,5,5,0));
 
+  TGHorizontalFrame *PSD_HF0 = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSD_HF0, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  
+  PSD_HF0->AddFrame(PSDChannel_CBL = new ADAQComboBoxWithLabel(PSD_HF0, "", -1),
+		    new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  
   stringstream ss;
   string entry;
   for(int ch=0; ch<NumDataChannels; ch++){
@@ -1611,65 +1615,17 @@ void AAInterface::FillProcessingFrame()
     PSDChannel_CBL->GetComboBox()->AddEntry(entry.c_str(),ch);
     ss.str("");
   }
+  PSDChannel_CBL->GetComboBox()->Resize(85,20);
   PSDChannel_CBL->GetComboBox()->Select(0);
   PSDChannel_CBL->GetComboBox()->SetEnabled(false);
 
-  PSDAnalysis_GF->AddFrame(PSDWaveforms_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Number of waveforms", -1),
-                           new TGLayoutHints(kLHintsNormal, 0,5,10,0));
+  PSD_HF0->AddFrame(PSDWaveforms_NEL = new ADAQNumberEntryWithLabel(PSD_HF0, "Waveforms", -1),
+                           new TGLayoutHints(kLHintsNormal, 10,5,5,0));
   PSDWaveforms_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDWaveforms_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   PSDWaveforms_NEL->GetEntry()->SetLimitValues(0,1); // Updated when ADAQ ROOT file loaded
   PSDWaveforms_NEL->GetEntry()->SetNumber(0); // Updated when ADAQ ROOT file loaded
   PSDWaveforms_NEL->GetEntry()->SetState(false);
-
-  PSDAnalysis_GF->AddFrame(PSDNumTotalBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. total bins (X axis)", -1),
-			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PSDNumTotalBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDNumTotalBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDNumTotalBins_NEL->GetEntry()->SetNumber(150);
-  PSDNumTotalBins_NEL->GetEntry()->SetState(false);
-
-  TGHorizontalFrame *TotalBins_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(TotalBins_HF);
-
-  TotalBins_HF->AddFrame(PSDMinTotalBin_NEL = new ADAQNumberEntryWithLabel(TotalBins_HF, "Min.", -1),
-			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PSDMinTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDMinTotalBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDMinTotalBin_NEL->GetEntry()->SetNumber(0);
-  PSDMinTotalBin_NEL->GetEntry()->SetState(false);
-
-  TotalBins_HF->AddFrame(PSDMaxTotalBin_NEL = new ADAQNumberEntryWithLabel(TotalBins_HF, "Max.", -1),
-			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PSDMaxTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDMaxTotalBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDMaxTotalBin_NEL->GetEntry()->SetNumber(10000);
-  PSDMaxTotalBin_NEL->GetEntry()->SetState(false);
-  
-  PSDAnalysis_GF->AddFrame(PSDNumTailBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. tail bins (Y axis)", -1),
-			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PSDNumTailBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDNumTailBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDNumTailBins_NEL->GetEntry()->SetNumber(150);
-  PSDNumTailBins_NEL->GetEntry()->SetState(false);
-
-  TGHorizontalFrame *TailBins_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(TailBins_HF);
-
-  TailBins_HF->AddFrame(PSDMinTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Min.", -1),
-			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PSDMinTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDMinTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDMinTailBin_NEL->GetEntry()->SetNumber(0);
-  PSDMinTailBin_NEL->GetEntry()->SetState(false);
-
-  TailBins_HF->AddFrame(PSDMaxTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Max.", -1),
-			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PSDMaxTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDMaxTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDMaxTailBin_NEL->GetEntry()->SetNumber(2000);
-  PSDMaxTailBin_NEL->GetEntry()->SetState(false);
-
 
   PSDAnalysis_GF->AddFrame(PSDThreshold_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Threshold (ADC)", -1),
                            new TGLayoutHints(kLHintsNormal, 0,5,5,0));
@@ -1691,17 +1647,80 @@ void AAInterface::FillProcessingFrame()
   PSDTailOffset_NEL->GetEntry()->SetNumber(29);
   PSDTailOffset_NEL->GetEntry()->SetState(false);
   PSDTailOffset_NEL->GetEntry()->Connect("ValueSet(long", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
+
+
+  PSDAnalysis_GF->AddFrame(PSDNumTotalBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. total bins (X axis)", -1),
+			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  PSDNumTotalBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  PSDNumTotalBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PSDNumTotalBins_NEL->GetEntry()->SetNumber(150);
+  PSDNumTotalBins_NEL->GetEntry()->SetState(false);
+
+  TGHorizontalFrame *TotalBins_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(TotalBins_HF);
+
+  TotalBins_HF->AddFrame(PSDMinTotalBin_NEL = new ADAQNumberEntryWithLabel(TotalBins_HF, "Min.", -1),
+			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  PSDMinTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDMinTotalBin_NEL->GetEntry()->SetNumber(0);
+  PSDMinTotalBin_NEL->GetEntry()->SetState(false);
+
+  TotalBins_HF->AddFrame(PSDMaxTotalBin_NEL = new ADAQNumberEntryWithLabel(TotalBins_HF, "Max.", -1),
+			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  PSDMaxTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDMaxTotalBin_NEL->GetEntry()->SetNumber(10000);
+  PSDMaxTotalBin_NEL->GetEntry()->SetState(false);
   
-  PSDAnalysis_GF->AddFrame(PSDPlotType_CBL = new ADAQComboBoxWithLabel(PSDAnalysis_GF, "Plot type", PSDPlotType_CBL_ID),
-			   new TGLayoutHints(kLHintsNormal, 0,5,5,5));
-  PSDPlotType_CBL->GetComboBox()->AddEntry("COL",0);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("LEGO2",1);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("SURF3",2);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("SURF4",3);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("CONT",4);
+  PSDAnalysis_GF->AddFrame(PSDNumTailBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. Y axis bins", -1),
+			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  PSDNumTailBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  PSDNumTailBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PSDNumTailBins_NEL->GetEntry()->SetNumber(150);
+  PSDNumTailBins_NEL->GetEntry()->SetState(false);
+
+  TGHorizontalFrame *TailBins_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(TailBins_HF);
+
+  TailBins_HF->AddFrame(PSDMinTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Min.", -1),
+			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  PSDMinTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDMinTailBin_NEL->GetEntry()->SetNumber(0);
+  PSDMinTailBin_NEL->GetEntry()->SetState(false);
+
+  TailBins_HF->AddFrame(PSDMaxTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Max.", -1),
+			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  PSDMaxTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDMaxTailBin_NEL->GetEntry()->SetNumber(2000);
+  PSDMaxTailBin_NEL->GetEntry()->SetState(false);
+
+  TGHorizontalFrame *PSDType_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSDType_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+
+  PSDType_HF->AddFrame(new TGLabel(PSDType_HF, "Y axis: "),
+		       new TGLayoutHints(kLHintsNormal,0,0,0,0));
+				   
+  PSDType_HF->AddFrame(PSDYAxisTail_RB = new TGRadioButton(PSDType_HF, "Tail", PSDYAxisTail_RB_ID),
+		       new TGLayoutHints(kLHintsNormal,10,0,0,0));
+  PSDYAxisTail_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDYAxisTail_RB->SetState(kButtonDown);
+  
+  PSDType_HF->AddFrame(PSDYAxisTailTotal_RB = new TGRadioButton(PSDType_HF, "(Tail / Total)", PSDYAxisTailTotal_RB_ID),
+		       new TGLayoutHints(kLHintsNormal,20,0,0,0));
+  PSDYAxisTailTotal_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+
+
+  PSDAnalysis_GF->AddFrame(PSDPlotType_CBL = new ADAQComboBoxWithLabel(PSDAnalysis_GF, "Draw option", PSDPlotType_CBL_ID),
+			   new TGLayoutHints(kLHintsNormal, 0,5,10,5));
+  PSDPlotType_CBL->GetComboBox()->AddEntry("COLZ",0);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("LEGO2Z0",1);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("SURF3Z0",2);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("CONTZ0",4);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("CONT1Z",4);
   PSDPlotType_CBL->GetComboBox()->Select(0);
+  PSDPlotType_CBL->GetComboBox()->Resize(70,20);
   PSDPlotType_CBL->GetComboBox()->Connect("Selected(int,int)", "AAProcessingSlots", ProcessingSlots, "HandleComboBox(int,int)");
   PSDPlotType_CBL->GetComboBox()->SetEnabled(false);
+
 
   PSDAnalysis_GF->AddFrame(PSDCalculate_TB = new TGTextButton(PSDAnalysis_GF, "Create PSD histogram", PSDCalculate_TB_ID),
                            new TGLayoutHints(kLHintsLeft, 30,5,5,5));
@@ -2255,19 +2274,23 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->PSDEnable = PSDEnable_CB->IsDown();
   ADAQSettings->PSDChannel = PSDChannel_CBL->GetComboBox()->GetSelected();
   ADAQSettings->PSDWaveformsToDiscriminate = PSDWaveforms_NEL->GetEntry()->GetIntNumber();
-  
-  ADAQSettings->PSDNumTailBins = PSDNumTailBins_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDMinTailBin = PSDMinTailBin_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDMaxTailBin = PSDMaxTailBin_NEL->GetEntry()->GetIntNumber();
-
-  ADAQSettings->PSDNumTotalBins = PSDNumTotalBins_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDMinTotalBin = PSDMinTotalBin_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDMaxTotalBin = PSDMaxTotalBin_NEL->GetEntry()->GetIntNumber();
 
   ADAQSettings->PSDThreshold = PSDThreshold_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->PSDPeakOffset = PSDPeakOffset_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->PSDTailOffset = PSDTailOffset_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDPlotType = PSDPlotType_CBL->GetComboBox()->GetSelected();
+  
+  ADAQSettings->PSDNumTailBins = PSDNumTailBins_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDMinTailBin = PSDMinTailBin_NEL->GetEntry()->GetNumber();
+  ADAQSettings->PSDMaxTailBin = PSDMaxTailBin_NEL->GetEntry()->GetNumber();
+
+  ADAQSettings->PSDNumTotalBins = PSDNumTotalBins_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDMinTotalBin = PSDMinTotalBin_NEL->GetEntry()->GetNumber();
+  ADAQSettings->PSDMaxTotalBin = PSDMaxTotalBin_NEL->GetEntry()->GetNumber();
+
+  ADAQSettings->PSDYAxisTail = PSDYAxisTail_RB->IsDown();
+  ADAQSettings->PSDYAxisTailTotal = PSDYAxisTailTotal_RB->IsDown();
+
+  ADAQSettings->PSDPlotType = PSDPlotType_CBL->GetComboBox()->GetSelectedEntry()->GetTitle();
   ADAQSettings->PSDPlotTailIntegrationRegion = PSDPlotTailIntegration_CB->IsDown();
   ADAQSettings->PSDInsideRegion = PSDInsideRegion_RB->IsDown();
   ADAQSettings->PSDOutsideRegion = PSDOutsideRegion_RB->IsDown();

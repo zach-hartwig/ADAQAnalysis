@@ -1758,6 +1758,11 @@ void AAComputation::CalculatePSDIntegrals(bool FillPSDHistogram)
     
     // Compute the tail integral (peak to upper limit)
     double TailIntegral = Waveform_H[ADAQSettings->PSDChannel]->Integral(Peak, UpperLimit);
+
+    // If the user wants to plot (Tail integral / Total integral) on
+    // the y-axis of the PSD histogram then modify the TailIntegral:
+    if(ADAQSettings->PSDYAxisTailTotal)
+      TailIntegral /= TotalIntegral;
     
     if(Verbose)
       cout << "PSD tail integral = " << TailIntegral << " (ADC)\n"

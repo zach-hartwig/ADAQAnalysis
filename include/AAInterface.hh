@@ -340,6 +340,8 @@ private:
 
   ADAQComboBoxWithLabel *PSDPlotType_CBL;
 
+  TGRadioButton *PSDYAxisTail_RB, *PSDYAxisTailTotal_RB;
+
   TGCheckButton *PSDPlotTailIntegration_CB;
   
   TGCheckButton *PSDEnableHistogramSlicing_CB;

@@ -122,11 +122,14 @@ public:
 
   bool PSDEnable;
   int PSDChannel, PSDWaveformsToDiscriminate;
-  int PSDNumTotalBins, PSDMinTotalBin, PSDMaxTotalBin;
-  int PSDNumTailBins, PSDMinTailBin, PSDMaxTailBin;
   int PSDThreshold, PSDTailOffset, PSDPeakOffset;
+  int PSDNumTotalBins;
+  Double_t PSDMinTotalBin, PSDMaxTotalBin;
+  int PSDNumTailBins;
+  Double_t PSDMinTailBin, PSDMaxTailBin;
+  Bool_t PSDYAxisTail, PSDYAxisTailTotal;
 
-  int PSDPlotType;
+  string PSDPlotType;
   bool PSDPlotTailIntegrationRegion, EnableHistogramSlicing, PSDXSlice, PSDYSlice;
 
   bool PSDEnableRegionCreation, PSDEnableFilterUse;
