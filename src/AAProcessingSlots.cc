@@ -330,7 +330,15 @@ void AAProcessingSlots::HandleTextButtons()
       ComputationMgr->CreatePSDRegion();
       GraphicsMgr->PlotPSDRegion();
       TheInterface->PSDEnableRegionCreation_CB->SetState(kButtonUp);
-    }
+      
+      TheInterface->PSDCreateRegion_TB->SetText("Region created!");
+      TheInterface->PSDCreateRegion_TB->SetForegroundColor(TheInterface->ColorMgr->Number2Pixel(0));
+      TheInterface->PSDCreateRegion_TB->SetBackgroundColor(TheInterface->ColorMgr->Number2Pixel(32));						   
+
+      TheInterface->PSDEnableRegion_CB->SetState(kButtonUp);
+      TheInterface->PSDInsideRegion_RB->SetState(kButtonUp);
+      TheInterface->PSDOutsideRegion_RB->SetState(kButtonUp);
+   }
 
     break;
 
@@ -340,6 +348,13 @@ void AAProcessingSlots::HandleTextButtons()
       
       ComputationMgr->ClearPSDRegion();
       TheInterface->PSDEnableRegion_CB->SetState(kButtonUp);
+      TheInterface->PSDEnableRegion_CB->SetState(kButtonDisabled);
+      TheInterface->PSDInsideRegion_RB->SetState(kButtonDisabled);
+      TheInterface->PSDOutsideRegion_RB->SetState(kButtonDisabled);
+
+      TheInterface->PSDCreateRegion_TB->SetText("Create PSD region!");
+      TheInterface->PSDCreateRegion_TB->SetForegroundColor(TheInterface->ColorMgr->Number2Pixel(1));
+      TheInterface->PSDCreateRegion_TB->SetBackgroundColor(TheInterface->ColorMgr->Number2Pixel(18));						   
       
       switch(GraphicsMgr->GetCanvasContentType()){
       case zWaveform:

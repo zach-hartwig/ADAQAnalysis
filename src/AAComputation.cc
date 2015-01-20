@@ -2336,6 +2336,11 @@ void AAComputation::CreatePSDRegion()
 
   Int_t Channel = ADAQSettings->PSDChannel;
   
+  // Ensure that the last point in the vectors is identical to the
+  // first point such that the TCutG will be a closed region
+  PSDRegionXPoints.push_back(PSDRegionXPoints.at(0));
+  PSDRegionYPoints.push_back(PSDRegionYPoints.at(0));
+  
   // Delete the previous TCutG object to prevent memory leaks
   if(PSDRegions[Channel] != NULL) 
     delete PSDRegions[Channel];

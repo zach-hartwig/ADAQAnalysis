@@ -1723,7 +1723,7 @@ void AAInterface::FillProcessingFrame()
 
 
   PSDAnalysis_GF->AddFrame(PSDCalculate_TB = new TGTextButton(PSDAnalysis_GF, "Create PSD histogram", PSDCalculate_TB_ID),
-                           new TGLayoutHints(kLHintsLeft, 30,5,5,5));
+                           new TGLayoutHints(kLHintsLeft, 25,5,5,5));
   PSDCalculate_TB->Resize(200,30);
   PSDCalculate_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   PSDCalculate_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
@@ -2615,9 +2615,9 @@ void AAInterface::SetPSDWidgetState(bool WidgetState, EButtonState ButtonState)
   PSDPlotTailIntegration_CB->SetState(ButtonState);
   PSDEnableHistogramSlicing_CB->SetState(ButtonState);
   PSDEnableRegionCreation_CB->SetState(ButtonState);
-  PSDEnableRegion_CB->SetState(ButtonState);
-  PSDInsideRegion_RB->SetState(ButtonState);
-  PSDOutsideRegion_RB->SetState(ButtonState);
+  //PSDEnableRegion_CB->SetState(ButtonState);
+  //PSDInsideRegion_RB->SetState(ButtonState);
+  //PSDOutsideRegion_RB->SetState(ButtonState);
   PSDCreateRegion_TB->SetState(ButtonState);
   PSDClearRegion_TB->SetState(ButtonState);
   PSDCalculate_TB->SetState(ButtonState);

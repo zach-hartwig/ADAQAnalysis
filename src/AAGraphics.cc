@@ -721,11 +721,14 @@ void AAGraphics::PlotPSDHistogram()
   else{
     Title = "Pulse Shape Discrimination Integrals";
     XTitle = "Waveform total integral [ADC]";
-    YTitle = "Waveform tail integral [ADC]";
+    if(ADAQSettings->PSDYAxisTail)
+      YTitle = "Waveform tail integral [ADC]";
+    else
+      YTitle = "Waveform (tail / total) integrals [ADC]";
     ZTitle = "Number of waveforms";
     PaletteTitle ="";
   }
-
+  
   // Get the desired axes divisions
   int XDivs = ADAQSettings->XDivs;
   int YDivs = ADAQSettings->YDivs;
@@ -1078,7 +1081,8 @@ void AAGraphics::PlotPSDRegion()
   PSDRegions[Channel]->SetLineColor(kMagenta);
   PSDRegions[Channel]->SetFillColor(kMagenta);
   PSDRegions[Channel]->SetFillStyle(3002);
-  PSDRegions[Channel]->Draw("LPF SAME");
+  PSDRegions[Channel]->Draw("PF");
+  PSDRegions[Channel]->Draw("L");
   
   TheCanvas->Update();
 }
