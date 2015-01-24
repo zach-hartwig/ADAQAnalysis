@@ -102,9 +102,10 @@ else
    CXX := clang++ -ferror-limit=5 -w
 endif
 
-# Include ADAQ header files; link against the ADAQSimulationReadout library
+# Include ADAQ header files; link against the ADAQReadout
+# (experimental data) and ASIMReadout (simulated data) libraries
 CXXFLAGS += -I$(ADAQHOME)/include
-ADAQLIBS = -L$(ADAQHOME)/lib/$(HOSTTYPE) -lASIMReadout
+ADAQLIBS = -L$(ADAQHOME)/lib/$(HOSTTYPE) -lADAQReadout -lASIMReadout 
 
 #***************#
 #**** RULES ****#

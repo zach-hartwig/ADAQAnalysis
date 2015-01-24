@@ -66,9 +66,12 @@ AAComputation *AAComputation::GetInstance()
 
 AAComputation::AAComputation(string CmdLineArg, bool PA)
   : SequentialArchitecture(!PA), ParallelArchitecture(PA),
-    ADAQFileLoaded(false), ASIMFileLoaded(false), 
+    ADAQFile(new TFile), ADAQFileName(""), ADAQFileLoaded(false), ADAQLegacyFileLoaded(false),
+    ADAQWaveformTree(new TTree), ADAQWaveformDataTree(new TTree),
+
+    ASIMFile(new TFile), ASIMFileName(""), ASIMFileLoaded(false), 
     ASIMEventTreeList(new TList), ASIMEvt(new ASIMEvent),
-    LegacyADAQFileLoaded(false),
+    
     ADAQParResults(NULL), ADAQParResultsLoaded(false),
     Time(0), RawVoltage(0), RecordLength(0),
     PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PearsonIntegralValue(0),
@@ -84,8 +87,8 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     V1720MaximumBit(4095), NumDataChannels(8),
     SpectrumExists(false), SpectrumBackgroundExists(false), SpectrumDerivativeExists(false), 
     PSDHistogramExists(false), PSDHistogramSliceExists(false),
-  TotalPeaks(0), DeuteronsInWaveform(0.), DeuteronsInTotal(0.), HalfHeight(0.),
-  EdgePosition(0.), EdgePositionFound(false)
+    TotalPeaks(0), DeuteronsInWaveform(0.), DeuteronsInTotal(0.), HalfHeight(0.),
+    EdgePosition(0.), EdgePositionFound(false)
 {
   if(TheComputationManager){
     cout << "\nERROR! TheComputationManager was constructed twice!\n" << endl;
@@ -118,8 +121,8 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
   // Set ROOT to print only break messages and above (to suppress the
   // annoying warning from TSpectrum that the peak buffer is full)
   gErrorIgnoreLevel = kBreak;
-  
-  
+
+ 
   ///////////////////////////
   // Parallel architecture //
   ///////////////////////////
@@ -206,10 +209,10 @@ bool AAComputation::LoadADAQFile(string FileName)
   ADAQFileName = FileName;
 
   // Open the specified ROOT file 
-  ADAQRootFile = new TFile(FileName.c_str(), "read");
+  ADAQFile = new TFile(FileName.c_str(), "read");
 
   // If a valid ADAQ ROOT file was NOT opened...
-  if(!ADAQRootFile->IsOpen())
+  if(!ADAQFile->IsOpen())
     ADAQFileLoaded = false;
   else{
     
@@ -219,29 +222,83 @@ bool AAComputation::LoadADAQFile(string FileName)
     // between 2012 and 2015. These file types were produced for a
     // number of experiments (AIMS, DNDO/ARI, and other projects), and
     // thus, support must be enabled for backwards
-    // compatibility. Typically, these files will have the .root or
-    // .adaq extension.
+    // compatibility. Typically, these files will have the ".root" or
+    // ".adaq" extension.
     //
     // The new "production" ADAQ file format that is far more
     // comprehensive, flexible, and standardized in all senses. These
-    // files are denoted with the extension .adaq.root by force if
+    // files are denoted with the extension ".adaq.root" by force if
     // created with ADAQAcquisition.
 
     // Determine whether the specified ADAQ file format is "legacy" or
     // "production" by the presence of the FileVersion TObjString
 
-    TObjString *FileVersion = NULL;
-    FileVersion = (TObjString *)ADAQRootFile->Get("FileVersion");
+    TObjString *FileVersionOS = NULL;
+    FileVersionOS = (TObjString *)ADAQFile->Get("FileVersion");
     
     // Handle loading the ADAQ file with format-appropriate methods
-    
-    if(FileVersion == NULL){
+ 
+    // The "legacy" ADAQ file version
+    if(FileVersionOS == NULL)
       LoadLegacyADAQFile();
-      LegacyADAQFileLoaded = true;
-    }
+    
+    // The "production" ADAQ file version
     else{
-      LegacyADAQFileLoaded = false;
-      exit(-42);
+
+      /////////////////////////
+      // Get ADAQ file metadata
+
+      TObjString *OS = (TObjString *)ADAQFile->Get("MachineName");
+      MachineName = OS->GetString();
+      
+      OS = (TObjString *)ADAQFile->Get("MachineUser");
+      MachineUser = OS->GetString();
+
+      OS = (TObjString *)ADAQFile->Get("FileDate");
+      FileDate = OS->GetString();
+
+      FileVersion = FileVersionOS->GetString();
+      
+
+      /////////////////////////////////////////
+      // Get the ADAQ readout information class
+      
+      ARI = (ADAQReadoutInformation *)ADAQFile->Get("ReadoutInformation");
+
+
+      ///////////////////////////////////////////
+      // Get the waveform and waveform data trees
+      
+      // Get the pointers to the TTrees stored in the TFile
+      ADAQWaveformTree = (TTree *)ADAQFile->Get("WaveformTree");
+      ADAQWaveformDataTree = (TTree *)ADAQFile->Get("WaveformDataTree");
+      
+      // Set branch addresses for the TTrees
+      int NumChannels = ARI->GetDGNumChannels();
+      for(int ch=0; ch<NumChannels; ch++){
+	
+	stringstream SS;
+	SS << "WaveformCh" << ch;
+	TString BranchName = SS.str();
+
+	// Initialize pointer to the waveform vector<Int_t> 
+	Waveforms[ch] = 0;
+	
+	ADAQWaveformTree->SetBranchStatus(BranchName, 1);
+	ADAQWaveformTree->SetBranchAddress(BranchName, &Waveforms[ch]);
+
+	// Initialize pointer to the waveform ADAQWaveformData class
+	WaveformData[ch] = new ADAQWaveformData;
+
+	SS.str("");
+	SS << "WaveformDataCh" << ch;
+	BranchName = SS.str();
+
+	ADAQWaveformDataTree->SetBranchStatus(BranchName, 1);
+	ADAQWaveformDataTree->SetBranchAddress(BranchName, &WaveformData[ch]);
+      }
+      
+      ADAQLegacyFileLoaded = false;
     }
     
     // An ADAQ file should be successfull loaded at this point
@@ -258,10 +315,10 @@ void AAComputation::LoadLegacyADAQFile()
   /////////////////////////////////////
   
   // Get the ADAQRootMeasParams objects stored in the ROOT file
-  ADAQMeasParams = (ADAQRootMeasParams *)ADAQRootFile->Get("MeasParams");
+  ADAQMeasParams = (ADAQRootMeasParams *)ADAQFile->Get("MeasParams");
   
   // Get the TTree with waveforms stored in the ROOT file
-  ADAQWaveformTree = (TTree *)ADAQRootFile->Get("WaveformTree");
+  ADAQWaveformTree = (TTree *)ADAQFile->Get("WaveformTree");
   
   // Seg fault protection against valid ROOT files that are missing
   // the essential ADAQ objects.
@@ -274,7 +331,7 @@ void AAComputation::LoadLegacyADAQFile()
   // along with data in the ROOT file. At present, this is only the
   // despliced waveform files. For standard ADAQ ROOT files, the
   // ADAQParResults class member will be a NULL pointer
-  ADAQParResults = dynamic_cast<AAParallelResults *>(ADAQRootFile->Get("ParResults"));
+  ADAQParResults = dynamic_cast<AAParallelResults *>(ADAQFile->Get("ParResults"));
   
   // If a valid class with the parallel parameters was found
   // (despliced ADAQ ROOT files, etc) then set the bool to true; if no
@@ -307,7 +364,7 @@ void AAComputation::LoadLegacyADAQFile()
   // length" is the width of the acquisition window in time in units
   // of 4 ns samples. There are 8 vectors<int>s corresponding to the 8
   // channels on the V1720 digitizer board. The following code
-  // initializes the member object WaveformVecPtrs to be vector of
+  // initializes the member object Waveforms to be vector of
   // vectors (outer vector size 8 = 8 V1720 channels; inner vector of
   // size RecordLength = RecordLength samples). Each of the outer
   // vectors is assigned to point to the address of the vector<int> in
@@ -323,20 +380,21 @@ void AAComputation::LoadLegacyADAQFile()
     ADAQWaveformTree->SetBranchStatus(BranchName.c_str(), 1);
     
     // Initialize the vector<int> pointers! No initialization worked
-      // in ROOT v5.34.19 and below but created a very difficult to
-      // track seg. fault for higher versions.
-    WaveformVecPtrs[ch] = 0;
+    // in ROOT v5.34.19 and below but created a very difficult to
+    // track seg. fault for higher versions.
+    Waveforms[ch] = 0;
     
     // Set the present channels' class object vector pointer to the
     // address of that chennel's vector<int> stored in the TTree
-    ADAQWaveformTree->SetBranchAddress(BranchName.c_str(), &WaveformVecPtrs[ch]);
+    ADAQWaveformTree->SetBranchAddress(BranchName.c_str(), &Waveforms[ch]);
     
     // Clear the string for the next channel.
     ss.str("");
   }
 
-  // Update the bool that determines if a valid ROOT file is loaded
+  // Update ADAQ file loaded booleans
   ADAQFileLoaded = true;
+  ADAQLegacyFileLoaded = true;
 }
 
     
@@ -346,13 +404,13 @@ bool AAComputation::LoadASIMFile(string FileName)
   ASIMFileName = FileName;
   
   // Open the ASIM ROOT file in read-only mode
-  ASIMRootFile = new TFile(FileName.c_str(), "read");
+  ASIMFile = new TFile(FileName.c_str(), "read");
 
   // Recreate the TList that contains TTrees with ADAQSimulationEvents
   if(ASIMEventTreeList) delete ASIMEventTreeList;
   ASIMEventTreeList = new TList;
   
-  if(!ASIMRootFile->IsOpen()){
+  if(!ASIMFile->IsOpen()){
     ASIMFileLoaded = false;
   }
   else{
@@ -363,13 +421,13 @@ bool AAComputation::LoadASIMFile(string FileName)
     // event-level information in branches with ADAQSimulationEvent
     // objects.
 
-    TIter It(ASIMRootFile->GetListOfKeys());
+    TIter It(ASIMFile->GetListOfKeys());
     TKey *Key;
     while((Key = (TKey *)It.Next())){
-      TString ClassType = ASIMRootFile->Get(Key->GetName())->ClassName();
+      TString ClassType = ASIMFile->Get(Key->GetName())->ClassName();
       
       if(ClassType == "TTree"){
-	TTree *Tree = (TTree *)ASIMRootFile->Get(Key->GetName());
+	TTree *Tree = (TTree *)ASIMFile->Get(Key->GetName());
 	ASIMEventTreeList->Add(Tree);
       }
     }
@@ -385,7 +443,7 @@ TH1F *AAComputation::CalculateRawWaveform(int Channel, int Waveform)
   ADAQWaveformTree->GetEntry(Waveform);
 
   // Set individual channel waveform address
-  vector<int> RawVoltage = *WaveformVecPtrs[Channel];
+  vector<int> RawVoltage = *Waveforms[Channel];
 
   // Get waveform size. This accounts for the possibility of waveforms
   // that vary length from event-to-event, such as with ZLE algorithm
@@ -416,7 +474,7 @@ TH1F* AAComputation::CalculateBSWaveform(int Channel, int Waveform, bool Current
 {
   ADAQWaveformTree->GetEntry(Waveform);
 
-  vector<int> RawVoltage = *WaveformVecPtrs[Channel];
+  vector<int> RawVoltage = *Waveforms[Channel];
 
   int Size = RawVoltage.size();
 
@@ -452,7 +510,7 @@ TH1F *AAComputation::CalculateZSWaveform(int Channel, int Waveform, bool Current
   double Polarity;
   (CurrentWaveform) ? Polarity = ADAQSettings->PearsonPolarity : Polarity = ADAQSettings->WaveformPolarity;
   
-  vector<int> RawVoltage = *WaveformVecPtrs[Channel];
+  vector<int> RawVoltage = *Waveforms[Channel];
   
   if(Waveform_H[Channel])
     delete Waveform_H[Channel];
@@ -843,7 +901,7 @@ void AAComputation::CreateSpectrum()
     int Channel = ADAQSettings->WaveformChannel;
 
     // Assign the raw waveform voltage to a class member vector<int>
-    RawVoltage = *WaveformVecPtrs[Channel];
+    RawVoltage = *Waveforms[Channel];
     
     // Calculate the selected waveform that will be analyzed into the
     // spectrum histogram. Note that "raw" waveforms may not be
@@ -1586,7 +1644,7 @@ TH2F *AAComputation::CreatePSDHistogram()
     
     ADAQWaveformTree->GetEntry(waveform);
 
-    RawVoltage = *WaveformVecPtrs[PSDChannel];
+    RawVoltage = *Waveforms[PSDChannel];
     
     if(ADAQSettings->RawWaveform or ADAQSettings->BSWaveform)
       CalculateBSWaveform(PSDChannel, waveform);
@@ -2138,7 +2196,7 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
   
   // Return to the ROOT TFile containing the waveforms
   // ZSH : Causing segfaults...necessary?
-  //ADAQRootFile->cd();
+  //ADAQFile->cd();
 }
 
 
@@ -2518,7 +2576,7 @@ void AAComputation::CreateDesplicedFile()
   // we want to operate. Recall that TFiles should be though of as
   // unix-like directories that we can move to/from...it's a bit
   // confusing but that's ROOT.
-  ADAQRootFile->cd();
+  ADAQFile->cd();
 
 
   ///////////////////////
@@ -2543,7 +2601,7 @@ void AAComputation::CreateDesplicedFile()
     ADAQWaveformTree->GetEntry(waveform);
 
     // Assign the current data channel's voltage to RawVoltage
-    RawVoltage = *WaveformVecPtrs[Channel];
+    RawVoltage = *Waveforms[Channel];
 
     // Select the type of Waveform_H object to create
     if(ADAQSettings->RawWaveform or ADAQSettings->BSWaveform)
@@ -2681,8 +2739,8 @@ void AAComputation::CreateDesplicedFile()
   PR->Write("ParResults");
   F->Close();
 
-  // Switch back to the ADAQRootFile TFile directory
-  ADAQRootFile->cd();
+  // Switch back to the ADAQFile TFile directory
+  ADAQFile->cd();
   
   // Note: if in parallel architecture then at this point a series of
   // despliced TFiles now exists in the /tmp directory with each TFile
@@ -2784,7 +2842,7 @@ void AAComputation::CalculateCountRate()
     ADAQWaveformTree->GetEntry(waveform);
 
     // Get the raw waveform voltage
-    RawVoltage = *WaveformVecPtrs[Channel];
+    RawVoltage = *Waveforms[Channel];
 
     // Calculate either a baseline subtracted waveform or a zero
     // suppression waveform

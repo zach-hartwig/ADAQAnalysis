@@ -58,6 +58,8 @@ using namespace std;
 // ADAQ
 #include "ADAQRootClasses.hh"
 #include "ASIMReadoutManager.hh"
+#include "ADAQReadoutInformation.hh"
+#include "ADAQWaveformData.hh"
 
 // ADAQAnalysis
 #include "AASettings.hh"
@@ -238,12 +240,22 @@ private:
   ///////////
   // File I/O
 
-  ADAQRootMeasParams *ADAQMeasParams;
-  TTree *ADAQWaveformTree;
-  TFile *ADAQRootFile, *ASIMRootFile;
-  string ADAQFileName, ASIMFileName;
-  bool ADAQFileLoaded, ASIMFileLoaded;
+  TFile *ADAQFile;
+  string ADAQFileName;
+  bool ADAQFileLoaded, ADAQLegacyFileLoaded;
 
+  TTree *ADAQWaveformTree, *ADAQWaveformDataTree;
+
+  TString MachineName, MachineUser, FileDate, FileVersion;
+  ADAQReadoutInformation *ARI;
+  vector<Int_t> *Waveforms[64];
+  ADAQWaveformData *WaveformData[64];
+  
+  ADAQRootMeasParams *ADAQMeasParams;
+
+  TFile *ASIMFile;
+  string ASIMFileName;
+  Bool_t ASIMFileLoaded;
 
   TList *ASIMEventTreeList;
   ASIMEvent *ASIMEvt;
@@ -251,22 +263,17 @@ private:
   AAParallelResults *ADAQParResults;
   bool ADAQParResultsLoaded;
 
-  bool LegacyADAQFileLoaded;
-
 
   //////////////////////
   // Waveforms variables
 
   TH1F *Waveform_H[8];
-
   TH1F *PearsonRawIntegration_H, *PearsonRiseFit_H, *PearsonPlateauFit_H;
   double PearsonIntegralValue;
   
-  // Readout for ADAQ waveforms 
-  vector<int> *WaveformVecPtrs[8];
   vector<int> Time, RawVoltage;
   int RecordLength;
-
+  
   // Peak finding machinery
   TSpectrum *PeakFinder;
   int NumPeaks;
