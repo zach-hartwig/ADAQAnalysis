@@ -297,7 +297,7 @@ bool AAComputation::LoadADAQFile(string FileName)
 	ADAQWaveformDataTree->SetBranchStatus(BranchName, 1);
 	ADAQWaveformDataTree->SetBranchAddress(BranchName, &WaveformData[ch]);
       }
-      
+
       ADAQLegacyFileLoaded = false;
     }
     

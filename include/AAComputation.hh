@@ -198,14 +198,14 @@ public:
 
   // ADAQ file data
   string GetADAQFileName() { return ADAQFileName; }
+  Bool_t GetADAQLegacyFileLoaded() {return ADAQLegacyFileLoaded;}
   int GetADAQNumberOfWaveforms() {return ADAQWaveformTree->GetEntries();}
   ADAQRootMeasParams *GetADAQMeasurementParameters() {return ADAQMeasParams;}
+  ADAQReadoutInformation *GetADAQReadoutInformation() {return ARI;}
   
-  // ACRONYM file data
+  // ASIM file data
   string GetASIMFileName() { return ASIMFileName; }
   TList *GetASIMEventTreeList() { return ASIMEventTreeList; }
-  //int GetASIMCRONYMLSEntries() { return LSDetectorTree->GetEntries(); }
-  //int GetACRONYMESEntries() { return ESDetectorTree->GetEntries(); }
   
   // Booleans
   bool GetADAQFileLoaded() { return ADAQFileLoaded; }

@@ -207,10 +207,25 @@ void AAGraphics::PlotWaveform(int Color)
   // with the vertical double slider positions) and min/max values
 
   double YMin, YMax, YAxisSize;
+
+  // In order to correctly size the maximum y-axis value for waveform
+  // plotting, we need to know the maximum ADC value (set by the
+  // digitizer bit depth that was used to acquire the data). This
+  // information was NOT stored in the legacy ADAQ files so the
+  // default in these cases should be a bit depth of 14 (with a
+  // maximum ADC value of 2**14-1 = 16383). However, thew new
+  // production ADAQ files make this information available via the
+  // ADAQReadoutInforrmation class 
+  
+  Int_t MaxADC = 16383;
+  if(!ComputationMgr->GetADAQLegacyFileLoaded()){
+    Int_t BitDepth = ComputationMgr->GetADAQReadoutInformation()->GetDGBitDepth();
+    MaxADC = pow(2,BitDepth);
+  }
   
   if(ADAQSettings->CanvasYAxisLog){
-    YMin = 16383 * (1 - ADAQSettings->YAxisMax);
-    YMax = 16383 * (1 - ADAQSettings->YAxisMin);
+    YMin = MaxADC * (1 - ADAQSettings->YAxisMax);
+    YMax = MaxADC * (1 - ADAQSettings->YAxisMin);
     if(YMin == 0)
       YMin = 0.05;
   }
@@ -219,10 +234,10 @@ void AAGraphics::PlotWaveform(int Color)
     YMax = Waveform_H->GetBinContent(Waveform_H->GetMaximumBin()) + 10;
   }
   else{
-    YMin = (16383 * (1 - ADAQSettings->YAxisMax))-30;
-    YMax = 16383 * (1 - ADAQSettings->YAxisMin);
+    YMin = (MaxADC * (1 - ADAQSettings->YAxisMax))-30;
+    YMax = MaxADC * (1 - ADAQSettings->YAxisMin);
   }
-
+  
   YAxisSize = YMax - YMin;
 
 

@@ -2417,11 +2417,41 @@ void AAInterface::CreateMessageBox(string Message, string IconName)
 // an ADAQ-formatted ROOT file
 void AAInterface::UpdateForADAQFile()
 {
+  // Get the current channel to be analyzed
+  int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
+
   // Update widgets with settings from the ADAQ file
-  
+
+  // Get the total number of waveforms stored in the ADAQWaveformTree
   int WaveformsInFile = ComputationMgr->GetADAQNumberOfWaveforms();
-  ADAQRootMeasParams *AMP = ComputationMgr->GetADAQMeasurementParameters();
-  int RecordLength = AMP->RecordLength;
+
+  // Get the following acquisition settings that are stored in the
+  // ADAQ file in order to correctly update the GUI widgets
+  Int_t RecordLength, Trigger, BaselineCalcMin, BaselineCalcMax;
+
+  // In order to ensure backwards compatibility with preexisting data
+  // sets taken before Feb 2015, we must differentiate between the
+  // "legacy" and "production" ADAQ file formats.
+
+  // "Legacy" ADAQ file (old and busted)
+  if(ComputationMgr->GetADAQLegacyFileLoaded()){
+    ADAQRootMeasParams *AMP = ComputationMgr->GetADAQMeasurementParameters();
+
+    RecordLength = AMP->RecordLength;
+    Trigger = AMP->TriggerThreshold[Channel];
+    BaselineCalcMin = AMP->BaselineCalcMin[Channel];
+    BaselineCalcMax = AMP->BaselineCalcMax[Channel];
+  }
+
+  // "Production" ADAQ file (new hotness)
+  else{
+    ADAQReadoutInformation *ARI = ComputationMgr->GetADAQReadoutInformation();
+    
+    RecordLength = ARI->GetRecordLength();
+    Trigger = ARI->GetTrigger().at(Channel);
+    BaselineCalcMin = ARI->GetBaselineCalcMin().at(Channel);
+    BaselineCalcMax = ARI->GetBaselineCalcMax().at(Channel);
+  }
   
   WaveformSelector_HS->SetRange(1, WaveformsInFile);
 
@@ -2437,14 +2467,12 @@ void AAInterface::UpdateForADAQFile()
 
   // Set the baseline calculation region to the values used during the
   // data acquisition as the default; user may update afterwards
-  int Channel = ChannelSelector_CBL->GetComboBox()->GetSelected();
 
   // Update the waveform trigger level display
-  double TriggerLevel = ComputationMgr->GetADAQMeasurementParameters()->TriggerThreshold[Channel];
-  TriggerLevel_NEFL->GetEntry()->SetNumber(TriggerLevel);
+  TriggerLevel_NEFL->GetEntry()->SetNumber(Trigger);
 
-  BaselineCalcMin_NEL->GetEntry()->SetNumber(AMP->BaselineCalcMin[Channel]);
-  BaselineCalcMax_NEL->GetEntry()->SetNumber(AMP->BaselineCalcMax[Channel]);
+  BaselineCalcMin_NEL->GetEntry()->SetNumber(BaselineCalcMin);
+  BaselineCalcMax_NEL->GetEntry()->SetNumber(BaselineCalcMax);
   
   PearsonLowerLimit_NEL->GetEntry()->SetLimitValues(0, RecordLength-1);
   PearsonLowerLimit_NEL->GetEntry()->SetNumber(0);
