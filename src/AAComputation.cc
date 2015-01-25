@@ -1452,6 +1452,14 @@ void AAComputation::IntegrateSpectrum()
   double LowerIntLimit = LowerFraction * Range + Min;
   double UpperIntLimit = UpperFraction * Range + Min;
 
+  /*
+  double XAxisMin = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
+  double XAxisMax = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
+
+  double LowerIntLimit = (ADAQSettings->SpectrumIntegrationMin * XAxisMax) + XAxisMin;
+  double UpperIntLimit = ADAQSettings->SpectrumIntegrationMax * XAxisMax;
+  */
+
   // Check to ensure that the lower limit line is always LESS than the
   // upper limit line
   if(UpperIntLimit < LowerIntLimit)
@@ -1520,11 +1528,28 @@ void AAComputation::IntegrateSpectrum()
 
 void AAComputation::FitSpectrum()
 {
+  /*
   double XAxisMin = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
   double XAxisMax = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
 
   double LowerIntLimit = (ADAQSettings->SpectrumIntegrationMin * XAxisMax) + XAxisMin;
   double UpperIntLimit = ADAQSettings->SpectrumIntegrationMax * XAxisMax;
+  */
+
+  // Get the spectrum binning min/max/total range
+  double Min = ADAQSettings->SpectrumMinBin;
+  double Max = ADAQSettings->SpectrumMaxBin;
+  double Range = Max-Min;
+
+  // Get the spectrum integration slider fractional position 
+  double LowerFraction = ADAQSettings->SpectrumIntegrationMin;
+  double UpperFraction = ADAQSettings->SpectrumIntegrationMax;
+
+  // Compute the integration range, ensuring to account for case where
+  // the lowest spectrum bin is non-zero.
+  double LowerIntLimit = LowerFraction * Range + Min;
+  double UpperIntLimit = UpperFraction * Range + Min;
+
   
   // Check to ensure that the lower limit line is always LESS than the
   // upper limit line
