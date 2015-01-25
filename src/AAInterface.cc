@@ -206,8 +206,11 @@ void AAInterface::CreateTheMainFrames()
   SavePSDSubMenu->AddEntry("sli&ce", MenuFileSavePSDHistogramSlice_ID);
   
   TGPopupMenu *MenuFile = new TGPopupMenu(gClient->GetRoot());
-  MenuFile->AddEntry("&Open ADAQ ROOT file ...", MenuFileOpenADAQ_ID);
-  MenuFile->AddEntry("Ope&n ASIM ROOT file ...", MenuFileOpenASIM_ID);
+  MenuFile->AddEntry("&Open ADAQ file ...", MenuFileOpenADAQ_ID);
+  MenuFile->AddEntry("Ope&n ASIM file ...", MenuFileOpenASIM_ID);
+  MenuFile->AddSeparator();
+  MenuFile->AddEntry("Load spectrum ...", MenuFileLoadSpectrum_ID);
+  MenuFile->AddEntry("Load PSD histogram ...", MenuFileLoadPSDHistogram_ID);
   MenuFile->AddSeparator();
   MenuFile->AddEntry("Save &waveform ...", MenuFileSaveWaveform_ID);
   MenuFile->AddPopup("Save &spectrum ...", SaveSpectrumSubMenu);
@@ -1855,7 +1858,21 @@ void AAInterface::FillProcessingFrame()
 
 
   TGGroupFrame *PearsonAnalysis_GF = new TGGroupFrame(ProcessingFrame_VF, "Pearson (RFQ current) integration", kVerticalFrame);
-  ProcessingFrame_VF->AddFrame(PearsonAnalysis_GF, new TGLayoutHints(kLHintsCenterX, 15,5,0,0));
+
+  //////////////////////
+  //
+  // The GUI widgets / methods contained in the PearsonAnalysis_GF are
+  // AIMS-specific analysis widgets and functions that are NOT in
+  // keeping with the generalized direction of the ADAQ tools. I am
+  // hesitant to remove them completely since they may be critical to
+  // future AIMS-specific DAQ. Commenting out the following line
+  // prevents the widgets from showing up, making this functionality
+  // 'invisible' to the normal user. Future of this functionality
+  // TBD. ZSH (25 Jan 15)
+  //
+  //  ProcessingFrame_VF->AddFrame(PearsonAnalysis_GF, new TGLayoutHints(kLHintsCenterX, 15,5,0,0));
+  //
+  //////////////////////
   
   PearsonAnalysis_GF->AddFrame(IntegratePearson_CB = new TGCheckButton(PearsonAnalysis_GF, "Integrate signal", IntegratePearson_CB_ID),
 			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
@@ -1944,7 +1961,7 @@ void AAInterface::FillProcessingFrame()
   DeuteronsInTotal_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal, TGNumberFormat::kNEANonNegative);
   DeuteronsInTotal_NEFL->GetEntry()->Resize(100,20);
   DeuteronsInTotal_NEFL->GetEntry()->SetState(false);
-  
+
   // Despliced file creation options
   
   TGGroupFrame *WaveformDesplicer_GF = new TGGroupFrame(ProcessingFrame_VF, "Despliced file creation", kVerticalFrame);
@@ -1998,7 +2015,21 @@ void AAInterface::FillProcessingFrame()
   // Count rate
 
   TGGroupFrame *CountRate_GF = new TGGroupFrame(ProcessingFrame_VF, "Count rate", kVerticalFrame);
-  ProcessingFrame_VF->AddFrame(CountRate_GF, new TGLayoutHints(kLHintsNormal, 15,5,5,5));
+
+  //////////////////////
+  //
+  // The GUI widgets / methods contained in the CountRate_GF are
+  // AIMS-specific analysis widgets and functions that are NOT in
+  // keeping with the generalized direction of the ADAQ tools. I am
+  // hesitant to remove them completely since they may be critical to
+  // future AIMS-specific DAQ. Commenting out the following line
+  // prevents the widgets from showing up, making this functionality
+  // 'invisible' to the normal user. Future of this functionality
+  // TBD. ZSH (25 Jan 15)
+  //
+  // ProcessingFrame_VF->AddFrame(CountRate_GF, new TGLayoutHints(kLHintsNormal, 15,5,5,5));
+  //
+  //////////////////////
 
   CountRate_GF->AddFrame(RFQPulseWidth_NEL = new ADAQNumberEntryWithLabel(CountRate_GF, "RFQ pulse width [us]", -1),
 			 new TGLayoutHints(kLHintsNormal, 5,5,5,0));

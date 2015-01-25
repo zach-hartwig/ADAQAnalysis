@@ -102,6 +102,8 @@ enum{
   
   MenuFileOpenADAQ_ID,
   MenuFileOpenASIM_ID,
+  MenuFileLoadSpectrum_ID,
+  MenuFileLoadPSDHistogram_ID,
   MenuFileSaveWaveform_ID,
   MenuFileSaveSpectrum_ID,
   MenuFileSaveSpectrumBackground_ID,

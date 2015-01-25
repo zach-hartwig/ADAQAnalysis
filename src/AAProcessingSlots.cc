@@ -106,26 +106,35 @@ void AAProcessingSlots::HandleCheckButtons()
   }
 
   case PSDEnableHistogramSlicing_CB_ID:{
-    if(TheInterface->PSDEnableHistogramSlicing_CB->IsDown()){
-      TheInterface->PSDHistogramSliceX_RB->SetState(kButtonUp);
-      TheInterface->PSDHistogramSliceY_RB->SetState(kButtonUp);
-      
-      // Temporary hack ZSH 12 Feb 13
-      TheInterface->PSDHistogramSliceX_RB->SetState(kButtonDown);
+    
+    if(TheInterface->PSDEnableHistogramSlicing_CB->IsDown() and 
+       GraphicsMgr->GetCanvasContentType() != zPSDHistogram){
+      TheInterface->CreateMessageBox("The canvas does not presently contain a PSD histogram! PSD filter creation is not possible!","Stop");
+      TheInterface->PSDEnableHistogramSlicing_CB->SetState(kButtonUp);
     }
     else{
-      // Disable histogram buttons
-      TheInterface->PSDHistogramSliceX_RB->SetState(kButtonDisabled);
-      TheInterface->PSDHistogramSliceY_RB->SetState(kButtonDisabled);
-
-      // Replot the PSD histogram
-      GraphicsMgr->PlotPSDHistogram();
       
-      // Delete the canvas containing the PSD slice histogram and
-      // close the window (formerly) containing the canvas
-      TCanvas *PSDSlice_C = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("PSDSlice_C");
-      if(PSDSlice_C)
-	PSDSlice_C->Close();
+      if(TheInterface->PSDEnableHistogramSlicing_CB->IsDown()){
+	TheInterface->PSDHistogramSliceX_RB->SetState(kButtonUp);
+	TheInterface->PSDHistogramSliceY_RB->SetState(kButtonUp);
+	
+	// Temporary hack ZSH 12 Feb 13
+	TheInterface->PSDHistogramSliceX_RB->SetState(kButtonDown);
+      }
+      else{
+	// Disable histogram buttons
+	TheInterface->PSDHistogramSliceX_RB->SetState(kButtonDisabled);
+	TheInterface->PSDHistogramSliceY_RB->SetState(kButtonDisabled);
+	
+	// Replot the PSD histogram
+	GraphicsMgr->PlotPSDHistogram();
+      
+	// Delete the canvas containing the PSD slice histogram and
+	// close the window (formerly) containing the canvas
+	TCanvas *PSDSlice_C = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("PSDSlice_C");
+	if(PSDSlice_C)
+	  PSDSlice_C->Close();
+      }
     }
     break;
   }

@@ -167,6 +167,12 @@ public:
   double GetDeuteronsInTotal() {return DeuteronsInTotal;}
   
   // Spectra
+  void SetSpectrum(TH1F *H) 
+  {
+    Spectrum_H = H;
+    SpectrumExists = true;
+  }
+  
   TH1F *GetSpectrum() {return (TH1F *)Spectrum_H->Clone();}
   TH1F *GetSpectrumBackground() {return (TH1F *)SpectrumBackground_H->Clone();}
   TH1F *GetSpectrumWithoutBackground() {return (TH1F *)SpectrumDeconvolved_H->Clone();}

@@ -230,18 +230,18 @@ void AANontabSlots::HandleMenu(int MenuID)
 
     string Desc[2], Type[2];
     if(MenuFileOpenADAQ_ID == MenuID){
-      Desc[0] = "ADAQ Experiment ROOT file";
-      Type[0] = "*.adaq";
-
-      Desc[1] = "ADAQ ROOT file";
-      Type[1] = "*.root";
-
+      Desc[0] = "ADAQ Experiment (ADAQ) file";
+      Type[0] = "*.adaq.root";
+      
+      Desc[1] = "ADAQ Experiment (ADAQ) file";
+      Type[1] = "*.adaq";
+      
     }
     else if(MenuFileOpenASIM_ID == MenuID){
-      Desc[0] = "ADAQ Simulation (ASIM) ROOT file";
+      Desc[0] = "ADAQ Simulation (ASIM) file";
       Type[0] = "*.asim.root";
       
-      Desc[1] = "ADAQ Simulation (ASIM) ROOT file";
+      Desc[1] = "ADAQ Simulation (ASIM) file";
       Type[1] = "*.root";
     }
     
@@ -298,6 +298,44 @@ void AANontabSlots::HandleMenu(int MenuID)
     }
     break;
   }
+
+  case MenuFileLoadSpectrum_ID:{
+
+    const char *FileTypes[] = {"ROOT file",   "*.root",
+			       0,             0};
+    
+    TGFileInfo FileInformation;
+    FileInformation.fFileTypeIdx = 0;
+    FileInformation.fFileTypes = FileTypes;
+    FileInformation.fIniDir = StrDup(TheInterface->HistogramDirectory.c_str());
+    
+    new TGFileDialog(gClient->GetRoot(), TheInterface, kFDOpen, &FileInformation);
+
+    if(FileInformation.fFilename==NULL)
+      TheInterface->CreateMessageBox("No file was selected! Nothing will be saved to file!","Stop");
+    else{
+
+      TString FileName = FileInformation.fFilename;
+      TFile *F = new TFile(FileName, "read");
+      
+      TH1F *H = NULL;
+      H = (TH1F *)F->Get("Spectrum");
+
+      if(H == NULL)
+	TheInterface->CreateMessageBox("No TH1F object named 'Spectrum' was found in the specific file!","Stop");
+      else{
+	TheInterface->SaveSettings();
+	ComputationMgr->SetSpectrum(H);
+	GraphicsMgr->PlotSpectrum();
+      }
+    }
+
+    break;
+  }
+
+  case MenuFileLoadPSDHistogram_ID:
+    TheInterface->CreateMessageBox("Loading a PSD histogram is not yet implemented!","Stop");
+    break;
 
   case MenuFileSaveWaveform_ID:
   case MenuFileSaveSpectrum_ID:

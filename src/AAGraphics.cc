@@ -524,12 +524,12 @@ void AAGraphics::PlotSpectrum()
   // Determine main spectrum to plot
 
   //TH1F *Spectrum_H = 0;
-  
+
   if(ADAQSettings->FindBackground and ADAQSettings->PlotLessBackground)
     Spectrum_H = ComputationMgr->GetSpectrumWithoutBackground();
   else
     Spectrum_H = ComputationMgr->GetSpectrum();
-  
+
   if(!Spectrum_H)
     return;
 
