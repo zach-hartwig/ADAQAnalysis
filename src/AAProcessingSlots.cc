@@ -101,8 +101,6 @@ void AAProcessingSlots::HandleCheckButtons()
   }
     
   case PSDPlotTailIntegration_CB_ID:{
-    if(!TheInterface->FindPeaks_CB->IsDown())
-      TheInterface->FindPeaks_CB->SetState(kButtonDown);
     GraphicsMgr->PlotWaveform();
     break;
   }
@@ -195,6 +193,13 @@ void AAProcessingSlots::HandleNumberEntries()
   TheInterface->SaveSettings();
   
   switch(NumberEntryID){
+    
+  case PSDTotalStart_NEL_ID:
+  case PSDTotalStop_NEL_ID:
+  case PSDTailStart_NEL_ID:
+  case PSDTailStop_NEL_ID:
+    GraphicsMgr->PlotWaveform();
+    break;
 
   default:
     break;
@@ -228,6 +233,16 @@ void AAProcessingSlots::HandleRadioButtons()
 
     TheInterface->NumProcessors_NEL->GetEntry()->SetState(true);
     TheInterface->NumProcessors_NEL->GetEntry()->SetNumber(TheInterface->NumProcessors);
+    break;
+    
+  case PSDTypePF_RB_ID:
+    if(TheInterface->PSDTypePF_RB->IsDown())
+      TheInterface->PSDTypeWW_RB->SetState(kButtonUp);
+    break;
+    
+  case PSDTypeWW_RB_ID:
+    if(TheInterface->PSDTypeWW_RB->IsDown())
+      TheInterface->PSDTypePF_RB->SetState(kButtonUp);
     break;
 
   case PSDYAxisTail_RB_ID:

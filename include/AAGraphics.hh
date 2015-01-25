@@ -130,8 +130,8 @@ private:
   TBox *Baseline_B;
   TLine *LPeakDelimiter_L, *RPeakDelimiter_L;
   TBox *IntegrationRegion_B;
-  TLine *PSDPeakOffset_L, *PSDTailOffset_L;
-  TBox *PSDTailIntegral_B;
+  TBox *PSDTotal_B;
+  TLine *PSDPeak_L, *PSDTail_L0, *PSDTail_L1;
   TLine *PearsonLowerLimit_L, *PearsonMiddleLimit_L, *PearsonUpperLimit_L;
 
   // Objects for spectral analysis

@@ -101,9 +101,9 @@ public:
   TH1F *CalculateZSWaveform(int, int, bool CurrentWaveform=false);
   double CalculateBaseline(vector<int> *);  
   double CalculateBaseline(TH1F *);
-
+  
   // Waveform processing 
-  bool FindPeaks(TH1F *);
+  bool FindPeaks(TH1F *, Int_t);
   void FindPeakLimits(TH1F *);
   void IntegratePeaks();
   void FindPeakHeights();

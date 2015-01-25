@@ -29,7 +29,6 @@
 //
 /////////////////////////////////////////////////////////////////////////////////
 
-
 // ROOT
 #include <TROOT.h>
 #include <TStyle.h>
@@ -42,15 +41,12 @@
 #include <TRootCanvas.h>
 #include <THashList.h>
 
-
 // C++
 #include <iostream>
 #include <cmath>
 #include <sstream>
 using namespace std;
 
-
-// AA
 #include "AAGraphics.hh"
 
 
@@ -66,7 +62,7 @@ AAGraphics *AAGraphics::GetInstance()
 AAGraphics::AAGraphics()
   : Trigger_L(new TLine), Floor_L(new TLine), ZSCeiling_L(new TLine), Baseline_B(new TBox), 
     LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine), IntegrationRegion_B(new TBox),
-    PSDPeakOffset_L(new TLine), PSDTailOffset_L(new TLine), PSDTailIntegral_B(new TBox),
+    PSDTotal_B(new TBox), PSDPeak_L(new TLine), PSDTail_L0(new TLine), PSDTail_L1(new TLine),
     PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
     HCalibration_L(new TLine), VCalibration_L(new TLine), EdgeBoundingBox_B(new TBox),
     EALine_L(new TLine), EABox_B(new TBox), DerivativeReference_L(new TLine),
@@ -114,16 +110,20 @@ AAGraphics::AAGraphics()
   IntegrationRegion_B->SetFillColor(kGreen+2);
   IntegrationRegion_B->SetFillStyle(3003);
 
-  PSDPeakOffset_L->SetLineStyle(7);
-  PSDPeakOffset_L->SetLineColor(kMagenta+3);
-  PSDPeakOffset_L->SetLineWidth(2);
+  PSDTotal_B->SetFillStyle(3003);
+  PSDTotal_B->SetFillColor(kMagenta+2);
 
-  PSDTailOffset_L->SetLineStyle(7);
-  PSDTailOffset_L->SetLineColor(kMagenta+1);
-  PSDTailOffset_L->SetLineWidth(2);
+  PSDPeak_L->SetLineStyle(7);
+  PSDPeak_L->SetLineColor(kMagenta+3);
+  PSDPeak_L->SetLineWidth(2);
 
-  PSDTailIntegral_B->SetFillColor(kMagenta+2);
-  PSDTailIntegral_B->SetFillStyle(3003);
+  PSDTail_L0->SetLineStyle(7);
+  PSDTail_L0->SetLineColor(kMagenta+1);
+  PSDTail_L0->SetLineWidth(2);
+
+  PSDTail_L1->SetLineStyle(7);
+  PSDTail_L1->SetLineColor(kMagenta+1);
+  PSDTail_L1->SetLineWidth(2);
 
   PearsonLowerLimit_L->SetLineStyle(7);
   PearsonLowerLimit_L->SetLineColor(kBlue);
@@ -338,32 +338,36 @@ void AAGraphics::PlotWaveform(int Color)
   if(ADAQSettings->PlotFloor)
     Floor_L->DrawLine(XMin, ADAQSettings->Floor, XMax, ADAQSettings->Floor);
   
-  if(ADAQSettings->FindPeaks){
-    ComputationMgr->FindPeaks(Waveform_H);
+  if(ADAQSettings->FindPeaks)
+    ComputationMgr->FindPeaks(Waveform_H, zPeakFinder);
+  else
+    ComputationMgr->FindPeaks(Waveform_H, zWholeWaveform);
     
-    if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel])
-      ComputationMgr->CalculatePSDIntegrals(false);
     
-    vector<PeakInfoStruct> PeakInfoVec = ComputationMgr->GetPeakInfoVec();
+  if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel])
+    ComputationMgr->CalculatePSDIntegrals(false);
     
-    vector<PeakInfoStruct>::iterator it;
-    for(it = PeakInfoVec.begin(); it != PeakInfoVec.end(); it++){
+  vector<PeakInfoStruct> PeakInfoVec = ComputationMgr->GetPeakInfoVec();
+  
+  vector<PeakInfoStruct>::iterator it;
+  for(it = PeakInfoVec.begin(); it != PeakInfoVec.end(); it++){
 
-      ////////////////////////
-      // Color waveform by PSD 
-
-      if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
-	
-	if((*it).PSDFilterFlag)
-	  Waveform_H->SetLineColor(kRed);
-	else
-	  Waveform_H->SetLineColor(kGreen+2);
-	
-	string NewDrawString = DrawString + " SAME";
-	Waveform_H->Draw(DrawString.c_str());
-      }
-
-
+    ////////////////////////
+    // Color waveform by PSD 
+    
+    if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
+      
+      if((*it).PSDFilterFlag)
+	Waveform_H->SetLineColor(kRed);
+      else
+	Waveform_H->SetLineColor(kGreen+2);
+      
+      string NewDrawString = DrawString + " SAME";
+      Waveform_H->Draw(DrawString.c_str());
+    }
+    
+    if(ADAQSettings->FindPeaks){
+      
       ////////////////////
       // Plot peak markers
       
@@ -375,11 +379,11 @@ void AAGraphics::PlotWaveform(int Color)
       PeakMarker->SetMarkerStyle(23);
       PeakMarker->SetMarkerSize(2.0);
       PeakMarker->Draw();
-
+      
       
       /////////////////
       // Plot crossings
-
+      
       if(ADAQSettings->PlotCrossings){
 	TMarker *Low2HighMarker = new TMarker((*it).PeakLimit_Lower,
 					      ADAQSettings->Floor,
@@ -397,13 +401,13 @@ void AAGraphics::PlotWaveform(int Color)
 	High2LowMarker->SetMarkerSize(2.0);
 	High2LowMarker->Draw();
       }
-
-
+      
+      
       //////////////////////////
       // Plot integration region
-
+      
       if(ADAQSettings->PlotPeakIntegrationRegion){
-
+	
 	LPeakDelimiter_L->DrawLine((*it).PeakLimit_Lower,
 				   YMin,
 				   (*it).PeakLimit_Lower,
@@ -424,25 +428,27 @@ void AAGraphics::PlotWaveform(int Color)
 				     (*it).PeakLimit_Upper,
 				     YMax);
       }
-      
-
-      //////////////////////////////
-      // Plot PSD integration region
-      
-      if(ADAQSettings->PSDEnable and ADAQSettings->PSDPlotTailIntegrationRegion)
-	if(ADAQSettings->PSDChannel == ADAQSettings->WaveformChannel){
-	  
-	  int PeakOffset = ADAQSettings->PSDPeakOffset;
-	  int LowerPos = (*it).PeakPosX + PeakOffset;
-	  
-	  int TailOffset = ADAQSettings->PSDTailOffset;
-	  int UpperPos = (*it).PeakLimit_Upper + TailOffset;
-	  
-	  PSDPeakOffset_L->DrawLine(LowerPos, YMin, LowerPos, YMax);
-	  PSDTailIntegral_B->DrawBox(LowerPos, YMin, UpperPos, YMax);
-	  PSDTailOffset_L->DrawLine(UpperPos, YMin, UpperPos, YMax);
-	}
     }
+      
+      
+    //////////////////////////////
+    // Plot PSD integration region
+    
+    if(ADAQSettings->PSDEnable and ADAQSettings->PSDPlotTailIntegrationRegion)
+      if(ADAQSettings->PSDChannel == ADAQSettings->WaveformChannel){
+	
+	Double_t Peak = (*it).PeakPosX;
+	
+	Double_t TotalStart = Peak + ADAQSettings->PSDTotalStart;
+	Double_t TotalStop = Peak + ADAQSettings->PSDTotalStop;
+	Double_t TailStart = Peak + ADAQSettings->PSDTailStart;
+	Double_t TailStop = Peak + ADAQSettings->PSDTailStop;
+	
+	PSDTotal_B->DrawBox(TotalStart, YMin, TotalStop, YMax);
+	PSDPeak_L->DrawLine(Peak, YMin, Peak, YMax);
+	PSDTail_L0->DrawLine(TailStart, YMin, TailStart, YMax);
+	PSDTail_L1->DrawLine(TailStop, YMin, TailStop, YMax);
+      }
   }
     
   // Set the class member int that tells the code what is currently

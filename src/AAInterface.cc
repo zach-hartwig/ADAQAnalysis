@@ -1627,27 +1627,82 @@ void AAInterface::FillProcessingFrame()
   PSDWaveforms_NEL->GetEntry()->SetNumber(0); // Updated when ADAQ ROOT file loaded
   PSDWaveforms_NEL->GetEntry()->SetState(false);
 
+
+  TGHorizontalFrame *PSDProcessingType_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSDProcessingType_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+
+  PSDProcessingType_HF->AddFrame(PSDTypePF_RB = new TGRadioButton(PSDProcessingType_HF,"Peak finder",PSDTypePF_RB_ID),
+		       new TGLayoutHints(kLHintsNormal,0,0,5,5));
+  PSDTypePF_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDTypePF_RB->SetState(kButtonDisabled);
+  
+  PSDProcessingType_HF->AddFrame(PSDTypeWW_RB = new TGRadioButton(PSDProcessingType_HF,"Whole waveform",PSDTypeWW_RB_ID),
+		       new TGLayoutHints(kLHintsNormal,20,0,5,5));
+  PSDTypeWW_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDTypeWW_RB->SetState(kButtonDown);
+  PSDTypeWW_RB->SetState(kButtonDisabled);
+  
+
+  PSDAnalysis_GF->AddFrame(new TGLabel(PSDAnalysis_GF, "Integral limits (sample rel. to peak)"),
+			   new TGLayoutHints(kLHintsLeft,0,0,5,5));
+
+  TGHorizontalFrame *PSDTotal_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSDTotal_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  
+  PSDTotal_HF->AddFrame(PSDTotalStart_NEL = new ADAQNumberEntryWithLabel(PSDTotal_HF,
+									 "Total start",
+									 PSDTotalStart_NEL_ID),
+			  new TGLayoutHints(kLHintsNormal, 0,10,0,0));
+  PSDTotalStart_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  PSDTotalStart_NEL->GetEntry()->SetNumber(-5);
+  PSDTotalStart_NEL->GetEntry()->Resize(45,20);
+  PSDTotalStart_NEL->GetEntry()->SetState(false);
+  PSDTotalStart_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
+    
+  PSDTotal_HF->AddFrame(PSDTotalStop_NEL = new ADAQNumberEntryWithLabel(PSDTotal_HF,
+									"Stop",
+									PSDTotalStop_NEL_ID),
+			  new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  PSDTotalStop_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  PSDTotalStop_NEL->GetEntry()->SetNumber(40);
+  PSDTotalStop_NEL->GetEntry()->Resize(45,20);
+  PSDTotalStop_NEL->GetEntry()->SetState(false);
+  PSDTotalStop_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
+
+
+
+  TGHorizontalFrame *DGPSDTail_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(DGPSDTail_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+
+
+  DGPSDTail_HF->AddFrame(PSDTailStart_NEL = new ADAQNumberEntryWithLabel(DGPSDTail_HF,
+									 "Tail start ",
+									 PSDTailStart_NEL_ID),
+			 new TGLayoutHints(kLHintsNormal, 0,10,0,0));
+  PSDTailStart_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  PSDTailStart_NEL->GetEntry()->SetNumber(7);
+  PSDTailStart_NEL->GetEntry()->Resize(45,20);
+  PSDTailStart_NEL->GetEntry()->SetState(false);
+  PSDTailStart_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
+    
+  DGPSDTail_HF->AddFrame(PSDTailStop_NEL = new ADAQNumberEntryWithLabel(DGPSDTail_HF,
+									"Stop",
+									PSDTailStop_NEL_ID),
+			 new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  PSDTailStop_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  PSDTailStop_NEL->GetEntry()->SetNumber(40);
+  PSDTailStop_NEL->GetEntry()->Resize(45,20);
+  PSDTailStop_NEL->GetEntry()->SetState(false);
+  PSDTailStop_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
+
+
   PSDAnalysis_GF->AddFrame(PSDThreshold_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Threshold (ADC)", -1),
                            new TGLayoutHints(kLHintsNormal, 0,5,5,0));
   PSDThreshold_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDThreshold_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
+  PSDThreshold_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PSDThreshold_NEL->GetEntry()->SetNumber(100);
   PSDThreshold_NEL->GetEntry()->SetState(false);
   
-  PSDAnalysis_GF->AddFrame(PSDPeakOffset_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Peak offset (sample)", PSDPeakOffset_NEL_ID),
-                           new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PSDPeakOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDPeakOffset_NEL->GetEntry()->SetNumber(7);
-  PSDPeakOffset_NEL->GetEntry()->SetState(false);
-  PSDPeakOffset_NEL->GetEntry()->Connect("ValueSet(long", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
-
-  PSDAnalysis_GF->AddFrame(PSDTailOffset_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Tail offset (sample)", PSDTailOffset_NEL_ID),
-                           new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PSDTailOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDTailOffset_NEL->GetEntry()->SetNumber(29);
-  PSDTailOffset_NEL->GetEntry()->SetState(false);
-  PSDTailOffset_NEL->GetEntry()->Connect("ValueSet(long", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
-
 
   PSDAnalysis_GF->AddFrame(PSDNumTotalBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. total bins (X axis)", -1),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
@@ -1670,6 +1725,7 @@ void AAInterface::FillProcessingFrame()
   PSDMaxTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PSDMaxTotalBin_NEL->GetEntry()->SetNumber(10000);
   PSDMaxTotalBin_NEL->GetEntry()->SetState(false);
+
   
   PSDAnalysis_GF->AddFrame(PSDNumTailBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. Y axis bins", -1),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
@@ -1707,7 +1763,6 @@ void AAInterface::FillProcessingFrame()
   PSDType_HF->AddFrame(PSDYAxisTailTotal_RB = new TGRadioButton(PSDType_HF, "(Tail / Total)", PSDYAxisTailTotal_RB_ID),
 		       new TGLayoutHints(kLHintsNormal,20,0,0,0));
   PSDYAxisTailTotal_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-
 
   PSDAnalysis_GF->AddFrame(PSDPlotType_CBL = new ADAQComboBoxWithLabel(PSDAnalysis_GF, "Draw option", PSDPlotType_CBL_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,10,5));
@@ -2275,9 +2330,15 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->PSDChannel = PSDChannel_CBL->GetComboBox()->GetSelected();
   ADAQSettings->PSDWaveformsToDiscriminate = PSDWaveforms_NEL->GetEntry()->GetIntNumber();
 
+  ADAQSettings->PSDTypePF = PSDTypePF_RB->IsDown();
+  ADAQSettings->PSDTypeWW = PSDTypeWW_RB->IsDown();
+
+  ADAQSettings->PSDTotalStart = PSDTotalStart_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDTotalStop = PSDTotalStop_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDTailStart = PSDTailStart_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDTailStop = PSDTailStop_NEL->GetEntry()->GetIntNumber();
+
   ADAQSettings->PSDThreshold = PSDThreshold_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDPeakOffset = PSDPeakOffset_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDTailOffset = PSDTailOffset_NEL->GetEntry()->GetIntNumber();
   
   ADAQSettings->PSDNumTailBins = PSDNumTailBins_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->PSDMinTailBin = PSDMinTailBin_NEL->GetEntry()->GetNumber();
@@ -2630,22 +2691,23 @@ void AAInterface::SetPSDWidgetState(bool WidgetState, EButtonState ButtonState)
 {
   PSDChannel_CBL->GetComboBox()->SetEnabled(WidgetState);
   PSDWaveforms_NEL->GetEntry()->SetState(WidgetState);
+  PSDTypePF_RB->SetState(ButtonState);
+  PSDTypeWW_RB->SetState(ButtonState);
+  PSDTotalStart_NEL->GetEntry()->SetState(WidgetState);
+  PSDTotalStop_NEL->GetEntry()->SetState(WidgetState);
+  PSDTailStart_NEL->GetEntry()->SetState(WidgetState);
+  PSDTailStop_NEL->GetEntry()->SetState(WidgetState);
+  PSDThreshold_NEL->GetEntry()->SetState(WidgetState);
   PSDNumTailBins_NEL->GetEntry()->SetState(WidgetState);
   PSDMinTailBin_NEL->GetEntry()->SetState(WidgetState);
   PSDMaxTailBin_NEL->GetEntry()->SetState(WidgetState);
   PSDNumTotalBins_NEL->GetEntry()->SetState(WidgetState);
   PSDMinTotalBin_NEL->GetEntry()->SetState(WidgetState);
   PSDMaxTotalBin_NEL->GetEntry()->SetState(WidgetState);
-  PSDThreshold_NEL->GetEntry()->SetState(WidgetState);
-  PSDPeakOffset_NEL->GetEntry()->SetState(WidgetState);
-  PSDTailOffset_NEL->GetEntry()->SetState(WidgetState);
   PSDPlotType_CBL->GetComboBox()->SetEnabled(WidgetState);
   PSDPlotTailIntegration_CB->SetState(ButtonState);
   PSDEnableHistogramSlicing_CB->SetState(ButtonState);
   PSDEnableRegionCreation_CB->SetState(ButtonState);
-  //PSDEnableRegion_CB->SetState(ButtonState);
-  //PSDInsideRegion_RB->SetState(ButtonState);
-  //PSDOutsideRegion_RB->SetState(ButtonState);
   PSDCreateRegion_TB->SetState(ButtonState);
   PSDClearRegion_TB->SetState(ButtonState);
   PSDCalculate_TB->SetState(ButtonState);

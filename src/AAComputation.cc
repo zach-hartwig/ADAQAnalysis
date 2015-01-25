@@ -572,72 +572,107 @@ double AAComputation::CalculateBaseline(TH1F *Waveform)
 
 
 // Method used to find peaks in any TH1F object.  
-bool AAComputation::FindPeaks(TH1F *Histogram_H)
+bool AAComputation::FindPeaks(TH1F *Histogram_H, int PeakFindingAlgorithm)
 {
-  // Use the PeakFinder to determine the number of potential peaks in
-  // the waveform and return the total number of peaks that the
-  // algorithm has found. "Potential" peaks are those that meet the
-  // criterion of the TSpectrum::Search algorithm with the
-  // user-specified (via the appropriate widgets) tuning
-  // parameters. They are "potential" because I want to impose a
-  // minimum threshold criterion (called the "floor") that potential
-  // peaks must meet before being declared real peaks. Note that the
-  // plotting of markers on TSpectrum's peaks have been disabled so
-  // that I can plot my "successful" peaks once they are determined
-  //
-  // sigma = distance between allowable peak finds
-  // resolution = fraction of max peak above which peaks are valid
-
-  string PeakFinderOptions = "goff nodraw";
-  if(!ADAQSettings->UseMarkovSmoothing)
-    PeakFinderOptions += " noMarkov";
-  
-  int NumPotentialPeaks = PeakFinder->Search(Histogram_H,				    
-					     ADAQSettings->Sigma,
-					     PeakFinderOptions.c_str(),
-					     ADAQSettings->Resolution);
-
-  // Since the PeakFinder actually found potential peaks then get the
-  // X and Y positions of the potential peaks from the PeakFinder
-  float *PotentialPeakPosX = PeakFinder->GetPositionX();
-  float *PotentialPeakPosY = PeakFinder->GetPositionY();
-  
   // Initialize the counter of successful peaks to zero and clear the
-  // peak info vector in preparation for the next set of peaks
+  // peak info vector in preparation for the next iteration
   NumPeaks = 0;
   PeakInfoVec.clear();
   
-  // For each of the potential peaks found by the PeakFinder...
-  for(int peak=0; peak<NumPotentialPeaks; peak++){
-    
-    // Determine if the peaks Y value (voltage) is above the "floor"
-    //if(PotentialPeakPosY[peak] > Floor_NEL->GetEntry()->GetIntNumber()){
-    if(PotentialPeakPosY[peak] > ADAQSettings->Floor){
-      
-      // Success! This peak was a winner. Let's give it a prize.
-      
-      // Increment the counter for successful peaks in the present waveform
-      NumPeaks++;
+  //////////////////////////////
+  // Use TSpectrum peak finding
 
-      // Increment the counter for total peaks in all processed waveforms
-      TotalPeaks++;
+  // This method of peak finding uses the TSpectrum class, which
+  // provides a vastly more powerful and accurate peak finding method
+  // but is much more computationally intensive. In addition to
+  // accuracy, programmability, and robustness, this algorithm can
+  // find many peaks within a single record length
+
+  if(PeakFindingAlgorithm == zPeakFinder){
+    
+    // Use the PeakFinder to determine the number of potential peaks
+    // in the waveform and return the total number of peaks that the
+    // algorithm has found. "Potential" peaks are those that meet the
+    // criterion of the TSpectrum::Search algorithm with the
+    // user-specified (via the appropriate widgets) tuning
+    // parameters. They are "potential" because I want to impose a
+    // minimum threshold criterion (called the "floor") that potential
+    // peaks must meet before being declared real peaks. Note that the
+    // plotting of markers on TSpectrum's peaks have been disabled so
+    // that I can plot my "successful" peaks once they are determined
+    //
+    // sigma = distance between allowable peak finds
+    // resolution = fraction of max peak above which peaks are valid
+
+    string PeakFinderOptions = "goff nodraw";
+    if(!ADAQSettings->UseMarkovSmoothing)
+      PeakFinderOptions += " noMarkov";
+  
+    int NumPotentialPeaks = PeakFinder->Search(Histogram_H,
+					       ADAQSettings->Sigma,
+					       PeakFinderOptions.c_str(),
+					       ADAQSettings->Resolution);
+
+    // Since the PeakFinder actually found potential peaks then get the
+    // X and Y positions of the potential peaks from the PeakFinder
+    float *PotentialPeakPosX = PeakFinder->GetPositionX();
+    float *PotentialPeakPosY = PeakFinder->GetPositionY();
+  
+    // For each of the potential peaks found by the PeakFinder...
+    for(int peak=0; peak<NumPotentialPeaks; peak++){
+    
+      // Determine if the peaks Y value (voltage) is above the "floor"
+      //if(PotentialPeakPosY[peak] > Floor_NEL->GetEntry()->GetIntNumber()){
+      if(PotentialPeakPosY[peak] > ADAQSettings->Floor){
       
-      // Create a PeakInfoStruct to hold the current successful peaks'
-      // information. Store the X and Y position in the structure and
-      // push it back into the dedicated vector for later use
-      PeakInfoStruct PeakInfo;
-      PeakInfo.PeakID = NumPeaks;
-      PeakInfo.PeakPosX = PotentialPeakPosX[peak];
-      PeakInfo.PeakPosY = PotentialPeakPosY[peak];
-      PeakInfoVec.push_back(PeakInfo);
+	// Success! This peak was a winner. Let's give it a prize.
+      
+	// Increment the counter for successful peaks in the present waveform
+	NumPeaks++;
+
+	// Increment the counter for total peaks in all processed waveforms
+	TotalPeaks++;
+      
+	// Create a PeakInfoStruct to hold the current successful peaks'
+	// information. Store the X and Y position in the structure and
+	// push it back into the dedicated vector for later use
+	PeakInfoStruct PeakInfo;
+	PeakInfo.PeakID = NumPeaks;
+	PeakInfo.PeakPosX = PotentialPeakPosX[peak];
+	PeakInfo.PeakPosY = PotentialPeakPosY[peak];
+	PeakInfoVec.push_back(PeakInfo);
+      }
     }
+
+    // Call the member functions that will find the lower (leftwards on
+    // the time axis) and upper (rightwards on the time axis)
+    // integration limits for each successful peak in the waveform
+    FindPeakLimits(Histogram_H);
+  }
+  
+
+  /////////////////////////////////////////////////////
+  // Use simple "whole waveform" peak finding algorithm
+
+  // This method uses TH1 methods to perform an extremely simple peak
+  // finding algorithm. While only a single peak can be found since
+  // the algorithm uses absolute height within a record length to find
+  // the peak position, the algorithm is extremely fast.
+
+  else if(PeakFindingAlgorithm == zWholeWaveform){
+    
+    // Create a new peak info struct, fill it, and push it back into
+    // the storage vector; note only one peak will be found
+    PeakInfoStruct PeakInfo;
+    PeakInfo.PeakID = 0;
+    PeakInfo.PeakPosX = Histogram_H->GetMaximumBin();
+    PeakInfo.PeakPosY = Histogram_H->GetBinContent(Histogram_H->GetMaximumBin());
+    PeakInfoVec.push_back(PeakInfo);
+
+    NumPeaks++;
   }
 
-  // Call the member functions that will find the lower (leftwards on
-  // the time axis) and upper (rightwards on the time axis)
-  // integration limits for each successful peak in the waveform
-  FindPeakLimits(Histogram_H);
-
+  
   // Function returns 'false' if zero peaks are found; algorithms can
   // use this flag to exit from analysis for this acquisition window
   // to save on CPU time
@@ -645,6 +680,7 @@ bool AAComputation::FindPeaks(TH1F *Histogram_H)
     return false;
   else
     return true;
+
 }
 
 
@@ -922,6 +958,21 @@ void AAComputation::CreateSpectrum()
 
     // If the entire waveform is to be used to calculate a pulse spectrum ...
     if(ADAQSettings->ADAQSpectrumIntTypeWW){
+
+      // If specified, calculate the PSD integrals for the waveform
+      // and determine if they meet the acceptance criterion defined
+      // by the current channel's PSD region. If not, continue the
+      // processing loop to prevent adding the waveform height/area to
+      // the pulse spectrum
+
+      if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
+	
+	FindPeaks(Waveform_H[Channel], zWholeWaveform);
+	CalculatePSDIntegrals(false);
+	
+	if(PeakInfoVec.at(0).PSDFilterFlag == true)
+	  continue;
+      }
       
       // If a pulse height spectrum (PHS) is to be created ...
       if(ADAQSettings->ADAQSpectrumTypePHS){
@@ -997,8 +1048,21 @@ void AAComputation::CreateSpectrum()
       // integrate the valid peaks to create a PAS or find the peak
       // heights to create a PHS, returning true. If zero peaks are
       // found in the waveform then FindPeaks() returns false
-      PeaksFound = FindPeaks(Waveform_H[Channel]);
-      
+      PeaksFound = FindPeaks(Waveform_H[Channel], zPeakFinder);
+
+      // Because the peak finding algorithm skips analysis of
+      // waveforms for which it cannot find peaks, we need to update
+      // the progress bar here to ensure that bar ends at 100% when
+      // actual processing ends. It would be nice to do this more
+      // accurately in the future (i.e. update the bar when processing
+      // actually finished!). Note that we must add a +1 to the
+      // waveform number in order to get the modulo to land on the
+      // correct intervals
+      if(IsMaster)
+	if(WaveformEnd >= 50)
+	  if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
+	    UpdateProcessingProgress(waveform);
+
       // If no peaks are present in the current waveform then continue
       // on to the next waveform for analysis
       if(!PeaksFound)
@@ -1016,13 +1080,6 @@ void AAComputation::CreateSpectrum()
       // or if a PHS is to be created ...
       else if(ADAQSettings->ADAQSpectrumTypePHS)
 	FindPeakHeights();
-
-      // Note that we must add a +1 to the waveform number in order to
-      // get the modulo to land on the correct intervals
-      if(IsMaster)
-	if(WaveformEnd >= 50)
-	  if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
-	    UpdateProcessingProgress(waveform);
     }
   }
   
@@ -1651,8 +1708,22 @@ TH2F *AAComputation::CreatePSDHistogram()
     else if(ADAQSettings->ZSWaveform)
       CalculateZSWaveform(PSDChannel, waveform);
     
-    // Find the peaks and peak limits in the current waveform
-    PeaksFound = FindPeaks(Waveform_H[PSDChannel]);
+    // Find the peaks and peak limits in the current waveform. The
+    // second argument ('true') indicates the find peaks calculation
+    // is being performed for PSD and thus the radio button settings
+    // for PSD 'peak finder' or 'whole waveform' should be used to
+    // decide which peak finding algorithm to use
+    if(ADAQSettings->PSDTypePF)
+      PeaksFound = FindPeaks(Waveform_H[PSDChannel], zPeakFinder);
+    else if(ADAQSettings->PSDTypeWW)
+      PeaksFound = FindPeaks(Waveform_H[PSDChannel], zWholeWaveform);
+
+    // Update the user with progress here because the peak finding
+    // algorithm can skip waveform for which it doesn't find a peak,
+    // which can throw off the progress bar progress.
+    if(IsMaster)
+      if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
+	UpdateProcessingProgress(waveform);
     
     // If not peaks are present in the current waveform then continue
     // onto the next waveform to optimize CPU $.
@@ -1663,11 +1734,6 @@ TH2F *AAComputation::CreatePSDHistogram()
     // peak. Because we want to create a PSD histogram, pass "true" to
     // the function to indicate the results should be histogrammed
     CalculatePSDIntegrals(true);
-    
-    // Update the user with progress
-    if(IsMaster)
-      if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
-	UpdateProcessingProgress(waveform);
   }
   
   if(SequentialArchitecture){
@@ -1804,28 +1870,28 @@ void AAComputation::CalculatePSDIntegrals(bool FillPSDHistogram)
   vector<PeakInfoStruct>::iterator it;
   for(it=PeakInfoVec.begin(); it!=PeakInfoVec.end(); it++){
     
-    // Assign the integration limits for the tail and total
-    // integrals. Note that peak limit and upper limit have the
-    // user-specified included to provide flexible integration
-    double LowerLimit = (*it).PeakLimit_Lower; // Left-most side of peak
-    double Peak = (*it).PeakPosX + ADAQSettings->PSDPeakOffset; // The peak location + offset
-    double UpperLimit = (*it).PeakLimit_Upper + ADAQSettings->PSDTailOffset; // Right-most side of peak + offset
-    
-    // Compute the total integral (lower to upper limit)
-    double TotalIntegral = Waveform_H[ADAQSettings->PSDChannel]->Integral(LowerLimit, UpperLimit);
-    
-    // Compute the tail integral (peak to upper limit)
-    double TailIntegral = Waveform_H[ADAQSettings->PSDChannel]->Integral(Peak, UpperLimit);
+    Double_t Peak = (*it).PeakPosX;
 
+    Double_t TotalStart = Peak + ADAQSettings->PSDTotalStart;
+    Double_t TotalStop = Peak + ADAQSettings->PSDTotalStop;
+    
+    Double_t TailStart = Peak + ADAQSettings->PSDTailStart;
+    Double_t TailStop = Peak + ADAQSettings->PSDTailStop;
+
+    Int_t PSDChannel = ADAQSettings->PSDChannel;
+
+    // Compute the total integral
+    Double_t TotalIntegral = Waveform_H[PSDChannel]->Integral(TotalStart,
+							      TotalStop);
+    
+    // Compute the tail integral
+    Double_t TailIntegral = Waveform_H[PSDChannel]->Integral(TailStart,
+							     TailStop);
+    
     // If the user wants to plot (Tail integral / Total integral) on
     // the y-axis of the PSD histogram then modify the TailIntegral:
     if(ADAQSettings->PSDYAxisTailTotal)
       TailIntegral /= TotalIntegral;
-    
-    if(Verbose)
-      cout << "PSD tail integral = " << TailIntegral << " (ADC)\n"
-	   << "PSD total integral = " << TotalIntegral << " (ADC)\n"
-	   << endl;
     
     // If the user has enabled a PSD filter ...
     if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel])
@@ -2623,7 +2689,7 @@ void AAComputation::CreateDesplicedFile()
     
     // Find the peaks (and peak data) in the current waveform.
     // Function returns "true" ("false) if peaks are found (not found).
-    PeaksFound = FindPeaks(Waveform_H[Channel]);
+    PeaksFound = FindPeaks(Waveform_H[Channel], zPeakFinder);
     
     // If no peaks found, continue to next waveform to save CPU $
     if(!PeaksFound)
@@ -2853,7 +2919,7 @@ void AAComputation::CalculateCountRate()
   
     // Find the peaks in the waveform. Note that this function is
     // responsible for incrementing the 'TotalPeaks' member data
-    FindPeaks(Waveform_H[Channel]);
+    FindPeaks(Waveform_H[Channel], zPeakFinder);
 
     // Update the waveform processing progress bar
     if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)

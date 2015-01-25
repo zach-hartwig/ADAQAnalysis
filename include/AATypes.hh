@@ -81,11 +81,11 @@ struct ADAQChannelCalibrationData{
 // Enumerators //
 /////////////////
 
-
 // An enumerator that specifies what type of plot is presently
 // contained in the main embedded canvas
 enum CanvasContentTypes{zEmpty, zWaveform, zSpectrum, zSpectrumDerivative, zPSDHistogram};
 
+enum PeakFindingAlgorithm{zPeakFinder, zWholeWaveform};
 
 // The following enumerator is used to create unique integers that
 // will be assigned as the "widget ID" to the ROOT widgets that make
@@ -296,9 +296,14 @@ enum{
   ProcessingPar_RB_ID,
 
   PSDEnable_CB_ID,
+  
+  PSDTypePF_RB_ID,
+  PSDTypeWW_RB_ID,
 
-  PSDPeakOffset_NEL_ID,
-  PSDTailOffset_NEL_ID,
+  PSDTotalStart_NEL_ID,
+  PSDTotalStop_NEL_ID,
+  PSDTailStart_NEL_ID,
+  PSDTailStop_NEL_ID,
   PSDPlotType_CBL_ID,
   PSDPlotTailIntegration_CB_ID,
   PSDYAxisTail_RB_ID,

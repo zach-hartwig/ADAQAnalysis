@@ -30,45 +30,45 @@ public:
   // Waveform frame  //
   /////////////////////
   
-  int WaveformChannel, WaveformToPlot;
-  bool RawWaveform, BSWaveform, ZSWaveform;
-  int WaveformPolarity;
+  Int_t WaveformChannel, WaveformToPlot;
+  Bool_t RawWaveform, BSWaveform, ZSWaveform;
+  Int_t WaveformPolarity;
   
-  bool PlotZeroSuppressionCeiling;
-  int ZeroSuppressionCeiling;
-  int ZeroSuppressionBuffer;
+  Bool_t PlotZeroSuppressionCeiling;
+  Int_t ZeroSuppressionCeiling;
+  Int_t ZeroSuppressionBuffer;
 
-  bool FindPeaks, UseMarkovSmoothing;
-  int MaxPeaks, Sigma, Floor;
-  double Resolution;
+  Bool_t FindPeaks, UseMarkovSmoothing;
+  Int_t MaxPeaks, Sigma, Floor;
+  Double_t Resolution;
   
-  bool PlotFloor, PlotCrossings, PlotPeakIntegrationRegion;
+  Bool_t PlotFloor, PlotCrossings, PlotPeakIntegrationRegion;
   
-  bool UsePileupRejection;
+  Bool_t UsePileupRejection;
   
-  bool PlotBaselineCalcRegion;
-  int BaselineCalcMin, BaselineCalcMax;
+  Bool_t PlotBaselineCalcRegion;
+  Int_t BaselineCalcMin, BaselineCalcMax;
   
-  bool PlotTrigger, WaveformAnalysis;
+  Bool_t PlotTrigger, WaveformAnalysis;
 
   
   ////////////////////
   // Spectrum frame //
   ////////////////////
 
-  int WaveformsToHistogram;
-  int SpectrumNumBins;
-  double SpectrumMinBin, SpectrumMaxBin;
+  Int_t WaveformsToHistogram;
+  Int_t SpectrumNumBins;
+  Double_t SpectrumMinBin, SpectrumMaxBin;
   
-  bool ADAQSpectrumTypePAS, ADAQSpectrumTypePHS;
-  bool ADAQSpectrumIntTypeWW, ADAQSpectrumIntTypePF;
+  Bool_t ADAQSpectrumTypePAS, ADAQSpectrumTypePHS;
+  Bool_t ADAQSpectrumIntTypeWW, ADAQSpectrumIntTypePF;
   
-  bool ASIMSpectrumTypeEnergy;
-  bool ASIMSpectrumTypePhotonsCreated;
-  bool ASIMSpectrumTypePhotonsDetected;
+  Bool_t ASIMSpectrumTypeEnergy;
+  Bool_t ASIMSpectrumTypePhotonsCreated;
+  Bool_t ASIMSpectrumTypePhotonsDetected;
   string ASIMEventTreeName;
 
-  int EnergyUnit;
+  Int_t EnergyUnit;
   vector<TGraph *> SpectraCalibrations;
   vector<bool> UseSpectraCalibrations;
   
@@ -77,90 +77,92 @@ public:
   // Analysis frame //
   ////////////////////
 
-  bool FindBackground;
-  int BackgroundIterations;
-  bool BackgroundCompton, BackgroundSmoothing;
-  int BackgroundMinBin, BackgroundMaxBin;
-  int BackgroundDirection;
-  int BackgroundFilterOrder;
-  int BackgroundSmoothingWidth;
+  Bool_t FindBackground;
+  Int_t BackgroundIterations;
+  Bool_t BackgroundCompton, BackgroundSmoothing;
+  Int_t BackgroundMinBin, BackgroundMaxBin;
+  Int_t BackgroundDirection;
+  Int_t BackgroundFilterOrder;
+  Int_t BackgroundSmoothingWidth;
 
-  bool PlotWithBackground, PlotLessBackground;
+  Bool_t PlotWithBackground, PlotLessBackground;
 
-  bool SpectrumFindIntegral, SpectrumIntegralInCounts;
-  bool SpectrumUseGaussianFit, SpectrumNormalizeToCurrent;
-  bool SpectrumOverplotDerivative;
+  Bool_t SpectrumFindIntegral, SpectrumIntegralInCounts;
+  Bool_t SpectrumUseGaussianFit, SpectrumNormalizeToCurrent;
+  Bool_t SpectrumOverplotDerivative;
   
 
   ////////////////////
   // Graphics frame //
   ////////////////////
   
-  bool WaveformLine, WaveformCurve, WaveformMarkers, WaveformBoth;
-  int WaveformLineWidth;
-  double WaveformMarkerSize;
-  bool SpectrumLine, SpectrumCurve, SpectrumError, SpectrumBars;
-  int SpectrumLineWidth, SpectrumFillStyle;
-  bool HistogramStats, CanvasGrid;
-  bool CanvasXAxisLog, CanvasYAxisLog, CanvasZAxisLog;
-  bool PlotSpectrumDerivativeError, PlotAbsValueSpectrumDerivative, PlotYAxisWithAutoRange;
-  bool OverrideGraphicalDefault;
+  Bool_t WaveformLine, WaveformCurve, WaveformMarkers, WaveformBoth;
+  Int_t WaveformLineWidth;
+  Double_t WaveformMarkerSize;
+  Bool_t SpectrumLine, SpectrumCurve, SpectrumError, SpectrumBars;
+  Int_t SpectrumLineWidth, SpectrumFillStyle;
+  Bool_t HistogramStats, CanvasGrid;
+  Bool_t CanvasXAxisLog, CanvasYAxisLog, CanvasZAxisLog;
+  Bool_t PlotSpectrumDerivativeError, PlotAbsValueSpectrumDerivative, PlotYAxisWithAutoRange;
+  Bool_t OverrideGraphicalDefault;
 
   string PlotTitle, XAxisTitle, YAxisTitle, ZAxisTitle, PaletteTitle;
-  double XSize, YSize, ZSize, PaletteSize;
-  double XOffset, YOffset, ZOffset, PaletteOffset;
-  int XDivs, YDivs, ZDivs;
-  double PaletteX1, PaletteX2, PaletteY1, PaletteY2;
+  Double_t XSize, YSize, ZSize, PaletteSize;
+  Double_t XOffset, YOffset, ZOffset, PaletteOffset;
+  Int_t XDivs, YDivs, ZDivs;
+  Double_t PaletteX1, PaletteX2, PaletteY1, PaletteY2;
 
 
   //////////////////////
   // Processing frame //
   //////////////////////
 
-  bool SeqProcessing, ParProcessing;
-  int NumProcessors, UpdateFreq;
+  Bool_t SeqProcessing, ParProcessing;
+  Int_t NumProcessors, UpdateFreq;
 
-  bool PSDEnable;
-  int PSDChannel, PSDWaveformsToDiscriminate;
-  int PSDThreshold, PSDTailOffset, PSDPeakOffset;
-  int PSDNumTotalBins;
+  Bool_t PSDEnable;
+  Int_t PSDChannel, PSDWaveformsToDiscriminate;
+  Bool_t PSDTypePF, PSDTypeWW;
+  Int_t PSDTotalStart, PSDTotalStop, PSDTailStart, PSDTailStop;
+  Int_t PSDThreshold, PSDTailOffset, PSDPeakOffset;
+  Int_t PSDNumTotalBins;
   Double_t PSDMinTotalBin, PSDMaxTotalBin;
-  int PSDNumTailBins;
+  Int_t PSDNumTailBins;
   Double_t PSDMinTailBin, PSDMaxTailBin;
   Bool_t PSDYAxisTail, PSDYAxisTailTotal;
 
   string PSDPlotType;
-  bool PSDPlotTailIntegrationRegion, EnableHistogramSlicing, PSDXSlice, PSDYSlice;
+  Bool_t PSDPlotTailIntegrationRegion, EnableHistogramSlicing, PSDXSlice, PSDYSlice;
 
-  bool PSDEnableRegionCreation, PSDEnableFilterUse;
-  bool PSDInsideRegion, PSDOutsideRegion;
+  Bool_t PSDEnableRegionCreation, PSDEnableFilterUse;
+  Bool_t PSDInsideRegion, PSDOutsideRegion;
 
   vector<TCutG *> PSDRegions;
   vector<bool> UsePSDRegions;
 
-  double RFQPulseWidth, RFQRepRate;
-  int RFQCountRateWaveforms;
+  Double_t RFQPulseWidth, RFQRepRate;
+  Int_t RFQCountRateWaveforms;
 
-  bool IntegratePearson;
-  int PearsonChannel, PearsonPolarity;
-  bool IntegrateRawPearson, IntegrateFitToPearson;
-  int PearsonLowerLimit, PearsonMiddleLimit, PearsonUpperLimit;
-  bool PlotPearsonIntegration;
+  Bool_t IntegratePearson;
+  Int_t PearsonChannel, PearsonPolarity;
+  Bool_t IntegrateRawPearson, IntegrateFitToPearson;
+  Int_t PearsonLowerLimit, PearsonMiddleLimit, PearsonUpperLimit;
+  Bool_t PlotPearsonIntegration;
 
-  int TotalDeuterons;
+  Int_t TotalDeuterons;
   
-  int WaveformsToDesplice, DesplicedWaveformBuffer, DesplicedWaveformLength;
+  Int_t WaveformsToDesplice, DesplicedWaveformBuffer, DesplicedWaveformLength;
   string DesplicedFileName;
 
 
   // Canvas
 
-  double XAxisMin, XAxisMax, XAxisPtr;
-  double YAxisMin, YAxisMax;
+  Double_t XAxisMin, XAxisMax, XAxisPtr;
+  Double_t YAxisMin, YAxisMax;
 
-  int WaveformSelector;
+  Int_t WaveformSelector;
   
-  double SpectrumIntegrationMin, SpectrumIntegrationMax;
+  Double_t SpectrumIntegrationMin, SpectrumIntegrationMax;
   
   // General
   

@@ -330,13 +330,18 @@ private:
 
   TGCheckButton *PSDEnable_CB;
   ADAQComboBoxWithLabel *PSDChannel_CBL;
-  ADAQNumberEntryWithLabel *PSDThreshold_NEL;
+  TGRadioButton *PSDTypePF_RB, *PSDTypeWW_RB;
+  
+  ADAQNumberEntryWithLabel *PSDTotalStart_NEL, *PSDTotalStop_NEL;
+  ADAQNumberEntryWithLabel *PSDTailStart_NEL, *PSDTailStop_NEL;
+  
   ADAQNumberEntryWithLabel *PSDPeakOffset_NEL;
   ADAQNumberEntryWithLabel *PSDTailOffset_NEL;
   ADAQNumberEntryWithLabel *PSDWaveforms_NEL;
 
   ADAQNumberEntryWithLabel *PSDNumTailBins_NEL, *PSDMinTailBin_NEL, *PSDMaxTailBin_NEL;
   ADAQNumberEntryWithLabel *PSDNumTotalBins_NEL, *PSDMinTotalBin_NEL, *PSDMaxTotalBin_NEL;
+  ADAQNumberEntryWithLabel *PSDThreshold_NEL;
 
   ADAQComboBoxWithLabel *PSDPlotType_CBL;
 
