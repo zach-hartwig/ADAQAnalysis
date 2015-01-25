@@ -249,8 +249,23 @@ void AAGraphics::PlotWaveform(int Color)
     YTitle = ADAQSettings->YAxisTitle;
   }
   else{
+
+    string XString;
+    if(!ComputationMgr->GetADAQLegacyFileLoaded()){
+      Int_t SamplingRate = 
+	ComputationMgr->GetADAQReadoutInformation()->GetDGSamplingRate();
+
+      Double_t SampleTime = 1e3 / SamplingRate;
+
+      stringstream SS;
+      SS << "Time [" << SampleTime << " ns sample]";
+      XString = SS.str();
+    }
+    else
+      XString = "Time [sample]";
+    
     Title = "Digitized Waveform";
-    XTitle = "Time [4 ns samples]";
+    XTitle = XString;
     YTitle = "Voltage [ADC]";
   }
   
