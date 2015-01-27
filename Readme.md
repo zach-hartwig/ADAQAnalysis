@@ -5,25 +5,33 @@
 ## ADAQAnalysis ##
 
 ADAQAnalysis is a program that provides comprehensive offline analysis
-of digitized detector waveforms that were created and stored with the
-[ADAQAcquisition](http://github.com/zach-hartwig/ADAQAcquisition)
-program. It is built on top of the [ROOT](http://root.cern.ch/drupal/)
-data analysis framework. The program enables the user to completely
-inspect and operate on raw waveforms (view, baseline calculation, peak
-finding, pulse shape discriminate, etc), create and analyze pulse
-spectra (calibrate, background subtraction, peak finding, integration,
-etc), and to create publication quality graphics in vector (EPS, PDF)
-and raster (JPG, PNG) formats. Methods are provided to save all
-objects (waveforms, spectra, pulse shape discrimination histograms,
-etc) to either ROOT files, ASCII files, or CSV files for further
-analysis outside of ADAQAnalysis. The ability to analyze simulated
-detector data - using a Monte Carlo code like
-[Geant4](http://geant4.cern.ch/)- with the identical algorithms used
-on experimental data is provided by via special ADAQ-compatible data
-storage classes from the [ADAQ](http://github.com/zach-hartwig/ADAQ)
-libraries. Finally, processing of waveforms can be performed in
+of DAQ hardware settings and digitized detector data that are stored
+in the ADAQ file format (\*.adaq.root) provided by the ADAQReadout
+library, which is part of the [ADAQ
+libraries](https://github.com/zach-hartwig/ADAQ). The principal method
+for producing ADAQ files is through the use of
+[ADAQAcquisition](http://github.com/zach-hartwig/ADAQAcquisition), a
+GUI-based program that provides complete DAQ capabilities and seamless
+production of ADAQ files for offline analysis. ADAQAnalysis is built
+on top of the [ROOT](http://root.cern.ch/drupal/) data analysis
+framework. The program enables the user to completely inspect and
+operate on raw waveforms (view, baseline calculation, peak finding,
+pulse shape discriminate, etc), create and analyze pulse spectra
+(calibrate, background subtraction, peak finding, integration, etc),
+and to create publication quality graphics in vector (EPS, PDF) and
+raster (JPG, PNG) formats. Methods are provided to save all objects
+(waveforms, spectra, pulse shape discrimination histograms, etc) to
+either ROOT files, ASCII files, or CSV files for further analysis
+outside of ADAQAnalysis. The ability to analyze simulated detector
+data - using a Monte Carlo code like [Geant4](http://geant4.cern.ch/) -
+with the identical algorithms used on experimental data is provided by
+the ASIMReadout library, which is also part of the [ADAQ
+libraries](https://github.com/zach-hartwig/ADAQ). This library manages
+readout and storage of simulated data into ASIM file format
+(\*.asim.root). Finally, processing of waveforms can be performed in
 parallel using MPI to significantly reduce computation time on systems
 where multiple cores are available.
+
 
 
 ### License and disclaimer ###
@@ -50,24 +58,12 @@ http://www.gnu.org/licenses.
 
 ### Build instructions  ###
 
-The following lines should first be added to your .bashrc file to configure
-your environment correctly:
-
-```bash 
-    # ADAQAnalysis configuration
-    export ADAQANALYSIS_HOME = /full/path/to/ADAQAcquisition
-    export ADAQANALYSIS_USER = dev # Setting for local install (developer)
-    # ADAQANALYSIS_USER = usr # Setting for global install (user)
-    source $ADAQANALYSIS_HOME/scripts/setup.sh $ADAQANALYSIS_USER >& /dev/null
-```
-Don't forget to open a new terminal for the settings to take effect!
-
 On Linux or MacOS, clone into the repository and then use the provided
 GNU Makefile to build the ADAQAnalysis binary:
 
 ```bash
   # Clone ADAQAnalysis source code from GitHub
-  git clone https://github.com/ADAQAnalysis/ADAQAnalysis.git
+  git clone https://github.com/zach-hartwig/ADAQAnalysis.git
 
   # Move to the ADAQAnalysis source code directory:
   cd ADAQAnalysis
@@ -84,6 +80,19 @@ GNU Makefile to build the ADAQAnalysis binary:
   # To cleanup all build files:  
   make clean  
 ```
+
+Then copy the following lines to your .bashrc file to configure your
+environment correctly:
+
+```bash 
+    # ADAQAnalysis configuration
+    export ADAQANALYSIS_HOME = /full/path/to/ADAQAcquisition
+    export ADAQANALYSIS_USER = dev # Setting for local install (developer)
+    # ADAQANALYSIS_USER = usr # Setting for global install (user)
+    source $ADAQANALYSIS_HOME/scripts/setup.sh $ADAQANALYSIS_USER >& /dev/null
+```
+Don't forget to open a new terminal for the settings to take effect!
+
 
 ### Code dependencies ###
 
@@ -122,7 +131,7 @@ straightforward and easy to understand:
 
   - **src/**       : C++ source code 
   
-  - **test/**      : ADAQ-formated files to used in development and testing (see below)
+  - **test/**      : ADAQ and ASIM files to used in development and testing (see below)
 
   - **Changelog.md** : List of major content updates and fixes for each Formulary release
   

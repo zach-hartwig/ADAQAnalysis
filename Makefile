@@ -1,7 +1,7 @@
 #********************************************************************
 #
 #  name: Makefile                  
-#  date: 11 Aug 14
+#  date: 26 Jan 15
 #  auth: Zach Hartwig              
 #  mail: hartwig@psfc.mit.edu
 #
@@ -14,8 +14,8 @@
 #
 #  dpnd: The build system depends on the following:
 #        -- ROOT (mandatory)
-#        -- The ADAQ{Hardware,Simulation}Readout libraries (mandatory)
-#        -- Boost, including Boost thread libraries (mandatory)
+#        -- The ADAQ libraries: ADAQReadout, ASIMReadout (mandatory)
+#        -- The Boost libraries: boost_thread, boost_system (mandatory)
 #        -- Open MPI (optional)
 # 
 #  To build the sequential binary
@@ -66,20 +66,8 @@ OBJS = $(subst src/,build/,$(TMP))
 # Add the mandatory ROOT dictionary object file
 OBJS += $(BUILDDIR)/ADAQAnalysisDict.o
 
-# Specify the required Boost libraries. Note that the sws/cmodws
-# cluster recently upgraded GCC, which breaks the ancient fucking
-# version of Boost (1.42.0 from Feb 2010!) that is in the RHEL
-# repository. I have, therefore, built the most recent Boost (1.53.0)
-# that must be used if compiling on sws/cmodws cluster
-
-DOMAIN=$(findstring .psfc.mit.edu, $(HOSTNAME))
-
-ifeq ($(DOMAIN),.psfc.mit.edu)
-   BOOSTLIBS = -L/home/hartwig/scratch/boost/boost_1_53_0/lib -lboost_thread -lboost_system
-   CXXFLAGS += -I/home/hartwig/scratch/boost/boost_1_53_0/include
-else
-   BOOSTLIBS = -lboost_thread
-endif
+# Specify the necessary Boost libraries for linking
+BOOSTLIBS = -lboost_thread -lboost_system
 
 # If the user desires to build a parallel version of the binary then
 # set a number of key macros for the build. Note that the Open MPI C++
@@ -159,15 +147,20 @@ clean:
 	rm -f $(BUILDDIR)/* $(BINDIR)/*
 	@echo -e ""
 
+# Automatically determine the number of processors on the
+# system. Unsure if this works for MacOS so we should be on the
+# lookout for issues flagged by users...
+NPROCS:=$(shell nproc)
+
 par:
 	@echo -e "\nBuilding parallel version of ADAQAnalysis ...\n"
-	@make ARCH=mpi -j2
+	@make ARCH=mpi -j$(NPROCS)
 	@echo -e ""
 
 both:
 	@echo -e "\nBuilding sequential and parallel versions of ADAQAnalysis ...\n"
-	@make -j3
-	@make ARCH=mpi -j2
+	@make -j$(NPROCS)
+	@make ARCH=mpi -j$(NPROCS)
 	@echo -e ""
 
 # Useful notes for the uninitiated:
