@@ -249,9 +249,9 @@ private:
   TFile *ADAQFile;
   string ADAQFileName;
   bool ADAQFileLoaded, ADAQLegacyFileLoaded;
-
-  TTree *ADAQWaveformTree, *ADAQWaveformDataTree;
-
+  
+  TTree *ADAQWaveformTree;
+  
   TString MachineName, MachineUser, FileDate, FileVersion;
   ADAQReadoutInformation *ARI;
   vector<Int_t> *Waveforms[64];

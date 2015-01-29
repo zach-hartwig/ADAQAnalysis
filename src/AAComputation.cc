@@ -67,7 +67,7 @@ AAComputation *AAComputation::GetInstance()
 AAComputation::AAComputation(string CmdLineArg, bool PA)
   : SequentialArchitecture(!PA), ParallelArchitecture(PA),
     ADAQFile(new TFile), ADAQFileName(""), ADAQFileLoaded(false), ADAQLegacyFileLoaded(false),
-    ADAQWaveformTree(new TTree), ADAQWaveformDataTree(new TTree),
+    ADAQWaveformTree(new TTree),
 
     ASIMFile(new TFile), ASIMFileName(""), ASIMFileLoaded(false), 
     ASIMEventTreeList(new TList), ASIMEvt(new ASIMEvent),
@@ -269,11 +269,16 @@ bool AAComputation::LoadADAQFile(string FileName)
       ///////////////////////////////////////////
       // Get the waveform and waveform data trees
       
-      // Get the pointers to the TTrees stored in the TFile
+      // Get the pointers to the waveform TTree stored in the TFile
       ADAQWaveformTree = (TTree *)ADAQFile->Get("WaveformTree");
-      ADAQWaveformDataTree = (TTree *)ADAQFile->Get("WaveformDataTree");
+
+      // For each digitizer channel that was enabled when creating the
+      // ADAQ file, there are two associated branches named:
+      // - "WaveformChX" stores the digitized waveform itself
+      // - "WaveformDataChX" stores analyzed waveform data
+      // where "X" is the digitizer channel number
       
-      // Set branch addresses for the TTrees
+      // Set branch addresses for the TTree
       int NumChannels = ARI->GetDGNumChannels();
       for(int ch=0; ch<NumChannels; ch++){
 	
@@ -281,21 +286,22 @@ bool AAComputation::LoadADAQFile(string FileName)
 	SS << "WaveformCh" << ch;
 	TString BranchName = SS.str();
 
-	// Initialize pointer to the waveform vector<Int_t> 
+	// Initialize pointer to the digitized waveform, which is
+	// stored as a vector<Int_t> * in the TTree branch
 	Waveforms[ch] = 0;
 	
 	ADAQWaveformTree->SetBranchStatus(BranchName, 1);
 	ADAQWaveformTree->SetBranchAddress(BranchName, &Waveforms[ch]);
 
-	// Initialize pointer to the waveform ADAQWaveformData class
+	// Initialize pointer to the ADAQWaveformData class
 	WaveformData[ch] = new ADAQWaveformData;
 
 	SS.str("");
 	SS << "WaveformDataCh" << ch;
 	BranchName = SS.str();
-
-	ADAQWaveformDataTree->SetBranchStatus(BranchName, 1);
-	ADAQWaveformDataTree->SetBranchAddress(BranchName, &WaveformData[ch]);
+	
+	ADAQWaveformTree->SetBranchStatus(BranchName, 1);
+	ADAQWaveformTree->SetBranchAddress(BranchName, &WaveformData[ch]);
       }
 
       ADAQLegacyFileLoaded = false;
