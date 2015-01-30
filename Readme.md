@@ -56,17 +56,30 @@ repository at $ADAQACQUISITION/License.md or is available online at
 http://www.gnu.org/licenses.
 
 
-### Build instructions  ###
+### Obtaining and building the code  ###
 
-On Linux or MacOS, clone into the repository and then use the provided
-GNU Makefile to build the ADAQAnalysis binary:
+First, a word on versioning of ADAQAnalysis. Git tags of the form
+X.Y.Z are used to indicate stable, production versions of the code
+that may be deployed with confidence for general use by the general
+user. A change in the X version number indicates a major release that
+departs substantially from the previous series, while a change in the
+Y version number indicates deployment of major new code features. A
+change in the Z number is used to indicate bug fixes and very minor
+changes to the codebase. Untagged commits are considered development
+versions of the code with no guarantee of stability and should only be
+used by developers in non-production situations.
+
+To obtain ADAQAnalysis, you'll need to first clone the repository from
+GitHub and then switch to the appropriate git tag version before
+building the code.
 
 ```bash
   # Clone ADAQAnalysis source code from GitHub
   git clone https://github.com/zach-hartwig/ADAQAnalysis.git
 
-  # Move to the ADAQAnalysis source code directory:
+  # Switch to a tagged production branch. For example:
   cd ADAQAnalysis
+  git checkout -b 1.0.0-beta
   
   # To build the sequential binary locally
   make  
@@ -81,8 +94,8 @@ GNU Makefile to build the ADAQAnalysis binary:
   make clean  
 ```
 
-Then copy the following lines to your .bashrc file to configure your
-environment correctly:
+Finally, add the following lines to your .bashrc file to configure
+your environment correctly before running ADAQAnalysis:
 
 ```bash 
     # ADAQAnalysis configuration
