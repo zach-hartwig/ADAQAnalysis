@@ -94,15 +94,11 @@ building the code.
   make clean  
 ```
 
-Finally, add the following lines to your .bashrc file to configure
+Finally, add the following line to your .bashrc file to configure
 your environment correctly before running ADAQAnalysis:
 
 ```bash 
-    # ADAQAnalysis configuration
-    export ADAQANALYSIS_HOME = /full/path/to/ADAQAcquisition
-    export ADAQANALYSIS_USER = dev # Setting for local install (developer)
-    # ADAQANALYSIS_USER = usr # Setting for global install (user)
-    source $ADAQANALYSIS_HOME/scripts/setup.sh $ADAQANALYSIS_USER >& /dev/null
+    source /full/path/to/ADAQAnalysis/scripts/setup.sh >& /dev/null
 ```
 Don't forget to open a new terminal for the settings to take effect!
 
