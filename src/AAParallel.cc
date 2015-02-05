@@ -55,30 +55,19 @@ AAParallel::AAParallel()
     exit(-42);
   }
   TheParallelManager = this;
-
-  // ADAQAnalysis is configured separately for two types of users;
-  // users and developers. The user type is automatically set by the
-  // ADAQ Setup.sh configuration script.
   
-  if(getenv("ADAQUSER")==NULL){
-    cout << "\nError! The 'ADAQUSER' environmental variable must be set to properly configure\n"
+  if(getenv("ADAQANALYSIS_HOME")==NULL){
+    cout << "\nError! The 'ADAQANALYSIS_HOME' environmental variable must be set to properly configure\n"
 	 <<   "       ADAQAnalysis! Please use the provided ADAQ Setup.sh script.\n"
 	 << endl;
     exit(-42);
   }
+  
+  // Get the absolute path to the ADAQAnalysis installation
+  string ADAQANALYSIS_HOME = getenv("ADAQANALYSIS_HOME");
 
-  // Get ADAQ user type
-  string ADAQUSER = getenv("ADAQUSER");
-
-  // ADAQ users will run the production version binaries from the
-  // system-wide /usr/local/adaq location. Force explicit path.
-  if(ADAQUSER == "user")
-    ParallelBinaryName = "/usr/local/adaq/ADAQAnalysis_MPI";
-
-  // ADAQ developers will run the locally built development binaries
-  // from their Git repository. Use relative path via setup.sh script
-  else if(ADAQUSER == "developer")
-    ParallelBinaryName = "ADAQAnalysis_MPI";
+  // Set the absolute path to the parallel ADAQAnalysis binary
+  ParallelBinaryName = ADAQANALYSIS_HOME + "/bin/ADAQAnalysis_MPI";
   
   // Set the location of the transient parallel processing file. Use
   // the linux user name to ensure a unique file name is created.
