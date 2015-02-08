@@ -906,8 +906,8 @@ void AAComputation::CreateSpectrum()
   int MasterEvents = int(ADAQSettings->WaveformsToHistogram-SlaveEvents*(MPI_Size-1));
 
   if(ParallelVerbose and IsMaster)
-    cout << "\nADAQAnalysis_MPI Node[0]: Number waveforms allocated to master (node == 0) : " << MasterEvents << "\n"
-         <<   "                          Number waveforms allocated to slaves (node != 0) : " << SlaveEvents
+    cout << "\nADAQAnalysis_MPI Node[0] : Number waveforms allocated to master (node == 0) : " << MasterEvents << "\n"
+         <<   "                           Number waveforms allocated to slaves (node != 0) : " << SlaveEvents
 	 << endl;
   
   // Divide up the total number of waveforms to be processed amongst
@@ -1703,8 +1703,8 @@ TH2F *AAComputation::CreatePSDHistogram()
   int MasterEvents = int(ADAQSettings->PSDWaveformsToDiscriminate-SlaveEvents*(MPI_Size-1));
   
   if(ParallelVerbose and IsMaster)
-    cout << "\nADAQAnalysis_MPI Node[0]: Number waveforms allocated to master (node == 0) : " << MasterEvents << "\n"
-         <<   "                          Number waveforms allocated to slaves (node != 0) : " << SlaveEvents
+    cout << "\nADAQAnalysis_MPI Node[0] : Number waveforms allocated to master (node == 0) : " << MasterEvents << "\n"
+         <<   "                           Number waveforms allocated to slaves (node != 0) : " << SlaveEvents
 	 << endl;
   
   // Divide up the total number of waveforms to be processed amongst
@@ -2569,8 +2569,8 @@ void AAComputation::CreateDesplicedFile()
   int MasterEvents = int(ADAQSettings->WaveformsToDesplice-SlaveEvents*(MPI_Size-1));
   
   if(ParallelVerbose and IsMaster)
-    cout << "\nADAQAnalysis_MPI Node[0]: Number waveforms allocated to master (node == 0) : " << MasterEvents << "\n"
-         <<   "                          Number waveforms allocated to slaves (node != 0) : " << SlaveEvents
+    cout << "\nADAQAnalysis_MPI Node[0] : Number waveforms allocated to master (node == 0) : " << MasterEvents << "\n"
+         <<   "                           Number waveforms allocated to slaves (node != 0) : " << SlaveEvents
 	 << endl;
 
   // Divide up the total number of waveforms to be processed amongst
