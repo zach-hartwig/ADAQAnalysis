@@ -89,8 +89,11 @@ building the code.
 
   # To build both sequential and parallel binaries locally
   make both
+```
 
-  # To cleanup all build files:  
+To remove the transient build files and the ADAQAnalysis binaries, you
+can run:
+```bash
   make clean  
 ```
 
