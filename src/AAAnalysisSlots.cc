@@ -103,7 +103,7 @@ void AAAnalysisSlots::HandleCheckButtons()
 	GraphicsMgr->PlotSpectrum();
     }
     break;
-
+    
   case EAEnable_CB_ID:{
     
     int Channel = TheInterface->ChannelSelector_CBL->GetComboBox()->GetSelected();
@@ -112,21 +112,26 @@ void AAAnalysisSlots::HandleCheckButtons()
     
     int Type = TheInterface->EASpectrumType_CBL->GetComboBox()->GetSelected();
     
-    if(TheInterface->EAEnable_CB->IsDown() and SpectrumIsCalibrated){
-      TheInterface->SpectrumCalibration_CB->SetState(kButtonUp, true);
-      TheInterface->SetCalibrationWidgetState(false, kButtonDisabled);
-      
-      TheInterface->EASpectrumType_CBL->GetComboBox()->SetEnabled(true);
-      
-      if(Type == 0){
-	TheInterface->SetEAGammaWidgetState(true, kButtonUp);
-	TheInterface->SetEANeutronWidgetState(false, kButtonDisabled);
+    if(TheInterface->EAEnable_CB->IsDown()){
+
+      if((TheInterface->ADAQFileLoaded and SpectrumIsCalibrated) or
+	 TheInterface->ASIMFileLoaded){
+	
+	TheInterface->SpectrumCalibration_CB->SetState(kButtonUp, true);
+	TheInterface->SetCalibrationWidgetState(false, kButtonDisabled);
+	
+	TheInterface->EASpectrumType_CBL->GetComboBox()->SetEnabled(true);
+	
+	if(Type == 0){
+	  TheInterface->SetEAGammaWidgetState(true, kButtonUp);
+	  TheInterface->SetEANeutronWidgetState(false, kButtonDisabled);
+	}
+	else if(Type == 1){
+	  TheInterface->SetEAGammaWidgetState(false, kButtonDisabled);
+	  TheInterface->SetEANeutronWidgetState(true, kButtonUp);
+	}
+	TheInterface->NontabSlots->HandleTripleSliderPointer();
       }
-      else if(Type == 1){
-	TheInterface->SetEAGammaWidgetState(false, kButtonDisabled);
-	TheInterface->SetEANeutronWidgetState(true, kButtonUp);
-      }
-      TheInterface->NontabSlots->HandleTripleSliderPointer();
     }
     else{
       TheInterface->EASpectrumType_CBL->GetComboBox()->SetEnabled(false);

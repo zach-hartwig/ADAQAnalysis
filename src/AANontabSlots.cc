@@ -695,40 +695,45 @@ void AANontabSlots::HandleTripleSliderPointer()
     const int Channel = TheInterface->ChannelSelector_CBL->GetComboBox()->GetSelected();
     bool SpectrumIsCalibrated = ComputationMgr->GetUseSpectraCalibrations()[Channel];
     
-    if(TheInterface->EAEnable_CB->IsDown() and SpectrumIsCalibrated){
-      
-      int Type = TheInterface->EASpectrumType_CBL->GetComboBox()->GetSelected();
+    if(TheInterface->EAEnable_CB->IsDown()){
 
-      double Error = 0.;
-      bool ErrorBox = false;
-      bool EscapePeaks = TheInterface->EAEscapePeaks_CB->IsDown();
+      if((TheInterface->ADAQFileLoaded and SpectrumIsCalibrated) or
+	 TheInterface->ASIMFileLoaded){
       
-      if(Type == 0){
-	GraphicsMgr->PlotEALine(XPos, Error, ErrorBox, EscapePeaks);
-	
-	TheInterface->EAGammaEDep_NEL->GetEntry()->SetNumber(XPos);
-      }
-      else if(Type == 1){
+	int Type = TheInterface->EASpectrumType_CBL->GetComboBox()->GetSelected();
 
-	Error = TheInterface->EAErrorWidth_NEL->GetEntry()->GetNumber();
-	ErrorBox = true;
-	EscapePeaks = false;
+	double Error = 0.;
+	bool ErrorBox = false;
+	bool EscapePeaks = TheInterface->EAEscapePeaks_CB->IsDown();
 	
-	GraphicsMgr->PlotEALine(XPos, Error, ErrorBox, EscapePeaks);
+	if(Type == 0){
+	  GraphicsMgr->PlotEALine(XPos, Error, ErrorBox, EscapePeaks);
+	  
+	  TheInterface->EAGammaEDep_NEL->GetEntry()->SetNumber(XPos);
+	}
 	
-	TheInterface->EAElectronEnergy_NEL->GetEntry()->SetNumber(XPos);
-	
-	double GE = InterpolationMgr->GetGammaEnergy(XPos);
-	TheInterface->EAGammaEnergy_NEL->GetEntry()->SetNumber(GE);
-	
-	double PE = InterpolationMgr->GetProtonEnergy(XPos);
-	TheInterface->EAProtonEnergy_NEL->GetEntry()->SetNumber(PE);
-	
-	double AE = InterpolationMgr->GetAlphaEnergy(XPos);
-	TheInterface->EAAlphaEnergy_NEL->GetEntry()->SetNumber(AE);
-	
-	double CE = InterpolationMgr->GetCarbonEnergy(XPos);
-	TheInterface->EACarbonEnergy_NEL->GetEntry()->SetNumber(CE);
+	else if(Type == 1){
+
+	  Error = TheInterface->EAErrorWidth_NEL->GetEntry()->GetNumber();
+	  ErrorBox = true;
+	  EscapePeaks = false;
+	  
+	  GraphicsMgr->PlotEALine(XPos, Error, ErrorBox, EscapePeaks);
+	  
+	  TheInterface->EAElectronEnergy_NEL->GetEntry()->SetNumber(XPos);
+	  
+	  double GE = InterpolationMgr->GetGammaEnergy(XPos);
+	  TheInterface->EAGammaEnergy_NEL->GetEntry()->SetNumber(GE);
+	  
+	  double PE = InterpolationMgr->GetProtonEnergy(XPos);
+	  TheInterface->EAProtonEnergy_NEL->GetEntry()->SetNumber(PE);
+	  
+	  double AE = InterpolationMgr->GetAlphaEnergy(XPos);
+	  TheInterface->EAAlphaEnergy_NEL->GetEntry()->SetNumber(AE);
+	  
+	  double CE = InterpolationMgr->GetCarbonEnergy(XPos);
+	  TheInterface->EACarbonEnergy_NEL->GetEntry()->SetNumber(CE);
+	}
       }
     }
   }
