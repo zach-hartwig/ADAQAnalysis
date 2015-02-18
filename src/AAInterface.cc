@@ -154,6 +154,7 @@ AAInterface::AAInterface(string CmdLineArg)
 	
 	// If a valid ASIM file was loaded then set the boolean that
 	// controls whether or not the interface should be enabled
+	EnableInterface = ASIMFileLoaded;
 	
 	if(ASIMFileLoaded)
 	  UpdateForASIMFile();
