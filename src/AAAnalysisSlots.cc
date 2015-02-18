@@ -43,7 +43,7 @@ AAAnalysisSlots::~AAAnalysisSlots()
 
 void AAAnalysisSlots::HandleCheckButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
   
   TGCheckButton *CheckButton = (TGCheckButton *) gTQSender;
@@ -149,7 +149,7 @@ void AAAnalysisSlots::HandleCheckButtons()
 
 void AAAnalysisSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
   
   TheInterface->SaveSettings();
@@ -183,7 +183,7 @@ void AAAnalysisSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
 
 void AAAnalysisSlots::HandleNumberEntries()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
 
   TGNumberEntry *NumberEntry = (TGNumberEntry *) gTQSender;
@@ -244,7 +244,7 @@ void AAAnalysisSlots::HandleNumberEntries()
 
 void AAAnalysisSlots::HandleRadioButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
   
   TGRadioButton *RadioButton = (TGRadioButton *) gTQSender;

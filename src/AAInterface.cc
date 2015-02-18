@@ -71,7 +71,7 @@ AAInterface::AAInterface(string CmdLineArg)
     NumEdgeBoundingPoints(0), EdgeBoundX0(0.), EdgeBoundY0(0.),
     DataDirectory(getenv("PWD")), PrintDirectory(getenv("HOME")),
     DesplicedDirectory(getenv("HOME")), HistogramDirectory(getenv("HOME")),
-    ADAQFileLoaded(false), ASIMFileLoaded(false),
+    ADAQFileLoaded(false), ASIMFileLoaded(false), EnableInterface(false),
     ColorMgr(new TColor), RndmMgr(new TRandom3)
 {
   SetCleanup(kDeepCleanup);
@@ -135,6 +135,10 @@ AAInterface::AAInterface(string CmdLineArg)
 	ADAQFileName = CurrentDir + "/" + RelativeFilePath;
 	ADAQFileLoaded = ComputationMgr->LoadADAQFile(ADAQFileName);
 	
+	// If a valid ADAQ file was loaded then set the boolean that
+	// controls whether or not the interface should be enabled
+	EnableInterface = ADAQFileLoaded;
+	
 	if(ADAQFileLoaded)
 	  UpdateForADAQFile();
 	else
@@ -147,6 +151,9 @@ AAInterface::AAInterface(string CmdLineArg)
 	
 	ASIMFileName = CmdLineArg;
 	ASIMFileLoaded = ComputationMgr->LoadASIMFile(ASIMFileName);
+	
+	// If a valid ASIM file was loaded then set the boolean that
+	// controls whether or not the interface should be enabled
 	
 	if(ASIMFileLoaded)
 	  UpdateForASIMFile();
@@ -1043,7 +1050,7 @@ void AAInterface::FillAnalysisFrame()
   SpectrumAnalysisLowerLimit_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   SpectrumAnalysisLowerLimit_NEL->GetEntry()->SetLimitValues(0,20000);
   SpectrumAnalysisLowerLimit_NEL->GetEntry()->SetNumber(0);
-  SpectrumAnalysisLowerLimit_NEL->GetEntry()->Resize(80, 20);
+  SpectrumAnalysisLowerLimit_NEL->GetEntry()->Resize(70, 20);
   SpectrumAnalysisLowerLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAAnalysisSlots", AnalysisSlots, "HandleNumberEntries()");
 
   Horizontal5_HF->AddFrame(SpectrumAnalysisUpperLimit_NEL = new ADAQNumberEntryWithLabel(Horizontal5_HF, "Upper", SpectrumAnalysisUpperLimit_NEL_ID),
@@ -1052,7 +1059,7 @@ void AAInterface::FillAnalysisFrame()
   SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
   SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetLimitValues(0,20000);
   SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetNumber(20000);
-  SpectrumAnalysisUpperLimit_NEL->GetEntry()->Resize(80, 20);
+  SpectrumAnalysisUpperLimit_NEL->GetEntry()->Resize(70, 20);
   SpectrumAnalysisUpperLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAAnalysisSlots", AnalysisSlots, "HandleNumberEntries()");
 
 
@@ -1720,12 +1727,14 @@ void AAInterface::FillProcessingFrame()
   TotalBins_HF->AddFrame(PSDMinTotalBin_NEL = new ADAQNumberEntryWithLabel(TotalBins_HF, "Min.", -1),
 			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMinTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDMinTotalBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
   PSDMinTotalBin_NEL->GetEntry()->SetNumber(0);
   PSDMinTotalBin_NEL->GetEntry()->SetState(false);
 
   TotalBins_HF->AddFrame(PSDMaxTotalBin_NEL = new ADAQNumberEntryWithLabel(TotalBins_HF, "Max.", -1),
 			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMaxTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDMaxTotalBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PSDMaxTotalBin_NEL->GetEntry()->SetNumber(10000);
   PSDMaxTotalBin_NEL->GetEntry()->SetState(false);
 
@@ -1743,12 +1752,14 @@ void AAInterface::FillProcessingFrame()
   TailBins_HF->AddFrame(PSDMinTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Min.", -1),
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMinTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDMinTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
   PSDMinTailBin_NEL->GetEntry()->SetNumber(0);
   PSDMinTailBin_NEL->GetEntry()->SetState(false);
 
   TailBins_HF->AddFrame(PSDMaxTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Max.", -1),
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMaxTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDMaxTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PSDMaxTailBin_NEL->GetEntry()->SetNumber(2000);
   PSDMaxTailBin_NEL->GetEntry()->SetState(false);
 

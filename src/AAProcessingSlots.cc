@@ -47,7 +47,7 @@ AAProcessingSlots::~AAProcessingSlots()
 
 void AAProcessingSlots::HandleCheckButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface or !TheInterface->ADAQFileLoaded)
     return;
   
   TGCheckButton *CheckButton = (TGCheckButton *) gTQSender;
@@ -174,7 +174,7 @@ case IntegratePearson_CB_ID:{
 
 void AAProcessingSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface or !TheInterface->ADAQFileLoaded)
     return;
   
   TheInterface->SaveSettings();
@@ -193,7 +193,7 @@ void AAProcessingSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
 
 void AAProcessingSlots::HandleNumberEntries()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface or !TheInterface->ADAQFileLoaded)
     return;
 
   TGNumberEntry *NumberEntry = (TGNumberEntry *) gTQSender;
@@ -218,7 +218,7 @@ void AAProcessingSlots::HandleNumberEntries()
 
 void AAProcessingSlots::HandleRadioButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface or !TheInterface->ADAQFileLoaded)
     return;
   
   TGRadioButton *RadioButton = (TGRadioButton *) gTQSender;
@@ -319,7 +319,7 @@ void AAProcessingSlots::HandleRadioButtons()
 
 void AAProcessingSlots::HandleTextButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface or !TheInterface->ADAQFileLoaded)
     return;
   
   TGTextButton *TextButton = (TGTextButton *) gTQSender;

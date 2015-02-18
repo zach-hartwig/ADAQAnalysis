@@ -42,7 +42,7 @@ AAWaveformSlots::~AAWaveformSlots()
 
 void AAWaveformSlots::HandleCheckButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface or !TheInterface->ADAQFileLoaded)
     return;
   
   TGCheckButton *CheckButton = (TGCheckButton *) gTQSender;
@@ -99,9 +99,9 @@ void AAWaveformSlots::HandleCheckButtons()
 
 void AAWaveformSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface or !TheInterface->ADAQFileLoaded)
     return;
-
+  
   TheInterface->SaveSettings();
 
   switch(ComboBoxID){
@@ -117,11 +117,11 @@ void AAWaveformSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
 
 void AAWaveformSlots::HandleNumberEntries()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface or !TheInterface->ADAQFileLoaded)
     return;
-
+  
   TheInterface->SaveSettings();
-
+  
     // Get the widget and ID from which the signal was sent
   TGNumberEntry *NumberEntry = (TGNumberEntry *) gTQSender;
   int NumberEntryID = NumberEntry->WidgetId();
@@ -174,9 +174,9 @@ void AAWaveformSlots::HandleNumberEntries()
 
 void AAWaveformSlots::HandleRadioButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface or !TheInterface->ADAQFileLoaded)
     return;
-
+  
   TGRadioButton *RadioButton = (TGRadioButton *) gTQSender;
   int RadioButtonID = RadioButton->WidgetId();
   

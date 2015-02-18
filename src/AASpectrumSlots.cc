@@ -51,7 +51,7 @@ AASpectrumSlots::~AASpectrumSlots()
 
 void AASpectrumSlots::HandleCheckButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
   
   TGCheckButton *CheckButton = (TGCheckButton *) gTQSender;
@@ -78,7 +78,7 @@ void AASpectrumSlots::HandleCheckButtons()
 
 void AASpectrumSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
 
   TheInterface->SaveSettings();
@@ -139,7 +139,7 @@ void AASpectrumSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
 
 void AASpectrumSlots::HandleNumberEntries()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
   
   TGNumberEntry *NumberEntry = (TGNumberEntry *) gTQSender;
@@ -186,7 +186,7 @@ void AASpectrumSlots::HandleNumberEntries()
 
 void AASpectrumSlots::HandleRadioButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
   
   TGRadioButton *RadioButton = (TGRadioButton *) gTQSender;
@@ -258,7 +258,7 @@ void AASpectrumSlots::HandleRadioButtons()
 
 void AASpectrumSlots::HandleTextButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
   
   TGTextButton *TextButton = (TGTextButton *) gTQSender;
@@ -275,6 +275,7 @@ void AASpectrumSlots::HandleTextButtons()
     
     // Sequential processing
     if(TheInterface->ProcessingSeq_RB->IsDown()){
+
       if(TheInterface->ADAQFileLoaded)
 	ComputationMgr->CreateSpectrum();
 

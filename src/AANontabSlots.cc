@@ -49,9 +49,9 @@ AANontabSlots::~AANontabSlots()
 
 void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *Selected)
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
-
+  
   // For an unknown reason, the XPixel value appears (erroneously) to
   // be two pixels too low for a given cursor selection, I have
   // examined this issue in detail but cannot determine the reason nor
@@ -144,7 +144,7 @@ void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *S
 
 void AANontabSlots::HandleDoubleSliders()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
   
   TheInterface->SaveSettings();
@@ -277,6 +277,9 @@ void AANontabSlots::HandleMenu(int MenuID)
 	TheInterface->ADAQFileName = FileName;
 	TheInterface->ADAQFileLoaded = ComputationMgr->LoadADAQFile(FileName);
 	
+	// Set whether or not the interface should be enabled
+	TheInterface->EnableInterface = TheInterface->ADAQFileLoaded;
+	
 	if(TheInterface->ADAQFileLoaded)
 	  TheInterface->UpdateForADAQFile();
 	else
@@ -287,6 +290,9 @@ void AANontabSlots::HandleMenu(int MenuID)
       else if(MenuID == MenuFileOpenASIM_ID){
 	TheInterface->ASIMFileName = FileName;
 	TheInterface->ASIMFileLoaded = ComputationMgr->LoadASIMFile(FileName);
+
+	// Set whether or not the interface should be enabled
+	TheInterface->EnableInterface = TheInterface->ASIMFileLoaded;
 	
 	if(TheInterface->ASIMFileLoaded)
 	  TheInterface->UpdateForASIMFile();
@@ -321,15 +327,45 @@ void AANontabSlots::HandleMenu(int MenuID)
       TH1F *H = NULL;
       H = (TH1F *)F->Get("Spectrum");
 
-      if(H == NULL)
+      if(H == NULL){
 	TheInterface->CreateMessageBox("No TH1F object named 'Spectrum' was found in the specific file!","Stop");
+	
+	// If there is no valid ADAQ or ASIM file already loaded and
+	// loading a TH1F spectrum failed, we need to disable the
+	// interface to prevent seg faults since there is nothing for
+	// the interface and underlying algorithms to operate on
+	if(!TheInterface->ADAQFileLoaded or !TheInterface->ASIMFileLoaded)
+	  TheInterface->EnableInterface = false;
+      }
       else{
+	
+	// Get the lower edge of the lowest non-underflow bin
+	Double_t MinBin = H->GetBinLowEdge(1);
+	
+	// Get the upper edge of the highest non-overflow bin
+	Double_t MaxBin = H->GetBinLowEdge(H->GetNbinsX()+1);
+	
+	// Update various spectral and analysis values with the new
+	// TH1F parameters
+	TheInterface->SpectrumNumBins_NEL->GetEntry()->SetNumber(H->GetNbinsX());
+	TheInterface->SpectrumMinBin_NEL->GetEntry()->SetNumber(MinBin);
+	TheInterface->SpectrumMaxBin_NEL->GetEntry()->SetNumber(MaxBin);
+	TheInterface->SpectrumRangeMin_NEL->GetEntry()->SetNumber(MinBin);
+	TheInterface->SpectrumRangeMax_NEL->GetEntry()->SetNumber(MaxBin);
+	TheInterface->SpectrumAnalysisLowerLimit_NEL->GetEntry()->SetNumber(MinBin);
+	TheInterface->SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetNumber(MaxBin);
+	
+	
+	// Ensure that the interface is enabled since a valid TH1F
+	// spectrum was loaded
+	TheInterface->EnableInterface = true;
+	
 	TheInterface->SaveSettings();
 	ComputationMgr->SetSpectrum(H);
 	GraphicsMgr->PlotSpectrum();
       }
     }
-
+    
     break;
   }
 
@@ -607,9 +643,9 @@ void AANontabSlots::HandleTerminate()
 
 void AANontabSlots::HandleTripleSliderPointer()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
-
+  
   if(ComputationMgr->GetSpectrumExists() and
      GraphicsMgr->GetCanvasContentType() == zSpectrum){
 

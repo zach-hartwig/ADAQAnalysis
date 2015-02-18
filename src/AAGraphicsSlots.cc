@@ -45,7 +45,7 @@ AAGraphicsSlots::~AAGraphicsSlots()
 
 void AAGraphicsSlots::HandleCheckButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
   
   TGCheckButton *CheckButton = (TGCheckButton *) gTQSender;
@@ -67,6 +67,8 @@ void AAGraphicsSlots::HandleCheckButtons()
       break;
       
     case zWaveform:
+      if(!TheInterface->ADAQFileLoaded)
+	break;
       GraphicsMgr->PlotWaveform();
       break;
       
@@ -109,7 +111,7 @@ void AAGraphicsSlots::HandleCheckButtons()
 
 void AAGraphicsSlots::HandleNumberEntries()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
 
   TGNumberEntry *NumberEntry = (TGNumberEntry *) gTQSender;
@@ -167,7 +169,7 @@ void AAGraphicsSlots::HandleNumberEntries()
 
 void AAGraphicsSlots::HandleRadioButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
   
   TGRadioButton *RadioButton = (TGRadioButton *) gTQSender;
@@ -178,6 +180,8 @@ void AAGraphicsSlots::HandleRadioButtons()
   switch(RadioButtonID){
 
   case DrawWaveformWithLine_RB_ID:
+    if(!TheInterface->ADAQFileLoaded)
+      break;
     TheInterface->DrawWaveformWithCurve_RB->SetState(kButtonUp);
     TheInterface->DrawWaveformWithMarkers_RB->SetState(kButtonUp);
     TheInterface->DrawWaveformWithBoth_RB->SetState(kButtonUp);
@@ -186,6 +190,8 @@ void AAGraphicsSlots::HandleRadioButtons()
     break;
 
   case DrawWaveformWithCurve_RB_ID:
+    if(!TheInterface->ADAQFileLoaded)
+      break;
     TheInterface->DrawWaveformWithLine_RB->SetState(kButtonUp);
     TheInterface->DrawWaveformWithMarkers_RB->SetState(kButtonUp);
     TheInterface->DrawWaveformWithBoth_RB->SetState(kButtonUp);
@@ -194,6 +200,8 @@ void AAGraphicsSlots::HandleRadioButtons()
     break;
 
   case DrawWaveformWithMarkers_RB_ID:
+    if(!TheInterface->ADAQFileLoaded)
+      break;
     TheInterface->DrawWaveformWithLine_RB->SetState(kButtonUp);
     TheInterface->DrawWaveformWithCurve_RB->SetState(kButtonUp);
     TheInterface->DrawWaveformWithBoth_RB->SetState(kButtonUp);
@@ -202,6 +210,8 @@ void AAGraphicsSlots::HandleRadioButtons()
     break;
 
   case DrawWaveformWithBoth_RB_ID:
+    if(!TheInterface->ADAQFileLoaded)
+      break;
     TheInterface->DrawWaveformWithLine_RB->SetState(kButtonUp);
     TheInterface->DrawWaveformWithCurve_RB->SetState(kButtonUp);
     TheInterface->DrawWaveformWithMarkers_RB->SetState(kButtonUp);
@@ -253,7 +263,7 @@ void AAGraphicsSlots::HandleRadioButtons()
 
 void AAGraphicsSlots::HandleTextButtons()
 {
-  if(!TheInterface->ADAQFileLoaded and !TheInterface->ASIMFileLoaded)
+  if(!TheInterface->EnableInterface)
     return;
   
   TGTextButton *TextButton = (TGTextButton *) gTQSender;
@@ -264,6 +274,10 @@ void AAGraphicsSlots::HandleTextButtons()
   switch(TextButtonID){
 
   case WaveformColor_TB_ID:{
+    
+    if(!TheInterface->ADAQFileLoaded)
+      break;
+    
     GraphicsMgr->SetWaveformColor();
     int Color = GraphicsMgr->GetWaveformColor();
     TheInterface->WaveformColor_TB->SetBackgroundColor(TheInterface->ColorMgr->Number2Pixel(Color));
@@ -290,6 +304,10 @@ void AAGraphicsSlots::HandleTextButtons()
   }
 
   case ReplotWaveform_TB_ID:
+    
+    if(!TheInterface->ADAQFileLoaded)
+      break;
+    
     GraphicsMgr->PlotWaveform();
     break;
     

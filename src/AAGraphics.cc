@@ -874,9 +874,9 @@ void AAGraphics::PlotSpectrumDerivative()
 
   ///////////////////
   // Create the graph
-
-  gStyle->SetEndErrorSize(0);
-
+  
+  gStyle->SetEndErrorSize(5);
+  
   SpectrumDerivative_G->SetTitle(Title.c_str());
 
   SpectrumDerivative_G->GetXaxis()->SetTitle(XTitle.c_str());
@@ -918,7 +918,7 @@ void AAGraphics::PlotSpectrumDerivative()
   double YMax = MaxValue - (AbsValue * ADAQSettings->YAxisMin);
   
   SpectrumDerivative_G->GetYaxis()->SetRangeUser(YMin, YMax);
-    
+  
   if(ADAQSettings->PlotSpectrumDerivativeError){
     SpectrumDerivative_G->SetLineColor(1);
     SpectrumDerivative_G->Draw("AP");

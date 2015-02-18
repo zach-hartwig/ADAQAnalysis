@@ -427,7 +427,7 @@ private:
   int TotalX, TotalY;
   int NumEdgeBoundingPoints;
   double EdgeBoundX0, EdgeBoundY0;
-
+  
   // Variables for interface colors
   long ThemeForegroundColor, ThemeBackgroundColor;
 
@@ -435,6 +435,8 @@ private:
   string DataDirectory, PrintDirectory, DesplicedDirectory, HistogramDirectory;
   bool ADAQFileLoaded, ASIMFileLoaded;
   string ADAQFileName, ASIMFileName;
+
+  Bool_t EnableInterface;
 
   // The class which holds all ROOT widget settings
   AASettings *ADAQSettings;
