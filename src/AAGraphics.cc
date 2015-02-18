@@ -839,9 +839,9 @@ void AAGraphics::PlotPSDHistogram()
 void AAGraphics::PlotSpectrumDerivative()
 {
   TGraph *SpectrumDerivative_G = ComputationMgr->CalculateSpectrumDerivative();
-
+  
   string Title, XTitle, YTitle;
-
+  
   if(ADAQSettings->OverrideGraphicalDefault){
     // Assign the titles to strings
     Title = ADAQSettings->PlotTitle;
@@ -875,8 +875,6 @@ void AAGraphics::PlotSpectrumDerivative()
   ///////////////////
   // Create the graph
   
-  gStyle->SetEndErrorSize(5);
-  
   SpectrumDerivative_G->SetTitle(Title.c_str());
 
   SpectrumDerivative_G->GetXaxis()->SetTitle(XTitle.c_str());
@@ -893,13 +891,14 @@ void AAGraphics::PlotSpectrumDerivative()
   SpectrumDerivative_G->GetYaxis()->CenterTitle();
   SpectrumDerivative_G->GetYaxis()->SetNdivisions(YDivs, true);
   
-  SpectrumDerivative_G->SetLineColor(2);
-  SpectrumDerivative_G->SetLineWidth(2);
+  gStyle->SetEndErrorSize(5);
+  SpectrumDerivative_G->SetLineColor(SpectrumLineColor);
+  SpectrumDerivative_G->SetLineWidth(SpectrumLineWidth);
   SpectrumDerivative_G->SetMarkerStyle(20);
   SpectrumDerivative_G->SetMarkerSize(1.0);
-  SpectrumDerivative_G->SetMarkerColor(2);
-
- 
+  SpectrumDerivative_G->SetMarkerColor(SpectrumLineColor);
+  
+  
   //////////////////////
   // X and Y axis limits
   
@@ -920,16 +919,24 @@ void AAGraphics::PlotSpectrumDerivative()
   SpectrumDerivative_G->GetYaxis()->SetRangeUser(YMin, YMax);
   
   if(ADAQSettings->PlotSpectrumDerivativeError){
-    SpectrumDerivative_G->SetLineColor(1);
-    SpectrumDerivative_G->Draw("AP");
+    TGraphErrors *SpectrumDerivativeError_G = (TGraphErrors *)
+      SpectrumDerivative_G->Clone("SpectrumDerivativeError_G");
+    
+    SpectrumDerivativeError_G->SetLineColor(kBlack);
+    SpectrumDerivativeError_G->SetLineWidth(SpectrumLineWidth);
+    
+    SpectrumDerivative_G->SetLineWidth(1);
+    SpectrumDerivative_G->Draw("APC");
+
+    SpectrumDerivativeError_G->Draw("E");
   }
   else
-    SpectrumDerivative_G->Draw("ALP");
+    SpectrumDerivative_G->Draw("APC");
   
   // Set the class member int denoting that the canvas now contains
   // only a spectrum derivative
   CanvasContentType = zSpectrumDerivative;
-
+  
   TheCanvas->Update();
 }
 

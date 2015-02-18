@@ -89,7 +89,6 @@ public:
 
   Bool_t SpectrumFindIntegral, SpectrumIntegralInCounts;
   Bool_t SpectrumUseGaussianFit, SpectrumNormalizeToCurrent;
-  Bool_t SpectrumOverplotDerivative;
   
 
   ////////////////////

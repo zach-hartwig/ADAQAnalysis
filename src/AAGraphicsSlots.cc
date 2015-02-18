@@ -86,22 +86,18 @@ void AAGraphicsSlots::HandleCheckButtons()
       break;
     }
     break;
-
+    
   case PlotSpectrumDerivativeError_CB_ID:
   case PlotAbsValueSpectrumDerivative_CB_ID:
     if(!ComputationMgr->GetSpectrumExists()){
       TheInterface->CreateMessageBox("A valid spectrum does not yet exists! The calculation of a spectrum derivative is, therefore, moot!", "Stop");
       break;
     }
-    else{
-      if(TheInterface->PlotSpectrumDerivativeError_CB->IsDown()){
+    else
+      if(GraphicsMgr->GetCanvasContentType() == zSpectrumDerivative)
 	GraphicsMgr->PlotSpectrumDerivative();
-      }
-      else{
-	GraphicsMgr->PlotSpectrum();
-      }
-      break;
-    }
+    
+    break;
     
   default:
     break;

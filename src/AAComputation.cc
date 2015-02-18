@@ -1983,18 +1983,6 @@ TGraph *AAComputation::CalculateSpectrumDerivative()
   // main purpose is more quantitatively examine spectra for peaks,
   // edges, and other features.
 
-  // If the user has selected to plot the derivative on top of the
-  // spectrum, assign a vertical offset that will be used to plot the
-  // derivative vertically centered in the canvas window. Also, reduce
-  // the vertical scale of the total derivative such that it will
-  // appropriately fit within the spectrum canvas.
-  double VerticalOffset = 0;
-  double ScaleFactor = 1.;
-  if(ADAQSettings->SpectrumOverplotDerivative){
-    VerticalOffset = Spectrum_H->GetMaximum() / 2;
-    ScaleFactor = 1.3;
-  }
-  
   const int NumBins = Spectrum_H->GetNbinsX();
   
   double BinCenters[NumBins], Differences[NumBins];  
@@ -2013,7 +2001,7 @@ TGraph *AAComputation::CalculateSpectrumDerivative()
     // difference between bins 0/-1 and 0/1 to zero to account for
     // bins that do not contain relevant content for the derivative
     if(bin < 2){
-      Differences[bin] = VerticalOffset;
+      Differences[bin] = 0;
       continue;
     }
     
@@ -2022,7 +2010,7 @@ TGraph *AAComputation::CalculateSpectrumDerivative()
 
     // Compute the "derivative", i.e. the difference between the
     // current and previous bin contents
-    Differences[bin] = (ScaleFactor*(Current - Previous)) + VerticalOffset;
+    Differences[bin] = (Current - Previous);
     
     if(ADAQSettings->PlotAbsValueSpectrumDerivative)
       Differences[bin] = abs(Differences[bin]);
@@ -2067,7 +2055,7 @@ TGraph *AAComputation::CalculateSpectrumDerivative()
   double x,y;
   for(int bin=0; bin<ADAQSettings->SpectrumNumBins; bin++){
     SpectrumDerivative_G->GetPoint(bin,x,y);
-    SpectrumDerivative_H->SetBinContent(bin, y-VerticalOffset);
+    SpectrumDerivative_H->SetBinContent(bin, y);
   }
   
   SpectrumDerivativeExists = true;
