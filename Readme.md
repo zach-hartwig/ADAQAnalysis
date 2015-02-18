@@ -162,25 +162,25 @@ intended to be used to familiarize oneself with the various waveform
 analysis features of the program or to be used in the development and
 debugging of the code.
 
-- **NaIWaveforms_22Na.adaq** : ~13 000 waveforms acquired with a 4"x4"
-    sodium iodide crystal coupled to a 2" photomultiplier tube. A
-    sodium-22 source (0.511, 1.274 MeV gammas) was placed
-    nearby. Intended for general code testing with a common,
-    representative inorganic scintillator.
+- **NaIWaveforms_22Na.adaq.root** : ~17 000 waveforms acquired with a
+    4"x4"x4" thallium-doped sodium iodide crystal coupled to a 2"
+    photomultiplier tube. A sodium-22 source (0.511, 1.274 MeV gammas)
+    was placed nearby. Intended for general program testing with a
+    common, representative inorganic scintillator.
 
-- **EJ309Waveforms_22Na.adaq** : ~38 000 waveforms acquired with a 2"
-    diam x 2" EJ309 liquid organic scintillator coupled to a 2" PMT. A
-    sodium-22 source (0.511, 1.274 MeV) was placed nearby.  Intended
-    for general code testing with a common, representative liquid
-    organic scintillator.
+- **EJ309Waveforms_22Na.adaq.root** : ~34 000 waveforms acquired with
+    a 10"x10"x4" EJ309 liquid organic scintillator coupled to a 3"
+    PMT. A sodium-22 source (0.511, 1.274 MeV) was placed nearby.
+    Intended for general code testing with a common, representative
+    liquid organic scintillator.
 
-- **EJ309Waveforms_AmBe.adaq** : ~17 000 waveforms acquired with a 2"
-    diam x 2" EJ309 liqruid organic scintillator coupled to a 2"
-    PMT. A Americium-241/Beryllium-9 source (4.44 MeV gammas; 2-12 MeV
-    neutrons) was placed nearby. Intended to be used for development
-    of detector pulse-shape discrimination algorithms and features.
-    Note that energy calibration for this data file may be obtained
-    from the EJ309Waveforms_22Na.adaq file.
+- **EJ309Waveforms_AmBe.adaq.root** : ~36 000 waveforms acquired with
+    a 10"x10"x4" EJ309 liquid organic scintillator coupled to a 3"
+    PMT. An Americium-241/Beryllium-9 source (4.44 MeV gammas; 2-12
+    MeV neutrons) was placed nearby. Intended to be used for
+    development of detector pulse-shape discrimination algorithms and
+    features. Note that energy calibration for this data file may be
+    obtained using the EJ309Waveforms_22Na.adaq.root file.
 
 ### Contact ###
 
