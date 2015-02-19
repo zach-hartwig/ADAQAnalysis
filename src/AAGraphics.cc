@@ -1,4 +1,4 @@
-/////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //                                                                             //
 //                           Copyright (C) 2012-2015                           //
 //                 Zachary Seth Hartwig : All rights reserved                  //
@@ -327,11 +327,16 @@ void AAGraphics::PlotWaveform(int Color)
 			  XMax,
 			  ADAQSettings->ZeroSuppressionCeiling);
 
-  if(ADAQSettings->PlotTrigger)
-    Trigger_L->DrawLine(XMin,
-			ComputationMgr->GetADAQMeasurementParameters()->TriggerThreshold[Channel], 
-			XMax,
-			ComputationMgr->GetADAQMeasurementParameters()->TriggerThreshold[Channel]);
+  if(ADAQSettings->PlotTrigger){
+    
+    Int_t Trigger = 0;
+    if(ComputationMgr->GetADAQLegacyFileLoaded())
+      Trigger = ComputationMgr->GetADAQMeasurementParameters()->TriggerThreshold[Channel]; 
+    else
+      Trigger = ComputationMgr->GetADAQReadoutInformation()->GetTrigger()[Channel];
+    
+    Trigger_L->DrawLine(XMin, Trigger, XMax, Trigger);
+  }
   
   if(ADAQSettings->PlotBaselineCalcRegion and !ADAQSettings->ZSWaveform){
     double Baseline = ComputationMgr->CalculateBaseline(Waveform_H);
