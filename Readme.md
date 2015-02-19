@@ -33,7 +33,6 @@ parallel using MPI to significantly reduce computation time on systems
 where multiple cores are available.
 
 
-
 ### License and disclaimer ###
 
 The **ADAQAnalysis** source code is licensed under the GNU General
@@ -168,19 +167,21 @@ debugging of the code.
     was placed nearby. Intended for general program testing with a
     common, representative inorganic scintillator.
 
-- **EJ309Waveforms_22Na.adaq.root** : ~34 000 waveforms acquired with
-    a 10"x10"x4" EJ309 liquid organic scintillator coupled to a 3"
-    PMT. A sodium-22 source (0.511, 1.274 MeV) was placed nearby.
-    Intended for general code testing with a common, representative
-    liquid organic scintillator.
+- **EJ309Waveforms_Na22.adaq.root** : ~31 000 waveforms acquired with
+    a 2"x2" EJ309 liquid organic scintillator coupled to a 2" PMT. A
+    sodium-22 check source (0.511, 1.274 MeV gammas) was placed
+    nearby. Intended for general code testing with a common,
+    representative liquid organic scintillator.
 
-- **EJ309Waveforms_AmBe.adaq.root** : ~36 000 waveforms acquired with
-    a 10"x10"x4" EJ309 liquid organic scintillator coupled to a 3"
-    PMT. An Americium-241/Beryllium-9 source (4.44 MeV gammas; 2-12
-    MeV neutrons) was placed nearby. Intended to be used for
-    development of detector pulse-shape discrimination algorithms and
-    features. Note that energy calibration for this data file may be
-    obtained using the EJ309Waveforms_22Na.adaq.root file.
+- **EJ309Waveforms_AmBe.adaq.root** : ~23 000 waveforms acquired with
+    a 2"x2" EJ309 liquid organic scintillator coupled to a 2" PMT. An
+    Americium-241/Beryllium-9 source (4.44 MeV gammas; 2-12 MeV
+    neutrons) was placed nearby. Intended to be used for development
+    of detector pulse-shape discrimination algorithms and features
+    with liquid organic scintillators. Note that energy calibration
+    for these waveforms may be obtained using the
+    EJ309Waveforms_22Na.adaq.root data.
+
 
 ### Contact ###
 
