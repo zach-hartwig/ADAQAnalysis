@@ -698,7 +698,15 @@ void AAGraphics::PlotSpectrum()
     SpectrumIntegral_H->SetFillColor(SpectrumFillColor);
     SpectrumIntegral_H->SetFillStyle(ADAQSettings->SpectrumFillStyle);
     SpectrumIntegral_H->Draw("HIST B SAME");
-    SpectrumIntegral_H->Draw("HIST C SAME");
+   
+    if(ADAQSettings->SpectrumLine or
+       ADAQSettings->SpectrumBars){
+      SpectrumIntegral_H->SetLineWidth(0);
+      SpectrumIntegral_H->Draw("HIST SAME");
+    }
+    else if(ADAQSettings->SpectrumCurve or
+	    ADAQSettings->SpectrumError)
+      SpectrumIntegral_H->Draw("HIST C SAME");
   }
     
   if(ADAQSettings->SpectrumUseGaussianFit){
