@@ -80,7 +80,7 @@ public:
   Bool_t FindBackground;
   Int_t BackgroundIterations;
   Bool_t BackgroundCompton, BackgroundSmoothing;
-  Int_t BackgroundMinBin, BackgroundMaxBin;
+  Double_t BackgroundMinBin, BackgroundMaxBin;
   Int_t BackgroundDirection;
   Int_t BackgroundFilterOrder;
   Int_t BackgroundSmoothingWidth;
