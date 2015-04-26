@@ -1192,7 +1192,7 @@ void AAGraphics::PlotPSDHistogramSlice(int XPixel, int YPixel)
     double YPosInADC = gPad->AbsPixeltoY(YPixel);
 
     ss << "PSDHistogram Y slice at " << YPosInADC << " ADC";
-    Title == ss.str();
+    Title = ss.str();
     XTitle = "PSD Total Integral [ADC]";
   }
 
