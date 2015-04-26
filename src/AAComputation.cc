@@ -1794,18 +1794,24 @@ TH2F *AAComputation::CreatePSDHistogram()
       // the y-axis of the PSD histogram then modify the TailIntegral:
       if(ADAQSettings->PSDYAxisTailTotal)
 	TailIntegral /= TotalIntegral;
-      
-      // If the user has enabled a PSD filter ...
-      if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
+
+      // Determine if waveform exceeds the PSD threshold
+      if(TotalIntegral > ADAQSettings->PSDThreshold){
 	
-	// ... then apply the PSD filter to the waveform. If the
-	// waveform does not pass the filter, mark the flag indicating
-	// that it should be filtered out due to its pulse shap
-	if(ApplyPSDRegion(TailIntegral, TotalIntegral))
+	// If the user has enabled a PSD filter ...
+	if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
+	  
+	  // ... then apply the PSD filter to the waveform. If the
+	  // waveform does not pass the filter, mark the flag indicating
+	  // that it should be filtered out due to its pulse shap
+	  if(ApplyPSDRegion(TailIntegral, TotalIntegral))
+	    PSDHistogram_H->Fill(TotalIntegral, TailIntegral);
+	}
+	
+	// ... otherwise straight PSD histogramming
+	else
 	  PSDHistogram_H->Fill(TotalIntegral, TailIntegral);
       }
-      else
-	PSDHistogram_H->Fill(TotalIntegral, TailIntegral);
     }
     PSDHistogramExists = true;
   }
