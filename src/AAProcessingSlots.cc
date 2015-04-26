@@ -380,7 +380,7 @@ void AAProcessingSlots::HandleTextButtons()
       TheInterface->PSDCreateRegion_TB->SetForegroundColor(TheInterface->ColorMgr->Number2Pixel(1));
       TheInterface->PSDCreateRegion_TB->SetBackgroundColor(TheInterface->ColorMgr->Number2Pixel(18));						   
       
-      switch(GraphicsMgr->GetCanvasContentType()){
+      switch((int)GraphicsMgr->GetCanvasContentType()){
       case zWaveform:
 	GraphicsMgr->PlotWaveform();
 	break;

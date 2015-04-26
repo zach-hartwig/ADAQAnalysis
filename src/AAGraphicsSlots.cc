@@ -138,7 +138,7 @@ void AAGraphicsSlots::HandleNumberEntries()
   case PaletteY1_NEL_ID:  
   case PaletteY2_NEL_ID:  
     
-    switch(GraphicsMgr->GetCanvasContentType()){
+    switch((int)GraphicsMgr->GetCanvasContentType()){
     case zWaveform:
       GraphicsMgr->PlotWaveform();
       break;
