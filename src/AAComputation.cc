@@ -871,342 +871,359 @@ void AAComputation::CreateSpectrum()
   // Variables for calculating pulse height and area
   double SampleHeight, PulseHeight, PulseArea;
   SampleHeight = PulseHeight = PulseArea = 0.;
-  
-  // Reset the variable holding accumulated RFQ current if the value
-  // was not loaded directly from an ADAQ ROOT file created during
-  // parallel processing (i.e. a "despliced" file) and will be
-  // calculated from scratch here
-  if(!ADAQParResultsLoaded)
-    DeuteronsInTotal = 0.;
-  
-  // Reboot the PeakFinder with up-to-date max peaks
-  if(PeakFinder) delete PeakFinder;
-  PeakFinder = new TSpectrum(ADAQSettings->MaxPeaks);
 
-  // Assign the range of waveforms that will be analyzed to create a
-  // histogram. Note that in sequential architecture if N waveforms
-  // are to be histogrammed, waveforms from waveform_ID == 0 to
-  // waveform_ID == (WaveformsToHistogram-1) will be included in the
-  // final spectra 
-  WaveformStart = 0; // Start (include this waveform in final histogram)
-  WaveformEnd = ADAQSettings->WaveformsToHistogram; // End (Up to but NOT including this waveform)
+
+  ///////////////////////////////////////////////////
+  // Create the spectrum from stored waveform data //
+  ///////////////////////////////////////////////////
+
+  if(ADAQSettings->ADAQSpectrumAlgorithmWD){
+    cout << "\nADAQAnalysis : Creating waveforms from stored waveform data is not yet enabled!\n"
+	 << endl;
+    SpectrumExists = false;
+  }
+  
+  /////////////////////////////////////////////////
+  // Create the spectrum by processing waveforms //
+  /////////////////////////////////////////////////
+  
+  else{
+    
+    // Reset the variable holding accumulated RFQ current if the value
+    // was not loaded directly from an ADAQ ROOT file created during
+    // parallel processing (i.e. a "despliced" file) and will be
+    // calculated from scratch here
+    if(!ADAQParResultsLoaded)
+      DeuteronsInTotal = 0.;
+  
+    // Reboot the PeakFinder with up-to-date max peaks
+    if(PeakFinder) delete PeakFinder;
+    PeakFinder = new TSpectrum(ADAQSettings->MaxPeaks);
+
+    // Assign the range of waveforms that will be analyzed to create a
+    // histogram. Note that in sequential architecture if N waveforms
+    // are to be histogrammed, waveforms from waveform_ID == 0 to
+    // waveform_ID == (WaveformsToHistogram-1) will be included in the
+    // final spectra 
+    WaveformStart = 0; // Start (include this waveform in final histogram)
+    WaveformEnd = ADAQSettings->WaveformsToHistogram; // End (Up to but NOT including this waveform)
 
 #ifdef MPI_ENABLED
 
-  // If the waveform processing is to be done in parallel then
-  // distribute the events as evenly as possible between the master
-  // (rank == 0) and the slaves (rank != 0) to maximize computational
-  // efficienct. Note that the master will carry the small leftover
-  // waveforms from the even division of labor to the slaves.
+    // If the waveform processing is to be done in parallel then
+    // distribute the events as evenly as possible between the master
+    // (rank == 0) and the slaves (rank != 0) to maximize computational
+    // efficienct. Note that the master will carry the small leftover
+    // waveforms from the even division of labor to the slaves.
   
-  // Assign the number of waveforms processed by each slave
-  int SlaveEvents = int(ADAQSettings->WaveformsToHistogram/MPI_Size);
+    // Assign the number of waveforms processed by each slave
+    int SlaveEvents = int(ADAQSettings->WaveformsToHistogram/MPI_Size);
 
-  // Assign the number of waveforms processed by the master
-  int MasterEvents = int(ADAQSettings->WaveformsToHistogram-SlaveEvents*(MPI_Size-1));
+    // Assign the number of waveforms processed by the master
+    int MasterEvents = int(ADAQSettings->WaveformsToHistogram-SlaveEvents*(MPI_Size-1));
 
-  if(ParallelVerbose and IsMaster)
-    cout << "\nADAQAnalysis_MPI Node[0] : Number waveforms allocated to master (node == 0) : " << MasterEvents << "\n"
-         <<   "                           Number waveforms allocated to slaves (node != 0) : " << SlaveEvents
-	 << endl;
-  
-  // Divide up the total number of waveforms to be processed amongst
-  // the master and slaves as evenly as possible. Note that the
-  // 'WaveformStart' value is *included* whereas the 'WaveformEnd'
-  // value _excluded_ from the for loop range 
-  WaveformStart = (MPI_Rank * SlaveEvents) + (ADAQSettings->WaveformsToHistogram % MPI_Size);
-  WaveformEnd = (MPI_Rank * SlaveEvents) + MasterEvents;
-  
-  // The master _always_ starts on waveform zero. This is required
-  // with the waveform allocation algorithm abov.
-  if(IsMaster)
-    WaveformStart = 0;
-  
-  if(ParallelVerbose)
-    cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Handling waveforms " << WaveformStart << " to " << (WaveformEnd-1)
-	 << endl;
-
-#endif
-
-  bool PeaksFound = false;
-
-  // Process the waveforms. 
-  for(int waveform=WaveformStart; waveform<WaveformEnd; waveform++){
-    // Run processing in a separate thread to enable use of the GUI by
-    // the user while the spectrum is being created
-    if(SequentialArchitecture)
-      gSystem->ProcessEvents();
-
-    // Get the data from the ADAQ TTree for the current waveform
-    ADAQWaveformTree->GetEntry(waveform);
-
-    int Channel = ADAQSettings->WaveformChannel;
-
-    // Assign the raw waveform voltage to a class member vector<int>
-    RawVoltage = *Waveforms[Channel];
-    
-    // Calculate the selected waveform that will be analyzed into the
-    // spectrum histogram. Note that "raw" waveforms may not be
-    // analyzed (simply due to how the code is presently setup) and
-    // will default to analyzing the baseline subtracted waveform
-    if(ADAQSettings->RawWaveform or ADAQSettings->BSWaveform)
-      CalculateBSWaveform(Channel, waveform);
-    else if(ADAQSettings->ZSWaveform)
-      CalculateZSWaveform(Channel, waveform);
-    
-    // Calculate the total RFQ current for this waveform.
-    if(ADAQSettings->IntegratePearson)
-      IntegratePearsonWaveform(waveform);
-   
-    ///////////////////////////////
-    // Whole waveform processing //
-    ///////////////////////////////
-
-    // If the entire waveform is to be used to calculate a pulse spectrum ...
-    if(ADAQSettings->ADAQSpectrumAlgorithmWW){
-
-      // If specified, calculate the PSD integrals for the waveform
-      // and determine if they meet the acceptance criterion defined
-      // by the current channel's PSD region. If not, continue the
-      // processing loop to prevent adding the waveform height/area to
-      // the pulse spectrum
-
-      if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
-	
-	FindPeaks(Waveform_H[Channel], zWholeWaveform);
-	CalculatePSDIntegrals(false);
-	
-	if(PeakInfoVec.at(0).PSDFilterFlag == true)
-	  continue;
-      }
-      
-      // If a pulse height spectrum (PHS) is to be created ...
-      if(ADAQSettings->ADAQSpectrumTypePHS){
-	// Get the pulse height by find the maximum bin value stored
-	// in the Waveform_H TH1F via class methods. Note that spectra
-	// are always created with positive polarity waveforms
-	PulseHeight = Waveform_H[Channel]->GetBinContent(Waveform_H[Channel]->GetMaximumBin());
-
-	// If the calibration manager is to be used to convert the
-	// value from pulse units [ADC] to energy units [keV, MeV,
-	// ...] then do so
-	if(ADAQSettings->UseSpectraCalibrations[Channel])
-	  PulseHeight = ADAQSettings->SpectraCalibrations[Channel]->Eval(PulseHeight);
-	
-	// Add the pulse height to the spectrum histogram	
-	Spectrum_H->Fill(PulseHeight);
-      }
-
-      // ... or if a pulse area spectrum (PAS) is to be created ...
-      else if(ADAQSettings->ADAQSpectrumTypePAS){
-
-	// Reset the pulse area "integral" to zero
-	PulseArea = 0.;
-	
-	// ...iterate through the bins in the Waveform_H histogram and
-	// add each bin value to the pulse area integral.
-	for(int sample=0; sample<Waveform_H[Channel]->GetEntries(); sample++){
-	  SampleHeight = Waveform_H[Channel]->GetBinContent(sample);
-
-	  // ZSH: At present, the whole-waveform spectra creation
-	  // simply integrates throught the entire waveform. Ideally,
-	  // I would like to eliminate the signal noise by eliminating
-	  // it from the integral with a threshold. But to avoid
-	  // confusing the user and to ensure consistency, I will
-	  // simply trust cancellation of + and - noise to avoid
-	  // broadening the photo peaks. May want to implement a
-	  // "minimum waveform height to be histogrammed" at some
-	  // point in the future.
-	  PulseArea += SampleHeight;
-	}
-	
-	// If the calibration manager is to be used to convert the
-	// value from pulse units [ADC] to energy units [keV, MeV,
-	// ...] then do so
-	if(ADAQSettings->UseSpectraCalibrations[Channel])
-	  PulseArea = ADAQSettings->SpectraCalibrations[Channel]->Eval(PulseArea);
-	
-	// Add the pulse area to the spectrum histogram
-	Spectrum_H->Fill(PulseArea);
-      }
-      
-      // Note that we must add a +1 to the waveform number in order to
-      // get the modulo to land on the correct intervals
-      if(IsMaster)
-	// Check to ensure no floating point exception for low number
-	if(WaveformEnd >= 50)
-	  if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
-	    UpdateProcessingProgress(waveform);
-    }
-    
-    /////////////////////////////////////
-    // Peak-finder waveform processing //
-    /////////////////////////////////////
-    
-    // If the peak-finding/limit-finding algorithm is to be used to
-    // create the pulse spectrum ...
-    else if(ADAQSettings->ADAQSpectrumAlgorithmPF){
-      
-      // ...pass the Waveform_H[Channel] TH1F object to the peak-finding
-      // algorithm, passing 'false' as the second argument to turn off
-      // plotting of the waveforms. ADAQAnalysisInterface::FindPeaks() will
-      // fill up a vector<PeakInfoStruct> that will be used to either
-      // integrate the valid peaks to create a PAS or find the peak
-      // heights to create a PHS, returning true. If zero peaks are
-      // found in the waveform then FindPeaks() returns false
-      PeaksFound = FindPeaks(Waveform_H[Channel], zPeakFinder);
-
-      // Because the peak finding algorithm skips analysis of
-      // waveforms for which it cannot find peaks, we need to update
-      // the progress bar here to ensure that bar ends at 100% when
-      // actual processing ends. It would be nice to do this more
-      // accurately in the future (i.e. update the bar when processing
-      // actually finished!). Note that we must add a +1 to the
-      // waveform number in order to get the modulo to land on the
-      // correct intervals
-      if(IsMaster)
-	if(WaveformEnd >= 50)
-	  if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
-	    UpdateProcessingProgress(waveform);
-
-      // If no peaks are present in the current waveform then continue
-      // on to the next waveform for analysis
-      if(!PeaksFound)
-	continue;
-      
-      // Calculate the PSD integrals and determine if they pass
-      // the pulse-shape filterthrough the pulse-shape filter
-      if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel])
-      	CalculatePSDIntegrals(false);
-      
-      // If a PAS is to be created ...
-      if(ADAQSettings->ADAQSpectrumTypePAS)
-	IntegratePeaks();
-      
-      // or if a PHS is to be created ...
-      else if(ADAQSettings->ADAQSpectrumTypePHS)
-	FindPeakHeights();
-    }
-  }
-  
-  // Make final updates to the progress bar, ensuring that it reaches
-  // 100% and changes color to acknoqledge that processing is complete
-
-  if(SequentialArchitecture){
-    ProcessingProgressBar->Increment(100);
-    ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(32));
-    ProcessingProgressBar->SetForegroundColor(ColorManager->Number2Pixel(0));
-  }
-  
-#ifdef MPI_ENABLED
-  // Parallel waveform processing is complete at this point and it is
-  // time to aggregate all the results from the nodes to the master
-  // (node == 0) for output to a text file (for now). In the near
-  // future, we will most likely persistently store a TH1F master
-  // histogram object in a ROOT file (along with other variables) for
-  // later retrieval
-  
-  // Ensure that all nodes reach this point before beginning the
-  // aggregation by using an MPI barrier
-  if(ParallelVerbose)
-    cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Reached the end-of-processing MPI barrier!"
-	 << endl;
-
-  // Ensure that all of the nodes have finished processing and
-  // check-in at the barrier before proceeding  
-  MPI::COMM_WORLD.Barrier();
-  
-  // In order to aggregate the Spectrum_H objects on each node to a
-  // single Spectrum_H object on the master node, we perform the
-  // following procedure:
-  //
-  // 0. Create a double array on each node 
-  // 1. Store each node's Spectrum_H bin contents in the array
-  // 2. Use MPI::Reduce on the array ptr to quickly aggregate the
-  //    array values to the master's array (master == node 0)
-  //
-  // The size of the array must be (nbins+2) since ROOT TH1 objects
-  // that are created with nbins have a underflow (bin = 0) and
-  // overflow (bin = nbin+1) bin added onto the bins within range. For
-  // example if a TH1 is created with 200 bins, the actual number of
-  // bins in the TH1 object is 202 (content + under/overflow bins).
-  
-  // Set the size of the array for Spectrum_H readout
-  const int ArraySize = ADAQSettings->SpectrumNumBins + 2;
-  
-  // Create the array for Spectrum_H readout
-  double SpectrumArray[ArraySize];
-
-  // Set array values to the bin content the node's Spectrum_H object
-  for(int i=0; i<ArraySize; i++)
-    SpectrumArray[i] = Spectrum_H->GetBinContent(i);
-  
-  // Get the total number of entries in the nod'es Spectrum_H object
-  double Entries = Spectrum_H->GetEntries();
-  
-  if(ParallelVerbose)
-    cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Aggregating results to Node[0]!" << endl;
-  
-  // Use MPI::Reduce function to aggregate the arrays on each node
-  // (which representing the Spectrum_H histogram) to a single array
-  // on the master node.
-  double *ReturnArray = AAParallel::GetInstance()->SumDoubleArrayToMaster(SpectrumArray, ArraySize);
-
-  // Use the MPI::Reduce function to aggregate the total number of
-  // entries on each node to a single double on the master
-  double ReturnDouble = AAParallel::GetInstance()->SumDoublesToMaster(Entries);
-
-  // Aggregate the total calculated RFQ current (if enabled) from all
-  // nodes to the master node
-  DeuteronsInTotal = AAParallel::GetInstance()->SumDoublesToMaster(DeuteronsInTotal);
-  
-  // The master should output the array to a text file, which will be
-  // read in by the running sequential binary of ADAQAnalysisGUI
-  if(IsMaster){
-    if(ParallelVerbose)
-      cout << "\nADAQAnalysis_MPI Node[0] : Writing master TH1F histogram to disk!\n"
+    if(ParallelVerbose and IsMaster)
+      cout << "\nADAQAnalysis_MPI Node[0] : Number waveforms allocated to master (node == 0) : " << MasterEvents << "\n"
+	   <<   "                           Number waveforms allocated to slaves (node != 0) : " << SlaveEvents
 	   << endl;
-    
-    // Create the master TH1F histogram object. Note that the member
-    // data for spectrum creation are used to ensure the correct
-    // number of bins and bin aranges
-    MasterHistogram_H = new TH1F("MasterHistogram","MasterHistogram", 
-				 ADAQSettings->SpectrumNumBins,
-				 ADAQSettings->SpectrumMinBin, 
-				 ADAQSettings->SpectrumMaxBin);
-    
-    // Assign the bin content to the appropriate bins. Note that the
-    // 'for loop' must include the TH1 overflow bin that exists at
-    // (nbin+1) in order to capture all possible entries
-    for(int i=0; i<ArraySize; i++)
-      MasterHistogram_H->SetBinContent(i, ReturnArray[i]);
-    
-    // Set the total number of entries in the histogram. Because we
-    // are setting the content of each bin with a single "entry"
-    // weighted to the desired bin content value for each bin, the
-    // number of entries will equal to the total number of
-    // bins. However, we'd like to preserve the number of counts in
-    // the histogram for statistics purposes;
-    MasterHistogram_H->SetEntries(ReturnDouble);
-    
-    // Open the ROOT file that stores all the parallel processing data
-    // in "update" mode such that we can append the master histogram
-    ParallelFile = new TFile(AAParallel::GetInstance()->GetParallelFileName().c_str(), "update");
-    
-    // Write the master histogram object to the ROOT file ...
-    MasterHistogram_H->Write();
-    
-    // Create/write the aggregated current vector to a file
-    TVectorD AggregatedDeuterons(1);
-    AggregatedDeuterons[0] = DeuteronsInTotal;
-    AggregatedDeuterons.Write("AggregatedDeuterons");
-    
-    // ... and write the ROOT file to disk
-    ParallelFile->Write();
-  }
+  
+    // Divide up the total number of waveforms to be processed amongst
+    // the master and slaves as evenly as possible. Note that the
+    // 'WaveformStart' value is *included* whereas the 'WaveformEnd'
+    // value _excluded_ from the for loop range 
+    WaveformStart = (MPI_Rank * SlaveEvents) + (ADAQSettings->WaveformsToHistogram % MPI_Size);
+    WaveformEnd = (MPI_Rank * SlaveEvents) + MasterEvents;
+  
+    // The master _always_ starts on waveform zero. This is required
+    // with the waveform allocation algorithm abov.
+    if(IsMaster)
+      WaveformStart = 0;
+  
+    if(ParallelVerbose)
+      cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Handling waveforms " << WaveformStart << " to " << (WaveformEnd-1)
+	   << endl;
+
 #endif
 
-  SpectrumExists = true;
+    bool PeaksFound = false;
+
+    // Process the waveforms. 
+    for(int waveform=WaveformStart; waveform<WaveformEnd; waveform++){
+      // Run processing in a separate thread to enable use of the GUI by
+      // the user while the spectrum is being created
+      if(SequentialArchitecture)
+	gSystem->ProcessEvents();
+
+      // Get the data from the ADAQ TTree for the current waveform
+      ADAQWaveformTree->GetEntry(waveform);
+
+      int Channel = ADAQSettings->WaveformChannel;
+
+      // Assign the raw waveform voltage to a class member vector<int>
+      RawVoltage = *Waveforms[Channel];
+    
+      // Calculate the selected waveform that will be analyzed into the
+      // spectrum histogram. Note that "raw" waveforms may not be
+      // analyzed (simply due to how the code is presently setup) and
+      // will default to analyzing the baseline subtracted waveform
+      if(ADAQSettings->RawWaveform or ADAQSettings->BSWaveform)
+	CalculateBSWaveform(Channel, waveform);
+      else if(ADAQSettings->ZSWaveform)
+	CalculateZSWaveform(Channel, waveform);
+    
+      // Calculate the total RFQ current for this waveform.
+      if(ADAQSettings->IntegratePearson)
+	IntegratePearsonWaveform(waveform);
+   
+      ///////////////////////////////
+      // Whole waveform processing //
+      ///////////////////////////////
+
+      // If the entire waveform is to be used to calculate a pulse spectrum ...
+      if(ADAQSettings->ADAQSpectrumAlgorithmWW){
+
+	// If specified, calculate the PSD integrals for the waveform
+	// and determine if they meet the acceptance criterion defined
+	// by the current channel's PSD region. If not, continue the
+	// processing loop to prevent adding the waveform height/area to
+	// the pulse spectrum
+
+	if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
+	
+	  FindPeaks(Waveform_H[Channel], zWholeWaveform);
+	  CalculatePSDIntegrals(false);
+	
+	  if(PeakInfoVec.at(0).PSDFilterFlag == true)
+	    continue;
+	}
+      
+	// If a pulse height spectrum (PHS) is to be created ...
+	if(ADAQSettings->ADAQSpectrumTypePHS){
+	  // Get the pulse height by find the maximum bin value stored
+	  // in the Waveform_H TH1F via class methods. Note that spectra
+	  // are always created with positive polarity waveforms
+	  PulseHeight = Waveform_H[Channel]->GetBinContent(Waveform_H[Channel]->GetMaximumBin());
+
+	  // If the calibration manager is to be used to convert the
+	  // value from pulse units [ADC] to energy units [keV, MeV,
+	  // ...] then do so
+	  if(ADAQSettings->UseSpectraCalibrations[Channel])
+	    PulseHeight = ADAQSettings->SpectraCalibrations[Channel]->Eval(PulseHeight);
+	
+	  // Add the pulse height to the spectrum histogram	
+	  Spectrum_H->Fill(PulseHeight);
+	}
+
+	// ... or if a pulse area spectrum (PAS) is to be created ...
+	else if(ADAQSettings->ADAQSpectrumTypePAS){
+
+	  // Reset the pulse area "integral" to zero
+	  PulseArea = 0.;
+	
+	  // ...iterate through the bins in the Waveform_H histogram and
+	  // add each bin value to the pulse area integral.
+	  for(int sample=0; sample<Waveform_H[Channel]->GetEntries(); sample++){
+	    SampleHeight = Waveform_H[Channel]->GetBinContent(sample);
+
+	    // ZSH: At present, the whole-waveform spectra creation
+	    // simply integrates throught the entire waveform. Ideally,
+	    // I would like to eliminate the signal noise by eliminating
+	    // it from the integral with a threshold. But to avoid
+	    // confusing the user and to ensure consistency, I will
+	    // simply trust cancellation of + and - noise to avoid
+	    // broadening the photo peaks. May want to implement a
+	    // "minimum waveform height to be histogrammed" at some
+	    // point in the future.
+	    PulseArea += SampleHeight;
+	  }
+	
+	  // If the calibration manager is to be used to convert the
+	  // value from pulse units [ADC] to energy units [keV, MeV,
+	  // ...] then do so
+	  if(ADAQSettings->UseSpectraCalibrations[Channel])
+	    PulseArea = ADAQSettings->SpectraCalibrations[Channel]->Eval(PulseArea);
+	
+	  // Add the pulse area to the spectrum histogram
+	  Spectrum_H->Fill(PulseArea);
+	}
+      
+	// Note that we must add a +1 to the waveform number in order to
+	// get the modulo to land on the correct intervals
+	if(IsMaster)
+	  // Check to ensure no floating point exception for low number
+	  if(WaveformEnd >= 50)
+	    if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
+	      UpdateProcessingProgress(waveform);
+      }
+    
+      /////////////////////////////////////
+      // Peak-finder waveform processing //
+      /////////////////////////////////////
+    
+      // If the peak-finding/limit-finding algorithm is to be used to
+      // create the pulse spectrum ...
+      else if(ADAQSettings->ADAQSpectrumAlgorithmPF){
+      
+	// ...pass the Waveform_H[Channel] TH1F object to the peak-finding
+	// algorithm, passing 'false' as the second argument to turn off
+	// plotting of the waveforms. ADAQAnalysisInterface::FindPeaks() will
+	// fill up a vector<PeakInfoStruct> that will be used to either
+	// integrate the valid peaks to create a PAS or find the peak
+	// heights to create a PHS, returning true. If zero peaks are
+	// found in the waveform then FindPeaks() returns false
+	PeaksFound = FindPeaks(Waveform_H[Channel], zPeakFinder);
+
+	// Because the peak finding algorithm skips analysis of
+	// waveforms for which it cannot find peaks, we need to update
+	// the progress bar here to ensure that bar ends at 100% when
+	// actual processing ends. It would be nice to do this more
+	// accurately in the future (i.e. update the bar when processing
+	// actually finished!). Note that we must add a +1 to the
+	// waveform number in order to get the modulo to land on the
+	// correct intervals
+	if(IsMaster)
+	  if(WaveformEnd >= 50)
+	    if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
+	      UpdateProcessingProgress(waveform);
+
+	// If no peaks are present in the current waveform then continue
+	// on to the next waveform for analysis
+	if(!PeaksFound)
+	  continue;
+      
+	// Calculate the PSD integrals and determine if they pass
+	// the pulse-shape filterthrough the pulse-shape filter
+	if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel])
+	  CalculatePSDIntegrals(false);
+      
+	// If a PAS is to be created ...
+	if(ADAQSettings->ADAQSpectrumTypePAS)
+	  IntegratePeaks();
+      
+	// or if a PHS is to be created ...
+	else if(ADAQSettings->ADAQSpectrumTypePHS)
+	  FindPeakHeights();
+      }
+    }
+  
+    // Make final updates to the progress bar, ensuring that it reaches
+    // 100% and changes color to acknoqledge that processing is complete
+
+    if(SequentialArchitecture){
+      ProcessingProgressBar->Increment(100);
+      ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(32));
+      ProcessingProgressBar->SetForegroundColor(ColorManager->Number2Pixel(0));
+    }
+  
+#ifdef MPI_ENABLED
+    // Parallel waveform processing is complete at this point and it is
+    // time to aggregate all the results from the nodes to the master
+    // (node == 0) for output to a text file (for now). In the near
+    // future, we will most likely persistently store a TH1F master
+    // histogram object in a ROOT file (along with other variables) for
+    // later retrieval
+  
+    // Ensure that all nodes reach this point before beginning the
+    // aggregation by using an MPI barrier
+    if(ParallelVerbose)
+      cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Reached the end-of-processing MPI barrier!"
+	   << endl;
+
+    // Ensure that all of the nodes have finished processing and
+    // check-in at the barrier before proceeding  
+    MPI::COMM_WORLD.Barrier();
+  
+    // In order to aggregate the Spectrum_H objects on each node to a
+    // single Spectrum_H object on the master node, we perform the
+    // following procedure:
+    //
+    // 0. Create a double array on each node 
+    // 1. Store each node's Spectrum_H bin contents in the array
+    // 2. Use MPI::Reduce on the array ptr to quickly aggregate the
+    //    array values to the master's array (master == node 0)
+    //
+    // The size of the array must be (nbins+2) since ROOT TH1 objects
+    // that are created with nbins have a underflow (bin = 0) and
+    // overflow (bin = nbin+1) bin added onto the bins within range. For
+    // example if a TH1 is created with 200 bins, the actual number of
+    // bins in the TH1 object is 202 (content + under/overflow bins).
+  
+    // Set the size of the array for Spectrum_H readout
+    const int ArraySize = ADAQSettings->SpectrumNumBins + 2;
+  
+    // Create the array for Spectrum_H readout
+    double SpectrumArray[ArraySize];
+
+    // Set array values to the bin content the node's Spectrum_H object
+    for(int i=0; i<ArraySize; i++)
+      SpectrumArray[i] = Spectrum_H->GetBinContent(i);
+  
+    // Get the total number of entries in the nod'es Spectrum_H object
+    double Entries = Spectrum_H->GetEntries();
+  
+    if(ParallelVerbose)
+      cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Aggregating results to Node[0]!" << endl;
+  
+    // Use MPI::Reduce function to aggregate the arrays on each node
+    // (which representing the Spectrum_H histogram) to a single array
+    // on the master node.
+    double *ReturnArray = AAParallel::GetInstance()->SumDoubleArrayToMaster(SpectrumArray, ArraySize);
+
+    // Use the MPI::Reduce function to aggregate the total number of
+    // entries on each node to a single double on the master
+    double ReturnDouble = AAParallel::GetInstance()->SumDoublesToMaster(Entries);
+
+    // Aggregate the total calculated RFQ current (if enabled) from all
+    // nodes to the master node
+    DeuteronsInTotal = AAParallel::GetInstance()->SumDoublesToMaster(DeuteronsInTotal);
+  
+    // The master should output the array to a text file, which will be
+    // read in by the running sequential binary of ADAQAnalysisGUI
+    if(IsMaster){
+      if(ParallelVerbose)
+	cout << "\nADAQAnalysis_MPI Node[0] : Writing master TH1F histogram to disk!\n"
+	     << endl;
+    
+      // Create the master TH1F histogram object. Note that the member
+      // data for spectrum creation are used to ensure the correct
+      // number of bins and bin aranges
+      MasterHistogram_H = new TH1F("MasterHistogram","MasterHistogram", 
+				   ADAQSettings->SpectrumNumBins,
+				   ADAQSettings->SpectrumMinBin, 
+				   ADAQSettings->SpectrumMaxBin);
+    
+      // Assign the bin content to the appropriate bins. Note that the
+      // 'for loop' must include the TH1 overflow bin that exists at
+      // (nbin+1) in order to capture all possible entries
+      for(int i=0; i<ArraySize; i++)
+	MasterHistogram_H->SetBinContent(i, ReturnArray[i]);
+    
+      // Set the total number of entries in the histogram. Because we
+      // are setting the content of each bin with a single "entry"
+      // weighted to the desired bin content value for each bin, the
+      // number of entries will equal to the total number of
+      // bins. However, we'd like to preserve the number of counts in
+      // the histogram for statistics purposes;
+      MasterHistogram_H->SetEntries(ReturnDouble);
+    
+      // Open the ROOT file that stores all the parallel processing data
+      // in "update" mode such that we can append the master histogram
+      ParallelFile = new TFile(AAParallel::GetInstance()->GetParallelFileName().c_str(), "update");
+    
+      // Write the master histogram object to the ROOT file ...
+      MasterHistogram_H->Write();
+    
+      // Create/write the aggregated current vector to a file
+      TVectorD AggregatedDeuterons(1);
+      AggregatedDeuterons[0] = DeuteronsInTotal;
+      AggregatedDeuterons.Write("AggregatedDeuterons");
+    
+      // ... and write the ROOT file to disk
+      ParallelFile->Write();
+    }
+#endif
+    SpectrumExists = true;
+  }
 }
 
 

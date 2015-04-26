@@ -207,13 +207,24 @@ void AASpectrumSlots::HandleRadioButtons()
     break;
 
   case ADAQSpectrumAlgorithmWW_RB_ID:
-    if(RadioButton->IsDown())
+    if(RadioButton->IsDown()){
       TheInterface->ADAQSpectrumAlgorithmPF_RB->SetState(kButtonUp);
+      TheInterface->ADAQSpectrumAlgorithmWD_RB->SetState(kButtonUp);
+    }
     break;
 
   case ADAQSpectrumAlgorithmPF_RB_ID:
-    if(RadioButton->IsDown())
+    if(RadioButton->IsDown()){
       TheInterface->ADAQSpectrumAlgorithmWW_RB->SetState(kButtonUp);
+      TheInterface->ADAQSpectrumAlgorithmWD_RB->SetState(kButtonUp);
+    }
+    break;
+
+  case ADAQSpectrumAlgorithmWD_RB_ID:
+    if(RadioButton->IsDown()){
+      TheInterface->ADAQSpectrumAlgorithmPF_RB->SetState(kButtonUp);
+      TheInterface->ADAQSpectrumAlgorithmWW_RB->SetState(kButtonUp);
+    }
     break;
 
   case ASIMSpectrumTypeEnergy_RB_ID:
