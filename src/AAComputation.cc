@@ -1752,10 +1752,60 @@ TH2F *AAComputation::CreatePSDHistogram()
   // Create the PSD histogram from stored waveform data //
   ////////////////////////////////////////////////////////
   if(ADAQSettings->PSDAlgorithmWD){
-    cout << "\nADAQAnalysis : Creating PSD histograms from waveform data is not yet enabled!\n"
-	 << endl;
 
-    PSDHistogramExists = false;
+    ////////////////////////////////////////////
+    // Check to ensure that waveform data exists
+
+    // Using waveform data is not available for legacy ADAQ files
+    if(ADAQLegacyFileLoaded){
+      PSDHistogramExists = false;
+      return PSDHistogram_H;
+    }
+    
+    // Ensure the user chose to save PSD waveform data
+    ADAQReadoutInformation *ARI = (ADAQReadoutInformation *)ADAQFile->Get("ReadoutInformation");
+    if(!ARI->GetStorePSDData()){
+      PSDHistogramExists = false;
+      return PSDHistogram_H;
+    }
+
+    ///////////////////////////////////////////////////
+    // Readout the waveform data into the PSD histogram
+    
+    // Set the ADAQWaveformData branch name depending on channel number
+    stringstream SS;
+    SS << "WaveformDataCh" << PSDChannel;
+    string WDName = SS.str();
+
+    // Create and set address of ADAQWavefomData object in the waveform tree
+    ADAQWaveformData *WD = new ADAQWaveformData;
+    ADAQWaveformTree->SetBranchAddress(WDName.c_str(), &WD);
+
+    // Readout appropriate waveform data into the spectrum
+    for(int entry=0; entry<ADAQWaveformTree->GetEntries(); entry++){
+      ADAQWaveformTree->GetEntry(entry);
+      
+      Double_t TotalIntegral = WD->GetPSDTotalIntegral();
+      Double_t TailIntegral = WD->GetPSDTailIntegral();
+
+      // If the user wants to plot (Tail integral / Total integral) on
+      // the y-axis of the PSD histogram then modify the TailIntegral:
+      if(ADAQSettings->PSDYAxisTailTotal)
+	TailIntegral /= TotalIntegral;
+      
+      // If the user has enabled a PSD filter ...
+      if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
+	
+	// ... then apply the PSD filter to the waveform. If the
+	// waveform does not pass the filter, mark the flag indicating
+	// that it should be filtered out due to its pulse shap
+	if(ApplyPSDRegion(TailIntegral, TotalIntegral))
+	  PSDHistogram_H->Fill(TotalIntegral, TailIntegral);
+      }
+      else
+	PSDHistogram_H->Fill(TotalIntegral, TailIntegral);
+    }
+    PSDHistogramExists = true;
   }
 
   ////////////////////////////////////////////////////////
