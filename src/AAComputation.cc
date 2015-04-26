@@ -878,10 +878,54 @@ void AAComputation::CreateSpectrum()
   ///////////////////////////////////////////////////
 
   if(ADAQSettings->ADAQSpectrumAlgorithmWD){
-    cout << "\nADAQAnalysis : Creating waveforms from stored waveform data is not yet enabled!\n"
-	 << endl;
-    SpectrumExists = false;
+
+    ////////////////////////////////////////////
+    // Check to ensure that waveform data exists
+
+    // Using waveform data is not available for legacy ADAQ files
+    if(ADAQLegacyFileLoaded){
+      SpectrumExists = false;
+      return;
+    }
+
+    // Ensure the user chose to save energy waveform data
+    ADAQReadoutInformation *ARI = (ADAQReadoutInformation *)ADAQFile->Get("ReadoutInformation");
+    if(!ARI->GetStoreEnergyData()){
+      SpectrumExists = false;
+      return;
+    }
+    
+    
+    //////////////////////////////////////////////
+    // Readout the waveform data into the spectrum
+    
+    // Set the ADAQWaveformData branch name depending on channel number
+    stringstream SS;
+    SS << "WaveformDataCh" << Channel;
+    string WDName = SS.str();
+
+    // Create and set address of ADAQWavefomData object in the waveform tree
+    ADAQWaveformData *WD = new ADAQWaveformData;
+    ADAQWaveformTree->SetBranchAddress(WDName.c_str(), &WD);
+
+    // Readout appropriate waveform data into the spectrum
+    for(int entry=0; entry<ADAQWaveformTree->GetEntries(); entry++){
+      ADAQWaveformTree->GetEntry(entry);
+      
+      Double_t PulseValue = 0.;
+      if(ADAQSettings->ADAQSpectrumTypePAS)
+	PulseValue = WD->GetPulseArea();
+      else if(ADAQSettings->ADAQSpectrumTypePHS)
+	PulseValue = WD->GetPulseHeight();
+
+      Spectrum_H->Fill(PulseValue);
+    }
+
+    delete WD;
+
+    SpectrumExists = true;
   }
+
   
   /////////////////////////////////////////////////
   // Create the spectrum by processing waveforms //
@@ -975,9 +1019,9 @@ void AAComputation::CreateSpectrum()
       if(ADAQSettings->IntegratePearson)
 	IntegratePearsonWaveform(waveform);
    
-      ///////////////////////////////
-      // Whole waveform processing //
-      ///////////////////////////////
+
+      ////////////////////////////
+      // Whole waveform processing
 
       // If the entire waveform is to be used to calculate a pulse spectrum ...
       if(ADAQSettings->ADAQSpectrumAlgorithmWW){
@@ -1055,10 +1099,10 @@ void AAComputation::CreateSpectrum()
 	    if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
 	      UpdateProcessingProgress(waveform);
       }
+
     
-      /////////////////////////////////////
-      // Peak-finder waveform processing //
-      /////////////////////////////////////
+      //////////////////////////////////
+      // Peak-finder waveform processing
     
       // If the peak-finding/limit-finding algorithm is to be used to
       // create the pulse spectrum ...
