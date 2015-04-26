@@ -202,9 +202,10 @@ private:
   //TGButtonGroup *ADAQSpectrumType_BG;
   TGRadioButton *ADAQSpectrumTypePAS_RB, *ADAQSpectrumTypePHS_RB;
 
-  //TGButtonGroup *ADAQSpectrumIntType_BG;
-  TGRadioButton *ADAQSpectrumIntTypePF_RB;
-  TGRadioButton *ADAQSpectrumIntTypeWW_RB;
+  //TGButtonGroup *ADAQSpectrumAlgorithm_BG;
+  TGRadioButton *ADAQSpectrumAlgorithmPF_RB;
+  TGRadioButton *ADAQSpectrumAlgorithmWW_RB;
+  TGRadioButton *ADAQSpectrumAlgorithmWD_RB;
 
   //TGButtonGroup *ASIMSpectrumType_BG;
   TGRadioButton *ASIMSpectrumTypeEnergy_RB;

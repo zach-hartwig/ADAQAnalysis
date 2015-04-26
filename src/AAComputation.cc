@@ -963,7 +963,7 @@ void AAComputation::CreateSpectrum()
     ///////////////////////////////
 
     // If the entire waveform is to be used to calculate a pulse spectrum ...
-    if(ADAQSettings->ADAQSpectrumIntTypeWW){
+    if(ADAQSettings->ADAQSpectrumAlgorithmWW){
 
       // If specified, calculate the PSD integrals for the waveform
       // and determine if they meet the acceptance criterion defined
@@ -1045,7 +1045,7 @@ void AAComputation::CreateSpectrum()
     
     // If the peak-finding/limit-finding algorithm is to be used to
     // create the pulse spectrum ...
-    else if(ADAQSettings->ADAQSpectrumIntTypePF){
+    else if(ADAQSettings->ADAQSpectrumAlgorithmPF){
       
       // ...pass the Waveform_H[Channel] TH1F object to the peak-finding
       // algorithm, passing 'false' as the second argument to turn off

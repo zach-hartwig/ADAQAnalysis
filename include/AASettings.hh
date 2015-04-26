@@ -61,7 +61,7 @@ public:
   Double_t SpectrumMinBin, SpectrumMaxBin;
   
   Bool_t ADAQSpectrumTypePAS, ADAQSpectrumTypePHS;
-  Bool_t ADAQSpectrumIntTypeWW, ADAQSpectrumIntTypePF;
+  Bool_t ADAQSpectrumAlgorithmWW, ADAQSpectrumAlgorithmPF;
   
   Bool_t ASIMSpectrumTypeEnergy;
   Bool_t ASIMSpectrumTypePhotonsCreated;

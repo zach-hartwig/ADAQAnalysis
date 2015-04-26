@@ -162,8 +162,8 @@ enum{
   
   ADAQSpectrumTypePAS_RB_ID,
   ADAQSpectrumTypePHS_RB_ID,
-  ADAQSpectrumIntTypeWW_RB_ID,
-  ADAQSpectrumIntTypePF_RB_ID,
+  ADAQSpectrumAlgorithmWW_RB_ID,
+  ADAQSpectrumAlgorithmPF_RB_ID,
 
   ASIMSpectrumTypeEnergy_RB_ID,
   ASIMSpectrumTypePhotonsCreated_RB_ID,

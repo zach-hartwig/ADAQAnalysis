@@ -649,22 +649,22 @@ void AAInterface::FillSpectrumFrame()
 				      new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   ADAQSpectrumTypePHS_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
 
-  // Integration type radio buttons
+  // Spectrum algorithm
 
-  TGVerticalFrame *ADAQSpectrumType_VF = new TGVerticalFrame(ADAQSpectrumOptions_GF);
-  ADAQSpectrumOptions_GF->AddFrame(ADAQSpectrumType_VF, new TGLayoutHints(kLHintsNormal, 15,5,5,0));
+  TGVerticalFrame *ADAQSpectrumAlgorithm_VF = new TGVerticalFrame(ADAQSpectrumOptions_GF);
+  ADAQSpectrumOptions_GF->AddFrame(ADAQSpectrumAlgorithm_VF, new TGLayoutHints(kLHintsNormal, 15,5,5,0));
 
-  ADAQSpectrumType_VF->AddFrame(new TGLabel(ADAQSpectrumType_VF, "Type"),
+  ADAQSpectrumAlgorithm_VF->AddFrame(new TGLabel(ADAQSpectrumAlgorithm_VF, "Algorithm"),
 				new TGLayoutHints(kLHintsNormal, 0,0,0,0));  
 
-  ADAQSpectrumType_VF->AddFrame(ADAQSpectrumIntTypeWW_RB = new TGRadioButton(ADAQSpectrumType_VF, "Whole waveform", ADAQSpectrumIntTypeWW_RB_ID),
+  ADAQSpectrumAlgorithm_VF->AddFrame(ADAQSpectrumAlgorithmWW_RB = new TGRadioButton(ADAQSpectrumAlgorithm_VF, "Whole waveform", ADAQSpectrumAlgorithmWW_RB_ID),
 				new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  ADAQSpectrumIntTypeWW_RB->SetState(kButtonDown);
-  ADAQSpectrumIntTypeWW_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
+  ADAQSpectrumAlgorithmWW_RB->SetState(kButtonDown);
+  ADAQSpectrumAlgorithmWW_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
   
-  ADAQSpectrumType_VF->AddFrame(ADAQSpectrumIntTypePF_RB = new TGRadioButton(ADAQSpectrumType_VF, "Peak finder", ADAQSpectrumIntTypePF_RB_ID),
+  ADAQSpectrumAlgorithm_VF->AddFrame(ADAQSpectrumAlgorithmPF_RB = new TGRadioButton(ADAQSpectrumAlgorithm_VF, "Peak finder", ADAQSpectrumAlgorithmPF_RB_ID),
 				new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  ADAQSpectrumIntTypePF_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
+  ADAQSpectrumAlgorithmPF_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
 
 
   //////////////////////////
@@ -2273,8 +2273,8 @@ void AAInterface::SaveSettings(bool SaveToFile)
 
   ADAQSettings->ADAQSpectrumTypePAS = ADAQSpectrumTypePAS_RB->IsDown();
   ADAQSettings->ADAQSpectrumTypePHS = ADAQSpectrumTypePHS_RB->IsDown();
-  ADAQSettings->ADAQSpectrumIntTypeWW = ADAQSpectrumIntTypeWW_RB->IsDown();
-  ADAQSettings->ADAQSpectrumIntTypePF = ADAQSpectrumIntTypePF_RB->IsDown();
+  ADAQSettings->ADAQSpectrumAlgorithmWW = ADAQSpectrumAlgorithmWW_RB->IsDown();
+  ADAQSettings->ADAQSpectrumAlgorithmPF = ADAQSpectrumAlgorithmPF_RB->IsDown();
 
   ADAQSettings->ASIMSpectrumTypeEnergy = ASIMSpectrumTypeEnergy_RB->IsDown();
   ADAQSettings->ASIMSpectrumTypePhotonsCreated = ASIMSpectrumTypePhotonsCreated_RB->IsDown();
@@ -2611,19 +2611,19 @@ void AAInterface::UpdateForADAQFile()
   else
     ADAQSpectrumTypePHS_RB->SetEnabled(true);
     
-   if(ADAQSpectrumIntTypeWW_RB->IsDown()){
-    ADAQSpectrumIntTypeWW_RB->SetEnabled(true);
-    ADAQSpectrumIntTypeWW_RB->SetState(kButtonDown);
+   if(ADAQSpectrumAlgorithmWW_RB->IsDown()){
+    ADAQSpectrumAlgorithmWW_RB->SetEnabled(true);
+    ADAQSpectrumAlgorithmWW_RB->SetState(kButtonDown);
   }
   else
-    ADAQSpectrumIntTypeWW_RB->SetEnabled(true);
+    ADAQSpectrumAlgorithmWW_RB->SetEnabled(true);
   
-  if(ADAQSpectrumIntTypePF_RB->IsDown()){
-    ADAQSpectrumIntTypePF_RB->SetEnabled(true);
-    ADAQSpectrumIntTypePF_RB->SetState(kButtonDown);
+  if(ADAQSpectrumAlgorithmPF_RB->IsDown()){
+    ADAQSpectrumAlgorithmPF_RB->SetEnabled(true);
+    ADAQSpectrumAlgorithmPF_RB->SetState(kButtonDown);
   }
   else
-    ADAQSpectrumIntTypePF_RB->SetEnabled(true);
+    ADAQSpectrumAlgorithmPF_RB->SetEnabled(true);
   
   // Disable all ASIM-specific analysis widgets
 
@@ -2656,8 +2656,8 @@ void AAInterface::UpdateForASIMFile()
   // Disable all ADAQ-specific analysis widgets
   ADAQSpectrumTypePAS_RB->SetState(kButtonDisabled);
   ADAQSpectrumTypePHS_RB->SetState(kButtonDisabled);
-  ADAQSpectrumIntTypeWW_RB->SetState(kButtonDisabled);
-  ADAQSpectrumIntTypePF_RB->SetState(kButtonDisabled);
+  ADAQSpectrumAlgorithmWW_RB->SetState(kButtonDisabled);
+  ADAQSpectrumAlgorithmPF_RB->SetState(kButtonDisabled);
 
   if(ASIMSpectrumTypeEnergy_RB->IsDown()){
     ASIMSpectrumTypeEnergy_RB->SetEnabled(true);
