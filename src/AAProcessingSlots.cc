@@ -244,15 +244,27 @@ void AAProcessingSlots::HandleRadioButtons()
     TheInterface->NumProcessors_NEL->GetEntry()->SetNumber(TheInterface->NumProcessors);
     break;
     
-  case PSDTypePF_RB_ID:
-    if(TheInterface->PSDTypePF_RB->IsDown())
-      TheInterface->PSDTypeWW_RB->SetState(kButtonUp);
+  case PSDAlgorithmPF_RB_ID:
+    if(TheInterface->PSDAlgorithmPF_RB->IsDown()){
+      TheInterface->PSDAlgorithmWW_RB->SetState(kButtonUp);
+      TheInterface->PSDAlgorithmWD_RB->SetState(kButtonUp);
+    }
     break;
     
-  case PSDTypeWW_RB_ID:
-    if(TheInterface->PSDTypeWW_RB->IsDown())
-      TheInterface->PSDTypePF_RB->SetState(kButtonUp);
+  case PSDAlgorithmWW_RB_ID:
+    if(TheInterface->PSDAlgorithmWW_RB->IsDown()){
+      TheInterface->PSDAlgorithmPF_RB->SetState(kButtonUp);
+      TheInterface->PSDAlgorithmWD_RB->SetState(kButtonUp);
+    }
     break;
+
+  case PSDAlgorithmWD_RB_ID:
+    if(TheInterface->PSDAlgorithmWW_RB->IsDown()){
+      TheInterface->PSDAlgorithmPF_RB->SetState(kButtonUp);
+      TheInterface->PSDAlgorithmWW_RB->SetState(kButtonUp);
+    }
+    break;
+
 
   case PSDYAxisTail_RB_ID:
     if(TheInterface->PSDYAxisTail_RB->IsDown()){

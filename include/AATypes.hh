@@ -300,8 +300,9 @@ enum{
 
   PSDEnable_CB_ID,
   
-  PSDTypePF_RB_ID,
-  PSDTypeWW_RB_ID,
+  PSDAlgorithmPF_RB_ID,
+  PSDAlgorithmWW_RB_ID,
+  PSDAlgorithmWD_RB_ID,
 
   PSDTotalStart_NEL_ID,
   PSDTotalStop_NEL_ID,

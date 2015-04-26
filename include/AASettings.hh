@@ -121,7 +121,7 @@ public:
 
   Bool_t PSDEnable;
   Int_t PSDChannel, PSDWaveformsToDiscriminate;
-  Bool_t PSDTypePF, PSDTypeWW;
+  Bool_t PSDAlgorithmPF, PSDAlgorithmWW, PSDAlgorithmWD;
   Int_t PSDTotalStart, PSDTotalStop, PSDTailStart, PSDTailStop;
   Int_t PSDThreshold, PSDTailOffset, PSDPeakOffset;
   Int_t PSDNumTotalBins;

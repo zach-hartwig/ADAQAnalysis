@@ -1702,203 +1702,220 @@ TH2F *AAComputation::CreatePSDHistogram()
 			    ADAQSettings->PSDMaxTailBin);
 
   int PSDChannel = ADAQSettings->PSDChannel;
+
+
+  ////////////////////////////////////////////////////////
+  // Create the PSD histogram from stored waveform data //
+  ////////////////////////////////////////////////////////
+  if(ADAQSettings->PSDAlgorithmWD){
+    cout << "\nADAQAnalysis : Creating PSD histograms from waveform data is not yet enabled!\n"
+	 << endl;
+
+    PSDHistogramExists = false;
+  }
+
+  ////////////////////////////////////////////////////////
+  // Create the PSD histogram from processing waveforms //
+  ////////////////////////////////////////////////////////
+
+  else{
   
-  // Reboot the PeakFinder with up-to-date max peaks
-  if(PeakFinder) delete PeakFinder;
-  PeakFinder = new TSpectrum(ADAQSettings->MaxPeaks);
+    // Reboot the PeakFinder with up-to-date max peaks
+    if(PeakFinder) delete PeakFinder;
+    PeakFinder = new TSpectrum(ADAQSettings->MaxPeaks);
   
-  // See documention in either ::CreateSpectrum() or
-  // ::CreateDesplicedFile for parallel processing assignemnts
+    // See documention in either ::CreateSpectrum() or
+    // ::CreateDesplicedFile for parallel processing assignemnts
   
-  WaveformStart = 0;
-  WaveformEnd = ADAQSettings->PSDWaveformsToDiscriminate;
+    WaveformStart = 0;
+    WaveformEnd = ADAQSettings->PSDWaveformsToDiscriminate;
   
 #ifdef MPI_ENABLED
   
-  int SlaveEvents = int(ADAQSettings->PSDWaveformsToDiscriminate/MPI_Size);
+    int SlaveEvents = int(ADAQSettings->PSDWaveformsToDiscriminate/MPI_Size);
   
-  int MasterEvents = int(ADAQSettings->PSDWaveformsToDiscriminate-SlaveEvents*(MPI_Size-1));
+    int MasterEvents = int(ADAQSettings->PSDWaveformsToDiscriminate-SlaveEvents*(MPI_Size-1));
   
-  if(ParallelVerbose and IsMaster)
-    cout << "\nADAQAnalysis_MPI Node[0] : Number waveforms allocated to master (node == 0) : " << MasterEvents << "\n"
-         <<   "                           Number waveforms allocated to slaves (node != 0) : " << SlaveEvents
-	 << endl;
+    if(ParallelVerbose and IsMaster)
+      cout << "\nADAQAnalysis_MPI Node[0] : Number waveforms allocated to master (node == 0) : " << MasterEvents << "\n"
+	   <<   "                           Number waveforms allocated to slaves (node != 0) : " << SlaveEvents
+	   << endl;
   
-  // Divide up the total number of waveforms to be processed amongst
-  // the master and slaves as evenly as possible. Note that the
-  // 'WaveformStart' value is *included* whereas the 'WaveformEnd'
-  // value _excluded_ from the for loop range 
-  WaveformStart = (MPI_Rank * SlaveEvents) + (ADAQSettings->WaveformsToHistogram % MPI_Size);
-  WaveformEnd =  (MPI_Rank * SlaveEvents) + MasterEvents;
+    // Divide up the total number of waveforms to be processed amongst
+    // the master and slaves as evenly as possible. Note that the
+    // 'WaveformStart' value is *included* whereas the 'WaveformEnd'
+    // value _excluded_ from the for loop range 
+    WaveformStart = (MPI_Rank * SlaveEvents) + (ADAQSettings->WaveformsToHistogram % MPI_Size);
+    WaveformEnd =  (MPI_Rank * SlaveEvents) + MasterEvents;
 
-  // The master _always_ starts on waveform zero. This is required
-  // with the waveform allocation algorithm abov.
-  if(IsMaster)
-    WaveformStart = 0;
+    // The master _always_ starts on waveform zero. This is required
+    // with the waveform allocation algorithm abov.
+    if(IsMaster)
+      WaveformStart = 0;
   
-  if(ParallelVerbose)
-    cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Handling waveforms " << WaveformStart << " to " << (WaveformEnd-1)
-	 << endl;
+    if(ParallelVerbose)
+      cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Handling waveforms " << WaveformStart << " to " << (WaveformEnd-1)
+	   << endl;
 #endif
 
-  bool PeaksFound = false;
+    bool PeaksFound = false;
   
-  for(int waveform=WaveformStart; waveform<WaveformEnd; waveform++){
-    if(SequentialArchitecture)
-      gSystem->ProcessEvents();
+    for(int waveform=WaveformStart; waveform<WaveformEnd; waveform++){
+      if(SequentialArchitecture)
+	gSystem->ProcessEvents();
     
-    ADAQWaveformTree->GetEntry(waveform);
+      ADAQWaveformTree->GetEntry(waveform);
 
-    RawVoltage = *Waveforms[PSDChannel];
+      RawVoltage = *Waveforms[PSDChannel];
     
-    if(ADAQSettings->RawWaveform or ADAQSettings->BSWaveform)
-      CalculateBSWaveform(PSDChannel, waveform);
-    else if(ADAQSettings->ZSWaveform)
-      CalculateZSWaveform(PSDChannel, waveform);
+      if(ADAQSettings->RawWaveform or ADAQSettings->BSWaveform)
+	CalculateBSWaveform(PSDChannel, waveform);
+      else if(ADAQSettings->ZSWaveform)
+	CalculateZSWaveform(PSDChannel, waveform);
     
-    // Find the peaks and peak limits in the current waveform. The
-    // second argument ('true') indicates the find peaks calculation
-    // is being performed for PSD and thus the radio button settings
-    // for PSD 'peak finder' or 'whole waveform' should be used to
-    // decide which peak finding algorithm to use
-    if(ADAQSettings->PSDTypePF)
-      PeaksFound = FindPeaks(Waveform_H[PSDChannel], zPeakFinder);
-    else if(ADAQSettings->PSDTypeWW)
-      PeaksFound = FindPeaks(Waveform_H[PSDChannel], zWholeWaveform);
+      // Find the peaks and peak limits in the current waveform. The
+      // second argument ('true') indicates the find peaks calculation
+      // is being performed for PSD and thus the radio button settings
+      // for PSD 'peak finder' or 'whole waveform' should be used to
+      // decide which peak finding algorithm to use
+      if(ADAQSettings->PSDAlgorithmPF)
+	PeaksFound = FindPeaks(Waveform_H[PSDChannel], zPeakFinder);
+      else if(ADAQSettings->PSDAlgorithmWW)
+	PeaksFound = FindPeaks(Waveform_H[PSDChannel], zWholeWaveform);
 
-    // Update the user with progress here because the peak finding
-    // algorithm can skip waveform for which it doesn't find a peak,
-    // which can throw off the progress bar progress.
-    if(IsMaster)
-      if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
-	UpdateProcessingProgress(waveform);
+      // Update the user with progress here because the peak finding
+      // algorithm can skip waveform for which it doesn't find a peak,
+      // which can throw off the progress bar progress.
+      if(IsMaster)
+	if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
+	  UpdateProcessingProgress(waveform);
     
-    // If not peaks are present in the current waveform then continue
-    // onto the next waveform to optimize CPU $.
-    if(!PeaksFound)
-      continue;
+      // If not peaks are present in the current waveform then continue
+      // onto the next waveform to optimize CPU $.
+      if(!PeaksFound)
+	continue;
     
-    // Calculate the "total" and "tail" integrals of each
-    // peak. Because we want to create a PSD histogram, pass "true" to
-    // the function to indicate the results should be histogrammed
-    CalculatePSDIntegrals(true);
-  }
+      // Calculate the "total" and "tail" integrals of each
+      // peak. Because we want to create a PSD histogram, pass "true" to
+      // the function to indicate the results should be histogrammed
+      CalculatePSDIntegrals(true);
+    }
   
-  if(SequentialArchitecture){
-    ProcessingProgressBar->Increment(100);
-    ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(32));
-    ProcessingProgressBar->SetForegroundColor(ColorManager->Number2Pixel(0));
-  }
+    if(SequentialArchitecture){
+      ProcessingProgressBar->Increment(100);
+      ProcessingProgressBar->SetBarColor(ColorManager->Number2Pixel(32));
+      ProcessingProgressBar->SetForegroundColor(ColorManager->Number2Pixel(0));
+    }
 
 #ifdef MPI_ENABLED
 
-  if(ParallelVerbose)
-    cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Reached the end-of-processing MPI barrier!"
-	 << endl;
-
-  MPI::COMM_WORLD.Barrier();
-
-  // The PSDHistogram_H is a 2-dimensional array containing the total
-  // (on the "X-axis") and the tail (on the "Y-axis") integrals of
-  // each detector pulse. In order to create a single master TH2F
-  // object from all the TH2F objects on the nodes, the following
-  // procedure is followed:
-  //
-  // 0. Create a 2-D array of doubles using the X and Y sizes of the
-  //    PSDHistogram_H TH2F object
-  // 
-  // 1. Readout the first column of the PSDHistogram_H object into a
-  //    1-D vector (array)
-  //
-  // 2. Use the SumDoubleArrayToMaster() to sum the nodes's array to a
-  //    single array on the master node
-  //
-  // 3. Fill up the first column of the 2-D array with the reduced
-  //    values
-  //
-  // 3. Repeat #1 for the second column, Repeat...to the Nth column
-  //
-  // 4. Finally, create a new MasterPSDHistogram_H object on the
-  //    master and assign it the values from the 2-D reduced array
-  //    (which is essentially a "sum" of all the TH2F objects on the
-  //    nodes, just in 2-D array form) and write it to the parallel
-  //    processing file
-  //
-  // Note the total entries in all the nodes PSDHistogram_H objects
-  // are aggregated and assigned to the master object, and the
-  // deuterons are integrated as well.
-
-
-  // Create a 2-D array to represent the PSDHistogram_H in array form
-  const int ArraySizeX = PSDHistogram_H->GetNbinsX() + 2;
-  const int ArraySizeY = PSDHistogram_H->GetNbinsY() + 2;
-  double DoubleArray[ArraySizeX][ArraySizeY];
-
-  // Iterate over the PSDHistogram_H columns...
-  for(int i=0; i<ArraySizeX; i++){
-   
-    // A container for the PSDHistogram_H's present column
-    vector<double> ColumnVector(ArraySizeY, 0.);
-
-    // Assign the PSDHistogram_H's column to the vector
-    for(int j=0; j<ArraySizeY; j++)
-      ColumnVector[j] = PSDHistogram_H->GetBinContent(i,j);
-
-    // Reduce the array representing the column
-    double *ReturnArray = AAParallel::GetInstance()->SumDoubleArrayToMaster(&ColumnVector[0], ArraySizeY);
-    
-    // Assign the array to the DoubleArray that represents the
-    // "master" or total PSDHistogram_H object
-    for(int j=0; j<ArraySizeY; j++)
-      DoubleArray[i][j] = ReturnArray[j];
-  }
-
-  // Aggregated the histogram entries from all nodes to the master
-  double Entries = PSDHistogram_H->GetEntries();
-  double ReturnDouble = AAParallel::GetInstance()->SumDoublesToMaster(Entries);
-  
-  // Aggregated the total deuterons from all nodes to the master
-  DeuteronsInTotal = AAParallel::GetInstance()->SumDoublesToMaster(DeuteronsInTotal);
-
-  if(IsMaster){
-    
     if(ParallelVerbose)
-      cout << "\nADAQAnalysis_MPI Node[0] : Writing master PSD TH2F histogram to disk!\n"
+      cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Reached the end-of-processing MPI barrier!"
 	   << endl;
 
-    // Create the master PSDHistogram_H object, i.e. the sum of all
-    // the PSDHistogram_H object values from the nodes
-    MasterPSDHistogram_H = new TH2F("MasterPSDHistogram_H","MasterPSDHistogram_H",
-				    ADAQSettings->PSDNumTotalBins, 
-				    ADAQSettings->PSDMinTotalBin,
-				    ADAQSettings->PSDMaxTotalBin,
-				    ADAQSettings->PSDNumTailBins,
-				    ADAQSettings->PSDMinTailBin,
-				    ADAQSettings->PSDMaxTailBin);
-        
-    // Assign the content from the aggregated 2-D array to the new
-    // master histogram
-    for(int i=0; i<ArraySizeX; i++)
+    MPI::COMM_WORLD.Barrier();
+
+    // The PSDHistogram_H is a 2-dimensional array containing the total
+    // (on the "X-axis") and the tail (on the "Y-axis") integrals of
+    // each detector pulse. In order to create a single master TH2F
+    // object from all the TH2F objects on the nodes, the following
+    // procedure is followed:
+    //
+    // 0. Create a 2-D array of doubles using the X and Y sizes of the
+    //    PSDHistogram_H TH2F object
+    // 
+    // 1. Readout the first column of the PSDHistogram_H object into a
+    //    1-D vector (array)
+    //
+    // 2. Use the SumDoubleArrayToMaster() to sum the nodes's array to a
+    //    single array on the master node
+    //
+    // 3. Fill up the first column of the 2-D array with the reduced
+    //    values
+    //
+    // 3. Repeat #1 for the second column, Repeat...to the Nth column
+    //
+    // 4. Finally, create a new MasterPSDHistogram_H object on the
+    //    master and assign it the values from the 2-D reduced array
+    //    (which is essentially a "sum" of all the TH2F objects on the
+    //    nodes, just in 2-D array form) and write it to the parallel
+    //    processing file
+    //
+    // Note the total entries in all the nodes PSDHistogram_H objects
+    // are aggregated and assigned to the master object, and the
+    // deuterons are integrated as well.
+
+
+    // Create a 2-D array to represent the PSDHistogram_H in array form
+    const int ArraySizeX = PSDHistogram_H->GetNbinsX() + 2;
+    const int ArraySizeY = PSDHistogram_H->GetNbinsY() + 2;
+    double DoubleArray[ArraySizeX][ArraySizeY];
+
+    // Iterate over the PSDHistogram_H columns...
+    for(int i=0; i<ArraySizeX; i++){
+   
+      // A container for the PSDHistogram_H's present column
+      vector<double> ColumnVector(ArraySizeY, 0.);
+
+      // Assign the PSDHistogram_H's column to the vector
       for(int j=0; j<ArraySizeY; j++)
-	MasterPSDHistogram_H->SetBinContent(i, j, DoubleArray[i][j]);
-    MasterPSDHistogram_H->SetEntries(ReturnDouble);
-    
-    // Open the TFile  and write all the necessary object to it
-    ParallelFile = new TFile(AAParallel::GetInstance()->GetParallelFileName().c_str(), "update");
-    
-    MasterPSDHistogram_H->Write("MasterPSDHistogram");
+	ColumnVector[j] = PSDHistogram_H->GetBinContent(i,j);
 
-    TVectorD AggregatedDeuterons(1);
-    AggregatedDeuterons[0] = DeuteronsInTotal;
-    AggregatedDeuterons.Write("AggregatedDeuterons");
+      // Reduce the array representing the column
+      double *ReturnArray = AAParallel::GetInstance()->SumDoubleArrayToMaster(&ColumnVector[0], ArraySizeY);
+    
+      // Assign the array to the DoubleArray that represents the
+      // "master" or total PSDHistogram_H object
+      for(int j=0; j<ArraySizeY; j++)
+	DoubleArray[i][j] = ReturnArray[j];
+    }
 
-    ParallelFile->Write();
-  }
+    // Aggregated the histogram entries from all nodes to the master
+    double Entries = PSDHistogram_H->GetEntries();
+    double ReturnDouble = AAParallel::GetInstance()->SumDoublesToMaster(Entries);
+  
+    // Aggregated the total deuterons from all nodes to the master
+    DeuteronsInTotal = AAParallel::GetInstance()->SumDoublesToMaster(DeuteronsInTotal);
+
+    if(IsMaster){
+    
+      if(ParallelVerbose)
+	cout << "\nADAQAnalysis_MPI Node[0] : Writing master PSD TH2F histogram to disk!\n"
+	     << endl;
+
+      // Create the master PSDHistogram_H object, i.e. the sum of all
+      // the PSDHistogram_H object values from the nodes
+      MasterPSDHistogram_H = new TH2F("MasterPSDHistogram_H","MasterPSDHistogram_H",
+				      ADAQSettings->PSDNumTotalBins, 
+				      ADAQSettings->PSDMinTotalBin,
+				      ADAQSettings->PSDMaxTotalBin,
+				      ADAQSettings->PSDNumTailBins,
+				      ADAQSettings->PSDMinTailBin,
+				      ADAQSettings->PSDMaxTailBin);
+        
+      // Assign the content from the aggregated 2-D array to the new
+      // master histogram
+      for(int i=0; i<ArraySizeX; i++)
+	for(int j=0; j<ArraySizeY; j++)
+	  MasterPSDHistogram_H->SetBinContent(i, j, DoubleArray[i][j]);
+      MasterPSDHistogram_H->SetEntries(ReturnDouble);
+    
+      // Open the TFile  and write all the necessary object to it
+      ParallelFile = new TFile(AAParallel::GetInstance()->GetParallelFileName().c_str(), "update");
+    
+      MasterPSDHistogram_H->Write("MasterPSDHistogram");
+
+      TVectorD AggregatedDeuterons(1);
+      AggregatedDeuterons[0] = DeuteronsInTotal;
+      AggregatedDeuterons.Write("AggregatedDeuterons");
+
+      ParallelFile->Write();
+    }
 #endif
  
-  // Update the bool to alert the code that a valid PSDHistogram_H object exists.
-  PSDHistogramExists = true;
-
+    // Update the bool to alert the code that a valid PSDHistogram_H object exists.
+    PSDHistogramExists = true;
+  }
   return PSDHistogram_H;
 }
 

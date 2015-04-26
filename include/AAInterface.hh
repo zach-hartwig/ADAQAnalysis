@@ -331,7 +331,7 @@ private:
 
   TGCheckButton *PSDEnable_CB;
   ADAQComboBoxWithLabel *PSDChannel_CBL;
-  TGRadioButton *PSDTypePF_RB, *PSDTypeWW_RB;
+  TGRadioButton *PSDAlgorithmPF_RB, *PSDAlgorithmWW_RB, *PSDAlgorithmWD_RB;
   
   ADAQNumberEntryWithLabel *PSDTotalStart_NEL, *PSDTotalStop_NEL;
   ADAQNumberEntryWithLabel *PSDTailStart_NEL, *PSDTailStop_NEL;

@@ -1645,19 +1645,24 @@ void AAInterface::FillProcessingFrame()
 
   TGHorizontalFrame *PSDProcessingType_HF = new TGHorizontalFrame(PSDAnalysis_GF);
   PSDAnalysis_GF->AddFrame(PSDProcessingType_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-
-  PSDProcessingType_HF->AddFrame(PSDTypePF_RB = new TGRadioButton(PSDProcessingType_HF,"Peak finder",PSDTypePF_RB_ID),
-		       new TGLayoutHints(kLHintsNormal,0,0,5,5));
-  PSDTypePF_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-  PSDTypePF_RB->SetState(kButtonDisabled);
   
-  PSDProcessingType_HF->AddFrame(PSDTypeWW_RB = new TGRadioButton(PSDProcessingType_HF,"Whole waveform",PSDTypeWW_RB_ID),
-		       new TGLayoutHints(kLHintsNormal,20,0,5,5));
-  PSDTypeWW_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-  PSDTypeWW_RB->SetState(kButtonDown);
-  PSDTypeWW_RB->SetState(kButtonDisabled);
+  PSDProcessingType_HF->AddFrame(PSDAlgorithmPF_RB = new TGRadioButton(PSDProcessingType_HF,"Peak\nfinder",PSDAlgorithmPF_RB_ID),
+				 new TGLayoutHints(kLHintsNormal,0,0,5,5));
+  PSDAlgorithmPF_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDAlgorithmPF_RB->SetState(kButtonDisabled);
   
+  PSDProcessingType_HF->AddFrame(PSDAlgorithmWW_RB = new TGRadioButton(PSDProcessingType_HF,"Whole\nwaveform",PSDAlgorithmWW_RB_ID),
+				 new TGLayoutHints(kLHintsNormal,20,0,5,5));
+  PSDAlgorithmWW_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDAlgorithmWW_RB->SetState(kButtonDown);
+  PSDAlgorithmWW_RB->SetState(kButtonDisabled);
+  
+  PSDProcessingType_HF->AddFrame(PSDAlgorithmWD_RB = new TGRadioButton(PSDProcessingType_HF,"Waveform\ndata",PSDAlgorithmWD_RB_ID),
+				 new TGLayoutHints(kLHintsNormal,20,0,5,5));
+  PSDAlgorithmWD_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDAlgorithmWD_RB->SetState(kButtonDisabled);
 
+  
   PSDAnalysis_GF->AddFrame(new TGLabel(PSDAnalysis_GF, "Integral limits (sample rel. to peak)"),
 			   new TGLayoutHints(kLHintsLeft,0,0,5,5));
 
@@ -1768,18 +1773,18 @@ void AAInterface::FillProcessingFrame()
   PSDMaxTailBin_NEL->GetEntry()->SetNumber(2000);
   PSDMaxTailBin_NEL->GetEntry()->SetState(false);
 
-  TGHorizontalFrame *PSDType_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSDType_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  TGHorizontalFrame *PSDAlgorithm_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSDAlgorithm_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
 
-  PSDType_HF->AddFrame(new TGLabel(PSDType_HF, "Y axis: "),
+  PSDAlgorithm_HF->AddFrame(new TGLabel(PSDAlgorithm_HF, "Y axis: "),
 		       new TGLayoutHints(kLHintsNormal,0,0,0,0));
 				   
-  PSDType_HF->AddFrame(PSDYAxisTail_RB = new TGRadioButton(PSDType_HF, "Tail", PSDYAxisTail_RB_ID),
+  PSDAlgorithm_HF->AddFrame(PSDYAxisTail_RB = new TGRadioButton(PSDAlgorithm_HF, "Tail", PSDYAxisTail_RB_ID),
 		       new TGLayoutHints(kLHintsNormal,10,0,0,0));
   PSDYAxisTail_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
   PSDYAxisTail_RB->SetState(kButtonDown);
   
-  PSDType_HF->AddFrame(PSDYAxisTailTotal_RB = new TGRadioButton(PSDType_HF, "(Tail / Total)", PSDYAxisTailTotal_RB_ID),
+  PSDAlgorithm_HF->AddFrame(PSDYAxisTailTotal_RB = new TGRadioButton(PSDAlgorithm_HF, "(Tail / Total)", PSDYAxisTailTotal_RB_ID),
 		       new TGLayoutHints(kLHintsNormal,20,0,0,0));
   PSDYAxisTailTotal_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
 
@@ -2378,8 +2383,9 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->PSDChannel = PSDChannel_CBL->GetComboBox()->GetSelected();
   ADAQSettings->PSDWaveformsToDiscriminate = PSDWaveforms_NEL->GetEntry()->GetIntNumber();
 
-  ADAQSettings->PSDTypePF = PSDTypePF_RB->IsDown();
-  ADAQSettings->PSDTypeWW = PSDTypeWW_RB->IsDown();
+  ADAQSettings->PSDAlgorithmPF = PSDAlgorithmPF_RB->IsDown();
+  ADAQSettings->PSDAlgorithmWW = PSDAlgorithmWW_RB->IsDown();
+  ADAQSettings->PSDAlgorithmWD = PSDAlgorithmWD_RB->IsDown();
 
   ADAQSettings->PSDTotalStart = PSDTotalStart_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->PSDTotalStop = PSDTotalStop_NEL->GetEntry()->GetIntNumber();
@@ -2748,8 +2754,9 @@ void AAInterface::SetPSDWidgetState(bool WidgetState, EButtonState ButtonState)
 {
   PSDChannel_CBL->GetComboBox()->SetEnabled(WidgetState);
   PSDWaveforms_NEL->GetEntry()->SetState(WidgetState);
-  PSDTypePF_RB->SetState(ButtonState);
-  PSDTypeWW_RB->SetState(ButtonState);
+  PSDAlgorithmPF_RB->SetState(ButtonState);
+  PSDAlgorithmWW_RB->SetState(ButtonState);
+  PSDAlgorithmWD_RB->SetState(ButtonState);
   PSDTotalStart_NEL->GetEntry()->SetState(WidgetState);
   PSDTotalStop_NEL->GetEntry()->SetState(WidgetState);
   PSDTailStart_NEL->GetEntry()->SetState(WidgetState);
