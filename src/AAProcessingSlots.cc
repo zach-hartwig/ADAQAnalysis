@@ -342,7 +342,7 @@ void AAProcessingSlots::HandleTextButtons()
   switch(TextButtonID){
 
   case PSDCalculate_TB_ID:
-
+    
     if(TheInterface->ADAQFileLoaded){
       // Sequential processing
       if(TheInterface->ProcessingSeq_RB->IsDown())
@@ -351,7 +351,11 @@ void AAProcessingSlots::HandleTextButtons()
       // Parallel processing
       else{
 	TheInterface->SaveSettings(true);
-	ComputationMgr->ProcessWaveformsInParallel("discriminating");
+	
+	if(TheInterface->PSDAlgorithmWD_RB->IsDown())
+	  TheInterface->CreateMessageBox("Error! Waveform data can only be processed sequentially!\n","Stop");
+	else
+	  ComputationMgr->ProcessWaveformsInParallel("discriminating");
       }
       GraphicsMgr->PlotPSDHistogram();
     }

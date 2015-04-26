@@ -924,8 +924,10 @@ void AAComputation::CreateSpectrum()
     delete WD;
 
     SpectrumExists = true;
-  }
 
+    return;
+  }
+  
   
   /////////////////////////////////////////////////
   // Create the spectrum by processing waveforms //

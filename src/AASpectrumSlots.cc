@@ -289,7 +289,7 @@ void AASpectrumSlots::HandleTextButtons()
 
       if(TheInterface->ADAQFileLoaded)
 	ComputationMgr->CreateSpectrum();
-
+      
       else if(TheInterface->ASIMFileLoaded)
 	ComputationMgr->CreateASIMSpectrum();
       
@@ -301,16 +301,20 @@ void AASpectrumSlots::HandleTextButtons()
     else{
       if(TheInterface->ADAQFileLoaded){
 	TheInterface->SaveSettings(true);
-	ComputationMgr->ProcessWaveformsInParallel("histogramming");
+
+	if(TheInterface->ADAQSpectrumAlgorithmWD_RB->IsDown())
+	  TheInterface->CreateMessageBox("Error! Waveform data can only be processed sequentially!\n","Stop");
+	else
+	  ComputationMgr->ProcessWaveformsInParallel("histogramming");
 	
 	if(ComputationMgr->GetSpectrumExists())
 	  GraphicsMgr->PlotSpectrum();
       }
       else if(TheInterface->ASIMFileLoaded){
-	TheInterface->CreateMessageBox("Error! ASIM files cannot be processed in parallel! Please switch to 'sequential mode'.\n","Stop");
+	TheInterface->CreateMessageBox("Error! ASIM files can only be processed sequentially!\n","Stop");
       }
     }
-
+    
     // If the background and integration functions were being used,
     // cycle them in order to refresh the spectral plotting and analysis
     if(TheInterface->SpectrumFindBackground_CB->IsDown()){
