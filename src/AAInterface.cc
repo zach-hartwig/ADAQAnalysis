@@ -838,14 +838,26 @@ GetComboBox()->Resize(150,20);
 
   /////////////////////////
   // Create spectrum button
-
-  SpectrumFrame_VF->AddFrame(CreateSpectrum_TB = new TGTextButton(SpectrumFrame_VF, "Create spectrum", CreateSpectrum_TB_ID),
-			     new TGLayoutHints(kLHintsCenterX | kLHintsTop, 5,5,15,0));
-  CreateSpectrum_TB->Resize(200, 30);
+  
+  TGHorizontalFrame *ProcessCreateSpectrum_HF = new TGHorizontalFrame(SpectrumFrame_VF);
+  SpectrumFrame_VF->AddFrame(ProcessCreateSpectrum_HF, new TGLayoutHints(kLHintsNormal, 20,5,5,5));
+  
+  ProcessCreateSpectrum_HF->AddFrame(ProcessSpectrum_TB = new TGTextButton(ProcessCreateSpectrum_HF, "Process waveforms", ProcessSpectrum_TB_ID),
+				     new TGLayoutHints(kLHintsCenterX | kLHintsTop, 5,5,15,0));
+  ProcessSpectrum_TB->Resize(120, 30);
+  ProcessSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  ProcessSpectrum_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
+  ProcessSpectrum_TB->ChangeOptions(ProcessSpectrum_TB->GetOptions() | kFixedSize);
+  ProcessSpectrum_TB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleTextButtons()");
+  
+  ProcessCreateSpectrum_HF->AddFrame(CreateSpectrum_TB = new TGTextButton(ProcessCreateSpectrum_HF, "Create spectrum", CreateSpectrum_TB_ID),
+				     new TGLayoutHints(kLHintsCenterX | kLHintsTop, 5,5,15,0));
+  CreateSpectrum_TB->Resize(120, 30);
   CreateSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   CreateSpectrum_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   CreateSpectrum_TB->ChangeOptions(CreateSpectrum_TB->GetOptions() | kFixedSize);
   CreateSpectrum_TB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleTextButtons()");
+  CreateSpectrum_TB->SetState(kButtonDisabled);
 }
 
 
@@ -2646,11 +2658,16 @@ void AAInterface::UpdateForADAQFile()
   
   // Disable all ASIM-specific analysis widgets
 
-
   ASIMSpectrumTypeEnergy_RB->SetEnabled(false);
   ASIMSpectrumTypePhotonsDetected_RB->SetEnabled(false);
   ASIMSpectrumTypePhotonsCreated_RB->SetEnabled(false);
   
+  // A new file means that there are no procssed waveforms yet so
+  // disable the ability to create spectra from them and set the
+  // process spectrum button color to blue
+  CreateSpectrum_TB->SetState(kButtonDisabled);
+  ProcessSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+				    
   PSDEnable_CB->SetState(kButtonUp);
 
   // Reenable all ADAQ-specific tab frames
@@ -2725,7 +2742,12 @@ void AAInterface::UpdateForASIMFile()
 
   WaveformsToHistogram_NEL->GetEntry()->SetNumber(EventTreeEntries);
   WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(0, EventTreeEntries);
- 
+
+  // There are no waveforms in ASIM files (as of yet!) so disabled the
+  // ability to process the waveforms
+  ProcessSpectrum_TB->SetState(kButtonDown);
+  ProcessSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  
   PSDEnable_CB->SetState(kButtonDisabled);
   SetPearsonWidgetState(false, kButtonDisabled);
 

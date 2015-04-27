@@ -182,10 +182,11 @@ enum{
   SpectrumCalibrationReset_TB_ID,
   SpectrumCalibrationPlot_TB_ID,
   SpectrumCalibrationLoad_TB_ID,
-
+  
+  ProcessSpectrum_TB_ID,
   CreateSpectrum_TB_ID,
-
-
+  
+  
   /////////////////////////////////////////
   // Values for the "Analysis" tabbed frame
 

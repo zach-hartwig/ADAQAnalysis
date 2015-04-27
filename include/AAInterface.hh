@@ -226,7 +226,7 @@ private:
   TGTextButton *SpectrumCalibrationReset_TB;
   TGTextButton *SpectrumCalibrationLoad_TB;
 
-  TGTextButton *CreateSpectrum_TB;
+  TGTextButton *ProcessSpectrum_TB, *CreateSpectrum_TB;
 
 
   ///////////////////////////////////////////

@@ -279,31 +279,30 @@ void AASpectrumSlots::HandleTextButtons()
   
   switch(TextButtonID){
 
-    ///////////////////
-    // Spectra creation
+    ///////////////////////////////////////////
+    // Waveform processing and spectra creation
     
-  case CreateSpectrum_TB_ID:{
+    // This slot handles creating a pulse spectrum by processing the
+    // raw waveforms using the present user settings 
+  case ProcessSpectrum_TB_ID:{
     
-    // Sequential processing
+    // Sequential waveform processing
     if(TheInterface->ProcessingSeq_RB->IsDown()){
-
-      if(TheInterface->ADAQFileLoaded)
-	ComputationMgr->CreateSpectrum();
       
-      else if(TheInterface->ASIMFileLoaded)
-	ComputationMgr->CreateASIMSpectrum();
+      if(TheInterface->ADAQFileLoaded)
+	ComputationMgr->ProcessSpectrumWaveforms();
       
       if(ComputationMgr->GetSpectrumExists())
 	GraphicsMgr->PlotSpectrum();
     }
     
-    // Parallel processing
+    // Parallel waveform processing
     else{
       if(TheInterface->ADAQFileLoaded){
 	TheInterface->SaveSettings(true);
 
 	if(TheInterface->ADAQSpectrumAlgorithmWD_RB->IsDown())
-	  TheInterface->CreateMessageBox("Error! Waveform data can only be processed sequentially!\n","Stop");
+	  TheInterface->CreateMessageBox("Error! Waveform data can only be processed sequentialooly!\n","Stop");
 	else
 	  ComputationMgr->ProcessWaveformsInParallel("histogramming");
 	
@@ -314,7 +313,7 @@ void AASpectrumSlots::HandleTextButtons()
 	TheInterface->CreateMessageBox("Error! ASIM files can only be processed sequentially!\n","Stop");
       }
     }
-    
+      
     // If the background and integration functions were being used,
     // cycle them in order to refresh the spectral plotting and analysis
     if(TheInterface->SpectrumFindBackground_CB->IsDown()){
@@ -337,14 +336,38 @@ void AASpectrumSlots::HandleTextButtons()
     
     int SpectrumMaxBin = TheInterface->SpectrumMaxBin_NEL->GetEntry()->GetNumber();
     TheInterface->SpectrumRangeMax_NEL->GetEntry()->SetNumber(SpectrumMaxBin);
-
-
+    
     TheInterface->SpectrumAnalysisLowerLimit_NEL->GetEntry()->SetLimitValues(SpectrumMinBin, SpectrumMaxBin);
     TheInterface->SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetLimitValues(SpectrumMinBin, SpectrumMaxBin);
-
+    
+    // Activate the CreateSpectrum_TB button since processed waveform
+    // values have been created and stored in vectors in AAComputation
+    TheInterface->CreateSpectrum_TB->SetState(kButtonUp);
+    
+    // Alert the user that waveforms have been processed by updating
+    // the ProcessSpectrum_TB button color
+    TheInterface->ProcessSpectrum_TB->SetBackgroundColor(TheInterface->ColorMgr->Number2Pixel(32));
+    
+    break;
+  }
+    
+    // This slot handles creating a pulse spectrum by using previously
+    // computed values from analyzed waveforms
+  case CreateSpectrum_TB_ID:{
+    
+    if(TheInterface->ADAQFileLoaded)
+      ComputationMgr->CreateSpectrum();
+    
+    else if(TheInterface->ASIMFileLoaded)
+      ComputationMgr->CreateASIMSpectrum();
+    
+    if(ComputationMgr->GetSpectrumExists())
+      GraphicsMgr->PlotSpectrum();
+    
     break;
   }
 
+    
     //////////////////////
     // Spectra calibration
 

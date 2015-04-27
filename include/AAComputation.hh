@@ -111,8 +111,9 @@ public:
   void IntegratePearsonWaveform(int);
   void CalculateCountRate();
   void AnalyzeWaveform(TH1F *);
-
+  
   // Spectrum creation
+  void ProcessSpectrumWaveforms();
   void CreateSpectrum();
   void CreateASIMSpectrum();
   void CalculateSpectrumBackground();
@@ -299,7 +300,6 @@ private:
   // Spectrum variables
 
   TH1F *Spectrum_H;
-
   TH1F *SpectrumDerivative_H;
   TGraph *SpectrumDerivative_G;
 
@@ -308,7 +308,9 @@ private:
   TF1 *SpectrumFit_F;
   double SpectrumIntegralValue, SpectrumIntegralError;
 
-  
+  // Vectors used to store processed waveform values
+  vector<Double_t> SpectrumPHVec[8], SpectrumPAVec[8];
+
   // Objects that are used in energy calibration of the pulse spectra
   vector<TGraph *> SpectraCalibrations;
   vector<bool> UseSpectraCalibrations;

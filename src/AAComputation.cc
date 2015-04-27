@@ -175,7 +175,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
 
     // Histogram waveforms into a spectrum
     if(CmdLineArg == "histogramming")
-      CreateSpectrum();
+      ProcessSpectrumWaveforms();
     
     // Desplice (or "uncouple") waveforms into a new ADAQ ROOT file
     else if(CmdLineArg == "desplicing")
@@ -844,7 +844,7 @@ void AAComputation::FindPeakLimits(TH1F *Histogram_H)
 }
 
 
-void AAComputation::CreateSpectrum()
+void AAComputation::ProcessSpectrumWaveforms()
 {
   // Delete the previous Spectrum_H TH1F object if it exists to
   // prevent memory leaks
@@ -866,13 +866,32 @@ void AAComputation::CreateSpectrum()
 			ADAQSettings->SpectrumMinBin,
 			ADAQSettings->SpectrumMaxBin);
 
+  // Get the current digitizer channel to analyze
   int Channel = ADAQSettings->WaveformChannel;
-  
+
   // Variables for calculating pulse height and area
   double SampleHeight, PulseHeight, PulseArea;
   SampleHeight = PulseHeight = PulseArea = 0.;
+  
+  // Reset the spectrum pulse value vectors for this channel
+  SpectrumPHVec[Channel].clear();
+  SpectrumPAVec[Channel].clear();
 
+  // For spectra creation with whole waveform (WW) and waveform data
+  // from disk (WD), there will always be exactly N pulse heights and
+  // areas for N waveforms; thus we can preallocate memory to save CPU
+  // (see next lines of codes) . When using the peak finder (PF)
+  // algorithm, we can have variable and multiple numbers of peaks in
+  // a single waveform, and, thus, we will need to allocate the vector
+  // memory as we go along using the vector::push_back() method.
 
+  // Preallocate memory if processing waveforms with WW or WD algorithms
+  if(!ADAQSettings->ADAQSpectrumAlgorithmPF){
+    SpectrumPHVec[Channel].resize(ADAQSettings->WaveformsToHistogram, 0);
+    SpectrumPAVec[Channel].resize(ADAQSettings->WaveformsToHistogram, 0);
+  }
+
+  
   ///////////////////////////////////////////////////
   // Create the spectrum from stored waveform data //
   ///////////////////////////////////////////////////
@@ -909,20 +928,23 @@ void AAComputation::CreateSpectrum()
     ADAQWaveformTree->SetBranchAddress(WDName.c_str(), &WD);
 
     // Readout appropriate waveform data into the spectrum
-    for(int entry=0; entry<ADAQWaveformTree->GetEntries(); entry++){
+    for(int entry=0; entry<ADAQSettings->WaveformsToHistogram; entry++){
       ADAQWaveformTree->GetEntry(entry);
       
-      Double_t PulseValue = 0.;
+      PulseHeight = WD->GetPulseHeight();
+      SpectrumPHVec[Channel][entry] = PulseHeight;
+      
+      PulseArea = WD->GetPulseArea();
+      SpectrumPAVec[Channel][entry] = PulseArea;
+      
       if(ADAQSettings->ADAQSpectrumTypePAS)
-	PulseValue = WD->GetPulseArea();
+	Spectrum_H->Fill(PulseArea);
       else if(ADAQSettings->ADAQSpectrumTypePHS)
-	PulseValue = WD->GetPulseHeight();
-
-      Spectrum_H->Fill(PulseValue);
+	Spectrum_H->Fill(PulseHeight);
     }
-
+    
     delete WD;
-
+    
     SpectrumExists = true;
 
     return;
@@ -1058,14 +1080,16 @@ void AAComputation::CreateSpectrum()
 	
 	  // Add the pulse height to the spectrum histogram	
 	  Spectrum_H->Fill(PulseHeight);
+	  if(SequentialArchitecture)
+	    SpectrumPHVec[Channel][waveform] = PulseHeight;
 	}
-
+	
 	// ... or if a pulse area spectrum (PAS) is to be created ...
 	else if(ADAQSettings->ADAQSpectrumTypePAS){
-
+	  
 	  // Reset the pulse area "integral" to zero
 	  PulseArea = 0.;
-	
+	  
 	  // ...iterate through the bins in the Waveform_H histogram and
 	  // add each bin value to the pulse area integral.
 	  for(int sample=0; sample<Waveform_H[Channel]->GetEntries(); sample++){
@@ -1091,6 +1115,8 @@ void AAComputation::CreateSpectrum()
 	
 	  // Add the pulse area to the spectrum histogram
 	  Spectrum_H->Fill(PulseArea);
+	  if(SequentialArchitecture)
+	    SpectrumPAVec[Channel][waveform] = PulseArea;
 	}
       
 	// Note that we must add a +1 to the waveform number in order to
@@ -1273,6 +1299,61 @@ void AAComputation::CreateSpectrum()
 }
 
 
+void AAComputation::CreateSpectrum()
+{
+  // Delete the previous Spectrum_H TH1F object if it exists to
+  // prevent memory leaks
+  if(Spectrum_H){
+    delete Spectrum_H;
+    SpectrumExists = false;
+  }
+
+  // Create the TH1F histogram object for spectra creation
+  Spectrum_H = new TH1F("Spectrum_H", "ADAQ spectrum", 
+			ADAQSettings->SpectrumNumBins, 
+			ADAQSettings->SpectrumMinBin,
+			ADAQSettings->SpectrumMaxBin);
+
+  // Get the current digitizer channel to analyze
+  Int_t Channel = ADAQSettings->WaveformChannel;
+
+  vector<Double_t>::iterator It, ItB, ItE;
+  if(ADAQSettings->ADAQSpectrumTypePAS){
+    It = SpectrumPAVec[Channel].begin();
+    ItB = SpectrumPAVec[Channel].begin();
+    ItE = SpectrumPAVec[Channel].end();
+  }
+  else if(ADAQSettings->ADAQSpectrumTypePHS){
+    It = SpectrumPHVec[Channel].begin();
+    ItB = SpectrumPHVec[Channel].begin();
+    ItE = SpectrumPHVec[Channel].end();
+  }
+  
+  for(; It!=ItE; It++){
+
+    // If using WW or WD algorithms, histogram only the number of
+    // waveforms specified by user; note that if using PF algorithm,
+    // all pulse heights/areas will be histogrammed regardless of user
+    // specifications to account for case of multiple values per
+    // waveforms, in which case values>waveforms-specified. This
+    // ensures that ALL values found during waveform processing in PF
+    // are used in the spectrum histogram.
+
+    if(!ADAQSettings->ADAQSpectrumAlgorithmPF)
+      if((It-ItB) > ADAQSettings->WaveformsToHistogram)
+	break;
+    
+    // Convert value if calibration has been activated
+    if(ADAQSettings->UseSpectraCalibrations[Channel])
+      Spectrum_H->Fill( ADAQSettings->SpectraCalibrations[Channel]->Eval( (*It) ) );
+    else
+      Spectrum_H->Fill( (*It) );
+  }
+  
+  SpectrumExists = true;
+}
+
+
 void AAComputation::IntegratePeaks()
 {
   // Iterate over each peak stored in the vector of PeakInfoStructs...
@@ -1304,8 +1385,10 @@ void AAComputation::IntegratePeaks()
     if(ADAQSettings->UseSpectraCalibrations[Channel])
       PeakIntegral = ADAQSettings->SpectraCalibrations[Channel]->Eval(PeakIntegral);
     
-    // Add the peak integral to the PAS 
+    // Add the peak integral to the PAS
     Spectrum_H->Fill(PeakIntegral);
+    if(SequentialArchitecture)
+      SpectrumPAVec[Channel].push_back(PeakIntegral);
   }
 }
 
@@ -1348,6 +1431,8 @@ void AAComputation::FindPeakHeights()
     
     // Add the detector pulse peak height to the spectrum histogram
     Spectrum_H->Fill(PeakHeight);
+    if(SequentialArchitecture)
+      SpectrumPHVec[Channel].push_back(PeakHeight);
   }
 }
 
@@ -1826,7 +1911,7 @@ TH2F *AAComputation::CreatePSDHistogram()
     if(PeakFinder) delete PeakFinder;
     PeakFinder = new TSpectrum(ADAQSettings->MaxPeaks);
   
-    // See documention in either ::CreateSpectrum() or
+    // See documention in either ::ProcessSpectrumWaveforms() or
     // ::CreateDesplicedFile for parallel processing assignemnts
   
     WaveformStart = 0;
