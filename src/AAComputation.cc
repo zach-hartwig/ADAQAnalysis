@@ -867,10 +867,10 @@ void AAComputation::ProcessSpectrumWaveforms()
 			ADAQSettings->SpectrumMaxBin);
 
   // Get the current digitizer channel to analyze
-  int Channel = ADAQSettings->WaveformChannel;
-
+  Int_t Channel = ADAQSettings->WaveformChannel;
+  
   // Variables for calculating pulse height and area
-  double SampleHeight, PulseHeight, PulseArea;
+  Double_t SampleHeight, PulseHeight, PulseArea;
   SampleHeight = PulseHeight = PulseArea = 0.;
   
   // Reset the spectrum pulse value vectors for this channel
@@ -1024,9 +1024,7 @@ void AAComputation::ProcessSpectrumWaveforms()
 
       // Get the data from the ADAQ TTree for the current waveform
       ADAQWaveformTree->GetEntry(waveform);
-
-      int Channel = ADAQSettings->WaveformChannel;
-
+      
       // Assign the raw waveform voltage to a class member vector<int>
       RawVoltage = *Waveforms[Channel];
     
@@ -1080,8 +1078,10 @@ void AAComputation::ProcessSpectrumWaveforms()
 	
 	  // Add the pulse height to the spectrum histogram	
 	  Spectrum_H->Fill(PulseHeight);
-	  if(SequentialArchitecture)
-	    SpectrumPHVec[Channel][waveform] = PulseHeight;
+
+	  // Store the calculated pulse height in the designated vector
+	  Int_t Index = waveform - WaveformStart;
+	  SpectrumPHVec[Channel][Index] = PulseHeight;
 	}
 	
 	// ... or if a pulse area spectrum (PAS) is to be created ...
@@ -1090,20 +1090,11 @@ void AAComputation::ProcessSpectrumWaveforms()
 	  // Reset the pulse area "integral" to zero
 	  PulseArea = 0.;
 	  
-	  // ...iterate through the bins in the Waveform_H histogram and
-	  // add each bin value to the pulse area integral.
-	  for(int sample=0; sample<Waveform_H[Channel]->GetEntries(); sample++){
+	  // ...iterate through the bins in the Waveform_H histogram
+	  // and add each bin value to the pulse area integral. Note
+	  // the integral is over the entire waveform.
+	  for(Int_t sample=0; sample<Waveform_H[Channel]->GetEntries(); sample++){
 	    SampleHeight = Waveform_H[Channel]->GetBinContent(sample);
-
-	    // ZSH: At present, the whole-waveform spectra creation
-	    // simply integrates throught the entire waveform. Ideally,
-	    // I would like to eliminate the signal noise by eliminating
-	    // it from the integral with a threshold. But to avoid
-	    // confusing the user and to ensure consistency, I will
-	    // simply trust cancellation of + and - noise to avoid
-	    // broadening the photo peaks. May want to implement a
-	    // "minimum waveform height to be histogrammed" at some
-	    // point in the future.
 	    PulseArea += SampleHeight;
 	  }
 	
@@ -1115,10 +1106,12 @@ void AAComputation::ProcessSpectrumWaveforms()
 	
 	  // Add the pulse area to the spectrum histogram
 	  Spectrum_H->Fill(PulseArea);
-	  if(SequentialArchitecture)
-	    SpectrumPAVec[Channel][waveform] = PulseArea;
+	  
+	  // Store the calculated pulse height in the designated vector
+	  Int_t Index = waveform - WaveformStart;
+	  SpectrumPAVec[Channel][Index] = PulseArea;
 	}
-      
+	
 	// Note that we must add a +1 to the waveform number in order to
 	// get the modulo to land on the correct intervals
 	if(IsMaster)
@@ -1232,18 +1225,26 @@ void AAComputation::ProcessSpectrumWaveforms()
   
     // Get the total number of entries in the nod'es Spectrum_H object
     double Entries = Spectrum_H->GetEntries();
-  
+    
     if(ParallelVerbose)
       cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Aggregating results to Node[0]!" << endl;
-  
+
+    AAParallel *ParallelMgr = AAParallel::GetInstance();
+    
     // Use MPI::Reduce function to aggregate the arrays on each node
     // (which representing the Spectrum_H histogram) to a single array
     // on the master node.
-    double *ReturnArray = AAParallel::GetInstance()->SumDoubleArrayToMaster(SpectrumArray, ArraySize);
+    double *ReturnArray = ParallelMgr->SumDoubleArrayToMaster(SpectrumArray, ArraySize);
 
     // Use the MPI::Reduce function to aggregate the total number of
     // entries on each node to a single double on the master
-    double ReturnDouble = AAParallel::GetInstance()->SumDoublesToMaster(Entries);
+    double ReturnDouble = ParallelMgr->SumDoublesToMaster(Entries);
+
+    TTree *SpectrumTree = new TTree("SpectrumTree", "Tree to temporarily hold node pulse value vectors");
+    SpectrumTree->Branch("PulseHeight", SpectrumPHVec);
+    SpectrumTree->Branch("PulseArea", SpectrumPAVec);
+
+
 
     // Aggregate the total calculated RFQ current (if enabled) from all
     // nodes to the master node
@@ -1255,7 +1256,7 @@ void AAComputation::ProcessSpectrumWaveforms()
       if(ParallelVerbose)
 	cout << "\nADAQAnalysis_MPI Node[0] : Writing master TH1F histogram to disk!\n"
 	     << endl;
-    
+      
       // Create the master TH1F histogram object. Note that the member
       // data for spectrum creation are used to ensure the correct
       // number of bins and bin aranges
@@ -1375,10 +1376,10 @@ void AAComputation::IntegratePeaks()
     
     // ...and use the lower and upper peak limits to calculate the
     // integral under each waveform peak that has passed all criterion
-    double PeakIntegral = Waveform_H[ADAQSettings->WaveformChannel]->Integral((*it).PeakLimit_Lower,
-									      (*it).PeakLimit_Upper);
-
-    int Channel = ADAQSettings->WaveformChannel;
+    Double_t PeakIntegral = Waveform_H[ADAQSettings->WaveformChannel]->Integral((*it).PeakLimit_Lower,
+										(*it).PeakLimit_Upper);
+    
+    Int_t Channel = ADAQSettings->WaveformChannel;
     
     // If the user has calibrated the spectrum, then transform the
     // peak integral in pulse units [ADC] to energy units
@@ -1387,8 +1388,9 @@ void AAComputation::IntegratePeaks()
     
     // Add the peak integral to the PAS
     Spectrum_H->Fill(PeakIntegral);
-    if(SequentialArchitecture)
-      SpectrumPAVec[Channel].push_back(PeakIntegral);
+
+    // Add the peak integral to the spectrum pulse area vector
+    SpectrumPAVec[Channel].push_back(PeakIntegral);
   }
 }
 
@@ -1412,14 +1414,14 @@ void AAComputation::FindPeakHeights()
       continue;
     
     // Initialize the peak height for each peak region
-    double PeakHeight = 0.;
+    Double_t PeakHeight = 0.;
 
     // Get the waveform processing channel number
-    int Channel = ADAQSettings->WaveformChannel;
+    Int_t Channel = ADAQSettings->WaveformChannel;
 
     // Iterate over the samples between lower and upper integration
     // limits to determine the maximum peak height
-    for(int sample=(*it).PeakLimit_Lower; sample<(*it).PeakLimit_Upper; sample++){
+    for(Int_t sample=(*it).PeakLimit_Lower; sample<(*it).PeakLimit_Upper; sample++){
       if(Waveform_H[Channel]->GetBinContent(sample) > PeakHeight)
 	PeakHeight = Waveform_H[Channel]->GetBinContent(sample);
     }
@@ -1431,8 +1433,9 @@ void AAComputation::FindPeakHeights()
     
     // Add the detector pulse peak height to the spectrum histogram
     Spectrum_H->Fill(PeakHeight);
-    if(SequentialArchitecture)
-      SpectrumPHVec[Channel].push_back(PeakHeight);
+    
+    // Add the peak height to the spectrum pulse height vector
+    SpectrumPHVec[Channel].push_back(PeakHeight);
   }
 }
 
