@@ -2759,6 +2759,55 @@ void AAInterface::UpdateForASIMFile()
 }
 
 
+void AAInterface::UpdateForSpectrumCreation()
+{
+  // Refresh the background, integration, and gaussian for the new
+  // spectrum if those options are already selected
+
+  if(SpectrumFindBackground_CB->IsDown()){
+    SpectrumFindBackground_CB->SetState(kButtonUp, true);
+    SpectrumFindBackground_CB->SetState(kButtonDown, true);
+  }
+
+  if(SpectrumFindIntegral_CB->IsDown()){
+    SpectrumFindIntegral_CB->SetState(kButtonUp, true);
+    SpectrumFindIntegral_CB->SetState(kButtonDown, true);
+  }
+  
+  if(SpectrumUseGaussianFit_CB->IsDown()){
+    SpectrumUseGaussianFit_CB->SetState(kButtonUp, true);
+    SpectrumUseGaussianFit_CB->SetState(kButtonDown, true);
+  }
+
+  // Update the spectrum binning limits
+
+  int SpectrumMinBin = SpectrumMinBin_NEL->GetEntry()->GetNumber();
+  SpectrumRangeMin_NEL->GetEntry()->SetNumber(SpectrumMinBin);
+    
+  int SpectrumMaxBin = SpectrumMaxBin_NEL->GetEntry()->GetNumber();
+  SpectrumRangeMax_NEL->GetEntry()->SetNumber(SpectrumMaxBin);
+  
+  // Update the spectrum analysis limits
+
+  SpectrumAnalysisLowerLimit_NEL->GetEntry()->SetLimitValues(SpectrumMinBin, SpectrumMaxBin);
+  SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetLimitValues(SpectrumMinBin, SpectrumMaxBin);
+    
+  // Activate the CreateSpectrum_TB button since processed waveform
+  // values have been created and stored in vectors in AAComputation
+  CreateSpectrum_TB->SetState(kButtonUp);
+  
+  // Alert the user that waveforms have been processed by updating
+  // the ProcessSpectrum_TB button color
+  ProcessSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(32));
+  
+  // Legacy code and depracated. Should be removed! ZSH (28 Apr 15)
+  if(IntegratePearson_CB->IsDown()){
+    double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
+    DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
+  }
+}
+
+
 void AAInterface::SetPeakFindingWidgetState(bool WidgetState, EButtonState ButtonState)
 {
   UseMarkovSmoothing_CB->SetState(ButtonState);

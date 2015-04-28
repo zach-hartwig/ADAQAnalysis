@@ -313,40 +313,8 @@ void AASpectrumSlots::HandleTextButtons()
 	TheInterface->CreateMessageBox("Error! ASIM files can only be processed sequentially!\n","Stop");
       }
     }
-    
-    // If the background and integration functions were being used,
-    // cycle them in order to refresh the spectral plotting and analysis
-    if(TheInterface->SpectrumFindBackground_CB->IsDown()){
-      TheInterface->SpectrumFindBackground_CB->SetState(kButtonUp, true);
-      TheInterface->SpectrumFindBackground_CB->SetState(kButtonDown, true);
-    }
 
-    if(TheInterface->SpectrumFindIntegral_CB->IsDown()){
-      TheInterface->SpectrumFindIntegral_CB->SetState(kButtonUp, true);
-      TheInterface->SpectrumFindIntegral_CB->SetState(kButtonDown, true);
-    }
-    
-    if(TheInterface->IntegratePearson_CB->IsDown()){
-      double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
-      TheInterface->DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
-    }
-
-    int SpectrumMinBin = TheInterface->SpectrumMinBin_NEL->GetEntry()->GetNumber();
-    TheInterface->SpectrumRangeMin_NEL->GetEntry()->SetNumber(SpectrumMinBin);
-    
-    int SpectrumMaxBin = TheInterface->SpectrumMaxBin_NEL->GetEntry()->GetNumber();
-    TheInterface->SpectrumRangeMax_NEL->GetEntry()->SetNumber(SpectrumMaxBin);
-    
-    TheInterface->SpectrumAnalysisLowerLimit_NEL->GetEntry()->SetLimitValues(SpectrumMinBin, SpectrumMaxBin);
-    TheInterface->SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetLimitValues(SpectrumMinBin, SpectrumMaxBin);
-    
-    // Activate the CreateSpectrum_TB button since processed waveform
-    // values have been created and stored in vectors in AAComputation
-    TheInterface->CreateSpectrum_TB->SetState(kButtonUp);
-    
-    // Alert the user that waveforms have been processed by updating
-    // the ProcessSpectrum_TB button color
-    TheInterface->ProcessSpectrum_TB->SetBackgroundColor(TheInterface->ColorMgr->Number2Pixel(32));
+    TheInterface->UpdateForSpectrumCreation();
     
     break;
   }
@@ -363,10 +331,12 @@ void AASpectrumSlots::HandleTextButtons()
     
     if(ComputationMgr->GetSpectrumExists())
       GraphicsMgr->PlotSpectrum();
+
+    TheInterface->UpdateForSpectrumCreation();
     
     break;
   }
-
+    
     
     //////////////////////
     // Spectra calibration

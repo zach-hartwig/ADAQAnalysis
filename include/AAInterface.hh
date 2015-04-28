@@ -107,12 +107,15 @@ public:
   // Method to save all widget values in a storage class
   void SaveSettings(bool SaveToFile=false);
   
+  // Methods to update the interface after different actions
   void UpdateForADAQFile();
   void UpdateForASIMFile();
+  void UpdateForSpectrumCreation();
 
   // Method to alert the user via a ROOT message box
   void CreateMessageBox(string, string);
 
+  // Methods to enable/disable widgets after different actions
   void SetPeakFindingWidgetState(bool, EButtonState);
   void SetPSDWidgetState(bool, EButtonState);
   void SetPearsonWidgetState(bool, EButtonState);
