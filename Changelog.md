@@ -1,4 +1,4 @@
-# ADAQAnalysis Version Change Log #  
+# ADAQAnalysis Version Change Log
 
 name: Changelog.md  
 date: 28 Apr 15 (last updated)  
@@ -14,8 +14,8 @@ Major new developments in this series include:
    data stored within an ADAQ file. This waveform data is created in
    real time by ADAQAcquisition and stored in the ADAQ file if the
    user has selected to do so. The waveform data is primarily energy
-   values (e.g. pulse height and pulse area) and'PSD integrals
-   (e.g. the tail (``short'') and total (``long'') waveform integrals.
+   values (e.g. pulse height and pulse area) and PSD integrals
+   (e.g. the tail ('short') and total ('long') waveform integrals.
    This feature enables extremely fast creation of spectra and PSD
    histograms while minimizing the required storage space of ADAQ
    files on disk if the user opts to *not* store the raw waveforms
