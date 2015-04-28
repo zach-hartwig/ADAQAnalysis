@@ -1056,53 +1056,59 @@ void AAComputation::ProcessSpectrumWaveforms()
 	  if(PeakInfoVec.at(0).PSDFilterFlag == true)
 	    continue;
 	}
-      
-	// If a pulse height spectrum (PHS) is to be created ...
-	if(ADAQSettings->ADAQSpectrumTypePHS){
-	  // Get the pulse height by find the maximum bin value stored
-	  // in the Waveform_H TH1F via class methods. Note that spectra
-	  // are always created with positive polarity waveforms
-	  PulseHeight = Waveform_H[Channel]->GetBinContent(Waveform_H[Channel]->GetMaximumBin());
 
-	  // If the calibration manager is to be used to convert the
-	  // value from pulse units [ADC] to energy units [keV, MeV,
-	  // ...] then do so
-	  if(ADAQSettings->UseSpectraCalibrations[Channel])
-	    PulseHeight = ADAQSettings->SpectraCalibrations[Channel]->Eval(PulseHeight);
+	////////////////////////////////////////////////
+	// Calculation of waveform pulse height and area
+
+
+	// Pulse height
+
+	// Get the pulse height by find the maximum bin value stored
+	// in the Waveform_H TH1F via class methods. Note that spectra
+	// are always created with positive polarity waveforms
+	PulseHeight = Waveform_H[Channel]->GetBinContent(Waveform_H[Channel]->GetMaximumBin());
 	
-	  // Add the pulse height to the spectrum histogram	
+	// Store the uncalibrated pulse height in the designated vector
+	SpectrumPHVec[Channel].push_back(PulseHeight);
+	
+	// If the calibration manager is to be used to convert the
+	// value from pulse units [ADC] to energy units [keV, MeV,
+	// ...] then do so
+	if(ADAQSettings->UseSpectraCalibrations[Channel])
+	  PulseHeight = ADAQSettings->SpectraCalibrations[Channel]->Eval(PulseHeight);
+
+	
+	// Pulse area
+	
+	// Reset the pulse area "integral" to zero
+	PulseArea = 0.;
+	
+	// ...iterate through the bins in the Waveform_H histogram
+	// and add each bin value to the pulse area integral. Note
+	// the integral is over the entire waveform.
+	for(Int_t sample=0; sample<Waveform_H[Channel]->GetEntries(); sample++){
+	  SampleHeight = Waveform_H[Channel]->GetBinContent(sample);
+	  PulseArea += SampleHeight;
+	}
+	
+	// Store the uncalibrated pulse height in the designated vector
+	SpectrumPAVec[Channel].push_back(PulseArea);
+
+	// If the calibration manager is to be used to convert the
+	// value from pulse units [ADC] to energy units [keV, MeV,
+	// ...] then do so
+	if(ADAQSettings->UseSpectraCalibrations[Channel])
+	  PulseArea = ADAQSettings->SpectraCalibrations[Channel]->Eval(PulseArea);
+
+
+	// Initial spectra creation
+	
+	// Add the pulse value to the spectrum object depending on
+	// type of spectrum that is to be created initially
+	if(ADAQSettings->ADAQSpectrumTypePHS)
 	  Spectrum_H->Fill(PulseHeight);
-
-	  // Store the calculated pulse height in the designated vector
-	  SpectrumPHVec[Channel].push_back(PulseHeight);
-	}
-	
-	// ... or if a pulse area spectrum (PAS) is to be created ...
-	else if(ADAQSettings->ADAQSpectrumTypePAS){
-	  
-	  // Reset the pulse area "integral" to zero
-	  PulseArea = 0.;
-	  
-	  // ...iterate through the bins in the Waveform_H histogram
-	  // and add each bin value to the pulse area integral. Note
-	  // the integral is over the entire waveform.
-	  for(Int_t sample=0; sample<Waveform_H[Channel]->GetEntries(); sample++){
-	    SampleHeight = Waveform_H[Channel]->GetBinContent(sample);
-	    PulseArea += SampleHeight;
-	  }
-	
-	  // If the calibration manager is to be used to convert the
-	  // value from pulse units [ADC] to energy units [keV, MeV,
-	  // ...] then do so
-	  if(ADAQSettings->UseSpectraCalibrations[Channel])
-	    PulseArea = ADAQSettings->SpectraCalibrations[Channel]->Eval(PulseArea);
-	
-	  // Add the pulse area to the spectrum histogram
+	else if(ADAQSettings->ADAQSpectrumTypePAS)
 	  Spectrum_H->Fill(PulseArea);
-	  
-	  // Store the calculated pulse height in the designated vector
-	  SpectrumPAVec[Channel].push_back(PulseArea);
-	}
 	
 	// Note that we must add a +1 to the waveform number in order to
 	// get the modulo to land on the correct intervals
@@ -1112,15 +1118,15 @@ void AAComputation::ProcessSpectrumWaveforms()
 	    if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
 	      UpdateProcessingProgress(waveform);
       }
-
-    
+      
+      
       //////////////////////////////////
       // Peak-finder waveform processing
     
       // If the peak-finding/limit-finding algorithm is to be used to
       // create the pulse spectrum ...
       else if(ADAQSettings->ADAQSpectrumAlgorithmPF){
-      
+	
 	// ...pass the Waveform_H[Channel] TH1F object to the peak-finding
 	// algorithm, passing 'false' as the second argument to turn off
 	// plotting of the waveforms. ADAQAnalysisInterface::FindPeaks() will
@@ -1152,14 +1158,11 @@ void AAComputation::ProcessSpectrumWaveforms()
 	// the pulse-shape filterthrough the pulse-shape filter
 	if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel])
 	  CalculatePSDIntegrals(false);
-      
-	// If a PAS is to be created ...
-	if(ADAQSettings->ADAQSpectrumTypePAS)
-	  IntegratePeaks();
-      
-	// or if a PHS is to be created ...
-	else if(ADAQSettings->ADAQSpectrumTypePHS)
-	  FindPeakHeights();
+	
+	// Find both pulse area and peak heights during processing so
+	// that the values can be added to the spectrum vectors
+	IntegratePeaks();
+	FindPeakHeights();
       }
     }
   
@@ -1404,7 +1407,7 @@ void AAComputation::IntegratePeaks()
   // Iterate over each peak stored in the vector of PeakInfoStructs...
   vector<PeakInfoStruct>::iterator it;
   for(it=PeakInfoVec.begin(); it!=PeakInfoVec.end(); it++){
-
+    
     // If pileup rejection is begin used, examine the pileup flag
     // stored in each PeakInfoStruct to determine whether or not this
     // peak is part of a pileup events. If so, skip it...
@@ -1425,16 +1428,18 @@ void AAComputation::IntegratePeaks()
     
     Int_t Channel = ADAQSettings->WaveformChannel;
     
+    // Add the uncalibrated integral to the spectrum vector
+    SpectrumPAVec[Channel].push_back(PeakIntegral);
+    
     // If the user has calibrated the spectrum, then transform the
     // peak integral in pulse units [ADC] to energy units
     if(ADAQSettings->UseSpectraCalibrations[Channel])
       PeakIntegral = ADAQSettings->SpectraCalibrations[Channel]->Eval(PeakIntegral);
     
-    // Add the peak integral to the PAS
-    Spectrum_H->Fill(PeakIntegral);
-
-    // Add the peak integral to the spectrum pulse area vector
-    SpectrumPAVec[Channel].push_back(PeakIntegral);
+    // Add the integral to the spectrum if a pulse area spectrum is
+    // desired to create the initial post-processing histogram
+    if(ADAQSettings->ADAQSpectrumTypePAS)
+      Spectrum_H->Fill(PeakIntegral);
   }
 }
 
@@ -1470,16 +1475,18 @@ void AAComputation::FindPeakHeights()
 	PeakHeight = Waveform_H[Channel]->GetBinContent(sample);
     }
 
+    // Add the uncalibrated peak height to the spectrum vector
+    SpectrumPHVec[Channel].push_back(PeakHeight);
+    
     // If the user has calibrated the spectrum then transform the peak
     // heights in pulse units [ADC] to energy
     if(ADAQSettings->UseSpectraCalibrations[Channel])
       PeakHeight = ADAQSettings->SpectraCalibrations[Channel]->Eval(PeakHeight);
     
-    // Add the detector pulse peak height to the spectrum histogram
-    Spectrum_H->Fill(PeakHeight);
-    
-    // Add the peak height to the spectrum pulse height vector
-    SpectrumPHVec[Channel].push_back(PeakHeight);
+    // Add the integral to the spectrum if a pulse area spectrum is
+    // desired to create the initial post-processing histogram
+    if(ADAQSettings->ADAQSpectrumTypePHS)
+      Spectrum_H->Fill(PeakHeight);
   }
 }
 
