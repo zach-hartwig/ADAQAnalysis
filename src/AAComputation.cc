@@ -1263,6 +1263,7 @@ void AAComputation::ProcessSpectrumWaveforms()
     TVectorD PH(SpectrumPHVec[Channel].size(), &SpectrumPHVec[Channel][0]);
     TVectorD PA(SpectrumPAVec[Channel].size(), &SpectrumPAVec[Channel][0]);
     PH.Write("PH");
+
     PA.Write("PA");
     VectorWrite->Close();
 
@@ -1307,11 +1308,14 @@ void AAComputation::ProcessSpectrumWaveforms()
       vector<Double_t> SpectrumPHVec_Master, SpectrumPAVec_Master;
       
       for(int file=0; file<MPI_Size; file++){
+	// Open the node TFile sequentially
 	SS.str("");
 	SS << "/tmp/ParallelProcessing_" << USER << file << ".root";
 	TString FName = SS.str();
 	TFile *VectorRead = new TFile(FName, "read");
 	
+	// Get the VectorT object and readout to class member vectors
+
 	TVectorD *PH = (TVectorD *)VectorRead->Get("PH");
 	for(int i=0; i<PH->GetNoElements(); i++)
 	  SpectrumPHVec_Master.push_back( (*PH)[i] );
@@ -1319,8 +1323,14 @@ void AAComputation::ProcessSpectrumWaveforms()
 	TVectorD *PA = (TVectorD *)VectorRead->Get("PA");
 	for(int i=0; i<PA->GetNoElements(); i++)
 	  SpectrumPAVec_Master.push_back( (*PA)[i]);
+	
+	// Close and delete the now-depracated node TFiles
+	VectorRead->Close();
+	string RemoveFilesCommand;
+	RemoveFilesCommand = "rm " + FName + " -f";
+	system(RemoveFilesCommand.c_str()); 
       }
-      
+
       TVectorD MasterPHVec(SpectrumPHVec_Master.size(), &SpectrumPHVec_Master[0]);
       TVectorD MasterPAVec(SpectrumPAVec_Master.size(), &SpectrumPAVec_Master[0]);
 
@@ -1340,6 +1350,12 @@ void AAComputation::ProcessSpectrumWaveforms()
       
       // ... and write the ROOT file to disk
       ParallelFile->Write();
+      
+      // Delete the now-depracated parallel TFiles containing the
+      // nodes' SpectrumPH/PAVec object
+      string RemoveFilesCommand;
+      RemoveFilesCommand = "rm " + FName + " -f";
+      system(RemoveFilesCommand.c_str()); 
     }
 #endif
     SpectrumExists = true;
