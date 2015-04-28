@@ -873,24 +873,15 @@ void AAComputation::ProcessSpectrumWaveforms()
   Double_t SampleHeight, PulseHeight, PulseArea;
   SampleHeight = PulseHeight = PulseArea = 0.;
   
-  // Reset the spectrum pulse value vectors for this channel
+  // Clear the spectrum pulse value vectors to zero elements. I have
+  // chosen *not* to preallocate memory intentionally since (a)
+  // vector::push_back() is easily sufficiently fast compared to
+  // preallocation for our purposes and (b) the PF algorithm, which
+  // can find multiple values per pulse and therefore does not have a
+  // fixed vector length, makes preallocation difficult.
   SpectrumPHVec[Channel].clear();
   SpectrumPAVec[Channel].clear();
-
-  // For spectra creation with whole waveform (WW) and waveform data
-  // from disk (WD), there will always be exactly N pulse heights and
-  // areas for N waveforms; thus we can preallocate memory to save CPU
-  // (see next lines of codes) . When using the peak finder (PF)
-  // algorithm, we can have variable and multiple numbers of peaks in
-  // a single waveform, and, thus, we will need to allocate the vector
-  // memory as we go along using the vector::push_back() method.
-
-  // Preallocate memory if processing waveforms with WW or WD algorithms
-  if(!ADAQSettings->ADAQSpectrumAlgorithmPF){
-    SpectrumPHVec[Channel].resize(ADAQSettings->WaveformsToHistogram, 0);
-    SpectrumPAVec[Channel].resize(ADAQSettings->WaveformsToHistogram, 0);
-  }
-
+  
   
   ///////////////////////////////////////////////////
   // Create the spectrum from stored waveform data //
@@ -930,13 +921,16 @@ void AAComputation::ProcessSpectrumWaveforms()
     // Readout appropriate waveform data into the spectrum
     for(int entry=0; entry<ADAQSettings->WaveformsToHistogram; entry++){
       ADAQWaveformTree->GetEntry(entry);
-      
+
+      // Get the pulse height and area...
       PulseHeight = WD->GetPulseHeight();
-      SpectrumPHVec[Channel][entry] = PulseHeight;
-      
       PulseArea = WD->GetPulseArea();
-      SpectrumPAVec[Channel][entry] = PulseArea;
+
+      // ... and also store them in vectors for later use
+      SpectrumPHVec[Channel].push_back(PulseHeight);
+      SpectrumPAVec[Channel].push_back(PulseArea);
       
+      // Fill the spectrum object depending on pulse spectrm type
       if(ADAQSettings->ADAQSpectrumTypePAS)
 	Spectrum_H->Fill(PulseArea);
       else if(ADAQSettings->ADAQSpectrumTypePHS)
@@ -1080,8 +1074,7 @@ void AAComputation::ProcessSpectrumWaveforms()
 	  Spectrum_H->Fill(PulseHeight);
 
 	  // Store the calculated pulse height in the designated vector
-	  Int_t Index = waveform - WaveformStart;
-	  SpectrumPHVec[Channel][Index] = PulseHeight;
+	  SpectrumPHVec[Channel].push_back(PulseHeight);
 	}
 	
 	// ... or if a pulse area spectrum (PAS) is to be created ...
@@ -1108,8 +1101,7 @@ void AAComputation::ProcessSpectrumWaveforms()
 	  Spectrum_H->Fill(PulseArea);
 	  
 	  // Store the calculated pulse height in the designated vector
-	  Int_t Index = waveform - WaveformStart;
-	  SpectrumPAVec[Channel][Index] = PulseArea;
+	  SpectrumPAVec[Channel].push_back(PulseArea);
 	}
 	
 	// Note that we must add a +1 to the waveform number in order to
@@ -1181,26 +1173,33 @@ void AAComputation::ProcessSpectrumWaveforms()
     }
   
 #ifdef MPI_ENABLED
-    // Parallel waveform processing is complete at this point and it is
-    // time to aggregate all the results from the nodes to the master
-    // (node == 0) for output to a text file (for now). In the near
-    // future, we will most likely persistently store a TH1F master
-    // histogram object in a ROOT file (along with other variables) for
-    // later retrieval
-  
-    // Ensure that all nodes reach this point before beginning the
-    // aggregation by using an MPI barrier
+
+    // Parallel waveform processing is complete at this point, and it
+    // is time to aggregate all the processed results from all nodes
+    // to the master, which is responsible for saving the aggregated
+    // results to disk in a ROOT TFile. From disk, the running
+    // sequential ADAQAnalysis process will open the TFile and extract
+    // the aggregated results for plotting, analysis, etc (For
+    // details, see AAComputaiton::ProcessWaveformsInParallel).
+
+    /////////////////////
+    // Impose MPI barrier
+
+    // Ensure that all nodes have reached the end-of-processing!
+
     if(ParallelVerbose)
       cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Reached the end-of-processing MPI barrier!"
 	   << endl;
 
-    // Ensure that all of the nodes have finished processing and
-    // check-in at the barrier before proceeding  
     MPI::COMM_WORLD.Barrier();
-  
+
+    
+    /////////////////////////////////
+    // Aggregate TH1F spectra objects
+
     // In order to aggregate the Spectrum_H objects on each node to a
-    // single Spectrum_H object on the master node, we perform the
-    // following procedure:
+    // single Spectrum_H object on the master node, the following is
+    // performed:
     //
     // 0. Create a double array on each node 
     // 1. Store each node's Spectrum_H bin contents in the array
@@ -1209,42 +1208,60 @@ void AAComputation::ProcessSpectrumWaveforms()
     //
     // The size of the array must be (nbins+2) since ROOT TH1 objects
     // that are created with nbins have a underflow (bin = 0) and
-    // overflow (bin = nbin+1) bin added onto the bins within range. For
-    // example if a TH1 is created with 200 bins, the actual number of
-    // bins in the TH1 object is 202 (content + under/overflow bins).
+    // overflow (bin = nbin+1) bin added onto the bins within range.
   
-    // Set the size of the array for Spectrum_H readout
-    const int ArraySize = ADAQSettings->SpectrumNumBins + 2;
-  
-    // Create the array for Spectrum_H readout
-    double SpectrumArray[ArraySize];
-
-    // Set array values to the bin content the node's Spectrum_H object
-    for(int i=0; i<ArraySize; i++)
+    const Int_t ArraySize = ADAQSettings->SpectrumNumBins + 2;
+    Double_t SpectrumArray[ArraySize];
+    for(Int_t i=0; i<ArraySize; i++)
       SpectrumArray[i] = Spectrum_H->GetBinContent(i);
-  
-    // Get the total number of entries in the nod'es Spectrum_H object
-    double Entries = Spectrum_H->GetEntries();
+    
+    // Get the total number of spectrum entries on the node 
+    Double_t Entries = Spectrum_H->GetEntries();
     
     if(ParallelVerbose)
       cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Aggregating results to Node[0]!" << endl;
 
     AAParallel *ParallelMgr = AAParallel::GetInstance();
     
-    // Use MPI::Reduce function to aggregate the arrays on each node
-    // (which representing the Spectrum_H histogram) to a single array
-    // on the master node.
-    double *ReturnArray = ParallelMgr->SumDoubleArrayToMaster(SpectrumArray, ArraySize);
+    // Use AAParallel's implementation of MPI::Reduce() to aggregate
+    // the spectrum arrays and entries on each node into a single
+    // array and total entries on the master node
 
-    // Use the MPI::Reduce function to aggregate the total number of
-    // entries on each node to a single double on the master
-    double ReturnDouble = ParallelMgr->SumDoublesToMaster(Entries);
-
-    TTree *SpectrumTree = new TTree("SpectrumTree", "Tree to temporarily hold node pulse value vectors");
-    SpectrumTree->Branch("PulseHeight", SpectrumPHVec);
-    SpectrumTree->Branch("PulseArea", SpectrumPAVec);
+    Double_t *ReturnArray = ParallelMgr->SumDoubleArrayToMaster(SpectrumArray, ArraySize);
+    Double_t ReturnDouble = ParallelMgr->SumDoublesToMaster(Entries);
 
 
+    ///////////////////////////////////
+    // Aggregate spectrum value vectors
+
+    // In order to aggregate the vectors that hold the calculated
+    // pulse area and heights from the nodes to the master, the
+    // following is performed (for each node unless otherwise noted):
+    //
+    // 0. The vectors are converted into persistent TVectorT<double>
+    //    classes, which as TObject-derived, can be stored in TFiles
+    // 1. The TVectorT's are written to temporary TFiles in /tmp
+    //
+    // 2. The master then reads each node's vector's from each TFile
+    //    and aggregates them into master TVectorT's
+    //
+    // 3. The master TVectorT's are written to the parallel results
+    //    TFile, which is accessed later by the sequential binary
+    //
+    // It's not overwhelmingly elegant, but it's reasonable efficiency
+    // and works!
+   
+    string USER = getenv("USER");
+    stringstream SS;
+    SS << "/tmp/ParallelProcessing_" << USER << MPI_Rank << ".root";
+    TString FName = SS.str();
+    
+    TFile *VectorWrite = new TFile(FName, "recreate");
+    TVectorD PH(SpectrumPHVec[Channel].size(), &SpectrumPHVec[Channel][0]);
+    TVectorD PA(SpectrumPAVec[Channel].size(), &SpectrumPAVec[Channel][0]);
+    PH.Write("PH");
+    PA.Write("PA");
+    VectorWrite->Close();
 
     // Aggregate the total calculated RFQ current (if enabled) from all
     // nodes to the master node
@@ -1278,19 +1295,46 @@ void AAComputation::ProcessSpectrumWaveforms()
       // bins. However, we'd like to preserve the number of counts in
       // the histogram for statistics purposes;
       MasterHistogram_H->SetEntries(ReturnDouble);
-    
+
+      // Aggregate each nodes' TVectorT's objects, which stored
+      // calculated pulse height/areas for each waveform they
+      // processed, aggregate to master TVectorT's, and then write the
+      // master TVectorT's to the parallel results file
+
+      vector<Double_t> SpectrumPHVec_Master, SpectrumPAVec_Master;
+      
+      for(int file=0; file<MPI_Size; file++){
+	SS.str("");
+	SS << "/tmp/ParallelProcessing_" << USER << file << ".root";
+	TString FName = SS.str();
+	TFile *VectorRead = new TFile(FName, "read");
+	
+	TVectorD *PH = (TVectorD *)VectorRead->Get("PH");
+	for(int i=0; i<PH->GetNoElements(); i++)
+	  SpectrumPHVec_Master.push_back( (*PH)[i] );
+	
+	TVectorD *PA = (TVectorD *)VectorRead->Get("PA");
+	for(int i=0; i<PA->GetNoElements(); i++)
+	  SpectrumPAVec_Master.push_back( (*PA)[i]);
+      }
+      
+      TVectorD MasterPHVec(SpectrumPHVec_Master.size(), &SpectrumPHVec_Master[0]);
+      TVectorD MasterPAVec(SpectrumPAVec_Master.size(), &SpectrumPAVec_Master[0]);
+
       // Open the ROOT file that stores all the parallel processing data
       // in "update" mode such that we can append the master histogram
-      ParallelFile = new TFile(AAParallel::GetInstance()->GetParallelFileName().c_str(), "update");
-    
+      ParallelFile = new TFile(ParallelMgr->GetParallelFileName().c_str(), "update");
+      
       // Write the master histogram object to the ROOT file ...
       MasterHistogram_H->Write();
-    
+      MasterPHVec.Write("MasterPHVec");
+      MasterPAVec.Write("MasterPAVec");
+      
       // Create/write the aggregated current vector to a file
       TVectorD AggregatedDeuterons(1);
       AggregatedDeuterons[0] = DeuteronsInTotal;
       AggregatedDeuterons.Write("AggregatedDeuterons");
-    
+      
       // ... and write the ROOT file to disk
       ParallelFile->Write();
     }
@@ -2399,7 +2443,7 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
   // manager, etc) from the sequential binary to the parallel binaries
   // (or nodes), a transient ROOT TFile is created in /tmp that acts
   // as an exchange point between seq. and par. binaries. This TFile
-  // is also used to "tranfser" results created in parallel back to
+  // is also used to "transfer" results created in parallel back to
   // the sequential binary for further viewing, analysis, etc.
   
   if(ParallelVerbose)
@@ -2451,15 +2495,32 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
     // Histogramming
 
     if(ProcessingType == "histogramming"){
-      // Obtain the "master" histogram, which is a TH1F object
-      // contains the result of MPI reducing all the TH1F objects
-      // calculated by the nodes in parallel. Set the master histogram
-      // to the Spectrum_H class data member and plot it.
+      
+      // Retrieve the master TH1F histogram, which is a sum of all
+      // TH1F histograms computed by all MPI nodes 
+
       Spectrum_H = (TH1F *)ParallelFile->Get("MasterHistogram");
       SpectrumExists = true;
 
+      // Retrieve the master TVectorT<double> objects that contain the
+      // pulse height and areas computed by all MPI nodes and use them
+      // to fill the class member vectors for later use
+
+      Int_t Channel = ADAQSettings->WaveformChannel;
+
+      TVectorD *MasterPHVec = (TVectorD *)ParallelFile->Get("MasterPHVec");
+      SpectrumPHVec[Channel].clear();
+      for(int i=0; i<MasterPHVec->GetNoElements(); i++)
+	SpectrumPHVec[Channel].push_back( (*MasterPHVec)[i]);
+
+      TVectorD *MasterPAVec = (TVectorD *)ParallelFile->Get("MasterPAVec");
+      SpectrumPAVec[Channel].clear();
+      for(int i=0; i<MasterPAVec->GetNoElements(); i++)
+	SpectrumPAVec[Channel].push_back( (*MasterPAVec)[i]);
+      
       // Obtain the total number of deuterons integrated during
       // histogram creation and update the ROOT widget
+
       TVectorD *AggregatedDeuterons = (TVectorD *)ParallelFile->Get("AggregatedDeuterons");
       DeuteronsInTotal = (*AggregatedDeuterons)[0];
     }
@@ -2502,10 +2563,6 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
   string RemoveFilesCommand;
   RemoveFilesCommand = "rm " + FileName + " -f";
   system(RemoveFilesCommand.c_str()); 
-  
-  // Return to the ROOT TFile containing the waveforms
-  // ZSH : Causing segfaults...necessary?
-  //ADAQFile->cd();
 }
 
 
