@@ -552,11 +552,19 @@ void AAGraphics::PlotSpectrum()
 
   if(!Spectrum_H)
     return;
-
-  double XMin = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
-  double XMax = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
   
+  //double XMin = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
+  //double XMax = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
+
+  Double_t XMinBin = ADAQSettings->SpectrumMinBin;
+  Double_t XMaxBin = ADAQSettings->SpectrumMaxBin;
+  Double_t Range = XMaxBin - XMinBin;
+
+  Double_t XMin = XMinBin + (Range * ADAQSettings->XAxisMin);
+  Double_t XMax = XMinBin + (Range * ADAQSettings->XAxisMax);
+
   Spectrum_H->GetXaxis()->SetRangeUser(XMin, XMax);
+
 
 
   double YMin, YMax;
