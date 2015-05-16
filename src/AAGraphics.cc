@@ -543,8 +543,6 @@ void AAGraphics::PlotSpectrum()
   //////////////////////////////////
   // Determine main spectrum to plot
 
-  //TH1F *Spectrum_H = 0;
-
   if(ADAQSettings->FindBackground and ADAQSettings->PlotLessBackground)
     Spectrum_H = ComputationMgr->GetSpectrumWithoutBackground();
   else
@@ -552,10 +550,9 @@ void AAGraphics::PlotSpectrum()
 
   if(!Spectrum_H)
     return;
-  
-  //double XMin = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
-  //double XMax = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
 
+  // Set the spectrum x-axis range
+  
   Double_t XMinBin = ADAQSettings->SpectrumMinBin;
   Double_t XMaxBin = ADAQSettings->SpectrumMaxBin;
   Double_t Range = XMaxBin - XMinBin;
@@ -566,6 +563,7 @@ void AAGraphics::PlotSpectrum()
   Spectrum_H->GetXaxis()->SetRangeUser(XMin, XMax);
 
 
+  // Set the spectrum y-axis range
 
   double YMin, YMax;
   if(ADAQSettings->CanvasYAxisLog and ADAQSettings->YAxisMax==1)
@@ -605,10 +603,22 @@ void AAGraphics::PlotSpectrum()
   }
   else{
     Title = "ADAQ Spectrum";
-    XTitle = "Pulse units [ADC]";
+    
+    if(ComputationMgr->GetUseSpectraCalibrations()[ADAQSettings->WaveformChannel]){
+      if(ADAQSettings->EnergyUnit == 0)
+	XTitle = "Energy deposited [keV]";
+      else
+	XTitle = "Energy deposited [MeV]";
+    }
+    else{
+      if(ADAQSettings->ADAQSpectrumTypePAS)
+	XTitle = "Pulse area [ADC]";
+      else if (ADAQSettings->ADAQSpectrumTypePHS)
+	XTitle = "Pulse height [ADC]";
+    }
     YTitle = "Counts";
   }
-
+  
   // Get the desired axes divisions
   int XDivs = ADAQSettings->XDivs;
   int YDivs = ADAQSettings->YDivs;
