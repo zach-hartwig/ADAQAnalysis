@@ -2745,8 +2745,9 @@ void AAInterface::UpdateForASIMFile()
 
   // There are no waveforms in ASIM files (as of yet!) so disabled the
   // ability to process the waveforms
-  ProcessSpectrum_TB->SetState(kButtonDown);
+  ProcessSpectrum_TB->SetState(kButtonDisabled);
   ProcessSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  CreateSpectrum_TB->SetState(kButtonUp);
   
   PSDEnable_CB->SetState(kButtonDisabled);
   SetPearsonWidgetState(false, kButtonDisabled);
