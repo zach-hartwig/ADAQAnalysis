@@ -32,7 +32,18 @@ Major new developments in this series include:
    later use, enabling near-instant switching between pulse height and
    pulse area spectra.
 
-      
+
+### Changes in master HEAD
+
+ - Correctly set spectrum TH1F X-axis limits when mininmum bin is
+   zero. This fix also suppresses visualization of the under/overflow
+   bins, which previously caused undesired display of spectrum.
+
+ - Correctly set spectrum TH1F X-axis title based on spectrum type
+   (pulse area/height) and calibration state (keV, MeV)
+
+
+
 ## Version-1.0 Series
 
 Major new developments in this series include:
