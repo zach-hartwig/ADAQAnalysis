@@ -42,6 +42,8 @@ Major new developments in this series include:
  - Correctly set spectrum TH1F X-axis title based on spectrum type
    (pulse area/height) and calibration state (keV, MeV)
 
+ - Fixed bug in state of spectrum process/create text buttons when
+   loading ASIM files
 
 
 ## Version-1.0 Series
