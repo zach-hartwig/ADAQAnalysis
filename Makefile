@@ -87,7 +87,6 @@ ifeq ($(ARCH),mpi)
 # then set the macros requires for the sequential build
 else	
    SEQ_TARGET = $(BINDIR)/ADAQAnalysis
-   CXX := clang++ -ferror-limit=5 -w
 endif
 
 # Include ADAQ header files; link against the ADAQReadout
