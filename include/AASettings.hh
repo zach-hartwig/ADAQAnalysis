@@ -46,8 +46,11 @@ public:
   
   Bool_t UsePileupRejection;
   
-  Bool_t PlotBaselineCalcRegion;
-  Int_t BaselineCalcMin, BaselineCalcMax;
+  Bool_t PlotBaselineRegion;
+  Int_t BaselineRegionMin, BaselineRegionMax;
+  
+  Bool_t PlotAnalysisRegion;
+  Int_t AnalysisRegionMin, AnalysisRegionMax;
   
   Bool_t PlotTrigger, WaveformAnalysis;
 
@@ -61,7 +64,7 @@ public:
   Double_t SpectrumMinBin, SpectrumMaxBin;
   
   Bool_t ADAQSpectrumTypePAS, ADAQSpectrumTypePHS;
-  Bool_t ADAQSpectrumAlgorithmWW, ADAQSpectrumAlgorithmPF, ADAQSpectrumAlgorithmWD;
+  Bool_t ADAQSpectrumAlgorithmSMS, ADAQSpectrumAlgorithmPF, ADAQSpectrumAlgorithmWD;
   
   Bool_t ASIMSpectrumTypeEnergy;
   Bool_t ASIMSpectrumTypePhotonsCreated;
@@ -121,7 +124,7 @@ public:
 
   Bool_t PSDEnable;
   Int_t PSDChannel, PSDWaveformsToDiscriminate;
-  Bool_t PSDAlgorithmPF, PSDAlgorithmWW, PSDAlgorithmWD;
+  Bool_t PSDAlgorithmPF, PSDAlgorithmSMS, PSDAlgorithmWD;
   Int_t PSDTotalStart, PSDTotalStop, PSDTailStart, PSDTailStop;
   Int_t PSDThreshold, PSDTailOffset, PSDPeakOffset;
   Int_t PSDNumTotalBins;

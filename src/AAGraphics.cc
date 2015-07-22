@@ -60,7 +60,8 @@ AAGraphics *AAGraphics::GetInstance()
 
 
 AAGraphics::AAGraphics()
-  : Trigger_L(new TLine), Floor_L(new TLine), ZSCeiling_L(new TLine), Baseline_B(new TBox), 
+  : Trigger_L(new TLine), Floor_L(new TLine), ZSCeiling_L(new TLine),
+    Analysis_B(new TBox), Baseline_B(new TBox), 
     LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine), IntegrationRegion_B(new TBox),
     PSDTotal_B(new TBox), PSDPeak_L(new TLine), PSDTail_L0(new TLine), PSDTail_L1(new TLine),
     PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
@@ -95,9 +96,12 @@ AAGraphics::AAGraphics()
   ZSCeiling_L->SetLineStyle(7);
   ZSCeiling_L->SetLineColor(kViolet+1);
   ZSCeiling_L->SetLineWidth(2);
-
+  
+  Analysis_B->SetFillStyle(3002);
+  Analysis_B->SetFillColor(kBlue);
+  
   Baseline_B->SetFillStyle(3002);
-  Baseline_B->SetFillColor(8);
+  Baseline_B->SetFillColor(kRed);
 
   LPeakDelimiter_L->SetLineStyle(7);
   LPeakDelimiter_L->SetLineColor(kGreen+3);
@@ -337,21 +341,26 @@ void AAGraphics::PlotWaveform(int Color)
     
     Trigger_L->DrawLine(XMin, Trigger, XMax, Trigger);
   }
+
+  if(ADAQSettings->PlotAnalysisRegion and !ADAQSettings->ZSWaveform){
+    Analysis_B->DrawBox(ADAQSettings->AnalysisRegionMin,
+			YMin + YMax*0.05,
+			ADAQSettings->AnalysisRegionMax,
+			YMax*0.95);
+  }
   
-  if(ADAQSettings->PlotBaselineCalcRegion and !ADAQSettings->ZSWaveform){
+  if(ADAQSettings->PlotBaselineRegion and !ADAQSettings->ZSWaveform){
     double Baseline = ComputationMgr->CalculateBaseline(Waveform_H);
     double BaselinePlotMinValue = Baseline - (0.04 * YAxisSize);
     double BaselinePlotMaxValue = Baseline + (0.04 * YAxisSize);
-
-    double Stuff = ComputationMgr->CalculateBaseline(Waveform_H);
 
     if(ADAQSettings->BSWaveform){
       BaselinePlotMinValue = -0.04 * YAxisSize;
       BaselinePlotMaxValue = 0.04 * YAxisSize;
     }
-    Baseline_B->DrawBox(ADAQSettings->BaselineCalcMin,
+    Baseline_B->DrawBox(ADAQSettings->BaselineRegionMin,
 			BaselinePlotMinValue,
-			ADAQSettings->BaselineCalcMax,
+			ADAQSettings->BaselineRegionMax,
 			BaselinePlotMaxValue);
   }
   

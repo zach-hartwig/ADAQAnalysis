@@ -558,20 +558,20 @@ TH1F *AAComputation::CalculateZSWaveform(int Channel, int Waveform, bool Current
 // of the baseline are in [samples]
 double AAComputation::CalculateBaseline(vector<int> *Waveform)
 {
-  int BaselineCalcLength = ADAQSettings->BaselineCalcMax - ADAQSettings->BaselineCalcMin;
+  int BaselineRegionLength = ADAQSettings->BaselineRegionMax - ADAQSettings->BaselineRegionMin;
   double Baseline = 0.;
-  for(int sample=ADAQSettings->BaselineCalcMin; sample<ADAQSettings->BaselineCalcMax; sample++)
-    Baseline += ((*Waveform)[sample]*1.0/BaselineCalcLength);
+  for(int sample=ADAQSettings->BaselineRegionMin; sample<ADAQSettings->BaselineRegionMax; sample++)
+    Baseline += ((*Waveform)[sample]*1.0/BaselineRegionLength);
 
   return Baseline;
 }
 
 double AAComputation::CalculateBaseline(TH1F *Waveform)
 {
-  int BaselineCalcLength = ADAQSettings->BaselineCalcMax - ADAQSettings->BaselineCalcMin;
+  int BaselineRegionLength = ADAQSettings->BaselineRegionMax - ADAQSettings->BaselineRegionMin;
   double Baseline = 0.;
-  for(int sample=ADAQSettings->BaselineCalcMin; sample<ADAQSettings->BaselineCalcMax; sample++)
-    Baseline += (Waveform->GetBinContent(sample)*1.0/BaselineCalcLength);
+  for(int sample=ADAQSettings->BaselineRegionMin; sample<ADAQSettings->BaselineRegionMax; sample++)
+    Baseline += (Waveform->GetBinContent(sample)*1.0/BaselineRegionLength);
 
   return Baseline;
 }
@@ -1036,12 +1036,11 @@ void AAComputation::ProcessSpectrumWaveforms()
 	IntegratePearsonWaveform(waveform);
    
 
-      ////////////////////////////
-      // Whole waveform processing
+      ///////////////////////////////////////////
+      // Simple max/sum (SMS) waveform processing
 
-      // If the entire waveform is to be used to calculate a pulse spectrum ...
-      if(ADAQSettings->ADAQSpectrumAlgorithmWW){
-
+      if(ADAQSettings->ADAQSpectrumAlgorithmSMS){
+	
 	// If specified, calculate the PSD integrals for the waveform
 	// and determine if they meet the acceptance criterion defined
 	// by the current channel's PSD region. If not, continue the
@@ -1059,14 +1058,20 @@ void AAComputation::ProcessSpectrumWaveforms()
 
 	////////////////////////////////////////////////
 	// Calculation of waveform pulse height and area
-
+	
+	Int_t AnalysisMin = ADAQSettings->AnalysisRegionMin;
+	Int_t AnalysisMax = ADAQSettings->AnalysisRegionMax;
 
 	// Pulse height
 
-	// Get the pulse height by find the maximum bin value stored
-	// in the Waveform_H TH1F via class methods. Note that spectra
-	// are always created with positive polarity waveforms
-	PulseHeight = Waveform_H[Channel]->GetBinContent(Waveform_H[Channel]->GetMaximumBin());
+	// Get the pulse height by finding the maximum bin value
+	// within the waveform analysis region from the Waveform_H
+	// TH1F via class methods. Note that spectra are always
+	// created with positive polarity waveforms
+	Waveform_H[Channel]->GetXaxis()->SetRange(AnalysisMin, AnalysisMax);
+	PulseHeight = Waveform_H[Channel]->
+	  GetBinContent(Waveform_H[Channel]->GetMaximumBin());
+	
 	
 	// Store the uncalibrated pulse height in the designated vector
 	SpectrumPHVec[Channel].push_back(PulseHeight);
@@ -1086,7 +1091,7 @@ void AAComputation::ProcessSpectrumWaveforms()
 	// ...iterate through the bins in the Waveform_H histogram
 	// and add each bin value to the pulse area integral. Note
 	// the integral is over the entire waveform.
-	for(Int_t sample=0; sample<Waveform_H[Channel]->GetEntries(); sample++){
+	for(Int_t sample=AnalysisMin; sample<=AnalysisMax; sample++){
 	  SampleHeight = Waveform_H[Channel]->GetBinContent(sample);
 	  PulseArea += SampleHeight;
 	}
@@ -1153,7 +1158,7 @@ void AAComputation::ProcessSpectrumWaveforms()
 	// on to the next waveform for analysis
 	if(!PeaksFound)
 	  continue;
-      
+
 	// Calculate the PSD integrals and determine if they pass
 	// the pulse-shape filterthrough the pulse-shape filter
 	if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel])
@@ -1395,7 +1400,7 @@ void AAComputation::CreateSpectrum()
   
   for(; It!=ItE; It++){
 
-    // If using WW or WD algorithms, histogram only the number of
+    // If using SMS or WD algorithms, histogram only the number of
     // waveforms specified by user; note that if using PF algorithm,
     // all pulse heights/areas will be histogrammed regardless of user
     // specifications to account for case of multiple values per
@@ -1435,6 +1440,12 @@ void AAComputation::IntegratePeaks()
     // stored in each PeakInfoStruct to determine whether or not this
     // peak should be filtered out of the spectrum.
     if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel] and (*it).PSDFilterFlag==true)
+      continue;
+
+    // If the peak falls outside the user-specific waveform analysis
+    // region then filter this peak out of the spectrum
+    if((*it).PeakPosX < ADAQSettings->AnalysisRegionMin or
+       (*it).PeakPosX > ADAQSettings->AnalysisRegionMax)
       continue;
     
     // ...and use the lower and upper peak limits to calculate the
@@ -1476,6 +1487,12 @@ void AAComputation::FindPeakHeights()
     // stored in each PeakInfoStruct to determine whether or not this
     // peak should be filtered out of the spectrum.
     if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel] and (*it).PSDFilterFlag==true)
+      continue;
+
+    // If the peak falls outside the user-specific waveform analysis
+    // region then filter this peak out of the spectrum
+    if((*it).PeakPosX < ADAQSettings->AnalysisRegionMin or
+       (*it).PeakPosX > ADAQSettings->AnalysisRegionMax)
       continue;
     
     // Initialize the peak height for each peak region
@@ -2037,7 +2054,7 @@ TH2F *AAComputation::CreatePSDHistogram()
       // decide which peak finding algorithm to use
       if(ADAQSettings->PSDAlgorithmPF)
 	PeaksFound = FindPeaks(Waveform_H[PSDChannel], zPeakFinder);
-      else if(ADAQSettings->PSDAlgorithmWW)
+      else if(ADAQSettings->PSDAlgorithmSMS)
 	PeaksFound = FindPeaks(Waveform_H[PSDChannel], zWholeWaveform);
 
       // Update the user with progress here because the peak finding
@@ -2192,8 +2209,14 @@ void AAComputation::CalculatePSDIntegrals(bool FillPSDHistogram)
   vector<PeakInfoStruct>::iterator it;
   for(it=PeakInfoVec.begin(); it!=PeakInfoVec.end(); it++){
     
+    // If the peak falls outside the user-specific waveform analysis
+    // region then filter this peak out of the spectrum
+    if((*it).PeakPosX < ADAQSettings->AnalysisRegionMin or
+       (*it).PeakPosX > ADAQSettings->AnalysisRegionMax)
+      continue;
+    
     Double_t Peak = (*it).PeakPosX;
-
+    
     Double_t TotalStart = Peak + ADAQSettings->PSDTotalStart;
     Double_t TotalStop = Peak + ADAQSettings->PSDTotalStop;
     

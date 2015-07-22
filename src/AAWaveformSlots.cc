@@ -70,7 +70,8 @@ void AAWaveformSlots::HandleCheckButtons()
   case PlotFloor_CB_ID:
   case PlotCrossings_CB_ID:
   case PlotPeakIntegratingRegion_CB_ID:
-  case PlotBaseline_CB_ID:
+  case PlotAnalysisRegion_CB_ID:
+  case PlotBaselineRegion_CB_ID:
   case PlotZeroSuppressionCeiling_CB_ID:
   case PlotTrigger_CB_ID:
   case UsePileupRejection_CB_ID:
@@ -159,8 +160,10 @@ void AAWaveformSlots::HandleNumberEntries()
   case Sigma_NEL_ID:
   case Resolution_NEL_ID:
   case Floor_NEL_ID:
-  case BaselineCalcMin_NEL_ID:
-  case BaselineCalcMax_NEL_ID:
+  case AnalysisRegionMin_NEL_ID:
+  case AnalysisRegionMax_NEL_ID:
+  case BaselineRegionMin_NEL_ID:
+  case BaselineRegionMax_NEL_ID:
   case ZeroSuppressionCeiling_NEL_ID:
   case ZeroSuppressionBuffer_NEL_ID:
     GraphicsMgr->PlotWaveform();

@@ -459,74 +459,122 @@ TGGroupFrame *PeakFindingOptions_GF = new TGGroupFrame(WaveformFrame_VF, "Peak f
 			    new TGLayoutHints(kLHintsLeft, 0,0,5,0));
   PlotPeakIntegratingRegion_CB->SetState(kButtonDisabled);
   PlotPeakIntegratingRegion_CB->Connect("Clicked()", "AAWaveformSlots", WaveformSlots, "HandleCheckButtons()");
+
+
+  //////////////////////////////
+  // Waveform analysis region //
+  //////////////////////////////
+
+  WaveformFrame_VF->AddFrame(new TGLabel(WaveformFrame_VF, "Waveform analysis region (samples)"),
+			     new TGLayoutHints(kLHintsLeft, 15,5,5,0));
   
+  TGHorizontalFrame *AnalysisRegion_HF = new TGHorizontalFrame(WaveformFrame_VF);
+  WaveformFrame_VF->AddFrame(AnalysisRegion_HF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+
+  AnalysisRegion_HF->AddFrame(AnalysisRegionMin_NEL = new ADAQNumberEntryWithLabel(AnalysisRegion_HF, "Min", AnalysisRegionMin_NEL_ID),
+			      new TGLayoutHints(kLHintsLeft, 0,5,0,0));
+  AnalysisRegionMin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  AnalysisRegionMin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
+  AnalysisRegionMin_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
+  AnalysisRegionMin_NEL->GetEntry()->SetLimitValues(0,1); // Set when ADAQRootFile loaded
+  AnalysisRegionMin_NEL->GetEntry()->SetNumber(0); // Set when ADAQRootFile loaded
+  AnalysisRegionMin_NEL->GetEntry()->Resize(55, 20);
+  AnalysisRegionMin_NEL->GetEntry()->Connect("ValueSet(long)", "AAWaveformSlots", WaveformSlots, "HandleNumberEntries()");
   
+  AnalysisRegion_HF->AddFrame(AnalysisRegionMax_NEL = new ADAQNumberEntryWithLabel(AnalysisRegion_HF, "Max", AnalysisRegionMax_NEL_ID),
+			      new TGLayoutHints(kLHintsLeft, 0,5,0,5)); 
+  AnalysisRegionMax_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  AnalysisRegionMax_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
+  AnalysisRegionMax_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
+  AnalysisRegionMax_NEL->GetEntry()->SetLimitValues(1,2); // Set When ADAQRootFile loaded
+  AnalysisRegionMax_NEL->GetEntry()->SetNumber(1); // Set when ADAQRootFile loaded
+  AnalysisRegionMax_NEL->GetEntry()->Resize(55, 20);
+  AnalysisRegionMax_NEL->GetEntry()->Connect("ValueSet(long)", "AAWaveformSlots", WaveformSlots, "HandleNumberEntries()");
+  
+  AnalysisRegion_HF->AddFrame(PlotAnalysisRegion_CB = new TGCheckButton(AnalysisRegion_HF, "Plot", PlotAnalysisRegion_CB_ID),
+			      new TGLayoutHints(kLHintsLeft, 5,5,5,0));
+  PlotAnalysisRegion_CB->Connect("Clicked()", "AAWaveformSlots", WaveformSlots, "HandleCheckButtons()");
+  
+
   ////////////////////////
   // Waveform baseline  //
   ////////////////////////
 
-  WaveformFrame_VF->AddFrame(PlotBaseline_CB = new TGCheckButton(WaveformFrame_VF, "Plot baseline calculation region.", PlotBaseline_CB_ID),
+  WaveformFrame_VF->AddFrame(new TGLabel(WaveformFrame_VF, "Waveform baseline region (samples)"),
 			     new TGLayoutHints(kLHintsLeft, 15,5,5,0));
-  PlotBaseline_CB->Connect("Clicked()", "AAWaveformSlots", WaveformSlots, "HandleCheckButtons()");
   
   TGHorizontalFrame *BaselineRegion_HF = new TGHorizontalFrame(WaveformFrame_VF);
   WaveformFrame_VF->AddFrame(BaselineRegion_HF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
   
-  BaselineRegion_HF->AddFrame(BaselineCalcMin_NEL = new ADAQNumberEntryWithLabel(BaselineRegion_HF, "Min.", BaselineCalcMin_NEL_ID),
+  BaselineRegion_HF->AddFrame(BaselineRegionMin_NEL = new ADAQNumberEntryWithLabel(BaselineRegion_HF, "Min", BaselineRegionMin_NEL_ID),
 			      new TGLayoutHints(kLHintsLeft, 0,5,0,0));
-  BaselineCalcMin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  BaselineCalcMin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
-  BaselineCalcMin_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
-  BaselineCalcMin_NEL->GetEntry()->SetLimitValues(0,1); // Set when ADAQRootFile loaded
-  BaselineCalcMin_NEL->GetEntry()->SetNumber(0); // Set when ADAQRootFile loaded
-  BaselineCalcMin_NEL->GetEntry()->Resize(55, 20);
-  BaselineCalcMin_NEL->GetEntry()->Connect("ValueSet(long)", "AAWaveformSlots", WaveformSlots, "HandleNumberEntries()");
+  BaselineRegionMin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  BaselineRegionMin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
+  BaselineRegionMin_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
+  BaselineRegionMin_NEL->GetEntry()->SetLimitValues(0,1); // Set when ADAQRootFile loaded
+  BaselineRegionMin_NEL->GetEntry()->SetNumber(0); // Set when ADAQRootFile loaded
+  BaselineRegionMin_NEL->GetEntry()->Resize(55, 20);
+  BaselineRegionMin_NEL->GetEntry()->Connect("ValueSet(long)", "AAWaveformSlots", WaveformSlots, "HandleNumberEntries()");
   
-  BaselineRegion_HF->AddFrame(BaselineCalcMax_NEL = new ADAQNumberEntryWithLabel(BaselineRegion_HF, "Max.", BaselineCalcMax_NEL_ID),
+  BaselineRegion_HF->AddFrame(BaselineRegionMax_NEL = new ADAQNumberEntryWithLabel(BaselineRegion_HF, "Max", BaselineRegionMax_NEL_ID),
 			      new TGLayoutHints(kLHintsLeft, 0,5,0,5)); 
-  BaselineCalcMax_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  BaselineCalcMax_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
-  BaselineCalcMax_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
-  BaselineCalcMax_NEL->GetEntry()->SetLimitValues(1,2); // Set When ADAQRootFile loaded
-  BaselineCalcMax_NEL->GetEntry()->SetNumber(1); // Set when ADAQRootFile loaded
-  BaselineCalcMax_NEL->GetEntry()->Resize(55, 20);
-  BaselineCalcMax_NEL->GetEntry()->Connect("ValueSet(long)", "AAWaveformSlots", WaveformSlots, "HandleNumberEntries()");
-
+  BaselineRegionMax_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  BaselineRegionMax_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
+  BaselineRegionMax_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
+  BaselineRegionMax_NEL->GetEntry()->SetLimitValues(1,2); // Set When ADAQRootFile loaded
+  BaselineRegionMax_NEL->GetEntry()->SetNumber(1); // Set when ADAQRootFile loaded
+  BaselineRegionMax_NEL->GetEntry()->Resize(55, 20);
+  BaselineRegionMax_NEL->GetEntry()->Connect("ValueSet(long)", "AAWaveformSlots", WaveformSlots, "HandleNumberEntries()");
+  
+  BaselineRegion_HF->AddFrame(PlotBaselineRegion_CB = new TGCheckButton(BaselineRegion_HF, "Plot", PlotBaselineRegion_CB_ID),
+			      new TGLayoutHints(kLHintsLeft, 5,5,5,0));
+  PlotBaselineRegion_CB->Connect("Clicked()", "AAWaveformSlots", WaveformSlots, "HandleCheckButtons()");
+    
 
   //////////////////////////////
   // Zero suppression options //
   //////////////////////////////
-
-  WaveformFrame_VF->AddFrame(PlotZeroSuppressionCeiling_CB = new TGCheckButton(WaveformFrame_VF, "Plot zero suppression ceiling", PlotZeroSuppressionCeiling_CB_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
-  PlotZeroSuppressionCeiling_CB->Connect("Clicked()", "AAWaveformSlots", WaveformSlots, "HandleCheckButtons()");
   
-  WaveformFrame_VF->AddFrame(ZeroSuppressionCeiling_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Zero suppression ceiling (ADC)", ZeroSuppressionCeiling_NEL_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,5,5,0));
+  WaveformFrame_VF->AddFrame(new TGLabel(WaveformFrame_VF, "Zero suppression settings (ADC, sample)"),
+			     new TGLayoutHints(kLHintsLeft, 15,5,5,0));
+
+  TGHorizontalFrame *ZLE_HF = new TGHorizontalFrame(WaveformFrame_VF);
+  WaveformFrame_VF->AddFrame(ZLE_HF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+  
+  ZLE_HF->AddFrame(ZeroSuppressionCeiling_NEL = new ADAQNumberEntryWithLabel(ZLE_HF, "Ceiling", ZeroSuppressionCeiling_NEL_ID),
+		   new TGLayoutHints(kLHintsLeft, 0,5,0,0));
   ZeroSuppressionCeiling_NEL->GetEntry()->SetNumber(15);
+  ZeroSuppressionCeiling_NEL->GetEntry()->Resize(55, 20);
   ZeroSuppressionCeiling_NEL->GetEntry()->Connect("ValueSet(long)", "AAWaveformSlots", WaveformSlots, "HandleNumberEntries()");
   
-  WaveformFrame_VF->AddFrame(ZeroSuppressionBuffer_NEL = new ADAQNumberEntryWithLabel(WaveformFrame_VF, "Zero suppression buffer (sample)", ZeroSuppressionBuffer_NEL_ID),
-			     new TGLayoutHints(kLHintsLeft, 15,5,0,5));
+  ZLE_HF->AddFrame(ZeroSuppressionBuffer_NEL = new ADAQNumberEntryWithLabel(ZLE_HF, "Buffer", ZeroSuppressionBuffer_NEL_ID),
+		   new TGLayoutHints(kLHintsLeft, 0,5,0,5));
   ZeroSuppressionBuffer_NEL->GetEntry()->SetNumber(15);
+  ZeroSuppressionBuffer_NEL->GetEntry()->Resize(55, 20);
   ZeroSuppressionBuffer_NEL->GetEntry()->Connect("ValueSet(long)", "AAWaveformSlots", WaveformSlots, "HandleNumberEntries()");
-  
+
+  ZLE_HF->AddFrame(PlotZeroSuppressionCeiling_CB = new TGCheckButton(ZLE_HF, "Plot", PlotZeroSuppressionCeiling_CB_ID),
+		   new TGLayoutHints(kLHintsLeft, 5,5,5,0));
+  PlotZeroSuppressionCeiling_CB->Connect("Clicked()", "AAWaveformSlots", WaveformSlots, "HandleCheckButtons()");
   
 
   /////////////////////
   // Trigger options //
   /////////////////////
-
-  WaveformFrame_VF->AddFrame(PlotTrigger_CB = new TGCheckButton(WaveformFrame_VF, "Plot trigger", PlotTrigger_CB_ID),
-		       new TGLayoutHints(kLHintsLeft, 15,5,10,0));
-  PlotTrigger_CB->Connect("Clicked()", "AAWaveformSlots", WaveformSlots, "HandleCheckButtons()");
   
-  WaveformFrame_VF->AddFrame(TriggerLevel_NEFL = new ADAQNumberEntryFieldWithLabel(WaveformFrame_VF, "Trigger level (ADC)", -1),
-			     new TGLayoutHints(kLHintsNormal, 15,5,5,5));
+  TGHorizontalFrame *Trigger_HF = new TGHorizontalFrame(WaveformFrame_VF);
+  WaveformFrame_VF->AddFrame(Trigger_HF, new TGLayoutHints(kLHintsLeft, 15,5,5,0));
+
+  Trigger_HF->AddFrame(TriggerLevel_NEFL = new ADAQNumberEntryFieldWithLabel(Trigger_HF, "Trigger (ADC)  ", -1),
+		       new TGLayoutHints(kLHintsNormal, 0,5,0,5));
   TriggerLevel_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESInteger, TGNumberFormat::kNEAAnyNumber);
   TriggerLevel_NEFL->GetEntry()->Resize(70, 20);
   TriggerLevel_NEFL->GetEntry()->SetState(false);
-
+  
+  Trigger_HF->AddFrame(PlotTrigger_CB = new TGCheckButton(Trigger_HF, "Plot", PlotTrigger_CB_ID),
+		       new TGLayoutHints(kLHintsLeft, 5,5,5,0));
+  PlotTrigger_CB->Connect("Clicked()", "AAWaveformSlots", WaveformSlots, "HandleCheckButtons()");
+  
 
   ////////////////////
   // Pileup options //
@@ -543,8 +591,7 @@ TGGroupFrame *PeakFindingOptions_GF = new TGGroupFrame(WaveformFrame_VF, "Peak f
   
   WaveformFrame_VF->AddFrame(AutoYAxisRange_CB = new TGCheckButton(WaveformFrame_VF, "Auto. Y Axis Range", AutoYAxisRange_CB_ID),
 			     new TGLayoutHints(kLHintsLeft, 15,5,5,5));
-  
-			       
+  			       
 
   ///////////////////////
   // Waveform analysis //
@@ -657,10 +704,10 @@ void AAInterface::FillSpectrumFrame()
   ADAQSpectrumAlgorithm_VF->AddFrame(new TGLabel(ADAQSpectrumAlgorithm_VF, "Algorithm"),
 				new TGLayoutHints(kLHintsNormal, 0,0,0,0));  
   
-  ADAQSpectrumAlgorithm_VF->AddFrame(ADAQSpectrumAlgorithmWW_RB = new TGRadioButton(ADAQSpectrumAlgorithm_VF, "Whole waveform", ADAQSpectrumAlgorithmWW_RB_ID),
+  ADAQSpectrumAlgorithm_VF->AddFrame(ADAQSpectrumAlgorithmSMS_RB = new TGRadioButton(ADAQSpectrumAlgorithm_VF, "Simple max/sum", ADAQSpectrumAlgorithmSMS_RB_ID),
 				     new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  ADAQSpectrumAlgorithmWW_RB->SetState(kButtonDown);
-  ADAQSpectrumAlgorithmWW_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
+  ADAQSpectrumAlgorithmSMS_RB->SetState(kButtonDown);
+  ADAQSpectrumAlgorithmSMS_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
   
   ADAQSpectrumAlgorithm_VF->AddFrame(ADAQSpectrumAlgorithmPF_RB = new TGRadioButton(ADAQSpectrumAlgorithm_VF, "Peak finder", ADAQSpectrumAlgorithmPF_RB_ID),
 				     new TGLayoutHints(kLHintsNormal, 0,0,0,0));
@@ -1658,16 +1705,16 @@ void AAInterface::FillProcessingFrame()
   TGHorizontalFrame *PSDProcessingType_HF = new TGHorizontalFrame(PSDAnalysis_GF);
   PSDAnalysis_GF->AddFrame(PSDProcessingType_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   
-  PSDProcessingType_HF->AddFrame(PSDAlgorithmPF_RB = new TGRadioButton(PSDProcessingType_HF,"Peak\nfinder",PSDAlgorithmPF_RB_ID),
+  PSDProcessingType_HF->AddFrame(PSDAlgorithmSMS_RB = new TGRadioButton(PSDProcessingType_HF,"Simple\nmax/sum",PSDAlgorithmSMS_RB_ID),
 				 new TGLayoutHints(kLHintsNormal,0,0,5,5));
+  PSDAlgorithmSMS_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDAlgorithmSMS_RB->SetState(kButtonDown);
+  PSDAlgorithmSMS_RB->SetState(kButtonDisabled);
+  
+  PSDProcessingType_HF->AddFrame(PSDAlgorithmPF_RB = new TGRadioButton(PSDProcessingType_HF,"Peak\nfinder",PSDAlgorithmPF_RB_ID),
+				 new TGLayoutHints(kLHintsNormal,20,0,5,5));
   PSDAlgorithmPF_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
   PSDAlgorithmPF_RB->SetState(kButtonDisabled);
-  
-  PSDProcessingType_HF->AddFrame(PSDAlgorithmWW_RB = new TGRadioButton(PSDProcessingType_HF,"Whole\nwaveform",PSDAlgorithmWW_RB_ID),
-				 new TGLayoutHints(kLHintsNormal,20,0,5,5));
-  PSDAlgorithmWW_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-  PSDAlgorithmWW_RB->SetState(kButtonDown);
-  PSDAlgorithmWW_RB->SetState(kButtonDisabled);
   
   PSDProcessingType_HF->AddFrame(PSDAlgorithmWD_RB = new TGRadioButton(PSDProcessingType_HF,"Waveform\ndata",PSDAlgorithmWD_RB_ID),
 				 new TGLayoutHints(kLHintsNormal,20,0,5,5));
@@ -2275,10 +2322,14 @@ void AAInterface::SaveSettings(bool SaveToFile)
 
   ADAQSettings->UsePileupRejection = UsePileupRejection_CB->IsDown();
 
-  ADAQSettings->PlotBaselineCalcRegion = PlotBaseline_CB->IsDown();
-  ADAQSettings->BaselineCalcMin = BaselineCalcMin_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->BaselineCalcMax = BaselineCalcMax_NEL->GetEntry()->GetIntNumber();
-
+  ADAQSettings->PlotAnalysisRegion = PlotAnalysisRegion_CB->IsDown();
+  ADAQSettings->AnalysisRegionMin = AnalysisRegionMin_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->AnalysisRegionMax = AnalysisRegionMax_NEL->GetEntry()->GetIntNumber();
+  
+  ADAQSettings->PlotBaselineRegion = PlotBaselineRegion_CB->IsDown();
+  ADAQSettings->BaselineRegionMin = BaselineRegionMin_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->BaselineRegionMax = BaselineRegionMax_NEL->GetEntry()->GetIntNumber();
+  
   ADAQSettings->PlotTrigger = PlotTrigger_CB->IsDown();
   
   ADAQSettings->WaveformAnalysis = WaveformAnalysis_CB->IsDown();
@@ -2294,7 +2345,7 @@ void AAInterface::SaveSettings(bool SaveToFile)
 
   ADAQSettings->ADAQSpectrumTypePAS = ADAQSpectrumTypePAS_RB->IsDown();
   ADAQSettings->ADAQSpectrumTypePHS = ADAQSpectrumTypePHS_RB->IsDown();
-  ADAQSettings->ADAQSpectrumAlgorithmWW = ADAQSpectrumAlgorithmWW_RB->IsDown();
+  ADAQSettings->ADAQSpectrumAlgorithmSMS = ADAQSpectrumAlgorithmSMS_RB->IsDown();
   ADAQSettings->ADAQSpectrumAlgorithmPF = ADAQSpectrumAlgorithmPF_RB->IsDown();
   ADAQSettings->ADAQSpectrumAlgorithmWD = ADAQSpectrumAlgorithmWD_RB->IsDown();
 
@@ -2396,7 +2447,7 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->PSDWaveformsToDiscriminate = PSDWaveforms_NEL->GetEntry()->GetIntNumber();
 
   ADAQSettings->PSDAlgorithmPF = PSDAlgorithmPF_RB->IsDown();
-  ADAQSettings->PSDAlgorithmWW = PSDAlgorithmWW_RB->IsDown();
+  ADAQSettings->PSDAlgorithmSMS = PSDAlgorithmSMS_RB->IsDown();
   ADAQSettings->PSDAlgorithmWD = PSDAlgorithmWD_RB->IsDown();
 
   ADAQSettings->PSDTotalStart = PSDTotalStart_NEL->GetEntry()->GetIntNumber();
@@ -2554,7 +2605,7 @@ void AAInterface::UpdateForADAQFile()
 
   // Get the following acquisition settings that are stored in the
   // ADAQ file in order to correctly update the GUI widgets
-  Int_t RecordLength, Trigger, BaselineCalcMin, BaselineCalcMax;
+  Int_t RecordLength, Trigger, BaselineRegionMin, BaselineRegionMax;
 
   // In order to ensure backwards compatibility with preexisting data
   // sets taken before Feb 2015, we must differentiate between the
@@ -2566,8 +2617,8 @@ void AAInterface::UpdateForADAQFile()
 
     RecordLength = AMP->RecordLength;
     Trigger = AMP->TriggerThreshold[Channel];
-    BaselineCalcMin = AMP->BaselineCalcMin[Channel];
-    BaselineCalcMax = AMP->BaselineCalcMax[Channel];
+    BaselineRegionMin = AMP->BaselineCalcMin[Channel];
+    BaselineRegionMax = AMP->BaselineCalcMax[Channel];
   }
 
   // "Production" ADAQ file (new hotness)
@@ -2576,8 +2627,8 @@ void AAInterface::UpdateForADAQFile()
     
     RecordLength = ARI->GetRecordLength();
     Trigger = ARI->GetTrigger().at(Channel);
-    BaselineCalcMin = ARI->GetBaselineCalcMin().at(Channel);
-    BaselineCalcMax = ARI->GetBaselineCalcMax().at(Channel);
+    BaselineRegionMin = ARI->GetBaselineCalcMin().at(Channel);
+    BaselineRegionMax = ARI->GetBaselineCalcMax().at(Channel);
   }
   
   WaveformSelector_HS->SetRange(1, WaveformsInFile);
@@ -2589,8 +2640,11 @@ void AAInterface::UpdateForADAQFile()
   Waveforms_NEL->SetNumber(WaveformsInFile);
   RecordLength_NEL->SetNumber(RecordLength);
   
-  BaselineCalcMin_NEL->GetEntry()->SetLimitValues(0,RecordLength-1);
-  BaselineCalcMax_NEL->GetEntry()->SetLimitValues(1,RecordLength);
+  AnalysisRegionMin_NEL->GetEntry()->SetLimitValues(0, RecordLength-2);
+  AnalysisRegionMax_NEL->GetEntry()->SetLimitValues(1, RecordLength-1);
+  
+  BaselineRegionMin_NEL->GetEntry()->SetLimitValues(0,RecordLength-2);
+  BaselineRegionMax_NEL->GetEntry()->SetLimitValues(1,RecordLength-1);
 
   // Set the baseline calculation region to the values used during the
   // data acquisition as the default; user may update afterwards
@@ -2598,8 +2652,11 @@ void AAInterface::UpdateForADAQFile()
   // Update the waveform trigger level display
   TriggerLevel_NEFL->GetEntry()->SetNumber(Trigger);
 
-  BaselineCalcMin_NEL->GetEntry()->SetNumber(BaselineCalcMin);
-  BaselineCalcMax_NEL->GetEntry()->SetNumber(BaselineCalcMax);
+  AnalysisRegionMin_NEL->GetEntry()->SetNumber(0);
+  AnalysisRegionMax_NEL->GetEntry()->SetNumber(RecordLength-1);
+
+  BaselineRegionMin_NEL->GetEntry()->SetNumber(BaselineRegionMin);
+  BaselineRegionMax_NEL->GetEntry()->SetNumber(BaselineRegionMax);
   
   PearsonLowerLimit_NEL->GetEntry()->SetLimitValues(0, RecordLength-1);
   PearsonLowerLimit_NEL->GetEntry()->SetNumber(0);
@@ -2634,12 +2691,12 @@ void AAInterface::UpdateForADAQFile()
   else
     ADAQSpectrumTypePHS_RB->SetEnabled(true);
   
-  if(ADAQSpectrumAlgorithmWW_RB->IsDown()){
-    ADAQSpectrumAlgorithmWW_RB->SetEnabled(true);
-    ADAQSpectrumAlgorithmWW_RB->SetState(kButtonDown);
+  if(ADAQSpectrumAlgorithmSMS_RB->IsDown()){
+    ADAQSpectrumAlgorithmSMS_RB->SetEnabled(true);
+    ADAQSpectrumAlgorithmSMS_RB->SetState(kButtonDown);
   }
   else
-    ADAQSpectrumAlgorithmWW_RB->SetEnabled(true);
+    ADAQSpectrumAlgorithmSMS_RB->SetEnabled(true);
   
   if(ADAQSpectrumAlgorithmPF_RB->IsDown()){
     ADAQSpectrumAlgorithmPF_RB->SetEnabled(true);
@@ -2692,7 +2749,7 @@ void AAInterface::UpdateForASIMFile()
   // Disable all ADAQ-specific analysis widgets
   ADAQSpectrumTypePAS_RB->SetState(kButtonDisabled);
   ADAQSpectrumTypePHS_RB->SetState(kButtonDisabled);
-  ADAQSpectrumAlgorithmWW_RB->SetState(kButtonDisabled);
+  ADAQSpectrumAlgorithmSMS_RB->SetState(kButtonDisabled);
   ADAQSpectrumAlgorithmPF_RB->SetState(kButtonDisabled);
   ADAQSpectrumAlgorithmWD_RB->SetState(kButtonDisabled);
 
@@ -2827,7 +2884,7 @@ void AAInterface::SetPSDWidgetState(bool WidgetState, EButtonState ButtonState)
   PSDChannel_CBL->GetComboBox()->SetEnabled(WidgetState);
   PSDWaveforms_NEL->GetEntry()->SetState(WidgetState);
   PSDAlgorithmPF_RB->SetState(ButtonState);
-  PSDAlgorithmWW_RB->SetState(ButtonState);
+  PSDAlgorithmSMS_RB->SetState(ButtonState);
   PSDAlgorithmWD_RB->SetState(ButtonState);
   PSDTotalStart_NEL->GetEntry()->SetState(WidgetState);
   PSDTotalStop_NEL->GetEntry()->SetState(WidgetState);

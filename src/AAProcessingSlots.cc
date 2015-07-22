@@ -246,22 +246,22 @@ void AAProcessingSlots::HandleRadioButtons()
     
   case PSDAlgorithmPF_RB_ID:
     if(TheInterface->PSDAlgorithmPF_RB->IsDown()){
-      TheInterface->PSDAlgorithmWW_RB->SetState(kButtonUp);
+      TheInterface->PSDAlgorithmSMS_RB->SetState(kButtonUp);
       TheInterface->PSDAlgorithmWD_RB->SetState(kButtonUp);
     }
     break;
     
-  case PSDAlgorithmWW_RB_ID:
-    if(TheInterface->PSDAlgorithmWW_RB->IsDown()){
+  case PSDAlgorithmSMS_RB_ID:
+    if(TheInterface->PSDAlgorithmSMS_RB->IsDown()){
       TheInterface->PSDAlgorithmPF_RB->SetState(kButtonUp);
       TheInterface->PSDAlgorithmWD_RB->SetState(kButtonUp);
     }
     break;
 
   case PSDAlgorithmWD_RB_ID:
-    if(TheInterface->PSDAlgorithmWW_RB->IsDown()){
+    if(TheInterface->PSDAlgorithmSMS_RB->IsDown()){
       TheInterface->PSDAlgorithmPF_RB->SetState(kButtonUp);
-      TheInterface->PSDAlgorithmWW_RB->SetState(kButtonUp);
+      TheInterface->PSDAlgorithmSMS_RB->SetState(kButtonUp);
     }
     break;
 
@@ -485,7 +485,7 @@ void AAProcessingSlots::HandleTextButtons()
     // Alert the user the filtering particles by PSD into the spectra
     // requires integration type peak finder to be used
     if(ComputationMgr->GetUsePSDRegions()[TheInterface->ADAQSettings->PSDChannel] and 
-       TheInterface->ADAQSettings->ADAQSpectrumAlgorithmWW)
+       TheInterface->ADAQSettings->ADAQSpectrumAlgorithmSMS)
       TheInterface->CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
 
     if(TheInterface->ASIMFileLoaded){

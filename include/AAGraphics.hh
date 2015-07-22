@@ -127,7 +127,7 @@ private:
   // Objects for waveform analysis
 
   TLine *Trigger_L, *Floor_L, *ZSCeiling_L;
-  TBox *Baseline_B;
+  TBox *Analysis_B, *Baseline_B;
   TLine *LPeakDelimiter_L, *RPeakDelimiter_L;
   TBox *IntegrationRegion_B;
   TBox *PSDTotal_B;

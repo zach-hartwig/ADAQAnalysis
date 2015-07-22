@@ -138,9 +138,13 @@ enum{
   PlotCrossings_CB_ID,
   PlotPeakIntegratingRegion_CB_ID,
 
-  PlotBaseline_CB_ID,
-  BaselineCalcMin_NEL_ID,
-  BaselineCalcMax_NEL_ID,
+  PlotAnalysisRegion_CB_ID,
+  AnalysisRegionMin_NEL_ID,
+  AnalysisRegionMax_NEL_ID,
+  
+  PlotBaselineRegion_CB_ID,
+  BaselineRegionMin_NEL_ID,
+  BaselineRegionMax_NEL_ID,
 
   PlotZeroSuppressionCeiling_CB_ID,
   ZeroSuppressionCeiling_NEL_ID,
@@ -162,7 +166,7 @@ enum{
   
   ADAQSpectrumTypePAS_RB_ID,
   ADAQSpectrumTypePHS_RB_ID,
-  ADAQSpectrumAlgorithmWW_RB_ID,
+  ADAQSpectrumAlgorithmSMS_RB_ID,
   ADAQSpectrumAlgorithmPF_RB_ID,
   ADAQSpectrumAlgorithmWD_RB_ID,
 
@@ -302,7 +306,7 @@ enum{
   PSDEnable_CB_ID,
   
   PSDAlgorithmPF_RB_ID,
-  PSDAlgorithmWW_RB_ID,
+  PSDAlgorithmSMS_RB_ID,
   PSDAlgorithmWD_RB_ID,
 
   PSDTotalStart_NEL_ID,

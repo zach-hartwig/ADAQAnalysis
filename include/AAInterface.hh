@@ -161,13 +161,17 @@ private:
   TGButtonGroup *WaveformPolarity_BG;
   TGRadioButton *PositiveWaveform_RB, *NegativeWaveform_RB;
 
+  TGCheckButton *PlotAnalysisRegion_CB;
+  ADAQNumberEntryWithLabel *AnalysisRegionMin_NEL;
+  ADAQNumberEntryWithLabel *AnalysisRegionMax_NEL;
+
   TGCheckButton *PlotTrigger_CB;
   ADAQNumberEntryFieldWithLabel *TriggerLevel_NEFL;
   
   // Widgets for controlling baseline calc. and plotting
-  TGCheckButton *PlotBaseline_CB;
-  ADAQNumberEntryWithLabel *BaselineCalcMin_NEL;
-  ADAQNumberEntryWithLabel *BaselineCalcMax_NEL;
+  TGCheckButton *PlotBaselineRegion_CB;
+  ADAQNumberEntryWithLabel *BaselineRegionMin_NEL;
+  ADAQNumberEntryWithLabel *BaselineRegionMax_NEL;
 
   // Widgets for controlling peak finding and plotting
   TGCheckButton *PlotZeroSuppressionCeiling_CB;
@@ -206,8 +210,8 @@ private:
   TGRadioButton *ADAQSpectrumTypePAS_RB, *ADAQSpectrumTypePHS_RB;
 
   //TGButtonGroup *ADAQSpectrumAlgorithm_BG;
+  TGRadioButton *ADAQSpectrumAlgorithmSMS_RB;
   TGRadioButton *ADAQSpectrumAlgorithmPF_RB;
-  TGRadioButton *ADAQSpectrumAlgorithmWW_RB;
   TGRadioButton *ADAQSpectrumAlgorithmWD_RB;
 
   //TGButtonGroup *ASIMSpectrumType_BG;
@@ -334,7 +338,7 @@ private:
 
   TGCheckButton *PSDEnable_CB;
   ADAQComboBoxWithLabel *PSDChannel_CBL;
-  TGRadioButton *PSDAlgorithmPF_RB, *PSDAlgorithmWW_RB, *PSDAlgorithmWD_RB;
+  TGRadioButton *PSDAlgorithmPF_RB, *PSDAlgorithmSMS_RB, *PSDAlgorithmWD_RB;
   
   ADAQNumberEntryWithLabel *PSDTotalStart_NEL, *PSDTotalStop_NEL;
   ADAQNumberEntryWithLabel *PSDTailStart_NEL, *PSDTailStop_NEL;

@@ -206,7 +206,7 @@ void AASpectrumSlots::HandleRadioButtons()
       TheInterface->ADAQSpectrumTypePAS_RB->SetState(kButtonUp);
     break;
 
-  case ADAQSpectrumAlgorithmWW_RB_ID:
+  case ADAQSpectrumAlgorithmSMS_RB_ID:
     if(RadioButton->IsDown()){
       TheInterface->ADAQSpectrumAlgorithmPF_RB->SetState(kButtonUp);
       TheInterface->ADAQSpectrumAlgorithmWD_RB->SetState(kButtonUp);
@@ -215,7 +215,7 @@ void AASpectrumSlots::HandleRadioButtons()
 
   case ADAQSpectrumAlgorithmPF_RB_ID:
     if(RadioButton->IsDown()){
-      TheInterface->ADAQSpectrumAlgorithmWW_RB->SetState(kButtonUp);
+      TheInterface->ADAQSpectrumAlgorithmSMS_RB->SetState(kButtonUp);
       TheInterface->ADAQSpectrumAlgorithmWD_RB->SetState(kButtonUp);
     }
     break;
@@ -223,7 +223,7 @@ void AASpectrumSlots::HandleRadioButtons()
   case ADAQSpectrumAlgorithmWD_RB_ID:
     if(RadioButton->IsDown()){
       TheInterface->ADAQSpectrumAlgorithmPF_RB->SetState(kButtonUp);
-      TheInterface->ADAQSpectrumAlgorithmWW_RB->SetState(kButtonUp);
+      TheInterface->ADAQSpectrumAlgorithmSMS_RB->SetState(kButtonUp);
     }
     break;
 
