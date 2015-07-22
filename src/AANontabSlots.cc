@@ -94,9 +94,6 @@ void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *S
     if(ComputationMgr->GetSpectrumExists() and
        GraphicsMgr->GetCanvasContentType() == zSpectrum){
 
-      // Get the current spectrum
-      TH1F *Spectrum_H = ComputationMgr->GetSpectrum();
-
       double X = gPad->AbsPixeltoX(XPixel);
       double Y = gPad->AbsPixeltoY(YPixel);
 
@@ -656,12 +653,6 @@ void AANontabSlots::HandleTripleSliderPointer()
     // (the "area" or "height" in ADC units) based on the current
     // X-axis maximum and the triple slider's pointer position
     double XPos = TheInterface->XAxisLimits_THS->GetPointerPosition() * Spectrum_H->GetXaxis()->GetXmax();
-
-    // Calculate min. and max. on the Y-axis for plotting
-    float Min, Max;
-    TheInterface->YAxisLimits_DVS->GetPosition(Min, Max);
-    double YMin = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-Max);
-    double YMax = Spectrum_H->GetBinContent(Spectrum_H->GetMaximumBin()) * (1-Min);
 
     // To enable easy spectra calibration, the user has the options of
     // dragging the pointer of the X-axis horizontal slider just below

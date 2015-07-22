@@ -870,8 +870,9 @@ void AAComputation::ProcessSpectrumWaveforms()
   Int_t Channel = ADAQSettings->WaveformChannel;
   
   // Variables for calculating pulse height and area
-  Double_t SampleHeight, PulseHeight, PulseArea;
-  SampleHeight = PulseHeight = PulseArea = 0.;
+  Double_t SampleHeight = 0.;
+  Double_t PulseHeight = 0.;
+  Double_t PulseArea = 0.;
   
   // Clear the spectrum pulse value vectors to zero elements. I have
   // chosen *not* to preallocate memory intentionally since (a)
@@ -1834,8 +1835,8 @@ void AAComputation::FitSpectrum()
 // (TH1F, TH1D ...) can be saved with this function
 bool AAComputation::SaveHistogramData(string Type, string FileName, string FileExtension)
 {
-  TH1F *HistogramToSave_H1;
-  TH2F *HistogramToSave_H2;
+  TH1F *HistogramToSave_H1 = NULL;
+  TH2F *HistogramToSave_H2 = NULL;
   
   if(Type == "Waveform")
     HistogramToSave_H1 = Waveform_H[ADAQSettings->WaveformChannel];
@@ -1897,7 +1898,7 @@ bool AAComputation::SaveHistogramData(string Type, string FileName, string FileE
 }
 
 
-TH2F *AAComputation::CreatePSDHistogram()
+TH2F *AAComputation::ProcessPSDHistogramWaveforms()
 {
   if(PSDHistogramExists){
     delete PSDHistogram_H;
@@ -1918,13 +1919,28 @@ TH2F *AAComputation::CreatePSDHistogram()
 			    ADAQSettings->PSDNumTailBins,
 			    ADAQSettings->PSDMinTailBin,
 			    ADAQSettings->PSDMaxTailBin);
-
+  
+  // Get the selected PSD channel
   int PSDChannel = ADAQSettings->PSDChannel;
 
+  Double_t TotalIntegral = 0.;
+  Double_t TailIntegral = 0.;
+
+
+  // Clear the PSD integrals vectors to zero elements. I have chosen
+  // *not* to preallocate memory intentionally since (a)
+  // vector::push_back() is easily sufficiently fast compared to
+  // preallocation for our purposes and (b) the PF algorithm, which
+  // can find multiple values per pulse and therefore does not have a
+  // fixed vector length, makes preallocation difficult.
+  PSDHistogramTotalVec[PSDChannel].clear();
+  PSDHistogramTailVec[PSDChannel].clear();
+  
 
   ////////////////////////////////////////////////////////
   // Create the PSD histogram from stored waveform data //
   ////////////////////////////////////////////////////////
+  
   if(ADAQSettings->PSDAlgorithmWD){
 
     ////////////////////////////////////////////
@@ -1959,14 +1975,19 @@ TH2F *AAComputation::CreatePSDHistogram()
     for(int entry=0; entry<ADAQWaveformTree->GetEntries(); entry++){
       ADAQWaveformTree->GetEntry(entry);
       
-      Double_t TotalIntegral = WD->GetPSDTotalIntegral();
-      Double_t TailIntegral = WD->GetPSDTailIntegral();
+      // Get the stored total and tail PSD integrals
+      TotalIntegral = WD->GetPSDTotalIntegral();
+      TailIntegral = WD->GetPSDTailIntegral();
+
+      // ...and also storem them in vectors for later use
+      PSDHistogramTotalVec[PSDChannel].push_back(TotalIntegral);
+      PSDHistogramTailVec[PSDChannel].push_back(TailIntegral);
 
       // If the user wants to plot (Tail integral / Total integral) on
       // the y-axis of the PSD histogram then modify the TailIntegral:
       if(ADAQSettings->PSDYAxisTailTotal)
 	TailIntegral /= TotalIntegral;
-
+      
       // Determine if waveform exceeds the PSD threshold
       if(TotalIntegral > ADAQSettings->PSDThreshold){
 	
@@ -1985,9 +2006,12 @@ TH2F *AAComputation::CreatePSDHistogram()
 	  PSDHistogram_H->Fill(TotalIntegral, TailIntegral);
       }
     }
+
+    delete WD;
+    
     PSDHistogramExists = true;
   }
-
+  
   ////////////////////////////////////////////////////////
   // Create the PSD histogram from processing waveforms //
   ////////////////////////////////////////////////////////
@@ -1997,13 +2021,13 @@ TH2F *AAComputation::CreatePSDHistogram()
     // Reboot the PeakFinder with up-to-date max peaks
     if(PeakFinder) delete PeakFinder;
     PeakFinder = new TSpectrum(ADAQSettings->MaxPeaks);
-  
+    
     // See documention in either ::ProcessSpectrumWaveforms() or
     // ::CreateDesplicedFile for parallel processing assignemnts
-  
+    
     WaveformStart = 0;
     WaveformEnd = ADAQSettings->PSDWaveformsToDiscriminate;
-  
+    
 #ifdef MPI_ENABLED
   
     int SlaveEvents = int(ADAQSettings->PSDWaveformsToDiscriminate/MPI_Size);
@@ -2194,6 +2218,60 @@ TH2F *AAComputation::CreatePSDHistogram()
 }
 
 
+TH2F *AAComputation::CreatePSDHistogram()
+{
+  if(PSDHistogram_H){
+    delete PSDHistogram_H;
+    PSDHistogramExists = false;
+  }
+  
+  PSDHistogram_H = new TH2F("PSDHistogram_H","PSDHistogram_H", 
+			    ADAQSettings->PSDNumTotalBins, 
+			    ADAQSettings->PSDMinTotalBin,
+			    ADAQSettings->PSDMaxTotalBin,
+			    ADAQSettings->PSDNumTailBins,
+			    ADAQSettings->PSDMinTailBin,
+			    ADAQSettings->PSDMaxTailBin);
+
+  Int_t PSDChannel = ADAQSettings->PSDChannel;
+
+  for(Int_t p=0; p<PSDHistogramTotalVec[PSDChannel].size(); p++){
+    
+    // If using SMS or WD algorithms, discriminate only the number of
+    // waveforms specified by user; note that if using PF algorithm,
+    // all pulse heights/areas will be discriminated regardless of user
+    // specifications to account for case of multiple values per
+    // waveforms, in which case values>waveforms-specified. This
+    // ensures that ALL values found during waveform processing in PF
+    // are used in the spectrum histogram.
+
+    if(!ADAQSettings->PSDAlgorithmPF)
+      if(p >= ADAQSettings->PSDWaveformsToDiscriminate)
+	break;
+
+    Double_t PSDTotal = PSDHistogramTotalVec[PSDChannel][p];
+    Double_t PSDParameter = PSDHistogramTailVec[PSDChannel][p];
+    
+    if(PSDTotal <= ADAQSettings->PSDThreshold)
+      break;
+    
+    if(ADAQSettings->PSDYAxisTailTotal)
+      PSDParameter /= PSDTotal;
+    
+    if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
+      if(ApplyPSDRegion(PSDParameter, PSDTotal))
+	PSDHistogram_H->Fill(PSDTotal, PSDParameter);
+    }
+    else
+      PSDHistogram_H->Fill(PSDTotal, PSDParameter);
+  }
+  
+  PSDHistogramExists = true;
+  
+  return PSDHistogram_H;
+}
+
+
 // Method to calculate the "tail" and "total" integrals of each of the
 // peaks located by the peak finding algorithm and stored in the class
 // member vector of PeakInfoStruct. Because calculating these
@@ -2232,6 +2310,10 @@ void AAComputation::CalculatePSDIntegrals(bool FillPSDHistogram)
     // Compute the tail integral
     Double_t TailIntegral = Waveform_H[PSDChannel]->Integral(TailStart,
 							     TailStop);
+
+    // Store the values in the member data vectors
+    PSDHistogramTotalVec[PSDChannel].push_back(TotalIntegral);
+    PSDHistogramTailVec[PSDChannel].push_back(TailIntegral);
     
     // If the user wants to plot (Tail integral / Total integral) on
     // the y-axis of the PSD histogram then modify the TailIntegral:
@@ -3277,16 +3359,16 @@ void AAComputation::CalculateCountRate()
   // waveforms specified by the 'NumWaveforms' variable
 
   // Compute the time (in seconds) that the RFQ beam was 'on'
-  double TotalTime = ADAQSettings->RFQPulseWidth * us2s * NumWaveforms;
+  // double TotalTime = ADAQSettings->RFQPulseWidth * us2s * NumWaveforms;
 
   // Compute the instantaneous count rate, i.e. the detector count
   // rate only when the RFQ beam is on
-  double InstCountRate = TotalPeaks * 1.0 / TotalTime;
-  //InstCountRate_NEFL->GetEntry()->SetNumber(InstCountRate);
+  // double InstCountRate = TotalPeaks * 1.0 / TotalTime;
+  // InstCountRate_NEFL->GetEntry()->SetNumber(InstCountRate);
   
   // Compute the average count rate, i.e. the detector count rate in
   // real time, which requires a knowledge of the RFQ rep rate.
-  double AvgCountRate = InstCountRate * (ADAQSettings->RFQPulseWidth * us2s * ADAQSettings->RFQRepRate);
+  // double AvgCountRate = InstCountRate * (ADAQSettings->RFQPulseWidth * us2s * ADAQSettings->RFQRepRate);
   //  AvgCountRate_NEFL->GetEntry()->SetNumber(AvgCountRate);
 }
 
@@ -3465,8 +3547,6 @@ void AAComputation::CreateASIMSpectrum()
   
   // Set the branch address of the ASIM event
   ASIMEventTree->SetBranchAddress("ASIMEventBranch", &ASIMEvt);
-  
-  int ASIMEvents = ASIMEventTree->GetEntries();
   
   // When the user selected an ASIM EventTree via the combo box, the
   // ADAQSettings::WaveformsToHistogram NEL is updated to reflect the

@@ -328,8 +328,9 @@ enum{
   PSDOutsideRegion_RB_ID,
   PSDCreateRegion_TB_ID,
   PSDClearRegion_TB_ID,
-
-  PSDCalculate_TB_ID,
+  
+  ProcessPSDHistogram_TB_ID,
+  CreatePSDHistogram_TB_ID,
 
   IntegratePearson_CB_ID,
   PlotPearsonIntegration_CB_ID,

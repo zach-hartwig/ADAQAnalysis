@@ -134,7 +134,9 @@ public:
   void FindEdge();
 
   // Pulse shape discrimination processing
+  TH2F *ProcessPSDHistogramWaveforms();
   TH2F *CreatePSDHistogram();
+
   void CalculatePSDIntegrals(bool);
   bool ApplyPSDRegion(double, double);
 
@@ -323,7 +325,9 @@ private:
   // Variables for PSD histograms and filter
   TH2F *PSDHistogram_H, *MasterPSDHistogram_H;
   TH1D *PSDHistogramSlice_H;
-
+  
+  vector<Double_t> PSDHistogramTotalVec[8], PSDHistogramTailVec[8];
+  
   Double_t PSDRegionPolarity;
   vector<TCutG *> PSDRegions;
   vector<Bool_t> UsePSDRegions;

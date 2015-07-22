@@ -1856,18 +1856,30 @@ void AAInterface::FillProcessingFrame()
   PSDPlotType_CBL->GetComboBox()->AddEntry("CONT1Z",4);
   PSDPlotType_CBL->GetComboBox()->Select(0);
   PSDPlotType_CBL->GetComboBox()->Resize(70,20);
-  PSDPlotType_CBL->GetComboBox()->Connect("Selected(int,int)", "AAProcessingSlots", ProcessingSlots, "HandleComboBox(int,int)");
+  PSDPlotType_CBL->GetComboBox()->Connect("Selected(int,int)", "AAProcessingSlots", ProcessingSlots, "HandleComboBoxes(int,int)");
   PSDPlotType_CBL->GetComboBox()->SetEnabled(false);
-
-
-  PSDAnalysis_GF->AddFrame(PSDCalculate_TB = new TGTextButton(PSDAnalysis_GF, "Create PSD histogram", PSDCalculate_TB_ID),
-                           new TGLayoutHints(kLHintsLeft, 25,5,5,5));
-  PSDCalculate_TB->Resize(200,30);
-  PSDCalculate_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
-  PSDCalculate_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
-  PSDCalculate_TB->ChangeOptions(PSDCalculate_TB->GetOptions() | kFixedSize);
-  PSDCalculate_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
-  PSDCalculate_TB->SetState(kButtonDisabled);
+  
+  
+  TGHorizontalFrame *ProcessCreatePSDHistogram_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(ProcessCreatePSDHistogram_HF, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  
+  ProcessCreatePSDHistogram_HF->AddFrame(ProcessPSDHistogram_TB = new TGTextButton(ProcessCreatePSDHistogram_HF, "Process waveforms", ProcessPSDHistogram_TB_ID),
+					 new TGLayoutHints(kLHintsCenterX | kLHintsTop, 0,5,5,0));
+  ProcessPSDHistogram_TB->Resize(120, 30);
+  ProcessPSDHistogram_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  ProcessPSDHistogram_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
+  ProcessPSDHistogram_TB->ChangeOptions(ProcessPSDHistogram_TB->GetOptions() | kFixedSize);
+  ProcessPSDHistogram_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
+  ProcessPSDHistogram_TB->SetState(kButtonDisabled);
+  
+  ProcessCreatePSDHistogram_HF->AddFrame(CreatePSDHistogram_TB = new TGTextButton(ProcessCreatePSDHistogram_HF, "Create PSD hist", CreatePSDHistogram_TB_ID),
+					 new TGLayoutHints(kLHintsCenterX | kLHintsTop, 5,0,5,0));
+  CreatePSDHistogram_TB->Resize(120, 30);
+  CreatePSDHistogram_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  CreatePSDHistogram_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
+  CreatePSDHistogram_TB->ChangeOptions(CreatePSDHistogram_TB->GetOptions() | kFixedSize);
+  CreatePSDHistogram_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
+  CreatePSDHistogram_TB->SetState(kButtonDisabled);
 
 
   PSDAnalysis_GF->AddFrame(PSDEnableHistogramSlicing_CB = new TGCheckButton(PSDAnalysis_GF, "Enable histogram slicing", PSDEnableHistogramSlicing_CB_ID),
@@ -2866,6 +2878,14 @@ void AAInterface::UpdateForSpectrumCreation()
 }
 
 
+void AAInterface::UpdateForPSDHistogramCreation()
+{
+  CreatePSDHistogram_TB->SetState(kButtonUp);
+  
+  ProcessPSDHistogram_TB->SetBackgroundColor(ColorMgr->Number2Pixel(32));
+}
+
+
 void AAInterface::SetPeakFindingWidgetState(bool WidgetState, EButtonState ButtonState)
 {
   UseMarkovSmoothing_CB->SetState(ButtonState);
@@ -2903,7 +2923,7 @@ void AAInterface::SetPSDWidgetState(bool WidgetState, EButtonState ButtonState)
   PSDEnableRegionCreation_CB->SetState(ButtonState);
   PSDCreateRegion_TB->SetState(ButtonState);
   PSDClearRegion_TB->SetState(ButtonState);
-  PSDCalculate_TB->SetState(ButtonState);
+  ProcessPSDHistogram_TB->SetState(ButtonState);
 }
 
 

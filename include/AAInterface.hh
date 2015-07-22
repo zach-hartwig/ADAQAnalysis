@@ -111,6 +111,7 @@ public:
   void UpdateForADAQFile();
   void UpdateForASIMFile();
   void UpdateForSpectrumCreation();
+  void UpdateForPSDHistogramCreation();
 
   // Method to alert the user via a ROOT message box
   void CreateMessageBox(string, string);
@@ -359,6 +360,8 @@ private:
   
   TGCheckButton *PSDEnableHistogramSlicing_CB;
   TGRadioButton *PSDHistogramSliceX_RB, *PSDHistogramSliceY_RB;
+
+  TGTextButton *ProcessPSDHistogram_TB, *CreatePSDHistogram_TB;
   
   TGTextButton *PSDCalculate_TB;
   

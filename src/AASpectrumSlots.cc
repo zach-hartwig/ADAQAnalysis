@@ -163,9 +163,7 @@ void AASpectrumSlots::HandleNumberEntries()
     
   case SpectrumCalibrationEnergy_NEL_ID:
   case SpectrumCalibrationPulseUnit_NEL_ID:{
-    // Get the current spectrum
-    TH1F *Spectrum_H = ComputationMgr->GetSpectrum();
-    
+
     // Get the value set in the PulseUnit number entry
     double Value = 0.;
     if(SpectrumCalibrationEnergy_NEL_ID == NumberEntryID)
@@ -313,7 +311,7 @@ void AASpectrumSlots::HandleTextButtons()
 	TheInterface->CreateMessageBox("Error! ASIM files can only be processed sequentially!\n","Stop");
       }
     }
-
+    
     TheInterface->UpdateForSpectrumCreation();
     
     break;

@@ -180,12 +180,10 @@ void AAProcessingSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
   TheInterface->SaveSettings();
   
   switch(ComboBoxID){
-
-    // Plotting 2D/3D representations of the PSD histogram can be very
-    // time consuming; thus, no automatic plotting enabled at present
+    
   case PSDPlotType_CBL_ID:
     if(ComputationMgr->GetPSDHistogramExists())
-      {}
+      GraphicsMgr->PlotPSDHistogram();
     break;
   }
 }
@@ -261,7 +259,7 @@ void AAProcessingSlots::HandleRadioButtons()
   case PSDAlgorithmWD_RB_ID:
     if(TheInterface->PSDAlgorithmSMS_RB->IsDown()){
       TheInterface->PSDAlgorithmPF_RB->SetState(kButtonUp);
-      TheInterface->PSDAlgorithmSMS_RB->SetState(kButtonUp);
+      TheInterface->PSDAlgorithmWD_RB->SetState(kButtonUp);
     }
     break;
 
@@ -341,12 +339,23 @@ void AAProcessingSlots::HandleTextButtons()
   
   switch(TextButtonID){
 
-  case PSDCalculate_TB_ID:
+  case ProcessPSDHistogram_TB_ID:
     
     if(TheInterface->ADAQFileLoaded){
+      
       // Sequential processing
       if(TheInterface->ProcessingSeq_RB->IsDown())
 	ComputationMgr->CreatePSDHistogram();
+
+
+      if(TheInterface->ProcessingSeq_RB->IsDown()){
+	
+	if(TheInterface->ADAQFileLoaded)
+	  ComputationMgr->ProcessPSDHistogramWaveforms();
+	
+	if(ComputationMgr->GetPSDHistogramExists())
+	  GraphicsMgr->PlotPSDHistogram();
+      }
       
       // Parallel processing
       else{
@@ -361,8 +370,24 @@ void AAProcessingSlots::HandleTextButtons()
     }
     else if(TheInterface->ASIMFileLoaded)
       TheInterface->CreateMessageBox("ASIM files cannot be processed for pulse shape at this time!","Stop");
+
+    TheInterface->UpdateForPSDHistogramCreation();
     
     break;
+
+
+  case CreatePSDHistogram_TB_ID:
+    
+    if(TheInterface->ADAQFileLoaded)
+      ComputationMgr->CreatePSDHistogram();
+    else
+      TheInterface->CreateMessageBox("ASIM files cannot be processed for PSD at this time!","Stop");
+
+    if(ComputationMgr->GetPSDHistogramExists())
+      GraphicsMgr->PlotPSDHistogram();
+
+    break;
+    
 
   case PSDCreateRegion_TB_ID:
 

@@ -1300,8 +1300,8 @@ void AAGraphics::CreateColorWheel()
   // the TColorWheel object) in the list.
 
   TIter next(gClient->GetListOfWindows());
-  TObject *Object;
-  TRootCanvas *Window;
+  TObject *Object = NULL;
+  TRootCanvas *Window = NULL;
 
   while( (Object = next()) ){
     if(Object->InheritsFrom(TRootCanvas::Class()))
