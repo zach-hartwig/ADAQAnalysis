@@ -2766,8 +2766,14 @@ void AAInterface::UpdateForADAQFile()
   // process spectrum button color to blue
   CreateSpectrum_TB->SetState(kButtonDisabled);
   ProcessSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
-				    
-  PSDEnable_CB->SetState(kButtonUp);
+
+  // Reset the PSD widgets to prevent accessing previous PSD histogram
+  if(PSDEnable_CB->IsDown()){
+    PSDEnable_CB->SetState(kButtonUp);
+    SetPSDWidgetState(false, kButtonDisabled);
+    ProcessPSDHistogram_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+    CreatePSDHistogram_TB->SetState(kButtonDisabled);
+  }
 
   // Reenable all ADAQ-specific tab frames
 

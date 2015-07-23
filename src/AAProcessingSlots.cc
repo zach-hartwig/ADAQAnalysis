@@ -66,7 +66,7 @@ void AAProcessingSlots::HandleCheckButtons()
       ButtonState = kButtonUp;
       WidgetState = true;
     }
-
+    
     // Be sure to turn off PSD filtering if the user does not want to
     // discriminate by pulse shape
     else{
@@ -74,7 +74,7 @@ void AAProcessingSlots::HandleCheckButtons()
       if(GraphicsMgr->GetCanvasContentType() == zWaveform)
 	GraphicsMgr->PlotWaveform();
     }
-
+    
     TheInterface->SetPSDWidgetState(WidgetState, ButtonState);
 
     break;
