@@ -178,6 +178,7 @@ enum{
   SpectrumCalibration_CB_ID,
   SpectrumCalibrationStandard_RB_ID,
   SpectrumCalibrationEdgeFinder_RB_ID,
+  SpectrumCalibrationType_CBL_ID,
   SpectrumCalibrationPoint_CBL_ID,
   SpectrumCalibrationEnergy_NEL_ID,
   SpectrumCalibrationPulseUnit_NEL_ID,

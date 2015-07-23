@@ -801,6 +801,18 @@ void AAInterface::FillSpectrumFrame()
 				       new TGLayoutHints(kLHintsNormal, 30,5,5,5));
   SpectrumCalibrationEdgeFinder_RB->SetState(kButtonDisabled);
   SpectrumCalibrationEdgeFinder_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
+  
+  
+  SpectrumCalibration_GF->AddFrame(SpectrumCalibrationType_CBL = new ADAQComboBoxWithLabel(SpectrumCalibration_GF, "", SpectrumCalibrationType_CBL_ID),
+				   new TGLayoutHints(kLHintsNormal, 0,0,10,0));
+  SpectrumCalibrationType_CBL->GetComboBox()->Resize(171,20);
+  SpectrumCalibrationType_CBL->GetComboBox()->AddEntry("Linear interpolation",0);
+  SpectrumCalibrationType_CBL->GetComboBox()->AddEntry("Linear fit (a+b*x)",1);
+  SpectrumCalibrationType_CBL->GetComboBox()->AddEntry("Quad. fit (a+b*x+c*x*x)",2);
+  SpectrumCalibrationType_CBL->GetComboBox()->Select(0);
+  SpectrumCalibrationType_CBL->GetComboBox()->SetEnabled(false);
+  SpectrumCalibrationType_CBL->GetComboBox()->Connect("Selected(int,int)", "AASpectrumSlots", SpectrumSlots, "HandleComboBoxes(int,int)");
+
 
 
   TGHorizontalFrame *SpectrumCalibrationType_HF = new TGHorizontalFrame(SpectrumCalibration_GF);
@@ -808,31 +820,33 @@ void AAInterface::FillSpectrumFrame()
   
   SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationPoint_CBL = new ADAQComboBoxWithLabel(SpectrumCalibrationType_HF, "", SpectrumCalibrationPoint_CBL_ID),
 				       new TGLayoutHints(kLHintsNormal, 0,0,10,0));
-  SpectrumCalibrationPoint_CBL->
-GetComboBox()->Resize(150,20);
+  SpectrumCalibrationPoint_CBL->GetComboBox()->Resize(171,20);
   SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Calibration point 0",0);
   SpectrumCalibrationPoint_CBL->GetComboBox()->Select(0);
   SpectrumCalibrationPoint_CBL->GetComboBox()->SetEnabled(false);
   SpectrumCalibrationPoint_CBL->GetComboBox()->Connect("Selected(int,int)", "AASpectrumSlots", SpectrumSlots, "HandleComboBoxes(int,int)");
 
-  TGVerticalFrame *SpectrumCalibrationType_VF = new TGVerticalFrame(SpectrumCalibrationType_HF);
-  SpectrumCalibrationType_HF->AddFrame(SpectrumCalibrationType_VF);
   
-  SpectrumCalibration_GF->AddFrame(SpectrumCalibrationUnit_CBL = new ADAQComboBoxWithLabel(SpectrumCalibration_GF, "Energy unit", -1),
-				   new TGLayoutHints(kLHintsLeft, 0,0,0,0));
-  SpectrumCalibrationUnit_CBL->GetComboBox()->Resize(72, 20);
+  TGHorizontalFrame *SpectrumCalibration_HF6 = new TGHorizontalFrame(SpectrumCalibration_GF);
+  SpectrumCalibration_GF->AddFrame(SpectrumCalibration_HF6, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  
+  SpectrumCalibration_HF6->AddFrame(SpectrumCalibrationEnergy_NEL = new ADAQNumberEntryWithLabel(SpectrumCalibration_HF6, "Energy", SpectrumCalibrationEnergy_NEL_ID),
+				    new TGLayoutHints(kLHintsLeft,0,5,0,0));
+  SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
+  SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);
+  SpectrumCalibrationEnergy_NEL->GetEntry()->SetState(false);
+  SpectrumCalibrationEnergy_NEL->GetEntry()->Resize(60,20);
+  SpectrumCalibrationEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AASpectrumSlots", SpectrumSlots, "HandleNumberEntries()");
+  
+  SpectrumCalibration_HF6->AddFrame(SpectrumCalibrationUnit_CBL = new ADAQComboBoxWithLabel(SpectrumCalibration_HF6, "", -1),
+				    new TGLayoutHints(kLHintsLeft, 0,0,0,0));
+  SpectrumCalibrationUnit_CBL->GetComboBox()->Resize(60, 20);
   SpectrumCalibrationUnit_CBL->GetComboBox()->AddEntry("keV", 0);
   SpectrumCalibrationUnit_CBL->GetComboBox()->AddEntry("MeV", 1);
   SpectrumCalibrationUnit_CBL->GetComboBox()->Select(1);
   SpectrumCalibrationUnit_CBL->GetComboBox()->SetEnabled(false);
 
-  SpectrumCalibration_GF->AddFrame(SpectrumCalibrationEnergy_NEL = new ADAQNumberEntryWithLabel(SpectrumCalibration_GF, "Energy (keV or MeV)", SpectrumCalibrationEnergy_NEL_ID),
-					  new TGLayoutHints(kLHintsLeft,0,0,0,0));
-  SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
-  SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
-  SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);
-  SpectrumCalibrationEnergy_NEL->GetEntry()->SetState(false);
-  SpectrumCalibrationEnergy_NEL->GetEntry()->Connect("ValueSet(long)", "AASpectrumSlots", SpectrumSlots, "HandleNumberEntries()");
 
   SpectrumCalibration_GF->AddFrame(SpectrumCalibrationPulseUnit_NEL = new ADAQNumberEntryWithLabel(SpectrumCalibration_GF, "Pulse unit (ADC)", SpectrumCalibrationPulseUnit_NEL_ID),
 				       new TGLayoutHints(kLHintsLeft,0,0,0,5));
@@ -840,6 +854,7 @@ GetComboBox()->Resize(150,20);
   SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(1.0);
   SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetState(false);
+  SpectrumCalibrationPulseUnit_NEL->GetEntry()->Resize(60,20);
   SpectrumCalibrationPulseUnit_NEL->GetEntry()->Connect("ValueSet(long)", "AASpectrumSlots", SpectrumSlots, "HandleNumberEntries()");
 
   TGHorizontalFrame *SpectrumCalibration_HF1 = new TGHorizontalFrame(SpectrumCalibration_GF);
@@ -2948,6 +2963,7 @@ void AAInterface::SetCalibrationWidgetState(bool WidgetState, EButtonState Butto
   SpectrumCalibrationLoad_TB->SetState(ButtonState);
   SpectrumCalibrationStandard_RB->SetState(ButtonState);
   SpectrumCalibrationEdgeFinder_RB->SetState(ButtonState);
+  SpectrumCalibrationType_CBL->GetComboBox()->SetEnabled(WidgetState);
   SpectrumCalibrationPoint_CBL->GetComboBox()->SetEnabled(WidgetState);
   SpectrumCalibrationUnit_CBL->GetComboBox()->SetEnabled(WidgetState);
   SpectrumCalibrationEnergy_NEL->GetEntry()->SetState(WidgetState);
