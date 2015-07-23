@@ -25,6 +25,7 @@
 
 // ROOT
 #include <TGFileDialog.h>
+#include <TStyle.h>
 
 // ADAQAnalysis
 #include "AAProcessingSlots.hh"
@@ -182,6 +183,12 @@ void AAProcessingSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
   switch(ComboBoxID){
     
   case PSDPlotType_CBL_ID:
+    if(ComputationMgr->GetPSDHistogramExists())
+      GraphicsMgr->PlotPSDHistogram();
+    break;
+
+  case PSDPlotPalette_CBL_ID:
+    gStyle->SetPalette(SelectedID);
     if(ComputationMgr->GetPSDHistogramExists())
       GraphicsMgr->PlotPSDHistogram();
     break;

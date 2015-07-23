@@ -315,6 +315,7 @@ enum{
   PSDTailStart_NEL_ID,
   PSDTailStop_NEL_ID,
   PSDPlotType_CBL_ID,
+  PSDPlotPalette_CBL_ID,
   PSDPlotTailIntegration_CB_ID,
   PSDYAxisTail_RB_ID,
   PSDYAxisTailTotal_RB_ID,

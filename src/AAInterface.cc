@@ -1863,18 +1863,32 @@ void AAInterface::FillProcessingFrame()
 		       new TGLayoutHints(kLHintsNormal,20,0,0,0));
   PSDYAxisTailTotal_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
 
-  PSDAnalysis_GF->AddFrame(PSDPlotType_CBL = new ADAQComboBoxWithLabel(PSDAnalysis_GF, "Draw option", PSDPlotType_CBL_ID),
-			   new TGLayoutHints(kLHintsNormal, 0,5,10,5));
+  TGHorizontalFrame *PSDPlotOptions_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSDPlotOptions_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  
+  PSDPlotOptions_HF->AddFrame(PSDPlotType_CBL = new ADAQComboBoxWithLabel(PSDPlotOptions_HF, "Style", PSDPlotType_CBL_ID),
+			      new TGLayoutHints(kLHintsNormal, 0,5,10,5));
   PSDPlotType_CBL->GetComboBox()->AddEntry("COLZ",0);
   PSDPlotType_CBL->GetComboBox()->AddEntry("LEGO2Z0",1);
   PSDPlotType_CBL->GetComboBox()->AddEntry("SURF3Z0",2);
   PSDPlotType_CBL->GetComboBox()->AddEntry("CONTZ0",4);
   PSDPlotType_CBL->GetComboBox()->AddEntry("CONT1Z",4);
   PSDPlotType_CBL->GetComboBox()->Select(0);
-  PSDPlotType_CBL->GetComboBox()->Resize(70,20);
+  PSDPlotType_CBL->GetComboBox()->Resize(75, 20);
   PSDPlotType_CBL->GetComboBox()->Connect("Selected(int,int)", "AAProcessingSlots", ProcessingSlots, "HandleComboBoxes(int,int)");
   PSDPlotType_CBL->GetComboBox()->SetEnabled(false);
-  
+
+  PSDPlotOptions_HF->AddFrame(PSDPlotPalette_CBL = new ADAQComboBoxWithLabel(PSDPlotOptions_HF, "Palette", PSDPlotPalette_CBL_ID),
+			      new TGLayoutHints(kLHintsNormal, 0,5,10,5));
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Deep sea", 51);
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Radiator",53);
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Two hue",54);
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Rainbow",55);
+  //PSDPlotPalette_CBL->GetComboBox()->AddEntry("Bird", 57);
+  PSDPlotPalette_CBL->GetComboBox()->Select(55);
+  PSDPlotPalette_CBL->GetComboBox()->Resize(75, 20);
+  PSDPlotPalette_CBL->GetComboBox()->Connect("Selected(int,int)", "AAProcessingSlots", ProcessingSlots, "HandleComboBoxes(int,int)");
+  PSDPlotPalette_CBL->GetComboBox()->SetEnabled(false);
   
   TGHorizontalFrame *ProcessCreatePSDHistogram_HF = new TGHorizontalFrame(PSDAnalysis_GF);
   PSDAnalysis_GF->AddFrame(ProcessCreatePSDHistogram_HF, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
@@ -2934,6 +2948,7 @@ void AAInterface::SetPSDWidgetState(bool WidgetState, EButtonState ButtonState)
   PSDMinTotalBin_NEL->GetEntry()->SetState(WidgetState);
   PSDMaxTotalBin_NEL->GetEntry()->SetState(WidgetState);
   PSDPlotType_CBL->GetComboBox()->SetEnabled(WidgetState);
+  PSDPlotPalette_CBL->GetComboBox()->SetEnabled(WidgetState);
   PSDPlotTailIntegration_CB->SetState(ButtonState);
   PSDEnableHistogramSlicing_CB->SetState(ButtonState);
   PSDEnableRegionCreation_CB->SetState(ButtonState);

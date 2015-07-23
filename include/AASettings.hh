@@ -133,7 +133,7 @@ public:
   Double_t PSDMinTailBin, PSDMaxTailBin;
   Bool_t PSDYAxisTail, PSDYAxisTailTotal;
 
-  string PSDPlotType;
+  string PSDPlotType, PSDPlotPalette;
   Bool_t PSDPlotTailIntegrationRegion, EnableHistogramSlicing, PSDXSlice, PSDYSlice;
 
   Bool_t PSDEnableRegionCreation, PSDEnableFilterUse;

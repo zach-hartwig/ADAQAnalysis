@@ -77,6 +77,9 @@ AAGraphics::AAGraphics()
     cout << "\nERROR! TheGraphicsManager was constructed twice\n" << endl;
   TheGraphicsManager = this;
 
+  // Initialize the color palette
+  gStyle->SetPalette(55);
+
   // All of the graphical objects for waveform and spectral analysis
   // (TLines, TBoxes, etc) are declared once in order to save memory
   // and prevent memory leaks. Attributes are set here and then actual
@@ -848,8 +851,6 @@ void AAGraphics::PlotPSDHistogram()
   PSDHistogram_H->GetZaxis()->SetTitleOffset(ADAQSettings->ZOffset);
   PSDHistogram_H->GetZaxis()->CenterTitle();
   PSDHistogram_H->GetZaxis()->SetNdivisions(ZDivs, true);
-
-  gStyle->SetPalette(55);
 
   PSDHistogram_H->Draw(ADAQSettings->PSDPlotType.c_str());
 

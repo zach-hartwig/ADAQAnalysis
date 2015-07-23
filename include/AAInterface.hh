@@ -355,7 +355,7 @@ private:
   ADAQNumberEntryWithLabel *PSDNumTotalBins_NEL, *PSDMinTotalBin_NEL, *PSDMaxTotalBin_NEL;
   ADAQNumberEntryWithLabel *PSDThreshold_NEL;
 
-  ADAQComboBoxWithLabel *PSDPlotType_CBL;
+  ADAQComboBoxWithLabel *PSDPlotType_CBL, *PSDPlotPalette_CBL;
 
   TGRadioButton *PSDYAxisTail_RB, *PSDYAxisTailTotal_RB;
 
