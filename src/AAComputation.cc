@@ -40,6 +40,7 @@
 // C++
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 using namespace std;
 
 // MPI
@@ -2803,9 +2804,18 @@ Bool_t AAComputation::SetCalibrationPoint(Int_t Channel, Int_t SetPoint,
 {
   // Add a new point to the calibration
   if(SetPoint == (Int_t)CalibrationData[Channel].PointID.size()){
+
+    // Push data into the channel's calibration vectors
     CalibrationData[Channel].PointID.push_back(SetPoint);
     CalibrationData[Channel].Energy.push_back(Energy);
     CalibrationData[Channel].PulseUnit.push_back(PulseUnit);
+
+    // Automatically sort the vectors from lowest-to-highest
+    sort(CalibrationData[Channel].Energy.begin(),
+	 CalibrationData[Channel].Energy.end());
+    
+    sort(CalibrationData[Channel].PulseUnit.begin(),
+	 CalibrationData[Channel].PulseUnit.end());
     
     return true;
   }
