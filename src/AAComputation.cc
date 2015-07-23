@@ -73,22 +73,24 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     ASIMEventTreeList(new TList), ASIMEvt(new ASIMEvent),
     
     ADAQParResults(NULL), ADAQParResultsLoaded(false),
-    Time(0), RawVoltage(0), RecordLength(0),
-    PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), PearsonIntegralValue(0),
+    Time(0), RawVoltage(0), RecordLength(0), Baseline(0.),
+    PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), 
     PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
     WaveformStart(0), WaveformEnd(0),
+    WaveformAnalysisHeight(0.), WaveformAnalysisArea(0.), PearsonIntegralValue(0),
     Spectrum_H(new TH1F), SpectrumDerivative_H(new TH1F), SpectrumDerivative_G(new TGraph),
     SpectrumBackground_H(new TH1F), SpectrumDeconvolved_H(new TH1F), 
     SpectrumIntegral_H(new TH1F), SpectrumFit_F(new TF1),
     PSDHistogram_H(new TH2F), MasterPSDHistogram_H(new TH2F), PSDHistogramSlice_H(new TH1D),
-    MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), 
-    Verbose(false), ParallelVerbose(true),
-    Baseline(0.), PSDRegionPolarity(1.),
-    V1720MaximumBit(4095), NumDataChannels(8),
+    PSDRegionPolarity(1.),
+   
     SpectrumExists(false), SpectrumBackgroundExists(false), SpectrumDerivativeExists(false), 
     PSDHistogramExists(false), PSDHistogramSliceExists(false),
-    TotalPeaks(0), DeuteronsInWaveform(0.), DeuteronsInTotal(0.), HalfHeight(0.),
-    EdgePosition(0.), EdgePositionFound(false)
+
+    MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelVerbose(true),
+    Verbose(false), NumDataChannels(8), TotalPeaks(0), 
+    DeuteronsInWaveform(0.), DeuteronsInTotal(0.),
+    HalfHeight(0.), EdgePosition(0.), EdgePositionFound(false)
 {
   if(TheComputationManager){
     cout << "\nERROR! TheComputationManager was constructed twice!\n" << endl;
@@ -1921,11 +1923,10 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
 			    ADAQSettings->PSDMaxTailBin);
   
   // Get the selected PSD channel
-  int PSDChannel = ADAQSettings->PSDChannel;
+  Int_t PSDChannel = ADAQSettings->PSDChannel;
 
   Double_t TotalIntegral = 0.;
   Double_t TailIntegral = 0.;
-
 
   // Clear the PSD integrals vectors to zero elements. I have chosen
   // *not* to preallocate memory intentionally since (a)
@@ -1994,10 +1995,8 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
 	// If the user has enabled a PSD filter ...
 	if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
 	  
-	  // ... then apply the PSD filter to the waveform. If the
-	  // waveform does not pass the filter, mark the flag indicating
-	  // that it should be filtered out due to its pulse shap
-	  if(ApplyPSDRegion(TailIntegral, TotalIntegral))
+	  // Determine whether to accept/exclude the event
+	  if(!ApplyPSDRegion(TotalIntegral, TailIntegral))
 	    PSDHistogram_H->Fill(TotalIntegral, TailIntegral);
 	}
 	
@@ -2235,7 +2234,7 @@ TH2F *AAComputation::CreatePSDHistogram()
 
   Int_t PSDChannel = ADAQSettings->PSDChannel;
 
-  for(Int_t p=0; p<PSDHistogramTotalVec[PSDChannel].size(); p++){
+  for(Int_t p=0; p<(Int_t)PSDHistogramTotalVec[PSDChannel].size(); p++){
     
     // If using SMS or WD algorithms, discriminate only the number of
     // waveforms specified by user; note that if using PF algorithm,
@@ -2248,22 +2247,28 @@ TH2F *AAComputation::CreatePSDHistogram()
     if(!ADAQSettings->PSDAlgorithmPF)
       if(p >= ADAQSettings->PSDWaveformsToDiscriminate)
 	break;
-
+    
     Double_t PSDTotal = PSDHistogramTotalVec[PSDChannel][p];
     Double_t PSDParameter = PSDHistogramTailVec[PSDChannel][p];
     
-    if(PSDTotal <= ADAQSettings->PSDThreshold)
-      break;
-    
     if(ADAQSettings->PSDYAxisTailTotal)
       PSDParameter /= PSDTotal;
-    
-    if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
-      if(ApplyPSDRegion(PSDParameter, PSDTotal))
+
+    // If the PSD total integral exceeds the threshold
+    if(PSDTotal > ADAQSettings->PSDThreshold){
+
+      // If the user has selected to use PSD regions
+      if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
+	
+	// Determine whether to accept/exclude the event 
+	if(!ApplyPSDRegion(PSDTotal, PSDParameter))
+	  PSDHistogram_H->Fill(PSDTotal, PSDParameter);
+      }
+      
+      // else just straight fill the PSD histogram
+      else
 	PSDHistogram_H->Fill(PSDTotal, PSDParameter);
     }
-    else
-      PSDHistogram_H->Fill(PSDTotal, PSDParameter);
   }
   
   PSDHistogramExists = true;
@@ -2326,7 +2331,7 @@ void AAComputation::CalculatePSDIntegrals(bool FillPSDHistogram)
       // ... then apply the PSD filter to the waveform. If the
       // waveform does not pass the filter, mark the flag indicating
       // that it should be filtered out due to its pulse shap
-      if(ApplyPSDRegion(TailIntegral, TotalIntegral))
+      if(ApplyPSDRegion(TotalIntegral, TailIntegral))
 	(*it).PSDFilterFlag = true;
     
     // The total integral of the waveform must exceed the PSDThreshold
@@ -2339,31 +2344,28 @@ void AAComputation::CalculatePSDIntegrals(bool FillPSDHistogram)
 }
 
 
-// Analyze the tail and total PSD integrals to determine whether the
-// waveform should be filtered out depending on its pulse shape. The
-// comparison is made by determining if the value of tail integral
-// falls above/below the interpolated value of the total integral via
-// a TGraph created by the user (depending on "positive" or "negative"
-// filter polarity as selected by the user.). The following convention
-// - uniform throughout the code - is used for the return value:true =
-// waveform should be filtered; false = waveform should not be
-// filtered
-bool AAComputation::ApplyPSDRegion(double TailIntegral, double TotalIntegral)
+// Use the PSD integrals and the user-specified PSD region to
+// determine whether waveform should be excluded from the PSD
+// histogram. The user can chose to exclude points that are inside or
+// outside hte pSD region. The method determines uses the
+// TCutG::IsInside() method on the point (PSDTotal, PSDParameter) to
+// determine whether to exclude the waveform or not. The return
+// convention is:
+//   return true  : exclude waveform (fails criterion)
+//   return false : accept waveform (passes criterion)
+Bool_t AAComputation::ApplyPSDRegion(Double_t PSDTotal,
+				     Double_t PSDParameter)
 {
-  // The PSD region is a channel-specific TCutG object that is used to
-  // discriminate particle-induced waveform shapes based on the user's
-  // graphical cut of a PSD 2D histogram. The user can define
-  // "accepted" waveforms to be either "inside" or "outside" the 2D
-  // region defined by the TCutG object. The function returns true is
-  // the waveform is "accepted" and false is the waveform is
-  // "rejected".
-
+  Int_t PSDChannel = ADAQSettings->PSDChannel;
+  
   if(ADAQSettings->PSDInsideRegion and
-     ADAQSettings->PSDRegions[ADAQSettings->PSDChannel]->IsInside(TotalIntegral, TailIntegral))
+     ADAQSettings->PSDRegions[PSDChannel]->IsInside(PSDTotal,
+						    PSDParameter))
     return false;
   
   else if(ADAQSettings->PSDOutsideRegion and 
-	  !ADAQSettings->PSDRegions[ADAQSettings->PSDChannel]->IsInside(TotalIntegral, TailIntegral))
+	  !ADAQSettings->PSDRegions[PSDChannel]->IsInside(PSDTotal,
+							  PSDParameter))
     return false;
   
   else
@@ -2720,11 +2722,11 @@ void AAComputation::RejectPileup(TH1F *Histogram_H)
 }
 
 
-bool AAComputation::SetCalibrationPoint(int Channel, int SetPoint,
-					double Energy, double PulseUnit)
+Bool_t AAComputation::SetCalibrationPoint(Int_t Channel, Int_t SetPoint,
+					  Double_t Energy, Double_t PulseUnit)
 {
   // Add a new point to the calibration
-  if(SetPoint == CalibrationData[Channel].PointID.size()){
+  if(SetPoint == (Int_t)CalibrationData[Channel].PointID.size()){
     CalibrationData[Channel].PointID.push_back(SetPoint);
     CalibrationData[Channel].Energy.push_back(Energy);
     CalibrationData[Channel].PulseUnit.push_back(PulseUnit);
@@ -2742,7 +2744,7 @@ bool AAComputation::SetCalibrationPoint(int Channel, int SetPoint,
 }
 
 
-bool AAComputation::SetCalibration(int Channel)
+Bool_t AAComputation::SetCalibration(Int_t Channel)
 {
   if(CalibrationData[Channel].PointID.size() >= 2){
     // Determine the total number of calibration points in the
@@ -2792,18 +2794,19 @@ bool AAComputation::ClearCalibration(int Channel)
 }
 
 
-bool AAComputation::WriteCalibrationFile(int Channel, string FName)
+Bool_t AAComputation::WriteCalibrationFile(Int_t Channel,
+					   string FName)
 {
   if(!UseSpectraCalibrations[Channel])
     return false;
   else{
     ofstream Out(FName.c_str(), ofstream::trunc);
-    for(int i=0; i<CalibrationData[Channel].PointID.size(); i++)
-      Out << setw(10) << CalibrationData[Channel].Energy[i]
-	  << setw(10) << CalibrationData[Channel].PulseUnit[i]
+    for(UInt_t ch=0; ch<CalibrationData[Channel].PointID.size(); ch++)
+      Out << setw(10) << CalibrationData[Channel].Energy[ch]
+	  << setw(10) << CalibrationData[Channel].PulseUnit[ch]
 	  << endl;
     Out.close();
-
+    
     return true;
   }
 }

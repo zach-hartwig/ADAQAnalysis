@@ -75,7 +75,7 @@ using namespace std;
 class AAComputation : public TObject
 {
 public:
-  AAComputation(string, bool);
+  AAComputation(string, Bool_t);
   ~AAComputation();
 
   static AAComputation *GetInstance();
@@ -89,26 +89,26 @@ public:
   // Data computation methods
   
   // File I/O methods
-  bool LoadADAQFile(string);
+  Bool_t LoadADAQFile(string);
   void LoadLegacyADAQFile();
-  bool LoadASIMFile(string);
-  bool SaveHistogramData(string, string, string);
+  Bool_t LoadASIMFile(string);
+  Bool_t SaveHistogramData(string, string, string);
   void CreateDesplicedFile();
 
   // Waveform creation
-  TH1F *CalculateRawWaveform(int, int);
-  TH1F *CalculateBSWaveform(int, int, bool CurrentWaveform=false);
-  TH1F *CalculateZSWaveform(int, int, bool CurrentWaveform=false);
-  double CalculateBaseline(vector<int> *);  
-  double CalculateBaseline(TH1F *);
+  TH1F *CalculateRawWaveform(Int_t, Int_t);
+  TH1F *CalculateBSWaveform(Int_t, Int_t, Bool_t CurrentWaveform=false);
+  TH1F *CalculateZSWaveform(Int_t, Int_t, Bool_t CurrentWaveform=false);
+  Double_t CalculateBaseline(vector<Int_t> *);  
+  Double_t CalculateBaseline(TH1F *);
   
   // Waveform processing 
-  bool FindPeaks(TH1F *, Int_t);
+  Bool_t FindPeaks(TH1F *, Int_t);
   void FindPeakLimits(TH1F *);
   void IntegratePeaks();
   void FindPeakHeights();
   void RejectPileup(TH1F *);
-  void IntegratePearsonWaveform(int);
+  void IntegratePearsonWaveform(Int_t);
   void CalculateCountRate();
   void AnalyzeWaveform(TH1F *);
   
@@ -125,28 +125,28 @@ public:
   TGraph *CalculateSpectrumDerivative();
 
   // Spectrum calibration
-  bool SetCalibrationPoint(int, int, double, double);
-  bool SetCalibration(int);
-  bool ClearCalibration(int);
-  bool WriteCalibrationFile(int, string);
+  Bool_t SetCalibrationPoint(Int_t, Int_t, Double_t, Double_t);
+  Bool_t SetCalibration(Int_t);
+  Bool_t ClearCalibration(Int_t);
+  Bool_t WriteCalibrationFile(Int_t, string);
 
-  void SetEdgeBound(double,double);
+  void SetEdgeBound(Double_t,Double_t);
   void FindEdge();
 
   // Pulse shape discrimination processing
   TH2F *ProcessPSDHistogramWaveforms();
   TH2F *CreatePSDHistogram();
 
-  void CalculatePSDIntegrals(bool);
-  bool ApplyPSDRegion(double, double);
+  void CalculatePSDIntegrals(Bool_t);
+  Bool_t ApplyPSDRegion(Double_t, Double_t);
 
   void AddPSDRegionPoint(Int_t, Int_t);
   void CreatePSDRegion();
   void ClearPSDRegion();
-  void CreatePSDHistogramSlice(int, int);
+  void CreatePSDHistogramSlice(Int_t, Int_t);
   
   // Processing methods
-  void UpdateProcessingProgress(int);
+  void UpdateProcessingProgress(Int_t);
   void ProcessWaveformsInParallel(string);
 
 
@@ -154,8 +154,8 @@ public:
   // Public access methods for member data
 
   // Waveform analysis results
-  double GetWaveformAnalysisHeight() {return WaveformAnalysisHeight;}
-  double GetWaveformAnalysisArea() {return WaveformAnalysisArea;}
+  Double_t GetWaveformAnalysisHeight() {return WaveformAnalysisHeight;}
+  Double_t GetWaveformAnalysisArea() {return WaveformAnalysisArea;}
 
   // Waveform peak data
   vector<PeakInfoStruct> GetPeakInfoVec() {return PeakInfoVec;}
@@ -163,11 +163,11 @@ public:
   TH1F *GetPearsonRawIntegration() {return PearsonRawIntegration_H;}
   TH1F *GetPearsonRiseFit() {return PearsonRiseFit_H;}
   TH1F *GetPearsonPlateauFit() {return PearsonPlateauFit_H;}
-  double GetPearsonIntegralValue() {return PearsonIntegralValue;}
+  Double_t GetPearsonIntegralValue() {return PearsonIntegralValue;}
   
-  double GetDeuteronsInWaveform() {return DeuteronsInWaveform;}
-  void SetDeuteronsInTotal(double DIT) {DeuteronsInTotal = DIT;}
-  double GetDeuteronsInTotal() {return DeuteronsInTotal;}
+  Double_t GetDeuteronsInWaveform() {return DeuteronsInWaveform;}
+  void SetDeuteronsInTotal(Double_t DIT) {DeuteronsInTotal = DIT;}
+  Double_t GetDeuteronsInTotal() {return DeuteronsInTotal;}
   
   // Spectra
   void SetSpectrum(TH1F *H) 
@@ -182,17 +182,17 @@ public:
   
   // Spectra calibrations
   vector<TGraph *> GetSpectraCalibrations() { return SpectraCalibrations; }
-  vector<bool> GetUseSpectraCalibrations() { return UseSpectraCalibrations; }
+  vector<Bool_t> GetUseSpectraCalibrations() { return UseSpectraCalibrations; }
 
-  double GetEdgePosition() {return EdgePosition;}
-  double GetHalfHeight() {return HalfHeight;}
-  bool GetEdgePositionFound() {return EdgePositionFound;}
+  Double_t GetEdgePosition() {return EdgePosition;}
+  Double_t GetHalfHeight() {return HalfHeight;}
+  Bool_t GetEdgePositionFound() {return EdgePositionFound;}
   
   // Spectra analysis
   TH1F *GetSpectrumIntegral() { return SpectrumIntegral_H; }
   TF1 *GetSpectrumFit() { return SpectrumFit_F; }
-  double GetSpectrumIntegralValue() { return SpectrumIntegralValue; }
-  double GetSpectrumIntegralError() { return SpectrumIntegralError; }
+  Double_t GetSpectrumIntegralValue() { return SpectrumIntegralValue; }
+  Double_t GetSpectrumIntegralError() { return SpectrumIntegralError; }
 
   // Pulse shape discrimination histograms
   TH2F *GetPSDHistogram() { return PSDHistogram_H; }
@@ -200,15 +200,15 @@ public:
   
   // Pulse shape discrimination regions
   vector<TCutG *> GetPSDRegions() { return PSDRegions; }
-  vector<bool> GetUsePSDRegions() { return UsePSDRegions; }
-  void SetUsePSDRegions(int Channel, bool Use) {UsePSDRegions[Channel] = Use;}
+  vector<Bool_t> GetUsePSDRegions() { return UsePSDRegions; }
+  void SetUsePSDRegions(int Channel, Bool_t Use) {UsePSDRegions[Channel] = Use;}
   vector<Double_t> &GetPSDRegionXPoints() {return PSDRegionXPoints;}
   vector<Double_t> &GetPSDRegionYPoints() {return PSDRegionYPoints;}
 
   // ADAQ file data
   string GetADAQFileName() { return ADAQFileName; }
   Bool_t GetADAQLegacyFileLoaded() {return ADAQLegacyFileLoaded;}
-  int GetADAQNumberOfWaveforms() {return ADAQWaveformTree->GetEntries();}
+  Int_t GetADAQNumberOfWaveforms() {return ADAQWaveformTree->GetEntries();}
   ADAQRootMeasParams *GetADAQMeasurementParameters() {return ADAQMeasParams;}
   ADAQReadoutInformation *GetADAQReadoutInformation() {return ARI;}
   
@@ -216,20 +216,20 @@ public:
   string GetASIMFileName() { return ASIMFileName; }
   TList *GetASIMEventTreeList() { return ASIMEventTreeList; }
   
-  // Booleans
-  bool GetADAQFileLoaded() { return ADAQFileLoaded; }
-  bool GetASIMFileLoaded() { return ASIMFileLoaded; }
-  bool GetSpectrumExists() { return SpectrumExists; }
-  bool GetSpectrumBackgroundExists() { return SpectrumBackgroundExists; }
-  bool GetSpectrumDerivativeExists() { return SpectrumDerivativeExists; }
-  bool GetPSDHistogramExists() { return PSDHistogramExists; }
-  bool GetPSDHistogramSliceExists() { return PSDHistogramSliceExists; }
+  // Bool_Teans
+  Bool_t GetADAQFileLoaded() { return ADAQFileLoaded; }
+  Bool_t GetASIMFileLoaded() { return ASIMFileLoaded; }
+  Bool_t GetSpectrumExists() { return SpectrumExists; }
+  Bool_t GetSpectrumBackgroundExists() { return SpectrumBackgroundExists; }
+  Bool_t GetSpectrumDerivativeExists() { return SpectrumDerivativeExists; }
+  Bool_t GetPSDHistogramExists() { return PSDHistogramExists; }
+  Bool_t GetPSDHistogramSliceExists() { return PSDHistogramSliceExists; }
 
 
   ////////////////
   // Miscellaneous
 
-  void CreateNewPeakFinder(int NumPeaks){
+  void CreateNewPeakFinder(Int_t NumPeaks){
     if(PeakFinder) delete PeakFinder;
     PeakFinder = new TSpectrum(NumPeaks);
   }
@@ -242,8 +242,8 @@ private:
   TGHProgressBar *ProcessingProgressBar;
   AASettings *ADAQSettings;
 
-  // Bools to specify architecture type
-  bool SequentialArchitecture, ParallelArchitecture;
+  // Bool_Ts to specify architecture type
+  Bool_t SequentialArchitecture, ParallelArchitecture;
 
 
   ///////////
@@ -251,7 +251,7 @@ private:
 
   TFile *ADAQFile;
   string ADAQFileName;
-  bool ADAQFileLoaded, ADAQLegacyFileLoaded;
+  Bool_t ADAQFileLoaded, ADAQLegacyFileLoaded;
   
   TTree *ADAQWaveformTree;
   
@@ -270,33 +270,37 @@ private:
   ASIMEvent *ASIMEvt;
 
   AAParallelResults *ADAQParResults;
-  bool ADAQParResultsLoaded;
+  Bool_t ADAQParResultsLoaded;
 
 
   //////////////////////
   // Waveforms variables
 
   TH1F *Waveform_H[8];
-  TH1F *PearsonRawIntegration_H, *PearsonRiseFit_H, *PearsonPlateauFit_H;
-  double PearsonIntegralValue;
   
-  vector<int> Time, RawVoltage;
-  int RecordLength;
+  vector<Int_t> Time, RawVoltage;
+  Int_t RecordLength;
+  Double_t Baseline;
   
   // Peak finding machinery
+
   TSpectrum *PeakFinder;
-  int NumPeaks;
+  Int_t NumPeaks;
   vector<PeakInfoStruct> PeakInfoVec;
-  vector<int> PeakIntegral_LowerLimit, PeakIntegral_UpperLimit;
+  vector<Int_t> PeakIntegral_LowerLimit, PeakIntegral_UpperLimit;
 #ifndef __CINT__
   vector< boost::array<int,2> > PeakLimits;
 #endif
 
   // Waveform processing range
-  int WaveformStart, WaveformEnd;
+  Int_t WaveformStart, WaveformEnd;
 
   // Waveform analysis results
-  double WaveformAnalysisHeight, WaveformAnalysisArea;
+  Double_t WaveformAnalysisHeight, WaveformAnalysisArea;
+
+  TH1F *PearsonRawIntegration_H, *PearsonRiseFit_H, *PearsonPlateauFit_H;
+  Double_t PearsonIntegralValue;
+
   
   /////////////////////
   // Spectrum variables
@@ -308,14 +312,14 @@ private:
   TH1F *SpectrumBackground_H, *SpectrumDeconvolved_H;
   TH1F *SpectrumIntegral_H;
   TF1 *SpectrumFit_F;
-  double SpectrumIntegralValue, SpectrumIntegralError;
+  Double_t SpectrumIntegralValue, SpectrumIntegralError;
 
   // Vectors used to store processed waveform values
   vector<Double_t> SpectrumPHVec[8], SpectrumPAVec[8];
 
   // Objects that are used in energy calibration of the pulse spectra
   vector<TGraph *> SpectraCalibrations;
-  vector<bool> UseSpectraCalibrations;
+  vector<Bool_t> UseSpectraCalibrations;
   vector<ADAQChannelCalibrationData> CalibrationData;
 
 
@@ -331,54 +335,47 @@ private:
   Double_t PSDRegionPolarity;
   vector<TCutG *> PSDRegions;
   vector<Bool_t> UsePSDRegions;
-  Int_t PSDNumRegionPoints;
   vector<Double_t> PSDRegionXPoints, PSDRegionYPoints;
 
 
   ///////////
-  // Booleans
-  bool SpectrumExists, SpectrumBackgroundExists, SpectrumDerivativeExists;
-  bool PSDHistogramExists, PSDHistogramSliceExists;
+  // Bool_Teans
+  Bool_t SpectrumExists, SpectrumBackgroundExists, SpectrumDerivativeExists;
+  Bool_t PSDHistogramExists, PSDHistogramSliceExists;
 
 
   ///////////
   // Parallel
 
-  int MPI_Size, MPI_Rank;
-  bool IsMaster, IsSlave;
+  Int_t MPI_Size, MPI_Rank;
+  Bool_t IsMaster, IsSlave;
 
-  bool ParallelVerbose;
+  Bool_t ParallelVerbose;
   TFile *ParallelFile;
 
   // Variables used to specify whether to print to stdout
-  bool Verbose;
+  Bool_t Verbose;
 
   // ROOT TH1F to hold aggregated spectra from parallel processing
   TH1F *MasterHistogram_H;
 
-  // Variables to hold waveform processing values
-  double Baseline;
-
-  // Maximum bit value of CAEN X720 digitizer family (4095)
-  int V1720MaximumBit;
-
   // Number of data channels in the ADAQ ROOT files
-  int NumDataChannels;
+  Int_t NumDataChannels;
 
   // Aggregated total waveform peaks found during processing
-  int TotalPeaks;
+  Int_t TotalPeaks;
   
-  double DeuteronsInWaveform, DeuteronsInTotal;
-
   // Create a TColor ROOT object to handle pixel-2-color conversions
   TColor *ColorManager;
 
   // A ROOT random number generator (RNG)
   TRandom *RNG;
 
-  vector<double> EdgeHBound, EdgeVBound;
-  double HalfHeight, EdgePosition;
-  bool EdgePositionFound;
+  Double_t DeuteronsInWaveform, DeuteronsInTotal;
+
+  vector<Double_t> EdgeHBound, EdgeVBound;
+  Double_t HalfHeight, EdgePosition;
+  Bool_t EdgePositionFound;
 
   // Define the class to ROOT
   ClassDef(AAComputation, 1)
