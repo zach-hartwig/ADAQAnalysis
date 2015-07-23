@@ -205,9 +205,10 @@ void AAProcessingSlots::HandleNumberEntries()
   case PSDTotalStop_NEL_ID:
   case PSDTailStart_NEL_ID:
   case PSDTailStop_NEL_ID:
-    GraphicsMgr->PlotWaveform();
+    if(TheInterface->PSDPlotTailIntegration_CB->IsDown())
+      GraphicsMgr->PlotWaveform();
     break;
-
+    
   default:
     break;
   }

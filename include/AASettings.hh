@@ -156,7 +156,6 @@ public:
   Int_t WaveformsToDesplice, DesplicedWaveformBuffer, DesplicedWaveformLength;
   string DesplicedFileName;
 
-
   // Canvas
 
   Double_t XAxisMin, XAxisMax, XAxisPtr;
