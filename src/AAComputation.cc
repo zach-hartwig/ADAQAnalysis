@@ -184,7 +184,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
       CreateDesplicedFile();
     
     else if(CmdLineArg == "discriminating")
-      CreatePSDHistogram();
+      ProcessPSDHistogramWaveforms();
     
     // Notify the user of error in processing type specification
     else{
@@ -2028,11 +2028,10 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
     WaveformEnd = ADAQSettings->PSDWaveformsToDiscriminate;
     
 #ifdef MPI_ENABLED
-  
-    int SlaveEvents = int(ADAQSettings->PSDWaveformsToDiscriminate/MPI_Size);
-  
-    int MasterEvents = int(ADAQSettings->PSDWaveformsToDiscriminate-SlaveEvents*(MPI_Size-1));
-  
+    
+    Int_t SlaveEvents = Int_t(ADAQSettings->PSDWaveformsToDiscriminate/MPI_Size);
+    Int_t MasterEvents = Int_t(ADAQSettings->PSDWaveformsToDiscriminate-SlaveEvents*(MPI_Size-1));
+    
     if(ParallelVerbose and IsMaster)
       cout << "\nADAQAnalysis_MPI Node[0] : Number waveforms allocated to master (node == 0) : " << MasterEvents << "\n"
 	   <<   "                           Number waveforms allocated to slaves (node != 0) : " << SlaveEvents
@@ -2170,6 +2169,30 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
     // Aggregated the histogram entries from all nodes to the master
     double Entries = PSDHistogram_H->GetEntries();
     double ReturnDouble = AAParallel::GetInstance()->SumDoublesToMaster(Entries);
+
+    ///////////////////////////////////////////
+    // Aggregate PSD histogram integral vectors
+
+    // The following procedure is identical to that performed for
+    // aggregated the spectrum pulse value vectors. See description in
+    // AAComputation::ProcessSpectrumWaveforms()
+
+    string USER = getenv("USER");
+    stringstream SS;
+    SS << "/tmp/ParallelProcessing_" << USER << MPI_Rank << ".root";
+    TString FName = SS.str();
+    
+    TFile *VectorWrite = new TFile(FName, "recreate");
+    TVectorD PT(PSDHistogramTotalVec[PSDChannel].size(),
+		&PSDHistogramTotalVec[PSDChannel][0]);
+    
+    TVectorD PP(PSDHistogramTailVec[PSDChannel].size(),
+		&PSDHistogramTailVec[PSDChannel][0]);
+    
+    PT.Write("PT");
+    PP.Write("PP");
+
+    VectorWrite->Close();
   
     // Aggregated the total deuterons from all nodes to the master
     DeuteronsInTotal = AAParallel::GetInstance()->SumDoublesToMaster(DeuteronsInTotal);
@@ -2196,12 +2219,46 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
 	for(int j=0; j<ArraySizeY; j++)
 	  MasterPSDHistogram_H->SetBinContent(i, j, DoubleArray[i][j]);
       MasterPSDHistogram_H->SetEntries(ReturnDouble);
+
+      vector<Double_t> PSDHistogramTotalVec_Master, PSDHistogramTailVec_Master;
+      
+      for(int file=0; file<MPI_Size; file++){
+	// Open the node TFile sequentially
+	SS.str("");
+	SS << "/tmp/ParallelProcessing_" << USER << file << ".root";
+	TString FName = SS.str();
+	TFile *VectorRead = new TFile(FName, "read");
+	
+	// Get the VectorT object and readout to class member vectors
+
+	TVectorD *PT = (TVectorD *)VectorRead->Get("PT");
+	for(int i=0; i<PT->GetNoElements(); i++)
+	  PSDHistogramTotalVec_Master.push_back( (*PT)[i] );
+	
+	TVectorD *PP = (TVectorD *)VectorRead->Get("PP");
+	for(int i=0; i<PP->GetNoElements(); i++)
+	  PSDHistogramTailVec_Master.push_back( (*PP)[i] );
+	
+	// Close and delete the now-depracated node TFiles
+	VectorRead->Close();
+	string RemoveFilesCommand;
+	RemoveFilesCommand = "rm " + FName + " -f";
+	system(RemoveFilesCommand.c_str()); 
+      }
+
+      TVectorD MasterPSDTotalVec(PSDHistogramTotalVec_Master.size(),
+				 &PSDHistogramTotalVec_Master[0]);
+
+      TVectorD MasterPSDTailVec(PSDHistogramTailVec_Master.size(),
+				&PSDHistogramTailVec_Master[0]);
     
       // Open the TFile  and write all the necessary object to it
       ParallelFile = new TFile(AAParallel::GetInstance()->GetParallelFileName().c_str(), "update");
-    
+      
       MasterPSDHistogram_H->Write("MasterPSDHistogram");
-
+      MasterPSDTotalVec.Write("MasterPSDTotalVec");
+      MasterPSDTailVec.Write("MasterPSDTailVec");
+      
       TVectorD AggregatedDeuterons(1);
       AggregatedDeuterons[0] = DeuteronsInTotal;
       AggregatedDeuterons.Write("AggregatedDeuterons");
@@ -2602,6 +2659,7 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
   //////////////////////////////////////
   // Processing waveforms in parallel //
   //////////////////////////////////////
+
   system(ParallelCommand.c_str());
 
   if(Verbose)
@@ -2669,6 +2727,24 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
     else if(ProcessingType == "discriminating"){
       PSDHistogram_H = (TH2F *)ParallelFile->Get("MasterPSDHistogram");
       PSDHistogramExists = true;
+
+      // Retrieve the master TVectorT<double> objects that contain the
+      // PSD values computed by all MPI nodes and use them to fill the
+      // class member vectors for later use
+
+      Int_t PSDChannel = ADAQSettings->PSDChannel;
+      
+      TVectorD *MasterPSDTotalVec = (TVectorD *)ParallelFile->Get("MasterPSDTotalVec");
+      PSDHistogramTotalVec[PSDChannel].clear();
+      for(int i=0; i<MasterPSDTotalVec->GetNoElements(); i++)
+	PSDHistogramTotalVec[PSDChannel].push_back( (*MasterPSDTotalVec)[i]);
+      
+      TVectorD *MasterPSDTailVec = (TVectorD *)ParallelFile->Get("MasterPSDTailVec");
+      PSDHistogramTailVec[PSDChannel].clear();
+      for(int i=0; i<MasterPSDTailVec->GetNoElements(); i++)
+	PSDHistogramTailVec[PSDChannel].push_back( (*MasterPSDTailVec)[i]);
+
+
       
       TVectorD *AggregatedDeuterons = (TVectorD *)ParallelFile->Get("AggregatedDeuterons");
       DeuteronsInTotal = (*AggregatedDeuterons)[0];

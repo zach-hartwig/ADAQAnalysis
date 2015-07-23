@@ -343,11 +343,7 @@ void AAProcessingSlots::HandleTextButtons()
     
     if(TheInterface->ADAQFileLoaded){
       
-      // Sequential processing
-      if(TheInterface->ProcessingSeq_RB->IsDown())
-	ComputationMgr->CreatePSDHistogram();
-
-
+      // Sequential waveform processing
       if(TheInterface->ProcessingSeq_RB->IsDown()){
 	
 	if(TheInterface->ADAQFileLoaded)
@@ -357,7 +353,7 @@ void AAProcessingSlots::HandleTextButtons()
 	  GraphicsMgr->PlotPSDHistogram();
       }
       
-      // Parallel processing
+      // Parallel waveform processing
       else{
 	TheInterface->SaveSettings(true);
 	
@@ -382,10 +378,10 @@ void AAProcessingSlots::HandleTextButtons()
       ComputationMgr->CreatePSDHistogram();
     else
       TheInterface->CreateMessageBox("ASIM files cannot be processed for PSD at this time!","Stop");
-
+    
     if(ComputationMgr->GetPSDHistogramExists())
       GraphicsMgr->PlotPSDHistogram();
-
+    
     break;
     
 
