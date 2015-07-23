@@ -1441,17 +1441,18 @@ void AAInterface::FillGraphicsFrame()
   OverrideTitles_CB->Connect("Clicked()", "AAGraphicsSlots", GraphicsSlots, "HandleCheckButtons()");
 
   // Plot title text entry
-  GraphicsFrame_VF->AddFrame(Title_TEL = new ADAQTextEntryWithLabel(GraphicsFrame_VF, "Plot title", Title_TEL_ID),
+  GraphicsFrame_VF->AddFrame(Title_TEL = new ADAQTextEntryWithLabel(GraphicsFrame_VF, "Title", Title_TEL_ID),
 			       new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
+  Title_TEL->GetEntry()->Resize(220,20);
 
   // X-axis title options
 
-  TGGroupFrame *XAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "X Axis", kVerticalFrame);
+  TGGroupFrame *XAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "X axis title and labels", kVerticalFrame);
   GraphicsFrame_VF->AddFrame(XAxis_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
 
-  XAxis_GF->AddFrame(XAxisTitle_TEL = new ADAQTextEntryWithLabel(XAxis_GF, "Title", XAxisTitle_TEL_ID),
+  XAxis_GF->AddFrame(XAxisTitle_TEL = new ADAQTextEntryWithLabel(XAxis_GF, "", XAxisTitle_TEL_ID),
 		     new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  XAxisTitle_TEL->GetEntry()->Resize(200, 20);
+  XAxisTitle_TEL->GetEntry()->Resize(240, 20);
 
   TGHorizontalFrame *XAxisTitleOptions_HF = new TGHorizontalFrame(XAxis_GF);
   XAxis_GF->AddFrame(XAxisTitleOptions_HF, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
@@ -1460,34 +1461,34 @@ void AAInterface::FillGraphicsFrame()
 				 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   XAxisSize_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   XAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  XAxisSize_NEL->GetEntry()->SetNumber(0.04);
-  XAxisSize_NEL->GetEntry()->Resize(50, 20);
+  XAxisSize_NEL->GetEntry()->SetNumber(0.055);
+  XAxisSize_NEL->GetEntry()->Resize(60, 20);
   XAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
   
   XAxisTitleOptions_HF->AddFrame(XAxisOffset_NEL = new ADAQNumberEntryWithLabel(XAxisTitleOptions_HF, "Offset", XAxisOffset_NEL_ID),		
 				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
   XAxisOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   XAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  XAxisOffset_NEL->GetEntry()->SetNumber(1.5);
-  XAxisOffset_NEL->GetEntry()->Resize(50, 20);
+  XAxisOffset_NEL->GetEntry()->SetNumber(1.0);
+  XAxisOffset_NEL->GetEntry()->Resize(60, 20);
   XAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   XAxis_GF->AddFrame(XAxisDivs_NEL = new ADAQNumberEntryWithLabel(XAxis_GF, "Divisions", XAxisDivs_NEL_ID),		
 		     new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   XAxisDivs_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   XAxisDivs_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  XAxisDivs_NEL->GetEntry()->SetNumber(510);
-  XAxisDivs_NEL->GetEntry()->Resize(50, 20);
+  XAxisDivs_NEL->GetEntry()->SetNumber(505);
+  XAxisDivs_NEL->GetEntry()->Resize(60, 20);
   XAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   // Y-axis title options
 
-  TGGroupFrame *YAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "Y Axis", kVerticalFrame);
+  TGGroupFrame *YAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "Y axis title and labels", kVerticalFrame);
   GraphicsFrame_VF->AddFrame(YAxis_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
   
-  YAxis_GF->AddFrame(YAxisTitle_TEL = new ADAQTextEntryWithLabel(YAxis_GF, "Title", YAxisTitle_TEL_ID),
+  YAxis_GF->AddFrame(YAxisTitle_TEL = new ADAQTextEntryWithLabel(YAxis_GF, "", YAxisTitle_TEL_ID),
 			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  YAxisTitle_TEL->GetEntry()->Resize(200, 20);
+  YAxisTitle_TEL->GetEntry()->Resize(240, 20);
   
   TGHorizontalFrame *YAxisTitleOptions_HF = new TGHorizontalFrame(YAxis_GF);
   YAxis_GF->AddFrame(YAxisTitleOptions_HF, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
@@ -1496,34 +1497,34 @@ void AAInterface::FillGraphicsFrame()
 				 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   YAxisSize_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   YAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  YAxisSize_NEL->GetEntry()->SetNumber(0.04);
-  YAxisSize_NEL->GetEntry()->Resize(50, 20);
+  YAxisSize_NEL->GetEntry()->SetNumber(0.055);
+  YAxisSize_NEL->GetEntry()->Resize(60, 20);
   YAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
   
   YAxisTitleOptions_HF->AddFrame(YAxisOffset_NEL = new ADAQNumberEntryWithLabel(YAxisTitleOptions_HF, "Offset", YAxisOffset_NEL_ID),		
 				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
   YAxisOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   YAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  YAxisOffset_NEL->GetEntry()->SetNumber(1.5);
-  YAxisOffset_NEL->GetEntry()->Resize(50, 20);
+  YAxisOffset_NEL->GetEntry()->SetNumber(1.2);
+  YAxisOffset_NEL->GetEntry()->Resize(60, 20);
   YAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   YAxis_GF->AddFrame(YAxisDivs_NEL = new ADAQNumberEntryWithLabel(YAxis_GF, "Divisions", YAxisDivs_NEL_ID),		
 		     new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   YAxisDivs_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   YAxisDivs_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  YAxisDivs_NEL->GetEntry()->SetNumber(510);
-  YAxisDivs_NEL->GetEntry()->Resize(50, 20);
+  YAxisDivs_NEL->GetEntry()->SetNumber(505);
+  YAxisDivs_NEL->GetEntry()->Resize(60, 20);
   YAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   // Z-axis options
 
-  TGGroupFrame *ZAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "Z Axis", kVerticalFrame);
+  TGGroupFrame *ZAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "Z axis titles and labels", kVerticalFrame);
   GraphicsFrame_VF->AddFrame(ZAxis_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
 
-  ZAxis_GF->AddFrame(ZAxisTitle_TEL = new ADAQTextEntryWithLabel(ZAxis_GF, "Title", ZAxisTitle_TEL_ID),
+  ZAxis_GF->AddFrame(ZAxisTitle_TEL = new ADAQTextEntryWithLabel(ZAxis_GF, "", ZAxisTitle_TEL_ID),
 			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  ZAxisTitle_TEL->GetEntry()->Resize(200,20);
+  ZAxisTitle_TEL->GetEntry()->Resize(240,20);
 
   TGHorizontalFrame *ZAxisTitleOptions_HF = new TGHorizontalFrame(ZAxis_GF);
   ZAxis_GF->AddFrame(ZAxisTitleOptions_HF, new TGLayoutHints(kLHintsNormal, 0,5,0,5));
@@ -1532,16 +1533,16 @@ void AAInterface::FillGraphicsFrame()
 				 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   ZAxisSize_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   ZAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  ZAxisSize_NEL->GetEntry()->SetNumber(0.04);
-  ZAxisSize_NEL->GetEntry()->Resize(50, 20);
+  ZAxisSize_NEL->GetEntry()->SetNumber(0.055);
+  ZAxisSize_NEL->GetEntry()->Resize(60, 20);
   ZAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
   
   ZAxisTitleOptions_HF->AddFrame(ZAxisOffset_NEL = new ADAQNumberEntryWithLabel(ZAxisTitleOptions_HF, "Offset", ZAxisOffset_NEL_ID),		
 				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
   ZAxisOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   ZAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  ZAxisOffset_NEL->GetEntry()->SetNumber(1.5);
-  ZAxisOffset_NEL->GetEntry()->Resize(50, 20);
+  ZAxisOffset_NEL->GetEntry()->SetNumber(1.0);
+  ZAxisOffset_NEL->GetEntry()->Resize(60, 20);
   ZAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   ZAxis_GF->AddFrame(ZAxisDivs_NEL = new ADAQNumberEntryWithLabel(ZAxis_GF, "Divisions", ZAxisDivs_NEL_ID),		
@@ -1549,17 +1550,17 @@ void AAInterface::FillGraphicsFrame()
   ZAxisDivs_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   ZAxisDivs_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   ZAxisDivs_NEL->GetEntry()->SetNumber(510);
-  ZAxisDivs_NEL->GetEntry()->Resize(50, 20);
+  ZAxisDivs_NEL->GetEntry()->Resize(60, 20);
   ZAxisDivs_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   // Color palette options
 
-  TGGroupFrame *PaletteAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "Palette Axis", kVerticalFrame);
+  TGGroupFrame *PaletteAxis_GF = new TGGroupFrame(GraphicsFrame_VF, "Palette axis title and labels", kVerticalFrame);
   GraphicsFrame_VF->AddFrame(PaletteAxis_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
 
-  PaletteAxis_GF->AddFrame(PaletteAxisTitle_TEL = new ADAQTextEntryWithLabel(PaletteAxis_GF, "Title", PaletteAxisTitle_TEL_ID),
+  PaletteAxis_GF->AddFrame(PaletteAxisTitle_TEL = new ADAQTextEntryWithLabel(PaletteAxis_GF, "", PaletteAxisTitle_TEL_ID),
 			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PaletteAxisTitle_TEL->GetEntry()->Resize(200,20);
+  PaletteAxisTitle_TEL->GetEntry()->Resize(240,20);
   
   // A horizontal frame for the Z-axis title/label size and offset
   TGHorizontalFrame *PaletteAxisTitleOptions_HF = new TGHorizontalFrame(PaletteAxis_GF);
@@ -1569,16 +1570,16 @@ void AAInterface::FillGraphicsFrame()
 				 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PaletteAxisSize_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PaletteAxisSize_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PaletteAxisSize_NEL->GetEntry()->SetNumber(0.04);
-  PaletteAxisSize_NEL->GetEntry()->Resize(50, 20);
+  PaletteAxisSize_NEL->GetEntry()->SetNumber(0.055);
+  PaletteAxisSize_NEL->GetEntry()->Resize(60, 20);
   PaletteAxisSize_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
   
   PaletteAxisTitleOptions_HF->AddFrame(PaletteAxisOffset_NEL = new ADAQNumberEntryWithLabel(PaletteAxisTitleOptions_HF, "Offset", PaletteAxisOffset_NEL_ID),		
 				 new TGLayoutHints(kLHintsNormal, 5,2,0,0));
   PaletteAxisOffset_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PaletteAxisOffset_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PaletteAxisOffset_NEL->GetEntry()->SetNumber(1.1);
-  PaletteAxisOffset_NEL->GetEntry()->Resize(50, 20);
+  PaletteAxisOffset_NEL->GetEntry()->SetNumber(1.0);
+  PaletteAxisOffset_NEL->GetEntry()->Resize(60, 20);
   PaletteAxisOffset_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
   TGHorizontalFrame *PaletteAxisPositions_HF1 = new TGHorizontalFrame(PaletteAxis_GF);
@@ -1588,7 +1589,7 @@ void AAInterface::FillGraphicsFrame()
 				    new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PaletteX1_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PaletteX1_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PaletteX1_NEL->GetEntry()->SetNumber(0.82);
+  PaletteX1_NEL->GetEntry()->SetNumber(0.85);
   PaletteX1_NEL->GetEntry()->Resize(50, 20);
   PaletteX1_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
@@ -1596,7 +1597,7 @@ void AAInterface::FillGraphicsFrame()
 				    new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PaletteX2_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PaletteX2_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PaletteX2_NEL->GetEntry()->SetNumber(0.87);
+  PaletteX2_NEL->GetEntry()->SetNumber(0.89);
   PaletteX2_NEL->GetEntry()->Resize(50, 20);
   PaletteX2_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 
@@ -1607,7 +1608,7 @@ void AAInterface::FillGraphicsFrame()
 				    new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PaletteY1_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PaletteY1_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PaletteY1_NEL->GetEntry()->SetNumber(0.15);
+  PaletteY1_NEL->GetEntry()->SetNumber(0.16);
   PaletteY1_NEL->GetEntry()->Resize(50, 20);
   PaletteY1_NEL->GetEntry()->Connect("ValueSet(long)", "AAGraphicsSlots", GraphicsSlots, "HandleNumberEntries()");
 

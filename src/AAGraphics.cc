@@ -814,7 +814,7 @@ void AAGraphics::PlotPSDHistogram()
   
   TheCanvas->SetLeftMargin(0.13);
   TheCanvas->SetBottomMargin(0.12);
-  TheCanvas->SetRightMargin(0.2);
+  TheCanvas->SetRightMargin(0.17);
 
   ////////////////////////////////
 
