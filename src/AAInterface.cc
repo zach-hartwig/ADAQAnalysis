@@ -591,6 +591,7 @@ TGGroupFrame *PeakFindingOptions_GF = new TGGroupFrame(WaveformFrame_VF, "Peak f
   
   WaveformFrame_VF->AddFrame(AutoYAxisRange_CB = new TGCheckButton(WaveformFrame_VF, "Auto. Y Axis Range", AutoYAxisRange_CB_ID),
 			     new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+  AutoYAxisRange_CB->Connect("Clicked()", "AAWaveformSlots", WaveformSlots, "HandleCheckButtons()");
   			       
 
   ///////////////////////

@@ -75,6 +75,7 @@ void AAWaveformSlots::HandleCheckButtons()
   case PlotZeroSuppressionCeiling_CB_ID:
   case PlotTrigger_CB_ID:
   case UsePileupRejection_CB_ID:
+  case AutoYAxisRange_CB_ID:
   case WaveformAnalysis_CB_ID:
     
     if(TheInterface->PlotPearsonIntegration_CB->IsDown()){
