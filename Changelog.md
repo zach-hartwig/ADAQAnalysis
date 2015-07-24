@@ -6,6 +6,8 @@ auth: Zach Hartwig
 mail: hartwig@psfc.mit.edu  
 
 
+## Changes in master HEAD
+
 ## Version-1.2 Series
 
 Major new developments in this series include:
@@ -32,8 +34,29 @@ Major new developments in this series include:
    later use, enabling near-instant switching between pulse height and
    pulse area spectra.
 
+### 1.2.1
 
-### Changes in master HEAD
+ - Corrections to Makefile to ensure easier building across Linux platfors
+
+ - Restrict waveform analysis to user-specified region in
+   time. Applies for spectrum and PSD histogram creation
+
+ - Completely split waveform processing and PSD histogram creation to
+   ensure optimal PSD. Implemented for sequential and parallel
+   architectures. Various PSD button behavior erros fixed.
+
+ - Updates and optimization of graphics, graphical default settings,
+   GUI buttons for custom axes properties
+
+ - New PSD color palette selection option
+
+ - Calibration vectors are now automatically sorted to that
+   calibration points can be added in any order
+
+ - Automatic replotting of waveforms when the user clicks to autorange
+   the y axis during waveform plotting
+   	 
+### 1.2.0
 
  - Correctly set spectrum TH1F X-axis limits when mininmum bin is
    zero. This fix also suppresses visualization of the under/overflow
