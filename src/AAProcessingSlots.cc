@@ -254,6 +254,7 @@ void AAProcessingSlots::HandleRadioButtons()
     if(TheInterface->PSDAlgorithmPF_RB->IsDown()){
       TheInterface->PSDAlgorithmSMS_RB->SetState(kButtonUp);
       TheInterface->PSDAlgorithmWD_RB->SetState(kButtonUp);
+      TheInterface->SaveSettings();
     }
     break;
     
@@ -261,13 +262,15 @@ void AAProcessingSlots::HandleRadioButtons()
     if(TheInterface->PSDAlgorithmSMS_RB->IsDown()){
       TheInterface->PSDAlgorithmPF_RB->SetState(kButtonUp);
       TheInterface->PSDAlgorithmWD_RB->SetState(kButtonUp);
+      TheInterface->SaveSettings();
     }
     break;
-
+    
   case PSDAlgorithmWD_RB_ID:
-    if(TheInterface->PSDAlgorithmSMS_RB->IsDown()){
+    if(TheInterface->PSDAlgorithmWD_RB->IsDown()){
+      TheInterface->PSDAlgorithmSMS_RB->SetState(kButtonUp);
       TheInterface->PSDAlgorithmPF_RB->SetState(kButtonUp);
-      TheInterface->PSDAlgorithmWD_RB->SetState(kButtonUp);
+      TheInterface->SaveSettings();
     }
     break;
 

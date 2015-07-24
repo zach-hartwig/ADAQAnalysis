@@ -1937,7 +1937,7 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
   // fixed vector length, makes preallocation difficult.
   PSDHistogramTotalVec[PSDChannel].clear();
   PSDHistogramTailVec[PSDChannel].clear();
-  
+
 
   ////////////////////////////////////////////////////////
   // Create the PSD histogram from stored waveform data //
@@ -1971,11 +1971,16 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
 
     // Create and set address of ADAQWavefomData object in the waveform tree
     ADAQWaveformData *WD = new ADAQWaveformData;
-    ADAQWaveformTree->SetBranchAddress(WDName.c_str(), &WD);
 
+    // Clone the ADAQWaveformTree for use to prevent TTree memory
+    // modifications that cause seg fault when PSD mode is switched
+    // from waveform data back to other PSD modes
+    TTree *CloneTree = (TTree *)ADAQWaveformTree->Clone("CloneTree");
+    CloneTree->SetBranchAddress(WDName.c_str(), &WD);
+    
     // Readout appropriate waveform data into the spectrum
-    for(int entry=0; entry<ADAQWaveformTree->GetEntries(); entry++){
-      ADAQWaveformTree->GetEntry(entry);
+    for(int entry=0; entry<CloneTree->GetEntries(); entry++){
+      CloneTree->GetEntry(entry);
       
       // Get the stored total and tail PSD integrals
       TotalIntegral = WD->GetPSDTotalIntegral();
@@ -2007,6 +2012,8 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
       }
     }
 
+    // Memory clean up
+    delete CloneTree;
     delete WD;
     
     PSDHistogramExists = true;
@@ -2015,9 +2022,9 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
   ////////////////////////////////////////////////////////
   // Create the PSD histogram from processing waveforms //
   ////////////////////////////////////////////////////////
-
-  else{
   
+  else{
+    
     // Reboot the PeakFinder with up-to-date max peaks
     if(PeakFinder) delete PeakFinder;
     PeakFinder = new TSpectrum(ADAQSettings->MaxPeaks);
@@ -2060,7 +2067,7 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
     for(int waveform=WaveformStart; waveform<WaveformEnd; waveform++){
       if(SequentialArchitecture)
 	gSystem->ProcessEvents();
-    
+
       ADAQWaveformTree->GetEntry(waveform);
 
       RawVoltage = *Waveforms[PSDChannel];
