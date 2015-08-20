@@ -2667,8 +2667,12 @@ void AAInterface::UpdateForADAQFile()
   // "Production" ADAQ file (new hotness)
   else{
     ADAQReadoutInformation *ARI = ComputationMgr->GetADAQReadoutInformation();
+
+    if(ARI->GetDGFWType() == "Standard")
+      RecordLength = ARI->GetRecordLength();
+    else if(ARI->GetDGFWType() == "DPP-PSD")
+      RecordLength = ARI->GetChRecordLength().at(Channel);
     
-    RecordLength = ARI->GetRecordLength();
     Trigger = ARI->GetTrigger().at(Channel);
     BaselineRegionMin = ARI->GetBaselineCalcMin().at(Channel);
     BaselineRegionMax = ARI->GetBaselineCalcMax().at(Channel);
