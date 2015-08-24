@@ -105,12 +105,13 @@ void AAWaveformSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
     return;
   
   TheInterface->SaveSettings();
-
+  
   switch(ComboBoxID){
-
+    
   case ChannelSelector_CBL_ID:
+    TheInterface->UpdateForADAQFile();
     break;
-
+    
   default:
     break;
   }
@@ -129,6 +130,7 @@ void AAWaveformSlots::HandleNumberEntries()
   int NumberEntryID = NumberEntry->WidgetId();
 
   switch(NumberEntryID){
+
   case WaveformSelector_NEL_ID:{
     int Num = TheInterface->WaveformSelector_NEL->GetEntry()->GetIntNumber();
     TheInterface->WaveformSelector_HS->SetPosition(Num);

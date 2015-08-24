@@ -345,6 +345,7 @@ void AAInterface::FillWaveformFrame()
     ChannelSelector_CBL->GetComboBox()->AddEntry(entry.c_str(),ch);
     ss.str("");
   }
+  ChannelSelector_CBL->GetComboBox()->Connect("Selected(int,int)", "AAWaveformSlots", WaveformSlots, "HandleComboBoxes(int,int)");
   ChannelSelector_CBL->GetComboBox()->Select(0);
 
   WaveformSelection_HF->AddFrame(WaveformSelector_NEL = new ADAQNumberEntryWithLabel(WaveformSelection_HF, "Waveform", WaveformSelector_NEL_ID),
@@ -2668,10 +2669,17 @@ void AAInterface::UpdateForADAQFile()
   else{
     ADAQReadoutInformation *ARI = ComputationMgr->GetADAQReadoutInformation();
 
+    // Standard firmware has a global record length setings
     if(ARI->GetDGFWType() == "Standard")
       RecordLength = ARI->GetRecordLength();
+
+    // DPP-PSD firmware has channel specific record length settings
     else if(ARI->GetDGFWType() == "DPP-PSD")
       RecordLength = ARI->GetChRecordLength().at(Channel);
+
+    // Account for ADAQ v1.0 files produced before DPP-PSD update
+    else
+      RecordLength = ARI->GetRecordLength();
     
     Trigger = ARI->GetTrigger().at(Channel);
     BaselineRegionMin = ARI->GetBaselineCalcMin().at(Channel);
