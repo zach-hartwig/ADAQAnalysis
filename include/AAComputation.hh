@@ -181,7 +181,8 @@ public:
   TH1F *GetSpectrumWithoutBackground() {return (TH1F *)SpectrumDeconvolved_H->Clone();}
   
   // Spectra calibrations
-  vector<TGraph *> GetSpectraCalibrations() { return SpectraCalibrations; }
+  vector<TGraph *> GetSpectraCalibrationData() { return SpectraCalibrationData; }
+  vector<TF1 *> GetSpectraCalibrations() { return SpectraCalibrations; }
   vector<Bool_t> GetUseSpectraCalibrations() { return UseSpectraCalibrations; }
 
   Double_t GetEdgePosition() {return EdgePosition;}
@@ -318,7 +319,8 @@ private:
   vector<Double_t> SpectrumPHVec[8], SpectrumPAVec[8];
 
   // Objects that are used in energy calibration of the pulse spectra
-  vector<TGraph *> SpectraCalibrations;
+  vector<TGraph *>SpectraCalibrationData;
+  vector<TF1 *> SpectraCalibrations;
   vector<Bool_t> UseSpectraCalibrations;
   vector<ADAQChannelCalibrationData> CalibrationData;
 

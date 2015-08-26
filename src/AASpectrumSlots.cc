@@ -102,17 +102,18 @@ void AASpectrumSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
     // by selecting the calibration point with the combo box
   case SpectrumCalibrationPoint_CBL_ID:{
 
-    const int Channel = TheInterface->ChannelSelector_CBL->GetComboBox()->GetSelected();
+    const Int_t Channel = TheInterface->ChannelSelector_CBL->GetComboBox()->GetSelected();
 
     // Get the vector<TGraph *> of spectra calibrations from the
     // ComputationMgr (if they are set for this channel) and set the
     // {Energy,PulseUnit} value to the number entry displays
     if(ComputationMgr->GetUseSpectraCalibrations()[Channel]){
-      vector<TGraph *> Calibrations = ComputationMgr->GetSpectraCalibrations();
-
-      double *PulseUnit = Calibrations[Channel]->GetX();
-      double *Energy = Calibrations[Channel]->GetY();
-
+      
+      vector<TGraph *> CalibrationData = ComputationMgr->GetSpectraCalibrationData();
+      
+      Double_t *PulseUnit = CalibrationData[Channel]->GetX();
+      Double_t *Energy = CalibrationData[Channel]->GetY();
+      
       // User selected present point ready for entry (not yet set)
       if(SelectedID+1 == TheInterface->SpectrumCalibrationPoint_CBL->GetComboBox()->GetNumberOfEntries()){
 	TheInterface->SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);

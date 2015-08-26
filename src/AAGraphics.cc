@@ -40,6 +40,8 @@
 #include <TGClient.h>
 #include <TRootCanvas.h>
 #include <THashList.h>
+#include <TLegend.h>
+#include <TLatex.h>
 
 // C++
 #include <iostream>
@@ -984,35 +986,75 @@ void AAGraphics::PlotSpectrumDerivative()
 
 void AAGraphics::PlotCalibration(int Channel)
 {
-  vector<TGraph *> SpectraCalibrations = ComputationMgr->GetSpectraCalibrations();
+  vector<TGraph *> CalibrationData = ComputationMgr->GetSpectraCalibrationData();
+  vector<TF1 *> Calibrations = ComputationMgr->GetSpectraCalibrations();
   
-  stringstream ss;
-  ss << "Spectrum calibration TGraph for channel[" << Channel << "]";
-  string Title = ss.str();
+  stringstream SS;
+  SS << "Spectrum calibration TGraph for channel[" << Channel << "]";
+  string Title = SS.str();
+
+  // Plot the calibration data points
   
-  SpectraCalibrations[Channel]->SetTitle(Title.c_str());
+  CalibrationData[Channel]->SetTitle(Title.c_str());
   
-  SpectraCalibrations[Channel]->GetXaxis()->SetTitle("Pulse unit [ADC]");
-  SpectraCalibrations[Channel]->GetXaxis()->SetTitleSize(0.05);
-  SpectraCalibrations[Channel]->GetXaxis()->SetTitleOffset(1.2);
-  SpectraCalibrations[Channel]->GetXaxis()->CenterTitle();
-  SpectraCalibrations[Channel]->GetXaxis()->SetLabelSize(0.05);
+  CalibrationData[Channel]->GetXaxis()->SetTitle("Pulse unit [ADC]");
+  CalibrationData[Channel]->GetXaxis()->SetTitleSize(0.05);
+  CalibrationData[Channel]->GetXaxis()->SetTitleOffset(1.2);
+  CalibrationData[Channel]->GetXaxis()->CenterTitle();
+  CalibrationData[Channel]->GetXaxis()->SetLabelSize(0.05);
   
-  SpectraCalibrations[Channel]->GetYaxis()->SetTitle("Energy");
-  SpectraCalibrations[Channel]->GetYaxis()->SetTitleSize(0.05);
-  SpectraCalibrations[Channel]->GetYaxis()->SetTitleOffset(1.2);
-  SpectraCalibrations[Channel]->GetYaxis()->CenterTitle();
-  SpectraCalibrations[Channel]->GetYaxis()->SetLabelSize(0.05);
+  CalibrationData[Channel]->GetYaxis()->SetTitle("Energy");
+  CalibrationData[Channel]->GetYaxis()->SetTitleSize(0.05);
+  CalibrationData[Channel]->GetYaxis()->SetTitleOffset(1.2);
+  CalibrationData[Channel]->GetYaxis()->CenterTitle();
+  CalibrationData[Channel]->GetYaxis()->SetLabelSize(0.05);
   
-  SpectraCalibrations[Channel]->SetMarkerSize(2);
-  SpectraCalibrations[Channel]->SetMarkerStyle(23);
-  SpectraCalibrations[Channel]->SetMarkerColor(1);
-  SpectraCalibrations[Channel]->SetLineWidth(2);
-  SpectraCalibrations[Channel]->SetLineColor(1);
-  SpectraCalibrations[Channel]->Draw("ALP");
+  CalibrationData[Channel]->SetMarkerStyle(20);
+  CalibrationData[Channel]->SetMarkerSize(2.0);
+  CalibrationData[Channel]->SetMarkerColor(kBlue);
+  CalibrationData[Channel]->Draw("AP");
+
+  // Overplot the fit to the calibration data
+
+  Calibrations[Channel]->SetLineStyle(1);
+  Calibrations[Channel]->SetLineWidth(2);
+  Calibrations[Channel]->SetLineColor(kRed);
+  Calibrations[Channel]->Draw("L SAME");
+
+  // Create a legend
+
+  TLegend *TheLegend_L = new TLegend(0.2, 0.7, 0.4, 0.9);
+  TheLegend_L->AddEntry(CalibrationData[Channel], "Data", "P");
+  TheLegend_L->AddEntry(Calibrations[Channel], "Fit", "L");
+  TheLegend_L->Draw();
+
+  // Plot an equation of the fit on the canvas
+  
+  SS.str("");
+  SS << "E = ";
+
+  const Int_t NParameters = Calibrations[Channel]->GetNpar();
+  Double_t *Parameters = Calibrations[Channel]->GetParameters();
+
+  vector<string> Variables;
+  Variables.push_back("1");
+  Variables.push_back("P");
+  Variables.push_back("P^{2}");
+
+  for(Int_t p=0; p<NParameters; p++){
+    SS << Parameters[p] << " * " << Variables[p];
+    if((p+1) != NParameters)
+      SS << " + ";
+  }
+  
+  TString EquationString = SS.str();
+
+  TLatex *Equation = new TLatex;
+  Equation->SetTextColor(kRed);
+  Equation->SetTextSize(0.045);
+  Equation->DrawTextNDC(0.22, 0.15, EquationString);
   
   TheCanvas->Update();
-
 }
 
 // Horizontal calibration line

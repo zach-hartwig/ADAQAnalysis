@@ -70,9 +70,10 @@ public:
   Bool_t ASIMSpectrumTypePhotonsCreated;
   Bool_t ASIMSpectrumTypePhotonsDetected;
   string ASIMEventTreeName;
-
+  
+  string CalibrationType;
   Int_t EnergyUnit;
-  vector<TGraph *> SpectraCalibrations;
+  vector<TF1 *> SpectraCalibrations;
   vector<bool> UseSpectraCalibrations;
   
   

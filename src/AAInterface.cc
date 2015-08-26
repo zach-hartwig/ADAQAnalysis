@@ -808,9 +808,8 @@ void AAInterface::FillSpectrumFrame()
   SpectrumCalibration_GF->AddFrame(SpectrumCalibrationType_CBL = new ADAQComboBoxWithLabel(SpectrumCalibration_GF, "", SpectrumCalibrationType_CBL_ID),
 				   new TGLayoutHints(kLHintsNormal, 0,0,10,0));
   SpectrumCalibrationType_CBL->GetComboBox()->Resize(171,20);
-  SpectrumCalibrationType_CBL->GetComboBox()->AddEntry("Linear interpolation",0);
-  SpectrumCalibrationType_CBL->GetComboBox()->AddEntry("Linear fit (a+b*x)",1);
-  SpectrumCalibrationType_CBL->GetComboBox()->AddEntry("Quad. fit (a+b*x+c*x*x)",2);
+  SpectrumCalibrationType_CBL->GetComboBox()->AddEntry("Linear fit",0);
+  SpectrumCalibrationType_CBL->GetComboBox()->AddEntry("Quadratic fit",1);
   SpectrumCalibrationType_CBL->GetComboBox()->Select(0);
   SpectrumCalibrationType_CBL->GetComboBox()->SetEnabled(false);
   SpectrumCalibrationType_CBL->GetComboBox()->Connect("Selected(int,int)", "AASpectrumSlots", SpectrumSlots, "HandleComboBoxes(int,int)");
@@ -2417,7 +2416,8 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->ASIMSpectrumTypePhotonsCreated = ASIMSpectrumTypePhotonsCreated_RB->IsDown();
   ADAQSettings->ASIMSpectrumTypePhotonsDetected = ASIMSpectrumTypePhotonsDetected_RB->IsDown();
   ADAQSettings->ASIMEventTreeName = ASIMEventTree_CB->GetSelectedEntry()->GetTitle();
-  
+
+  ADAQSettings->CalibrationType = SpectrumCalibrationType_CBL->GetComboBox()->GetSelectedEntry()->GetTitle();
   ADAQSettings->EnergyUnit = SpectrumCalibrationUnit_CBL->GetComboBox()->GetSelected();
 
   

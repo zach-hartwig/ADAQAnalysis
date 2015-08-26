@@ -111,7 +111,8 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     
     // Store empty TCutG pointers in std::vectors to hold space and
     // prevent seg. faults later when we test/delete unused objects
-    SpectraCalibrations.push_back(new TGraph);
+    SpectraCalibrationData.push_back(new TGraph);
+    SpectraCalibrations.push_back(new TF1);
     PSDRegions.push_back(new TCutG);
     
     // Assign a blank initial structure for channel calibration data
@@ -2839,15 +2840,31 @@ Bool_t AAComputation::SetCalibrationPoint(Int_t Channel, Int_t SetPoint,
 
 Bool_t AAComputation::SetCalibration(Int_t Channel)
 {
-  if(CalibrationData[Channel].PointID.size() >= 2){
-    // Determine the total number of calibration points in the
-    // current channel's calibration data set
-    int NumCalibrationPoints = CalibrationData[Channel].PointID.size();
+  Int_t NumCalibrationPoints = CalibrationData[Channel].PointID.size();
+
+  if(NumCalibrationPoints >= 2){
     
-    // Create a new "SpectraCalibrations" TGraph object.
-    SpectraCalibrations[Channel] = new TGraph(NumCalibrationPoints,
-					      &CalibrationData[Channel].PulseUnit[0],
-					      &CalibrationData[Channel].Energy[0]);
+    SpectraCalibrationData[Channel] = new TGraph(NumCalibrationPoints,
+						 &CalibrationData[Channel].PulseUnit[0],
+						 &CalibrationData[Channel].Energy[0]);
+    
+    TString FitType;
+    if(ADAQSettings->CalibrationType == "Linear fit")
+      FitType = "pol1";
+    else if(ADAQSettings->CalibrationType == "Quadratic fit")
+      FitType = "pol2";
+
+    Double_t FitRangeMin = 0;
+    Double_t FitRangeMax = 40000;
+    
+    delete SpectraCalibrations[Channel];
+
+    SpectraCalibrations[Channel] = new TF1("SpectrumCalibration", 
+					   FitType, 
+					   FitRangeMin,
+					   FitRangeMax);
+
+    SpectraCalibrationData[Channel]->Fit("SpectrumCalibration", "RN");
     
     // Set the current channel's calibration boolean to true,
     // indicating that the current channel will convert pulse units
@@ -2869,13 +2886,16 @@ bool AAComputation::ClearCalibration(int Channel)
   CalibrationData[Channel].Energy.clear();
   CalibrationData[Channel].PulseUnit.clear();
   
-  // Delete the current channel's depracated calibration manager
-  // TGraph object to prevent memory leaks but reallocat the TGraph
-  // object to prevent seg. faults when writing the
+  // Delete the current channel's depracated calibration data TGraph
+  // and fit TF1 objects to prevent memory leaks but reallocate the
+  // objects to prevent seg. faults when writing the
   // SpectraCalibrations to the ROOT parallel processing file
   if(UseSpectraCalibrations[Channel]){
+    delete SpectraCalibrationData[Channel];
+    SpectraCalibrationData[Channel] = new TGraph;
+
     delete SpectraCalibrations[Channel];
-    SpectraCalibrations[Channel] = new TGraph;
+    SpectraCalibrations[Channel] = new TF1;
   }
   
   // Set the current channel's calibration boolean to false,
