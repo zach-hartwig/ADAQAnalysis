@@ -2226,6 +2226,24 @@ void AAInterface::FillCanvasFrame()
   FileStats_HF->SetBackgroundColor(ThemeBackgroundColor);
   Canvas_VF->AddFrame(FileStats_HF, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 5,5,0,5));
 
+  // CAEN firmware type
+
+  TGHorizontalFrame *FirmwareTEAndLabel_HF = new TGHorizontalFrame(FileStats_HF);
+  FirmwareTEAndLabel_HF->SetBackgroundColor(ThemeBackgroundColor);
+  FileStats_HF->AddFrame(FirmwareTEAndLabel_HF, new TGLayoutHints(kLHintsLeft, 5,35,0,0));
+  
+  FirmwareTEAndLabel_HF->AddFrame(FirmwareType_TE = new TGTextEntry(FirmwareTEAndLabel_HF, " <None>", -1),
+				  new TGLayoutHints(kLHintsTop | kLHintsCenterX, 30,5,0,5));
+  FirmwareType_TE->Resize(80,20);
+  FirmwareType_TE->SetState(false);
+  FirmwareType_TE->SetAlignment(kTextCenterX);
+  FirmwareType_TE->SetBackgroundColor(ThemeForegroundColor);
+  FirmwareType_TE->ChangeOptions(FirmwareType_TE->GetOptions() | kFixedSize);
+  
+  FirmwareTEAndLabel_HF->AddFrame(FirmwareLabel_L = new TGLabel(FirmwareTEAndLabel_HF, " Firmware type "),
+				  new TGLayoutHints(kLHintsLeft,0,5,3,0));
+  FirmwareLabel_L->SetBackgroundColor(ThemeForegroundColor);
+  
   // Waveforms
 
   TGHorizontalFrame *WaveformNELAndLabel_HF = new TGHorizontalFrame(FileStats_HF);
@@ -2234,6 +2252,7 @@ void AAInterface::FillCanvasFrame()
 
   WaveformNELAndLabel_HF->AddFrame(Waveforms_NEL = new TGNumberEntryField(WaveformNELAndLabel_HF,-1),
 				  new TGLayoutHints(kLHintsLeft,5,5,0,0));
+  Waveforms_NEL->Resize(80,20);
   Waveforms_NEL->SetBackgroundColor(ThemeForegroundColor);
   Waveforms_NEL->SetAlignment(kTextCenterX);
   Waveforms_NEL->SetState(false);
@@ -2250,6 +2269,7 @@ void AAInterface::FillCanvasFrame()
 
   RecordLengthNELAndLabel_HF->AddFrame(RecordLength_NEL = new TGNumberEntryField(RecordLengthNELAndLabel_HF,-1),
 				      new TGLayoutHints(kLHintsLeft,5,5,0,0));
+  RecordLength_NEL->Resize(80,20);
   RecordLength_NEL->SetBackgroundColor(ThemeForegroundColor);
   RecordLength_NEL->SetAlignment(kTextCenterX);
   RecordLength_NEL->SetState(false);
@@ -2655,6 +2675,9 @@ void AAInterface::UpdateForADAQFile()
   // sets taken before Feb 2015, we must differentiate between the
   // "legacy" and "production" ADAQ file formats.
 
+  TString FWType;
+
+
   // "Legacy" ADAQ file (old and busted)
   if(ComputationMgr->GetADAQLegacyFileLoaded()){
     ADAQRootMeasParams *AMP = ComputationMgr->GetADAQMeasurementParameters();
@@ -2663,6 +2686,8 @@ void AAInterface::UpdateForADAQFile()
     Trigger = AMP->TriggerThreshold[Channel];
     BaselineRegionMin = AMP->BaselineCalcMin[Channel];
     BaselineRegionMax = AMP->BaselineCalcMax[Channel];
+
+    FWType = "Standard";
   }
 
   // "Production" ADAQ file (new hotness)
@@ -2670,16 +2695,22 @@ void AAInterface::UpdateForADAQFile()
     ADAQReadoutInformation *ARI = ComputationMgr->GetADAQReadoutInformation();
 
     // Standard firmware has a global record length setings
-    if(ARI->GetDGFWType() == "Standard")
+    if(ARI->GetDGFWType() == "Standard"){
       RecordLength = ARI->GetRecordLength();
+      FWType = "Standard";
+    }
 
     // DPP-PSD firmware has channel specific record length settings
-    else if(ARI->GetDGFWType() == "DPP-PSD")
+    else if(ARI->GetDGFWType() == "DPP-PSD"){
       RecordLength = ARI->GetChRecordLength().at(Channel);
-
+      FWType = ARI->GetDGFWType();
+    }
+    
     // Account for ADAQ v1.0 files produced before DPP-PSD update
-    else
+    else{
       RecordLength = ARI->GetRecordLength();
+      FWType = "Standard";
+    }
     
     Trigger = ARI->GetTrigger().at(Channel);
     BaselineRegionMin = ARI->GetBaselineCalcMin().at(Channel);
@@ -2692,6 +2723,7 @@ void AAInterface::UpdateForADAQFile()
   WaveformsToHistogram_NEL->GetEntry()->SetNumber(WaveformsInFile);
 
   FileName_TE->SetText(ADAQFileName.c_str());
+  FirmwareType_TE->SetText(FWType);
   Waveforms_NEL->SetNumber(WaveformsInFile);
   RecordLength_NEL->SetNumber(RecordLength);
   

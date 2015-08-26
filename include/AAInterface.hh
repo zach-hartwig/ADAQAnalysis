@@ -400,10 +400,10 @@ private:
   // Widget objects for the "Canvas" frame //
   ///////////////////////////////////////////
 
-  // Widget to display open ADAQ ROOT file statistics
-  TGTextEntry *FileName_TE;
+  // Widget to display open ADAQ ROOT file statistic
+  TGTextEntry *FileName_TE, *FirmwareType_TE;
   TGNumberEntryField *Waveforms_NEL, *RecordLength_NEL;
-  TGLabel *WaveformLabel_L, *RecordLengthLabel_L;
+  TGLabel *FirmwareLabel_L, *WaveformLabel_L, *RecordLengthLabel_L;
 
   // The canvas to display all plots
   TRootEmbeddedCanvas *Canvas_EC;
