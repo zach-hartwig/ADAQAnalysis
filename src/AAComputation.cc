@@ -2853,9 +2853,9 @@ Bool_t AAComputation::SetCalibration(Int_t Channel)
       FitType = "pol1";
     else if(ADAQSettings->CalibrationType == "Quadratic fit")
       FitType = "pol2";
-
-    Double_t FitRangeMin = 0;
-    Double_t FitRangeMax = 40000;
+    
+    Double_t FitRangeMin = ADAQSettings->CalibrationMin;
+    Double_t FitRangeMax = ADAQSettings->CalibrationMax;
     
     delete SpectraCalibrations[Channel];
 

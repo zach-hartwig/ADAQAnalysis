@@ -225,6 +225,7 @@ private:
   TGCheckButton *SpectrumCalibration_CB;
   TGRadioButton *SpectrumCalibrationStandard_RB, *SpectrumCalibrationEdgeFinder_RB;
   ADAQComboBoxWithLabel *SpectrumCalibrationType_CBL;
+  ADAQNumberEntryWithLabel *SpectrumCalibrationMin_NEL, *SpectrumCalibrationMax_NEL;
 
   ADAQComboBoxWithLabel *SpectrumCalibrationPoint_CBL;
   ADAQComboBoxWithLabel *SpectrumCalibrationUnit_CBL;

@@ -72,6 +72,7 @@ public:
   string ASIMEventTreeName;
   
   string CalibrationType;
+  Double_t CalibrationMin, CalibrationMax;
   Int_t EnergyUnit;
   vector<TF1 *> SpectraCalibrations;
   vector<bool> UseSpectraCalibrations;

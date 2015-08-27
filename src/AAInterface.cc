@@ -671,7 +671,7 @@ void AAInterface::FillSpectrumFrame()
 		       new TGLayoutHints(kLHintsRight, 15,0,0,0));
   SpectrumMaxBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumMaxBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  SpectrumMaxBin_NEL->GetEntry()->SetNumber(20000);
+  SpectrumMaxBin_NEL->GetEntry()->SetNumber(50000);
   SpectrumMaxBin_NEL->GetEntry()->Connect("ValueSet(long)", "AASpectrumSlots", SpectrumSlots, "HandleNumberEntries()");
 
 
@@ -807,13 +807,38 @@ void AAInterface::FillSpectrumFrame()
   
   SpectrumCalibration_GF->AddFrame(SpectrumCalibrationType_CBL = new ADAQComboBoxWithLabel(SpectrumCalibration_GF, "", SpectrumCalibrationType_CBL_ID),
 				   new TGLayoutHints(kLHintsNormal, 0,0,10,0));
-  SpectrumCalibrationType_CBL->GetComboBox()->Resize(171,20);
+  SpectrumCalibrationType_CBL->GetComboBox()->Resize(130,20);
   SpectrumCalibrationType_CBL->GetComboBox()->AddEntry("Linear fit",0);
   SpectrumCalibrationType_CBL->GetComboBox()->AddEntry("Quadratic fit",1);
   SpectrumCalibrationType_CBL->GetComboBox()->Select(0);
   SpectrumCalibrationType_CBL->GetComboBox()->SetEnabled(false);
   SpectrumCalibrationType_CBL->GetComboBox()->Connect("Selected(int,int)", "AASpectrumSlots", SpectrumSlots, "HandleComboBoxes(int,int)");
 
+  
+  TGHorizontalFrame *SpectrumCalibrationRange_HF = new TGHorizontalFrame(SpectrumCalibration_GF);
+  SpectrumCalibration_GF->AddFrame(SpectrumCalibrationRange_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+
+  SpectrumCalibrationRange_HF->AddFrame(SpectrumCalibrationMin_NEL = new ADAQNumberEntryWithLabel(SpectrumCalibrationRange_HF,
+												  "Min (ADC)",
+												  SpectrumCalibrationMin_NEL_ID),
+					new TGLayoutHints(kLHintsLeft,0,5,0,0));
+  SpectrumCalibrationMin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  SpectrumCalibrationMin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
+  SpectrumCalibrationMin_NEL->GetEntry()->SetNumber(0.0);
+  SpectrumCalibrationMin_NEL->GetEntry()->SetState(false);
+  SpectrumCalibrationMin_NEL->GetEntry()->Resize(60,20);
+  SpectrumCalibrationMin_NEL->GetEntry()->Connect("ValueSet(long)", "AASpectrumSlots", SpectrumSlots, "HandleNumberEntries()");
+  
+  SpectrumCalibrationRange_HF->AddFrame(SpectrumCalibrationMax_NEL = new ADAQNumberEntryWithLabel(SpectrumCalibrationRange_HF,
+												  "Max (ADC)",
+												  SpectrumCalibrationMax_NEL_ID),
+					new TGLayoutHints(kLHintsLeft,0,0,0,0));
+  SpectrumCalibrationMax_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  SpectrumCalibrationMax_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
+  SpectrumCalibrationMax_NEL->GetEntry()->SetNumber(1.0);
+  SpectrumCalibrationMax_NEL->GetEntry()->SetState(false);
+  SpectrumCalibrationMax_NEL->GetEntry()->Resize(60,20);
+  SpectrumCalibrationMax_NEL->GetEntry()->Connect("ValueSet(long)", "AASpectrumSlots", SpectrumSlots, "HandleNumberEntries()");
 
 
   TGHorizontalFrame *SpectrumCalibrationType_HF = new TGHorizontalFrame(SpectrumCalibration_GF);
@@ -2417,6 +2442,8 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->ASIMSpectrumTypePhotonsDetected = ASIMSpectrumTypePhotonsDetected_RB->IsDown();
   ADAQSettings->ASIMEventTreeName = ASIMEventTree_CB->GetSelectedEntry()->GetTitle();
 
+  ADAQSettings->CalibrationMin = SpectrumCalibrationMin_NEL->GetEntry()->GetNumber();
+  ADAQSettings->CalibrationMax = SpectrumCalibrationMax_NEL->GetEntry()->GetNumber();
   ADAQSettings->CalibrationType = SpectrumCalibrationType_CBL->GetComboBox()->GetSelectedEntry()->GetTitle();
   ADAQSettings->EnergyUnit = SpectrumCalibrationUnit_CBL->GetComboBox()->GetSelected();
 
@@ -2677,7 +2704,6 @@ void AAInterface::UpdateForADAQFile()
 
   TString FWType;
 
-
   // "Legacy" ADAQ file (old and busted)
   if(ComputationMgr->GetADAQLegacyFileLoaded()){
     ADAQRootMeasParams *AMP = ComputationMgr->GetADAQMeasurementParameters();
@@ -2744,7 +2770,7 @@ void AAInterface::UpdateForADAQFile()
 
   BaselineRegionMin_NEL->GetEntry()->SetNumber(BaselineRegionMin);
   BaselineRegionMax_NEL->GetEntry()->SetNumber(BaselineRegionMax);
-  
+
   PearsonLowerLimit_NEL->GetEntry()->SetLimitValues(0, RecordLength-1);
   PearsonLowerLimit_NEL->GetEntry()->SetNumber(0);
 
@@ -3030,6 +3056,8 @@ void AAInterface::SetCalibrationWidgetState(bool WidgetState, EButtonState Butto
   SpectrumCalibrationStandard_RB->SetState(ButtonState);
   SpectrumCalibrationEdgeFinder_RB->SetState(ButtonState);
   SpectrumCalibrationType_CBL->GetComboBox()->SetEnabled(WidgetState);
+  SpectrumCalibrationMin_NEL->GetEntry()->SetState(WidgetState);
+  SpectrumCalibrationMax_NEL->GetEntry()->SetState(WidgetState);
   SpectrumCalibrationPoint_CBL->GetComboBox()->SetEnabled(WidgetState);
   SpectrumCalibrationUnit_CBL->GetComboBox()->SetEnabled(WidgetState);
   SpectrumCalibrationEnergy_NEL->GetEntry()->SetState(WidgetState);
@@ -3038,6 +3066,12 @@ void AAInterface::SetCalibrationWidgetState(bool WidgetState, EButtonState Butto
   SpectrumCalibrationCalibrate_TB->SetState(ButtonState);
   SpectrumCalibrationPlot_TB->SetState(ButtonState);
   SpectrumCalibrationReset_TB->SetState(ButtonState);
+
+  Double_t Min = SpectrumMinBin_NEL->GetEntry()->GetNumber();
+  SpectrumCalibrationMin_NEL->GetEntry()->SetNumber(Min);
+
+  Double_t Max = SpectrumMaxBin_NEL->GetEntry()->GetNumber();
+  SpectrumCalibrationMax_NEL->GetEntry()->SetNumber(Max);
 }
 
 
