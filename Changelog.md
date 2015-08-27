@@ -1,14 +1,32 @@
 # ADAQAnalysis Version Change Log
 
 name: Changelog.md  
-date: 28 Apr 15 (last updated)  
+date: 26 Aug 15 (last updated)  
 auth: Zach Hartwig  
 mail: hartwig@psfc.mit.edu  
 
 
 ## Changes in master HEAD
 
-## Version-1.2 Series
+## Version 1.4 Series
+
+Major new developments in this series include:
+
+ - Implemented ability to read ADAQ files produced with
+   ADAQAcquisition that was running CAEN DPP-PSD firmware. Initial
+   testing has been successful.
+
+ - Spectral calibration are now exclusively handled by linear or
+   quadratic fits to the calibration data over a user-specified
+   range. New features (including the fit equation) have been added to
+   the calibration plot
+
+ - Fixed a major bug preventing the creation of PSD histograms
+   directly from waveform data (PSD integrals in this case) optionally
+   stored in ADAQ files (as opposed to full waveform analysis)
+
+
+## Version 1.2 Series
 
 Major new developments in this series include:
 
@@ -69,7 +87,7 @@ Major new developments in this series include:
    loading ASIM files
 
 
-## Version-1.0 Series
+## Version 1.0 Series
 
 Major new developments in this series include:
 
