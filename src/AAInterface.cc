@@ -1895,10 +1895,16 @@ void AAInterface::FillProcessingFrame()
   PSDPlotOptions_HF->AddFrame(PSDPlotType_CBL = new ADAQComboBoxWithLabel(PSDPlotOptions_HF, "Style", PSDPlotType_CBL_ID),
 			      new TGLayoutHints(kLHintsNormal, 0,5,10,5));
   PSDPlotType_CBL->GetComboBox()->AddEntry("COLZ",0);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("LEGO2Z0",1);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("SURF3Z0",2);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("CONTZ0",4);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("CONT1Z",4);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("LEGO",1);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("LEGO1",2);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("LEGO2Z0",3);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("SURF",4);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("SURF1Z0",5);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("SURF3Z0",6);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("CONTZ0",7);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("CONT1Z",8);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("SCAT",9);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("TEXT",10);
   PSDPlotType_CBL->GetComboBox()->Select(0);
   PSDPlotType_CBL->GetComboBox()->Resize(75, 20);
   PSDPlotType_CBL->GetComboBox()->Connect("Selected(int,int)", "AAProcessingSlots", ProcessingSlots, "HandleComboBoxes(int,int)");

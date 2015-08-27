@@ -186,7 +186,7 @@ void AAProcessingSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
     if(ComputationMgr->GetPSDHistogramExists())
       GraphicsMgr->PlotPSDHistogram();
     break;
-
+    
   case PSDPlotPalette_CBL_ID:
     gStyle->SetPalette(SelectedID);
     if(ComputationMgr->GetPSDHistogramExists())

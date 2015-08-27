@@ -822,7 +822,6 @@ void AAGraphics::PlotPSDHistogram()
   TheCanvas->SetRightMargin(0.17);
 
   ////////////////////////////////
-
   
   // Axis and graphical attributes
 
@@ -858,20 +857,23 @@ void AAGraphics::PlotPSDHistogram()
 
   // The canvas must be updated before the TPaletteAxis is accessed
   TheCanvas->Update();
-    
-  TPaletteAxis *ColorPalette = (TPaletteAxis *)PSDHistogram_H->GetListOfFunctions()->FindObject("palette");
-  ColorPalette->GetAxis()->SetTitle(PaletteTitle.c_str());
-  ColorPalette->GetAxis()->SetTitleSize(ADAQSettings->PaletteSize);
-  ColorPalette->GetAxis()->SetTitleOffset(ADAQSettings->PaletteOffset);
-  ColorPalette->GetAxis()->CenterTitle();
-  ColorPalette->GetAxis()->SetLabelSize(ADAQSettings->PaletteSize);
-  
-  ColorPalette->SetX1NDC(ADAQSettings->PaletteX1);
-  ColorPalette->SetX2NDC(ADAQSettings->PaletteX2);
-  ColorPalette->SetY1NDC(ADAQSettings->PaletteY1);
-  ColorPalette->SetY2NDC(ADAQSettings->PaletteY2);
 
-  ColorPalette->Draw("SAME");
+  TPaletteAxis *ColorPalette = NULL;
+  ColorPalette = (TPaletteAxis *)PSDHistogram_H->GetListOfFunctions()->FindObject("palette");
+  if(ColorPalette != NULL){
+    ColorPalette->GetAxis()->SetTitle(PaletteTitle.c_str());
+    ColorPalette->GetAxis()->SetTitleSize(ADAQSettings->PaletteSize);
+    ColorPalette->GetAxis()->SetTitleOffset(ADAQSettings->PaletteOffset);
+    ColorPalette->GetAxis()->CenterTitle();
+    ColorPalette->GetAxis()->SetLabelSize(ADAQSettings->PaletteSize);
+    
+    ColorPalette->SetX1NDC(ADAQSettings->PaletteX1);
+    ColorPalette->SetX2NDC(ADAQSettings->PaletteX2);
+    ColorPalette->SetY1NDC(ADAQSettings->PaletteY1);
+    ColorPalette->SetY2NDC(ADAQSettings->PaletteY2);
+    
+    ColorPalette->Draw("SAME");
+  }
   
   CanvasContentType = zPSDHistogram;
   
