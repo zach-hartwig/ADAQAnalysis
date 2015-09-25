@@ -57,9 +57,10 @@ using namespace std;
 
 // ADAQ
 #include "ADAQRootClasses.hh"
-#include "ASIMReadoutManager.hh"
 #include "ADAQReadoutInformation.hh"
 #include "ADAQWaveformData.hh"
+#include "ASIMEvent.hh"
+#include "ASIMRun.hh"
 
 // ADAQAnalysis
 #include "AASettings.hh"

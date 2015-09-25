@@ -92,7 +92,7 @@ endif
 # Include ADAQ header files; link against the ADAQReadout
 # (experimental data) and ASIMReadout (simulated data) libraries
 CXXFLAGS += -I$(ADAQHOME)/include
-ADAQLIBS = -L$(ADAQHOME)/lib/$(HOSTTYPE) -lADAQReadout -lASIMReadout 
+ADAQLIBS = -L$(ADAQHOME)/lib/$(HOSTTYPE) -lADAQReadout -lASIMStorage
 
 #***************#
 #**** RULES ****#
