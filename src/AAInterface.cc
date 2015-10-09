@@ -59,7 +59,6 @@ using namespace std;
 #include "AAGraphicsSlots.hh"
 #include "AAProcessingSlots.hh"
 #include "AANontabSlots.hh"
-#include "AAConstants.hh"
 #include "AAVersion.hh"
 
 
