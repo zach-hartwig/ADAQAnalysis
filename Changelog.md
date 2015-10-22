@@ -25,6 +25,15 @@ Major new developments in this series include:
    directly from waveform data (PSD integrals in this case) optionally
    stored in ADAQ files (as opposed to full waveform analysis)
 
+### 1.4.1
+
+ - Updated for compatability with new ASIM file format
+
+ - Adding new ASIM testing file; renaming NaI Na22 ADAQ file for consistency
+
+ - Removing depracated AAConstants header; commenting out depracated
+   methods slated for removal in future releases
+
 
 ## Version 1.2 Series
 
