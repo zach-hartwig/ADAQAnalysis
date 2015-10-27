@@ -607,7 +607,7 @@ void AAGraphics::PlotSpectrum()
     Title = "ASIM Spectrum";    
     
     if(ADAQSettings->ASIMSpectrumTypeEnergy)
-      XTitle = "Energy [MeV]";
+      XTitle = "Energy deposited [MeV]";
     else if(ADAQSettings->ASIMSpectrumTypePhotonsCreated)
       XTitle = "Visible photons created [#]";
     else if(ADAQSettings->ASIMSpectrumTypePhotonsDetected)
