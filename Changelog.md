@@ -1,10 +1,9 @@
 # ADAQAnalysis Version Change Log
 
 name: Changelog.md  
-date: 26 Aug 15 (last updated)  
+date: 19 Nov 15 (last updated)  
 auth: Zach Hartwig  
 mail: hartwig@psfc.mit.edu  
-
 
 ## Changes in master HEAD
 
@@ -25,14 +24,21 @@ Major new developments in this series include:
    directly from waveform data (PSD integrals in this case) optionally
    stored in ADAQ files (as opposed to full waveform analysis)
 
+
 ### 1.4.1
 
- - Updated for compatability with new ASIM file format
+ - Removed all dependencies on ASIMReadout library and updated to
+   correct ASIM to enabled ADAQAnalysis builds on systems without
+   Geant4 installed
+
+ - Updated for full compatability with new ASIM file format
 
  - Adding new ASIM testing file; renaming NaI Na22 ADAQ file for consistency
 
  - Removing depracated AAConstants header; commenting out depracated
    methods slated for removal in future releases
+
+ - Corectly set X-axis title for  calibrated spectra
 
 
 ## Version 1.2 Series
