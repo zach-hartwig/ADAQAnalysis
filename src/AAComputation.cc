@@ -55,7 +55,6 @@ using namespace std;
 // ADAQAnalysis
 #include "AAComputation.hh"
 #include "AAParallel.hh"
-#include "AAConstants.hh"
 
 
 AAComputation *AAComputation::TheComputationManager = 0;
@@ -2528,7 +2527,6 @@ TGraph *AAComputation::CalculateSpectrumDerivative()
 }
 
 
-
 // Method to integrate the Pearson waveform (which measures the RFQ
 // beam current) in order to calculate the number of deuterons
 // delivered during a single waveform. The deuterons/waveform are
@@ -2536,6 +2534,15 @@ TGraph *AAComputation::CalculateSpectrumDerivative()
 // waveforms processed.
 void AAComputation::IntegratePearsonWaveform(int Waveform)
 {
+  /*
+
+    AAComputation::IntegrationPearsonWaveform() is an ancient legacy
+    method from the days of the AIMS experiment. It is essentially
+    depracated at this point now that the ADAQ framework has matured
+    and broadened to support generic data analysis. This should
+    probably be removed, but it remains here for sentimental
+    reasons. Ah, the good old days.... ZSH (08 Oct 15).
+
   // The total deutorons delivered for all waveforms in the presently
   // loaed ADAQ-formatted ROOT file may be stored in the ROOT file
   // itself if that ROOT file was created during parallel processing.
@@ -2623,6 +2630,7 @@ void AAComputation::IntegratePearsonWaveform(int Waveform)
     delete RiseFit;
     delete PlateauFit;
   }
+  */
 }
 
 
