@@ -1,7 +1,7 @@
 #********************************************************************
 #
 #  name: Makefile                  
-#  date: 26 Jan 15
+#  date: 19 Nov 15
 #  auth: Zach Hartwig              
 #  mail: hartwig@psfc.mit.edu
 #
@@ -12,9 +12,9 @@
 #        object files and build rules are automatically generated
 #        based on the presence of source files for convenience.
 #
-#  dpnd: The build system depends on the following:
+# 	 dpnd: The build system depends on the following:
 #        -- ROOT (mandatory)
-#        -- The ADAQ libraries: ADAQReadout, ASIMReadout (mandatory)
+#        -- The ADAQ libraries: ADAQReadout, ASIMStorage (mandatory)
 #        -- The Boost libraries: boost_thread, boost_system (mandatory)
 #        -- Open MPI (optional)
 # 
@@ -92,7 +92,7 @@ endif
 # Include ADAQ header files; link against the ADAQReadout
 # (experimental data) and ASIMReadout (simulated data) libraries
 CXXFLAGS += -I$(ADAQHOME)/include
-ADAQLIBS = -L$(ADAQHOME)/lib/$(HOSTTYPE) -lADAQReadout -lASIMReadout 
+ADAQLIBS = -L$(ADAQHOME)/lib/$(HOSTTYPE) -lADAQReadout -lASIMStorage
 
 #***************#
 #**** RULES ****#
