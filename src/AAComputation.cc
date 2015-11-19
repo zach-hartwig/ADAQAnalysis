@@ -917,34 +917,55 @@ void AAComputation::ProcessSpectrumWaveforms()
     stringstream SS;
     SS << "WaveformDataCh" << Channel;
     string WDName = SS.str();
-
+    
     // Create and set address of ADAQWavefomData object in the waveform tree
     ADAQWaveformData *WD = new ADAQWaveformData;
     ADAQWaveformTree->SetBranchAddress(WDName.c_str(), &WD);
-
+    
     // Readout appropriate waveform data into the spectrum
     for(int entry=0; entry<ADAQSettings->WaveformsToHistogram; entry++){
+      
+      // Ensure only the specified number of events are processed
+      if(entry == ADAQSettings->WaveformsToHistogram)
+	break;
+      
       ADAQWaveformTree->GetEntry(entry);
 
       // Get the pulse height and area...
       PulseHeight = WD->GetPulseHeight();
       PulseArea = WD->GetPulseArea();
 
-      // ... and also store them in vectors for later use
-      SpectrumPHVec[Channel].push_back(PulseHeight);
-      SpectrumPAVec[Channel].push_back(PulseArea);
-      
-      // Fill the spectrum object depending on pulse spectrm type
-      if(ADAQSettings->ADAQSpectrumTypePAS)
-	Spectrum_H->Fill(PulseArea);
-      else if(ADAQSettings->ADAQSpectrumTypePHS)
-	Spectrum_H->Fill(PulseHeight);
+      Bool_t AcceptWaveform = true;
+
+      // Optionally test the waveform against the PSD region criterion
+      if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
+	
+	// Get the stored PSD total and tail integrals
+	Double_t Total = WD->GetPSDTotalIntegral();
+	Double_t Tail = WD->GetPSDTailIntegral();
+
+	// Flag the waveform if it is not accepted
+	if(ApplyPSDRegion(Total, Tail))
+	  AcceptWaveform = false;
+      }
+
+      if(AcceptWaveform){
+	// Add waveform data to the storage vectors
+      	SpectrumPHVec[Channel].push_back(PulseHeight);
+	SpectrumPAVec[Channel].push_back(PulseArea);
+	
+	// Fill the spectrum object depending on pulse spectrm type
+	if(ADAQSettings->ADAQSpectrumTypePAS)
+	  Spectrum_H->Fill(PulseArea);
+	else if(ADAQSettings->ADAQSpectrumTypePHS)
+	  Spectrum_H->Fill(PulseHeight);
+      }
     }
     
     delete WD;
     
     SpectrumExists = true;
-
+    
     return;
   }
   
@@ -1980,6 +2001,12 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
     
     // Readout appropriate waveform data into the spectrum
     for(int entry=0; entry<CloneTree->GetEntries(); entry++){
+
+      // Ensure only the specified number of events are processed
+      if(entry == ADAQSettings->PSDWaveformsToDiscriminate)
+	break;
+
+      // Get the entry
       CloneTree->GetEntry(entry);
       
       // Get the stored total and tail PSD integrals
