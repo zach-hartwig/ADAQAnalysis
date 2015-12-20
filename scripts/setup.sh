@@ -17,7 +17,7 @@ else
     SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     export ADAQANALYSIS_HOME=${SCRIPTDIR///scripts/}
     export PATH=${SCRIPTDIR///scripts/}/bin:$PATH
-    export LD_LIBRARY_PATH=$ADAQHOME/lib/$HOSTTYPE:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=$ADAQHOME/lib/$HOSTTYPE:$ADAQANALYSIS_HOME/bin:$LD_LIBRARY_PATH
     export PYTHONPATH=$ADAQHOME/lib/$HOSTTYPE:$PYTHONPATH
     
     echo -e "\nADAQAnalysis : The environment has been successfully configured!\n"

@@ -624,8 +624,8 @@ bool AAComputation::FindPeaks(TH1F *Histogram_H, int PeakFindingAlgorithm)
 
     // Since the PeakFinder actually found potential peaks then get the
     // X and Y positions of the potential peaks from the PeakFinder
-    float *PotentialPeakPosX = PeakFinder->GetPositionX();
-    float *PotentialPeakPosY = PeakFinder->GetPositionY();
+    Double_t *PotentialPeakPosX = PeakFinder->GetPositionX();
+    Double_t *PotentialPeakPosY = PeakFinder->GetPositionY();
   
     // For each of the potential peaks found by the PeakFinder...
     for(int peak=0; peak<NumPotentialPeaks; peak++){
