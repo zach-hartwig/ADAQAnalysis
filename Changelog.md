@@ -1,12 +1,17 @@
 # ADAQAnalysis Version Change Log
 
 name: Changelog.md  
-date: 26 Aug 15 (last updated)  
+date: 23 Dec 15 (last updated)  
 auth: Zach Hartwig  
 mail: hartwig@psfc.mit.edu  
 
 
-## Changes in master HEAD
+## Version 1.6 series
+
+Major new developments in this series include:
+
+ - Updated for compatibility with newest ROOT6 (v6.06.00)
+
 
 ## Version 1.4 Series
 
@@ -23,7 +28,7 @@ Major new developments in this series include:
 
  - Fixed a major bug preventing the creation of PSD histograms
    directly from waveform data (PSD integrals in this case) optionally
-   stored in ADAQ files (as opposed to full waveform analysis)
+	stored in ADAQ files (as opposed to full waveform analysis)
 
 ### 1.4.1
 
