@@ -906,6 +906,7 @@ void AAComputation::ProcessSpectrumWaveforms()
     ADAQReadoutInformation *ARI = (ADAQReadoutInformation *)ADAQFile->Get("ReadoutInformation");
     if(!ARI->GetStoreEnergyData()){
       SpectrumExists = false;
+      cout << "HERE" << endl;
       return;
     }
     

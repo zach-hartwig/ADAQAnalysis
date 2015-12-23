@@ -64,7 +64,7 @@ using namespace std;
 
 AAInterface::AAInterface(string CmdLineArg)
   : TGMainFrame(gClient->GetRoot()),
-    NumDataChannels(8), NumProcessors(boost::thread::hardware_concurrency()),
+    NumDataChannels(16), NumProcessors(boost::thread::hardware_concurrency()),
     CanvasX(700), CanvasY(500), CanvasFrameWidth(700), 
     SliderBuffer(45), LeftFrameLength(720), TotalX(1125), TotalY(800),
     NumEdgeBoundingPoints(0), EdgeBoundX0(0.), EdgeBoundY0(0.),
@@ -309,9 +309,9 @@ void AAInterface::CreateTheMainFrames()
   // ADAQAnalysisGUI to identify the version number of the code
   string TitleString;
   if(VersionString == "Development")
-    TitleString = "ADAQ Analysis (Development version)               Fear is the mind-killer.";
+    TitleString = "ADAQAnalysis (Development version)               Fear is the mind-killer.";
   else
-    TitleString = "ADAQ Analysis (Production version " + VersionString + ")               Fear is the mind-killer.";
+    TitleString = "ADAQAnalysis (Production version " + VersionString + ")               Fear is the mind-killer.";
 
   SetWindowName(TitleString.c_str());
   MapSubwindows();
