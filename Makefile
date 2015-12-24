@@ -135,7 +135,7 @@ $(BUILDDIR)/ADAQAnalysisDict_MPI.o : $(BUILDDIR)/ADAQAnalysisDict.cc
 
 $(BUILDDIR)/ADAQAnalysisDict.cc : $(INCLS) $(INCLDIR)/RootLinkDef.h
 	@echo -e "\nGenerating ROOT dictionary '$@' ..."
-	rootcint -f $@ -c -I$(ADAQHOME)/include $^
+	rootcling -f $@ -c -I$(ADAQHOME)/include $^
 	cp $(BUILDDIR)/*.pcm $(BINDIR)
 
 
