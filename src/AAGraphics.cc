@@ -989,7 +989,11 @@ void AAGraphics::PlotSpectrumDerivative()
 void AAGraphics::PlotCalibration(int Channel)
 {
   vector<TGraph *> CalibrationData = ComputationMgr->GetSpectraCalibrationData();
-  vector<TF1 *> Calibrations = ComputationMgr->GetSpectraCalibrations();
+  vector<TF1 *> Calibrations;
+
+  // Determine if the calibration is using a fit (== 0) or
+  // interpolation (== 1)
+  Int_t CalibrationType = ComputationMgr->GetSpectraCalibrationType()[Channel];
   
   stringstream SS;
   SS << "Spectrum calibration TGraph for channel[" << Channel << "]";
@@ -1014,48 +1018,61 @@ void AAGraphics::PlotCalibration(int Channel)
   CalibrationData[Channel]->SetMarkerStyle(20);
   CalibrationData[Channel]->SetMarkerSize(2.0);
   CalibrationData[Channel]->SetMarkerColor(kBlue);
-  CalibrationData[Channel]->Draw("AP");
+  if(CalibrationType == 0)
+    CalibrationData[Channel]->Draw("AP");
+  else if(CalibrationType == 1){
+    CalibrationData[Channel]->SetLineColor(kBlue);
+    CalibrationData[Channel]->SetLineWidth(2);
+    CalibrationData[Channel]->Draw("APL");
+  }
+  
+  if(CalibrationType == 0){
+    
+    // Overplot the fit to the calibration data
+    Calibrations = ComputationMgr->GetSpectraCalibrations();
 
-  // Overplot the fit to the calibration data
-
-  Calibrations[Channel]->SetLineStyle(1);
-  Calibrations[Channel]->SetLineWidth(2);
-  Calibrations[Channel]->SetLineColor(kRed);
-  Calibrations[Channel]->Draw("L SAME");
+    Calibrations[Channel]->SetLineStyle(1);
+    Calibrations[Channel]->SetLineWidth(2);
+    Calibrations[Channel]->SetLineColor(kRed);
+    Calibrations[Channel]->Draw("L SAME");
+  }
 
   // Create a legend
 
   TLegend *TheLegend_L = new TLegend(0.2, 0.7, 0.4, 0.9);
   TheLegend_L->AddEntry(CalibrationData[Channel], "Data", "P");
-  TheLegend_L->AddEntry(Calibrations[Channel], "Fit", "L");
+  if(CalibrationType == 0)
+    TheLegend_L->AddEntry(Calibrations[Channel], "Fit", "L");
   TheLegend_L->Draw();
 
   // Plot an equation of the fit on the canvas
+
+  if(CalibrationType == 0){
   
-  SS.str("");
-  SS << "E = ";
-
-  const Int_t NParameters = Calibrations[Channel]->GetNpar();
-  Double_t *Parameters = Calibrations[Channel]->GetParameters();
-
-  vector<string> Variables;
-  Variables.push_back("1");
-  Variables.push_back("P");
-  Variables.push_back("P^{2}");
-
-  for(Int_t p=0; p<NParameters; p++){
-    SS << Parameters[p] << " * " << Variables[p];
-    if((p+1) != NParameters)
-      SS << " + ";
+    SS.str("");
+    SS << "E = ";
+    
+    const Int_t NParameters = Calibrations[Channel]->GetNpar();
+    Double_t *Parameters = Calibrations[Channel]->GetParameters();
+    
+    vector<string> Variables;
+    Variables.push_back("1");
+    Variables.push_back("P");
+    Variables.push_back("P^{2}");
+    
+    for(Int_t p=0; p<NParameters; p++){
+      SS << Parameters[p] << " * " << Variables[p];
+      if((p+1) != NParameters)
+	SS << " + ";
+    }
+    
+    TString EquationString = SS.str();
+    
+    TLatex *Equation = new TLatex;
+    Equation->SetTextColor(kRed);
+    Equation->SetTextSize(0.045);
+    Equation->DrawTextNDC(0.22, 0.15, EquationString);
   }
-  
-  TString EquationString = SS.str();
-
-  TLatex *Equation = new TLatex;
-  Equation->SetTextColor(kRed);
-  Equation->SetTextSize(0.045);
-  Equation->DrawTextNDC(0.22, 0.15, EquationString);
-  
   TheCanvas->Update();
 }
 

@@ -74,6 +74,7 @@ public:
   string CalibrationType;
   Double_t CalibrationMin, CalibrationMax;
   Int_t EnergyUnit;
+  vector<TGraph *> SpectraCalibrationData;
   vector<TF1 *> SpectraCalibrations;
   vector<bool> UseSpectraCalibrations;
   

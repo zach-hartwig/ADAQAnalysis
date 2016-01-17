@@ -809,6 +809,7 @@ void AAInterface::FillSpectrumFrame()
   SpectrumCalibrationType_CBL->GetComboBox()->Resize(130,20);
   SpectrumCalibrationType_CBL->GetComboBox()->AddEntry("Linear fit",0);
   SpectrumCalibrationType_CBL->GetComboBox()->AddEntry("Quadratic fit",1);
+  SpectrumCalibrationType_CBL->GetComboBox()->AddEntry("Lin. interp.",2);
   SpectrumCalibrationType_CBL->GetComboBox()->Select(0);
   SpectrumCalibrationType_CBL->GetComboBox()->SetEnabled(false);
   SpectrumCalibrationType_CBL->GetComboBox()->Connect("Selected(int,int)", "AASpectrumSlots", SpectrumSlots, "HandleComboBoxes(int,int)");
@@ -2623,6 +2624,7 @@ void AAInterface::SaveSettings(bool SaveToFile)
   
   // Spectrum calibration objects
   ADAQSettings->UseSpectraCalibrations = ComputationMgr->GetUseSpectraCalibrations();
+  ADAQSettings->SpectraCalibrationData = ComputationMgr->GetSpectraCalibrationData();
   ADAQSettings->SpectraCalibrations = ComputationMgr->GetSpectraCalibrations();
   
   // PSD filter objects

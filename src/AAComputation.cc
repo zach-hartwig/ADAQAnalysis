@@ -106,6 +106,8 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
   for(int ch=0; ch<NumDataChannels; ch++){
     // All 8 channel's managers are set "off" by default
     UseSpectraCalibrations.push_back(false);
+    SpectraCalibrationType.push_back(zCalibrationFit);
+      
     UsePSDRegions.push_back(false);
     
     // Store empty TCutG pointers in std::vectors to hold space and
@@ -1105,10 +1107,12 @@ void AAComputation::ProcessSpectrumWaveforms()
 	// If the calibration manager is to be used to convert the
 	// value from pulse units [ADC] to energy units [keV, MeV,
 	// ...] then do so
-	if(ADAQSettings->UseSpectraCalibrations[Channel])
-	  PulseHeight = ADAQSettings->SpectraCalibrations[Channel]->Eval(PulseHeight);
-
-	
+	if(ADAQSettings->UseSpectraCalibrations[Channel]){
+	  if(SpectraCalibrationType[Channel] == zCalibrationFit)
+	    PulseHeight = ADAQSettings->SpectraCalibrations[Channel]->Eval(PulseHeight);
+	  else if(SpectraCalibrationType[Channel] == zCalibrationInterp)
+	    PulseHeight = ADAQSettings->SpectraCalibrationData[Channel]->Eval(PulseHeight);
+	}
 	// Pulse area
 	
 	// Reset the pulse area "integral" to zero
@@ -1128,9 +1132,12 @@ void AAComputation::ProcessSpectrumWaveforms()
 	// If the calibration manager is to be used to convert the
 	// value from pulse units [ADC] to energy units [keV, MeV,
 	// ...] then do so
-	if(ADAQSettings->UseSpectraCalibrations[Channel])
-	  PulseArea = ADAQSettings->SpectraCalibrations[Channel]->Eval(PulseArea);
-
+	if(ADAQSettings->UseSpectraCalibrations[Channel]){
+	  if(SpectraCalibrationType[Channel] == zCalibrationFit)
+	    PulseArea = ADAQSettings->SpectraCalibrations[Channel]->Eval(PulseArea);
+	  else if(SpectraCalibrationType[Channel] == zCalibrationInterp)
+	    PulseArea = ADAQSettings->SpectraCalibrationData[Channel]->Eval(PulseArea);
+	}
 
 	// Initial spectra creation
 	
@@ -1439,8 +1446,12 @@ void AAComputation::CreateSpectrum()
 	break;
     
     // Convert value if calibration has been activated
-    if(ADAQSettings->UseSpectraCalibrations[Channel])
-      Spectrum_H->Fill( ADAQSettings->SpectraCalibrations[Channel]->Eval( (*It) ) );
+    if(ADAQSettings->UseSpectraCalibrations[Channel]){
+      if(SpectraCalibrationType[Channel] == zCalibrationFit)      	  
+	Spectrum_H->Fill( ADAQSettings->SpectraCalibrations[Channel]->Eval( (*It) ) );
+      else if(SpectraCalibrationType[Channel] == zCalibrationInterp)
+	Spectrum_H->Fill( ADAQSettings->SpectraCalibrationData[Channel]->Eval( (*It) ) );
+    }
     else
       Spectrum_H->Fill( (*It) );
   }
@@ -1486,8 +1497,12 @@ void AAComputation::IntegratePeaks()
     
     // If the user has calibrated the spectrum, then transform the
     // peak integral in pulse units [ADC] to energy units
-    if(ADAQSettings->UseSpectraCalibrations[Channel])
-      PeakIntegral = ADAQSettings->SpectraCalibrations[Channel]->Eval(PeakIntegral);
+    if(ADAQSettings->UseSpectraCalibrations[Channel]){
+      if(SpectraCalibrationType[Channel] == zCalibrationFit)
+	PeakIntegral = ADAQSettings->SpectraCalibrations[Channel]->Eval(PeakIntegral);
+      else if(SpectraCalibrationType[Channel] == zCalibrationInterp)
+	PeakIntegral = ADAQSettings->SpectraCalibrationData[Channel]->Eval(PeakIntegral);
+    }
     
     // Add the integral to the spectrum if a pulse area spectrum is
     // desired to create the initial post-processing histogram
@@ -1539,8 +1554,12 @@ void AAComputation::FindPeakHeights()
     
     // If the user has calibrated the spectrum then transform the peak
     // heights in pulse units [ADC] to energy
-    if(ADAQSettings->UseSpectraCalibrations[Channel])
-      PeakHeight = ADAQSettings->SpectraCalibrations[Channel]->Eval(PeakHeight);
+    if(ADAQSettings->UseSpectraCalibrations[Channel]){
+      if(SpectraCalibrationType[Channel] == zCalibrationFit)
+	PeakHeight = ADAQSettings->SpectraCalibrations[Channel]->Eval(PeakHeight);
+      else if(SpectraCalibrationType[Channel] == zCalibrationInterp)
+	PeakHeight = ADAQSettings->SpectraCalibrationData[Channel]->Eval(PeakHeight);
+    }
     
     // Add the integral to the spectrum if a pulse area spectrum is
     // desired to create the initial post-processing histogram
@@ -2889,25 +2908,34 @@ Bool_t AAComputation::SetCalibration(Int_t Channel)
       FitType = "pol1";
     else if(ADAQSettings->CalibrationType == "Quadratic fit")
       FitType = "pol2";
-    
-    Double_t FitRangeMin = ADAQSettings->CalibrationMin;
-    Double_t FitRangeMax = ADAQSettings->CalibrationMax;
-    
-    delete SpectraCalibrations[Channel];
+    else if(ADAQSettings->CalibrationType == "Lin. interpolation")
+      FitType = "None";
 
-    SpectraCalibrations[Channel] = new TF1("SpectrumCalibration", 
-					   FitType, 
-					   FitRangeMin,
-					   FitRangeMax);
+    if(FitType == "pol1" or FitType == "pol2"){
+      Double_t FitRangeMin = ADAQSettings->CalibrationMin;
+      Double_t FitRangeMax = ADAQSettings->CalibrationMax;
+    
+      delete SpectraCalibrations[Channel];
+      
+      SpectraCalibrations[Channel] = new TF1("SpectrumCalibration", 
+					     FitType, 
+					     FitRangeMin,
+					     FitRangeMax);
+      
+      SpectraCalibrationData[Channel]->Fit("SpectrumCalibration", "RN");
 
-    SpectraCalibrationData[Channel]->Fit("SpectrumCalibration", "RN");
+      SpectraCalibrationType[Channel] = zCalibrationFit;
+    }
+    else
+      SpectraCalibrationType[Channel] = zCalibrationInterp;
+     
     
     // Set the current channel's calibration boolean to true,
     // indicating that the current channel will convert pulse units
     // to energy within the acquisition loop before histogramming
     // the result into the channel's spectrum
     UseSpectraCalibrations[Channel] = true;
-
+    
     return true;
   }
   else
@@ -3719,9 +3747,12 @@ void AAComputation::CreateASIMSpectrum()
     else if(ADAQSettings->ASIMSpectrumTypePhotonsDetected)
       Quantity = ASIMEvt->GetPhotonsDetected();
 
-    if(ADAQSettings->UseSpectraCalibrations[ADAQSettings->WaveformChannel])
-      Quantity = SpectraCalibrations[ADAQSettings->WaveformChannel]->Eval(Quantity);
-    
+    if(ADAQSettings->UseSpectraCalibrations[ADAQSettings->WaveformChannel]){
+      if(SpectraCalibrationType[ADAQSettings->WaveformChannel] == zCalibrationFit)
+	Quantity = SpectraCalibrations[ADAQSettings->WaveformChannel]->Eval(Quantity);
+      else if(SpectraCalibrationType[ADAQSettings->WaveformChannel] == zCalibrationInterp)
+	Quantity = SpectraCalibrationData[ADAQSettings->WaveformChannel]->Eval(Quantity);
+    }
     Spectrum_H->Fill(Quantity);
   }
   SpectrumExists = true;

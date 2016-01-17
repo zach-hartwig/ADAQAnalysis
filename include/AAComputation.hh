@@ -184,6 +184,7 @@ public:
   // Spectra calibrations
   vector<TGraph *> GetSpectraCalibrationData() { return SpectraCalibrationData; }
   vector<TF1 *> GetSpectraCalibrations() { return SpectraCalibrations; }
+  vector<Int_t> GetSpectraCalibrationType() {return SpectraCalibrationType; }
   vector<Bool_t> GetUseSpectraCalibrations() { return UseSpectraCalibrations; }
 
   Double_t GetEdgePosition() {return EdgePosition;}
@@ -324,7 +325,10 @@ private:
   vector<TF1 *> SpectraCalibrations;
   vector<Bool_t> UseSpectraCalibrations;
   vector<ADAQChannelCalibrationData> CalibrationData;
-
+  
+  enum {zCalibrationFit, zCalibrationInterp};
+  vector<Int_t> SpectraCalibrationType;
+  
 
   ////////////////
   // PSD variables
