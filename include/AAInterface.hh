@@ -206,6 +206,8 @@ private:
   ADAQNumberEntryWithLabel *SpectrumNumBins_NEL;
   ADAQNumberEntryWithLabel *SpectrumMinBin_NEL;
   ADAQNumberEntryWithLabel *SpectrumMaxBin_NEL;
+  ADAQNumberEntryWithLabel *SpectrumMinThresh_NEL;
+  ADAQNumberEntryWithLabel *SpectrumMaxThresh_NEL;
 
   //TGButtonGroup *ADAQSpectrumType_BG;
   TGRadioButton *ADAQSpectrumTypePAS_RB, *ADAQSpectrumTypePHS_RB;

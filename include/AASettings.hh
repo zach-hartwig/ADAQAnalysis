@@ -62,6 +62,7 @@ public:
   Int_t WaveformsToHistogram;
   Int_t SpectrumNumBins;
   Double_t SpectrumMinBin, SpectrumMaxBin;
+  Double_t SpectrumMinThresh, SpectrumMaxThresh;
   
   Bool_t ADAQSpectrumTypePAS, ADAQSpectrumTypePHS;
   Bool_t ADAQSpectrumAlgorithmSMS, ADAQSpectrumAlgorithmPF, ADAQSpectrumAlgorithmWD;

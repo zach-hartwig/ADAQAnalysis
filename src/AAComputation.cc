@@ -935,10 +935,11 @@ void AAComputation::ProcessSpectrumWaveforms()
       ADAQWaveformTree->GetEntry(entry);
 
       // Get the pulse height and area...
+
       PulseHeight = WD->GetPulseHeight();
       PulseArea = WD->GetPulseArea();
 
-      Bool_t AcceptWaveform = true;
+      Bool_t PSDAccept = true;
 
       // Optionally test the waveform against the PSD region criterion
       if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
@@ -949,19 +950,28 @@ void AAComputation::ProcessSpectrumWaveforms()
 
 	// Flag the waveform if it is not accepted
 	if(ApplyPSDRegion(Total, Tail))
-	  AcceptWaveform = false;
+	  PSDAccept = false;
       }
-
-      if(AcceptWaveform){
+      
+      if(PSDAccept){
 	// Add waveform data to the storage vectors
       	SpectrumPHVec[Channel].push_back(PulseHeight);
 	SpectrumPAVec[Channel].push_back(PulseArea);
 	
 	// Fill the spectrum object depending on pulse spectrm type
-	if(ADAQSettings->ADAQSpectrumTypePAS)
-	  Spectrum_H->Fill(PulseArea);
-	else if(ADAQSettings->ADAQSpectrumTypePHS)
-	  Spectrum_H->Fill(PulseHeight);
+	if(ADAQSettings->ADAQSpectrumTypePAS){
+	  if(PulseArea > ADAQSettings->SpectrumMinThresh and
+	     PulseArea < ADAQSettings->SpectrumMaxThresh){
+	    Spectrum_H->Fill(PulseArea);
+	  }
+	}
+
+	else if(ADAQSettings->ADAQSpectrumTypePHS){
+	  if(PulseHeight > ADAQSettings->SpectrumMinThresh and
+	     PulseHeight < ADAQSettings->SpectrumMaxThresh){
+	    Spectrum_H->Fill(PulseHeight);
+	  }
+	}
       }
     }
     
@@ -1143,10 +1153,20 @@ void AAComputation::ProcessSpectrumWaveforms()
 	
 	// Add the pulse value to the spectrum object depending on
 	// type of spectrum that is to be created initially
-	if(ADAQSettings->ADAQSpectrumTypePHS)
-	  Spectrum_H->Fill(PulseHeight);
-	else if(ADAQSettings->ADAQSpectrumTypePAS)
-	  Spectrum_H->Fill(PulseArea);
+
+	if(ADAQSettings->ADAQSpectrumTypePHS){
+	  if(PulseHeight > ADAQSettings->SpectrumMinThresh and
+	     PulseHeight < ADAQSettings->SpectrumMaxThresh){
+	    Spectrum_H->Fill(PulseHeight);
+	  }
+	}
+	
+	else if(ADAQSettings->ADAQSpectrumTypePAS){
+	  if(PulseArea > ADAQSettings->SpectrumMinThresh and
+	     PulseArea < ADAQSettings->SpectrumMaxThresh){
+	    Spectrum_H->Fill(PulseArea);
+	  }
+	}
 	
 	// Note that we must add a +1 to the waveform number in order to
 	// get the modulo to land on the correct intervals
@@ -1444,15 +1464,19 @@ void AAComputation::CreateSpectrum()
     if(!ADAQSettings->ADAQSpectrumAlgorithmPF)
       if((It-ItB) > ADAQSettings->WaveformsToHistogram)
 	break;
-    
-    // Convert value if calibration has been activated
+
+    double Quantity = (*It);
+
+    // Convert the quantity if calibration has been activated
     if(ADAQSettings->UseSpectraCalibrations[Channel]){
       if(SpectraCalibrationType[Channel] == zCalibrationFit)      	  
-	Spectrum_H->Fill( ADAQSettings->SpectraCalibrations[Channel]->Eval( (*It) ) );
+	Quantity = ADAQSettings->SpectraCalibrations[Channel]->Eval(Quantity);
       else if(SpectraCalibrationType[Channel] == zCalibrationInterp)
-	Spectrum_H->Fill( ADAQSettings->SpectraCalibrationData[Channel]->Eval( (*It) ) );
+	Quantity = ADAQSettings->SpectraCalibrationData[Channel]->Eval(Quantity);
     }
-    else
+    
+    if(Quantity > ADAQSettings->SpectrumMinThresh and
+       Quantity < ADAQSettings->SpectrumMaxThresh)
       Spectrum_H->Fill( (*It) );
   }
   
@@ -1506,8 +1530,12 @@ void AAComputation::IntegratePeaks()
     
     // Add the integral to the spectrum if a pulse area spectrum is
     // desired to create the initial post-processing histogram
-    if(ADAQSettings->ADAQSpectrumTypePAS)
-      Spectrum_H->Fill(PeakIntegral);
+    if(ADAQSettings->ADAQSpectrumTypePAS){
+      if(PeakIntegral > ADAQSettings->SpectrumMinThresh and
+	 PeakIntegral < ADAQSettings->SpectrumMaxThresh){
+	Spectrum_H->Fill(PeakIntegral);
+      }
+    }
   }
 }
 
@@ -1563,8 +1591,12 @@ void AAComputation::FindPeakHeights()
     
     // Add the integral to the spectrum if a pulse area spectrum is
     // desired to create the initial post-processing histogram
-    if(ADAQSettings->ADAQSpectrumTypePHS)
-      Spectrum_H->Fill(PeakHeight);
+    if(ADAQSettings->ADAQSpectrumTypePHS){
+      if(PeakHeight > ADAQSettings->SpectrumMinThresh and
+	 PeakHeight < ADAQSettings->SpectrumMaxThresh){
+	Spectrum_H->Fill(PeakHeight);
+      }
+    }
   }
 }
 
@@ -3753,7 +3785,10 @@ void AAComputation::CreateASIMSpectrum()
       else if(SpectraCalibrationType[ADAQSettings->WaveformChannel] == zCalibrationInterp)
 	Quantity = SpectraCalibrationData[ADAQSettings->WaveformChannel]->Eval(Quantity);
     }
-    Spectrum_H->Fill(Quantity);
+
+    if(Quantity > ADAQSettings->SpectrumMinThresh and
+       Quantity < ADAQSettings->SpectrumMaxThresh)
+      Spectrum_H->Fill(Quantity);
   }
   SpectrumExists = true;
 }

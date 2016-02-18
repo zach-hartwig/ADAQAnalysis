@@ -652,28 +652,52 @@ void AAInterface::FillSpectrumFrame()
   SpectrumNumBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   SpectrumNumBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
   SpectrumNumBins_NEL->GetEntry()->SetNumber(200);
+
+  SpectrumFrame_VF->AddFrame(new TGLabel(SpectrumFrame_VF, "Histogram limits"),
+			     new TGLayoutHints(kLHintsNormal, 15,0,0,0));
   
   TGHorizontalFrame *SpectrumBinning_HF = new TGHorizontalFrame(SpectrumFrame_VF);
   SpectrumFrame_VF->AddFrame(SpectrumBinning_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-
+  
   // Minimum spectrum bin number entry
-  SpectrumBinning_HF->AddFrame(SpectrumMinBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Minimum  ", SpectrumMinBin_NEL_ID),
-		       new TGLayoutHints(kLHintsLeft, 15,0,0,0));
+  SpectrumBinning_HF->AddFrame(SpectrumMinBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Mininum  ", SpectrumMinBin_NEL_ID),
+			       new TGLayoutHints(kLHintsLeft, 15,0,5,0));
   SpectrumMinBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumMinBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
   SpectrumMinBin_NEL->GetEntry()->SetNumber(0);
   SpectrumMinBin_NEL->GetEntry()->Connect("ValueSet(long)", "AASpectrumSlots", SpectrumSlots, "HandleNumberEntries()");
-
-
+  
   // Maximum spectrum bin number entry
   SpectrumBinning_HF->AddFrame(SpectrumMaxBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Maximum", SpectrumMaxBin_NEL_ID),
-		       new TGLayoutHints(kLHintsRight, 15,0,0,0));
+			       new TGLayoutHints(kLHintsRight, 15,0,5,0));
   SpectrumMaxBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumMaxBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   SpectrumMaxBin_NEL->GetEntry()->SetNumber(50000);
   SpectrumMaxBin_NEL->GetEntry()->Connect("ValueSet(long)", "AASpectrumSlots", SpectrumSlots, "HandleNumberEntries()");
-
-
+  
+  SpectrumFrame_VF->AddFrame(new TGLabel(SpectrumFrame_VF, "Histogram thresholds"),
+			     new TGLayoutHints(kLHintsNormal, 15, 0, 5, 0));
+  
+  TGHorizontalFrame *SpectrumThresholds_HF = new TGHorizontalFrame(SpectrumFrame_VF);
+  SpectrumFrame_VF->AddFrame(SpectrumThresholds_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  
+  // Minimum/lower threshold for histogramming
+  SpectrumThresholds_HF->AddFrame(SpectrumMinThresh_NEL = new ADAQNumberEntryWithLabel(SpectrumThresholds_HF, "Mininum  ", SpectrumMinThresh_NEL_ID),
+				  new TGLayoutHints(kLHintsLeft, 15,0,5,0));
+  SpectrumMinThresh_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  SpectrumMinThresh_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  SpectrumMinThresh_NEL->GetEntry()->SetNumber(0);
+  SpectrumMinThresh_NEL->GetEntry()->Connect("ValueSet(long)", "AASpectrumSlots", SpectrumSlots, "HandleNumberEntries()");
+  
+  // Maximum/upper threshold for histogramming
+  SpectrumThresholds_HF->AddFrame(SpectrumMaxThresh_NEL = new ADAQNumberEntryWithLabel(SpectrumThresholds_HF, "Maximum", SpectrumMaxThresh_NEL_ID),
+				  new TGLayoutHints(kLHintsRight, 15,0,5,0));
+  SpectrumMaxThresh_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  SpectrumMaxThresh_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  SpectrumMaxThresh_NEL->GetEntry()->SetNumber(50000);
+  SpectrumMaxThresh_NEL->GetEntry()->Connect("ValueSet(long)", "AASpectrumSlots", SpectrumSlots, "HandleNumberEntries()");
+  
+  
   ///////////////////////
   // ADAQ spectra options
 
@@ -2436,6 +2460,8 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->SpectrumNumBins = SpectrumNumBins_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->SpectrumMinBin = SpectrumMinBin_NEL->GetEntry()->GetNumber();
   ADAQSettings->SpectrumMaxBin = SpectrumMaxBin_NEL->GetEntry()->GetNumber();
+  ADAQSettings->SpectrumMinThresh = SpectrumMinThresh_NEL->GetEntry()->GetNumber();
+  ADAQSettings->SpectrumMaxThresh = SpectrumMaxThresh_NEL->GetEntry()->GetNumber();
 
   ADAQSettings->ADAQSpectrumTypePAS = ADAQSpectrumTypePAS_RB->IsDown();
   ADAQSettings->ADAQSpectrumTypePHS = ADAQSpectrumTypePHS_RB->IsDown();

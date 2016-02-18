@@ -159,6 +159,12 @@ void AASpectrumSlots::HandleNumberEntries()
     TheInterface->SpectrumAnalysisUpperLimit_NEL->GetEntry()->
       SetNumber(TheInterface->SpectrumMaxBin_NEL->GetEntry()->GetNumber());
     
+    TheInterface->SpectrumMinThresh_NEL->GetEntry()->
+      SetNumber(TheInterface->SpectrumMinBin_NEL->GetEntry()->GetNumber());
+    
+    TheInterface->SpectrumMaxThresh_NEL->GetEntry()->
+      SetNumber(TheInterface->SpectrumMaxBin_NEL->GetEntry()->GetNumber());
+    
     break;
     
     

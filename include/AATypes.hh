@@ -163,6 +163,8 @@ enum{
   SpectrumNumBins_NEL_ID,
   SpectrumMinBin_NEL_ID,
   SpectrumMaxBin_NEL_ID,
+  SpectrumMinThresh_NEL_ID,
+  SpectrumMaxThresh_NEL_ID,
   
   ADAQSpectrumTypePAS_RB_ID,
   ADAQSpectrumTypePHS_RB_ID,
