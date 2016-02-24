@@ -88,22 +88,26 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     PSDHistogramExists(false), PSDHistogramSliceExists(false),
 
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelVerbose(true),
-    Verbose(false), NumDataChannels(8), TotalPeaks(0), 
+    Verbose(false), NumDataChannels(16), TotalPeaks(0), 
     DeuteronsInWaveform(0.), DeuteronsInTotal(0.),
     HalfHeight(0.), EdgePosition(0.), EdgePositionFound(false)
 {
   if(TheComputationManager){
-    cout << "\nERROR! TheComputationManager was constructed twice!\n" << endl;
+    cout << "\nADAQAnalysis error! TheComputationManager was constructed twice!\n" << endl;
     exit(-42);
   }
-  TheComputationManager = this;
+  else
+    TheComputationManager = this;
 
+  
+  
   // Initialize the objects used in the calibration and pulse shape
   // discrimination (PSD) scheme. A set of 8 calibration and 8 PSD
   // filter "managers" -- really, TGraph *'s used for interpolating --
   // along with the corresponding booleans that determine whether or
   // not that channel's "manager" should be used is initialized. 
-  for(int ch=0; ch<NumDataChannels; ch++){
+
+  for(Int_t ch=0; ch<NumDataChannels; ch++){
     // All 8 channel's managers are set "off" by default
     UseSpectraCalibrations.push_back(false);
     SpectraCalibrationType.push_back(zCalibrationFit);
@@ -851,12 +855,26 @@ void AAComputation::FindPeakLimits(TH1F *Histogram_H)
 
 void AAComputation::ProcessSpectrumWaveforms()
 {
+  // Get the current digitizer channel to analyze
+  Int_t Channel = ADAQSettings->WaveformChannel;
+  
   // Delete the previous Spectrum_H TH1F object if it exists to
   // prevent memory leaks
+  
   if(Spectrum_H){
     delete Spectrum_H;
     SpectrumExists = false;
   }
+  
+  // Clear the spectrum pulse value vectors to zero elements. I have
+  // chosen *not* to preallocate memory intentionally since (a)
+  // vector::push_back() is easily sufficiently fast compared to
+  // preallocation for our purposes and (b) the PF algorithm, which
+  // can find multiple values per pulse and therefore does not have a
+  // fixed vector length, makes preallocation difficult.
+
+  SpectrumPHVec[Channel].clear();
+  SpectrumPAVec[Channel].clear();
   
   // Reset the waveform progress bar
   if(SequentialArchitecture){
@@ -865,29 +883,18 @@ void AAComputation::ProcessSpectrumWaveforms()
     ProcessingProgressBar->SetForegroundColor(ColorManager->Number2Pixel(1));
   }
   
-  // Create the TH1F histogram object for spectra creation
+  // Create a new TH1F histogram object for spectra creation
   Spectrum_H = new TH1F("Spectrum_H", "ADAQ spectrum", 
 			ADAQSettings->SpectrumNumBins, 
 			ADAQSettings->SpectrumMinBin,
 			ADAQSettings->SpectrumMaxBin);
-
-  // Get the current digitizer channel to analyze
-  Int_t Channel = ADAQSettings->WaveformChannel;
   
   // Variables for calculating pulse height and area
+
   Double_t SampleHeight = 0.;
   Double_t PulseHeight = 0.;
   Double_t PulseArea = 0.;
-  
-  // Clear the spectrum pulse value vectors to zero elements. I have
-  // chosen *not* to preallocate memory intentionally since (a)
-  // vector::push_back() is easily sufficiently fast compared to
-  // preallocation for our purposes and (b) the PF algorithm, which
-  // can find multiple values per pulse and therefore does not have a
-  // fixed vector length, makes preallocation difficult.
-  SpectrumPHVec[Channel].clear();
-  SpectrumPAVec[Channel].clear();
-  
+
   
   ///////////////////////////////////////////////////
   // Create the spectrum from stored waveform data //
@@ -903,15 +910,13 @@ void AAComputation::ProcessSpectrumWaveforms()
       SpectrumExists = false;
       return;
     }
-
-    // Ensure the user chose to save energy waveform data
+    
+    // Ensure the ADAQ file contains stored energy waveform data
     ADAQReadoutInformation *ARI = (ADAQReadoutInformation *)ADAQFile->Get("ReadoutInformation");
     if(!ARI->GetStoreEnergyData()){
       SpectrumExists = false;
-      cout << "HERE" << endl;
       return;
     }
-    
     
     //////////////////////////////////////////////
     // Readout the waveform data into the spectrum
@@ -920,13 +925,9 @@ void AAComputation::ProcessSpectrumWaveforms()
     stringstream SS;
     SS << "WaveformDataCh" << Channel;
     string WDName = SS.str();
-    
-    // Create and set address of ADAQWavefomData object in the waveform tree
-    ADAQWaveformData *WD = new ADAQWaveformData;
-    ADAQWaveformTree->SetBranchAddress(WDName.c_str(), &WD);
-    
+
     // Readout appropriate waveform data into the spectrum
-    for(int entry=0; entry<ADAQSettings->WaveformsToHistogram; entry++){
+    for(Int_t entry=0; entry<ADAQSettings->WaveformsToHistogram; entry++){
       
       // Ensure only the specified number of events are processed
       if(entry == ADAQSettings->WaveformsToHistogram)
@@ -935,51 +936,47 @@ void AAComputation::ProcessSpectrumWaveforms()
       ADAQWaveformTree->GetEntry(entry);
 
       // Get the pulse height and area...
+      
+      PulseHeight = WaveformData[Channel]->GetPulseHeight();
+      PulseArea = WaveformData[Channel]->GetPulseArea();
 
-      PulseHeight = WD->GetPulseHeight();
-      PulseArea = WD->GetPulseArea();
-
-      Bool_t PSDAccept = true;
-
+      Bool_t PSDReject = false;
+      
       // Optionally test the waveform against the PSD region criterion
       if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
 	
 	// Get the stored PSD total and tail integrals
-	Double_t Total = WD->GetPSDTotalIntegral();
-	Double_t Tail = WD->GetPSDTailIntegral();
-
+	Double_t Total = WaveformData[ADAQSettings->PSDChannel]->GetPSDTotalIntegral();
+	Double_t Tail = WaveformData[ADAQSettings->PSDChannel]->GetPSDTailIntegral();
+	
 	// Flag the waveform if it is not accepted
 	if(ApplyPSDRegion(Total, Tail))
-	  PSDAccept = false;
+	  PSDReject = true;
       }
       
-      if(PSDAccept){
-	// Add waveform data to the storage vectors
-      	SpectrumPHVec[Channel].push_back(PulseHeight);
-	SpectrumPAVec[Channel].push_back(PulseArea);
-	
-	// Fill the spectrum object depending on pulse spectrm type
-	if(ADAQSettings->ADAQSpectrumTypePAS){
-	  if(PulseArea > ADAQSettings->SpectrumMinThresh and
-	     PulseArea < ADAQSettings->SpectrumMaxThresh){
-	    Spectrum_H->Fill(PulseArea);
-	  }
-	}
+      if(PSDReject)
+	continue;
 
-	else if(ADAQSettings->ADAQSpectrumTypePHS){
-	  if(PulseHeight > ADAQSettings->SpectrumMinThresh and
-	     PulseHeight < ADAQSettings->SpectrumMaxThresh){
-	    Spectrum_H->Fill(PulseHeight);
-	  }
+      // Add waveform data to the storage vectors
+      SpectrumPHVec[Channel].push_back(PulseHeight);
+      SpectrumPAVec[Channel].push_back(PulseArea);
+      
+      // Fill the spectrum object depending on pulse spectrm type
+      if(ADAQSettings->ADAQSpectrumTypePAS){
+	if(PulseArea > ADAQSettings->SpectrumMinThresh and
+	   PulseArea < ADAQSettings->SpectrumMaxThresh){
+	  Spectrum_H->Fill(PulseArea);
+	}
+      }
+      
+      else if(ADAQSettings->ADAQSpectrumTypePHS){
+	if(PulseHeight > ADAQSettings->SpectrumMinThresh and
+	   PulseHeight < ADAQSettings->SpectrumMaxThresh){
+	  Spectrum_H->Fill(PulseHeight);
 	}
       }
     }
-    
-    delete WD;
-    
     SpectrumExists = true;
-    
-    return;
   }
   
   
