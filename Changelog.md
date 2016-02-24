@@ -1,7 +1,7 @@
 # ADAQAnalysis Version Change Log
 
 name: Changelog.md  
-date: 23 Dec 15 (last updated)  
+date: 23 Feb 16 (last updated)  
 auth: Zach Hartwig  
 mail: hartwig@psfc.mit.edu  
 
@@ -11,6 +11,19 @@ mail: hartwig@psfc.mit.edu
 Major new developments in this series include:
 
  - Updated for compatibility with newest ROOT6 (v6.06.00)
+
+### 1.6.1
+
+ - Fixed a major bug that was including identical data in pulse
+   spectra for waveform data analysis. The data was included ~N times
+   (N is the number of enabled data channels used in ADAQAcquisition)
+
+ - Fixed a major bug preventing correct selection of data channel for
+   pulse spectra creation when using waveform data analysis
+
+ - Adding new min/max thresholds for inclusion of data in pulse spectra
+
+ - Reimplemented option for linear interpolation on calibration data
 
 
 ## Version 1.4 Series
