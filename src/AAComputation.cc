@@ -892,9 +892,9 @@ void AAComputation::ProcessSpectrumWaveforms()
   // Variables for calculating pulse height and area
 
   Double_t SampleHeight = 0.;
-  Double_t PulseHeight = 0.;
-  Double_t PulseArea = 0.;
-
+  Double_t PulseHeight = 0., PrevPulseHeight = 0.;
+  Double_t PulseArea = 0., PrevPulseArea = 0.;
+  
   
   ///////////////////////////////////////////////////
   // Create the spectrum from stored waveform data //
@@ -932,15 +932,40 @@ void AAComputation::ProcessSpectrumWaveforms()
 	break;
       
       ADAQWaveformTree->GetEntry(entry);
-
+      
       // Get the pulse height and area...
       
       PulseHeight = WaveformData[Channel]->GetPulseHeight();
       PulseArea = WaveformData[Channel]->GetPulseArea();
 
-      Bool_t PSDReject = false;
+      // The following is a temporary hack. As of ADAQ libraries
+      // version 1.6.0, all digitizer channel data is stored in a
+      // single tree with channel-specific branches. When a
+      // TTree::Fill() is called, all branches are saved. WHen
+      // operating with multiple detectors, this causes non-triggered
+      // branched to write whatever data is present from previously
+      // triggered events. The fix below prevents adding this
+      // redundant data to the spectra. In the future, each channel is
+      // likely to get its own TTree, resolving this issue
+
+      if(ADAQSettings->ADAQSpectrumTypePHS){
+	if(PulseHeight == PrevPulseHeight)
+	  continue;
+	else
+	  PrevPulseHeight = PulseHeight;
+      }
+      else if(ADAQSettings->ADAQSpectrumTypePAS){
+	if(PulseArea == PrevPulseArea)
+	  continue;
+	else
+	  PrevPulseArea = PulseArea;
+      }
       
-      // Optionally test the waveform against the PSD region criterion
+      // If specified, assess the waveform's pulse shape and exclude
+      // it from the pulse spectra if it fails the test
+
+      Bool_t PSDReject = false;
+
       if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
 	
 	// Get the stored PSD total and tail integrals
