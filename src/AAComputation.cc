@@ -911,8 +911,6 @@ void AAComputation::ProcessSpectrumWaveforms()
       return;
     }
     
-    // Ensure the ADAQ file contains stored energy waveform data
-    ADAQReadoutInformation *ARI = (ADAQReadoutInformation *)ADAQFile->Get("ReadoutInformation");
     if(!ARI->GetStoreEnergyData()){
       SpectrumExists = false;
       return;
@@ -985,6 +983,11 @@ void AAComputation::ProcessSpectrumWaveforms()
   /////////////////////////////////////////////////
   
   else{
+
+    if(!ARI->GetStoreRawWaveforms()){
+      SpectrumExists = false;
+      return;
+    }
     
     // Reset the variable holding accumulated RFQ current if the value
     // was not loaded directly from an ADAQ ROOT file created during
@@ -2025,7 +2028,6 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
     }
     
     // Ensure the user chose to save PSD waveform data
-    ADAQReadoutInformation *ARI = (ADAQReadoutInformation *)ADAQFile->Get("ReadoutInformation");
     if(!ARI->GetStorePSDData()){
       PSDHistogramExists = false;
       return PSDHistogram_H;

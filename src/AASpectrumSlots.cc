@@ -319,7 +319,8 @@ void AASpectrumSlots::HandleTextButtons()
       }
     }
     
-    TheInterface->UpdateForSpectrumCreation();
+    if(ComputationMgr->GetSpectrumExists())
+      TheInterface->UpdateForSpectrumCreation();
     
     break;
   }
