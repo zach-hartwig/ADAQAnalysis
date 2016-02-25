@@ -1490,7 +1490,7 @@ void AAComputation::CreateSpectrum()
       if((It-ItB) > ADAQSettings->WaveformsToHistogram)
 	break;
 
-    double Quantity = (*It);
+    Double_t Quantity = (*It);
 
     // Convert the quantity if calibration has been activated
     if(ADAQSettings->UseSpectraCalibrations[Channel]){
@@ -1502,9 +1502,8 @@ void AAComputation::CreateSpectrum()
     
     if(Quantity > ADAQSettings->SpectrumMinThresh and
        Quantity < ADAQSettings->SpectrumMaxThresh)
-      Spectrum_H->Fill( (*It) );
+      Spectrum_H->Fill(Quantity);
   }
-  
   SpectrumExists = true;
 }
 
