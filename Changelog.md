@@ -12,6 +12,12 @@ Major new developments in this series include:
 
  - Updated for compatibility with newest ROOT6 (v6.06.00)
 
+### 1.6.2
+
+ - Fixed bug preventing creation of calibrated spectra when using
+   processed waveform data.
+   
+
 ### 1.6.1
 
  - Fixed a major bug that was including identical data in pulse
