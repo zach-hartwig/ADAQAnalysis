@@ -986,7 +986,7 @@ void AAGraphics::PlotSpectrumDerivative()
 }
 
 
-void AAGraphics::PlotCalibration(int Channel)
+void AAGraphics::PlotCalibration(Int_t Channel)
 {
   vector<TGraph *> CalibrationData = ComputationMgr->GetSpectraCalibrationData();
   vector<TF1 *> Calibrations;

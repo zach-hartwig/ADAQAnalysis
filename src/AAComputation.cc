@@ -124,7 +124,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     ADAQChannelCalibrationData Init;
     CalibrationData.push_back(Init);
     
-    Waveform_H[ch] = new TH1F;
+    Waveform_H.push_back(new TH1F);
   }
 
   // Set ROOT to print only break messages and above (to suppress the

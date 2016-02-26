@@ -71,7 +71,7 @@ using namespace std;
 #include <boost/array.hpp>
 #endif
 
-
+#define MAX_DG_CHANNELS 16
 
 class AAComputation : public TObject
 {
@@ -260,8 +260,8 @@ private:
   
   TString MachineName, MachineUser, FileDate, FileVersion;
   ADAQReadoutInformation *ARI;
-  vector<Int_t> *Waveforms[64];
-  ADAQWaveformData *WaveformData[64];
+  vector<Int_t> *Waveforms[MAX_DG_CHANNELS];
+  ADAQWaveformData *WaveformData[MAX_DG_CHANNELS];
   
   ADAQRootMeasParams *ADAQMeasParams;
 
@@ -279,7 +279,7 @@ private:
   //////////////////////
   // Waveforms variables
 
-  TH1F *Waveform_H[8];
+  vector<TH1F *> Waveform_H;
   
   vector<Int_t> Time, RawVoltage;
   Int_t RecordLength;
@@ -318,7 +318,7 @@ private:
   Double_t SpectrumIntegralValue, SpectrumIntegralError;
 
   // Vectors used to store processed waveform values
-  vector<Double_t> SpectrumPHVec[8], SpectrumPAVec[8];
+  vector<Double_t> SpectrumPHVec[MAX_DG_CHANNELS], SpectrumPAVec[MAX_DG_CHANNELS];
 
   // Objects that are used in energy calibration of the pulse spectra
   vector<TGraph *>SpectraCalibrationData;
@@ -337,7 +337,7 @@ private:
   TH2F *PSDHistogram_H, *MasterPSDHistogram_H;
   TH1D *PSDHistogramSlice_H;
   
-  vector<Double_t> PSDHistogramTotalVec[8], PSDHistogramTailVec[8];
+  vector<Double_t> PSDHistogramTotalVec[MAX_DG_CHANNELS], PSDHistogramTailVec[MAX_DG_CHANNELS];
   
   Double_t PSDRegionPolarity;
   vector<TCutG *> PSDRegions;
