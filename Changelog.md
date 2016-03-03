@@ -1,7 +1,7 @@
 # ADAQAnalysis Version Change Log
 
 name: Changelog.md  
-date: 23 Feb 16 (last updated)  
+date: 03 Mar 16 (last updated)  
 auth: Zach Hartwig  
 mail: hartwig@psfc.mit.edu  
 
@@ -11,6 +11,13 @@ mail: hartwig@psfc.mit.edu
 Major new developments in this series include:
 
  - Updated for compatibility with newest ROOT6 (v6.06.00)
+
+
+### 1.6.3
+
+ - Enabling calibration for data channels higher than 8 for
+   compatibility with 16 channel V1725 boards
+   
 
 ### 1.6.2
 
