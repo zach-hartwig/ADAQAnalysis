@@ -391,7 +391,7 @@ void AAInterface::FillWaveformFrame()
   NegativeWaveform_RB->SetState(kButtonDown);
 
 TGGroupFrame *PeakFindingOptions_GF = new TGGroupFrame(WaveformFrame_VF, "Peak finding options", kVerticalFrame);
-  WaveformFrame_VF->AddFrame(PeakFindingOptions_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
+  WaveformFrame_VF->AddFrame(PeakFindingOptions_GF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
   
   TGHorizontalFrame *PeakFinding_HF0 = new TGHorizontalFrame(PeakFindingOptions_GF);
   PeakFindingOptions_GF->AddFrame(PeakFinding_HF0, new TGLayoutHints(kLHintsLeft, 0,0,0,5));
@@ -647,9 +647,11 @@ void AAInterface::FillSpectrumFrame()
   SpectrumFrame_VF->AddFrame(WaveformAndBins_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
 
 
+  Int_t LOffset = 15;
+
   // Number of waveforms to bin in the histogram
   WaveformAndBins_HF->AddFrame(WaveformsToHistogram_NEL = new ADAQNumberEntryWithLabel(WaveformAndBins_HF, "Waveforms", WaveformsToHistogram_NEL_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,0,8,5));
+			       new TGLayoutHints(kLHintsLeft, LOffset,0,8,5));
   WaveformsToHistogram_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   WaveformsToHistogram_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   WaveformsToHistogram_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
@@ -664,14 +666,14 @@ void AAInterface::FillSpectrumFrame()
   SpectrumNumBins_NEL->GetEntry()->SetNumber(200);
 
   SpectrumFrame_VF->AddFrame(new TGLabel(SpectrumFrame_VF, "Histogram limits"),
-			     new TGLayoutHints(kLHintsNormal, 15,0,0,0));
+			     new TGLayoutHints(kLHintsNormal, LOffset,0,0,0));
   
   TGHorizontalFrame *SpectrumBinning_HF = new TGHorizontalFrame(SpectrumFrame_VF);
   SpectrumFrame_VF->AddFrame(SpectrumBinning_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   
   // Minimum spectrum bin number entry
   SpectrumBinning_HF->AddFrame(SpectrumMinBin_NEL = new ADAQNumberEntryWithLabel(SpectrumBinning_HF, "Mininum  ", SpectrumMinBin_NEL_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,0,5,0));
+			       new TGLayoutHints(kLHintsLeft, LOffset,0,5,0));
   SpectrumMinBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumMinBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
   SpectrumMinBin_NEL->GetEntry()->SetNumber(0);
@@ -686,14 +688,14 @@ void AAInterface::FillSpectrumFrame()
   SpectrumMaxBin_NEL->GetEntry()->Connect("ValueSet(long)", "AASpectrumSlots", SpectrumSlots, "HandleNumberEntries()");
   
   SpectrumFrame_VF->AddFrame(new TGLabel(SpectrumFrame_VF, "Histogram thresholds"),
-			     new TGLayoutHints(kLHintsNormal, 15, 0, 5, 0));
+			     new TGLayoutHints(kLHintsNormal, LOffset, 0, 5, 0));
   
   TGHorizontalFrame *SpectrumThresholds_HF = new TGHorizontalFrame(SpectrumFrame_VF);
   SpectrumFrame_VF->AddFrame(SpectrumThresholds_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   
   // Minimum/lower threshold for histogramming
   SpectrumThresholds_HF->AddFrame(SpectrumMinThresh_NEL = new ADAQNumberEntryWithLabel(SpectrumThresholds_HF, "Mininum  ", SpectrumMinThresh_NEL_ID),
-				  new TGLayoutHints(kLHintsLeft, 15,0,5,0));
+				  new TGLayoutHints(kLHintsLeft, LOffset,0,5,0));
   SpectrumMinThresh_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   SpectrumMinThresh_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   SpectrumMinThresh_NEL->GetEntry()->SetNumber(0);
@@ -711,8 +713,8 @@ void AAInterface::FillSpectrumFrame()
   ///////////////////////
   // ADAQ spectra options
 
-  TGGroupFrame *ADAQSpectrumOptions_GF = new TGGroupFrame(SpectrumFrame_VF, "Experimental Spectra (ADAQ)", kHorizontalFrame);
-  SpectrumFrame_VF->AddFrame(ADAQSpectrumOptions_GF, new TGLayoutHints(kLHintsNormal, 15,0,10,0));
+  TGGroupFrame *ADAQSpectrumOptions_GF = new TGGroupFrame(SpectrumFrame_VF, "Experimental spectra (ADAQ)", kHorizontalFrame);
+  SpectrumFrame_VF->AddFrame(ADAQSpectrumOptions_GF, new TGLayoutHints(kLHintsLeft, 15,0,10,0));
 
   TGVerticalFrame *ADAQSpectrumQuantities_VF = new TGVerticalFrame(ADAQSpectrumOptions_GF);
   ADAQSpectrumOptions_GF->AddFrame(ADAQSpectrumQuantities_VF, new TGLayoutHints(kLHintsNormal, 5,15,5,0));
@@ -756,8 +758,8 @@ void AAInterface::FillSpectrumFrame()
   //////////////////////////
   // ASIM spectra options
 
-  TGGroupFrame *ASIMSpectrumOptions_GF = new TGGroupFrame(SpectrumFrame_VF, "Simulated Spectra (ASIM)", kHorizontalFrame);
-  SpectrumFrame_VF->AddFrame(ASIMSpectrumOptions_GF, new TGLayoutHints(kLHintsNormal, 15,0,5,0));
+  TGGroupFrame *ASIMSpectrumOptions_GF = new TGGroupFrame(SpectrumFrame_VF, "Simulated spectra (ASIM)", kHorizontalFrame);
+  SpectrumFrame_VF->AddFrame(ASIMSpectrumOptions_GF, new TGLayoutHints(kLHintsLeft, 15,0,5,0));
 
   TGVerticalFrame *ASIMSpectrumQuantities_VF = new TGVerticalFrame(ASIMSpectrumOptions_GF);
   ASIMSpectrumOptions_GF->AddFrame(ASIMSpectrumQuantities_VF, new TGLayoutHints(kLHintsNormal, 5,15,5,0));
@@ -804,7 +806,7 @@ void AAInterface::FillSpectrumFrame()
   // Spectrum energy calibration
 
   TGGroupFrame *SpectrumCalibration_GF = new TGGroupFrame(SpectrumFrame_VF, "Energy calibration", kVerticalFrame);
-  SpectrumFrame_VF->AddFrame(SpectrumCalibration_GF, new TGLayoutHints(kLHintsCenterX,5,5,10,0));
+  SpectrumFrame_VF->AddFrame(SpectrumCalibration_GF, new TGLayoutHints(kLHintsLeft, 15,5,10,0));
 
   TGHorizontalFrame *SpectrumCalibration_HF0 = new TGHorizontalFrame(SpectrumCalibration_GF);
   SpectrumCalibration_GF->AddFrame(SpectrumCalibration_HF0, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
@@ -962,10 +964,10 @@ void AAInterface::FillSpectrumFrame()
   // Create spectrum button
   
   TGHorizontalFrame *ProcessCreateSpectrum_HF = new TGHorizontalFrame(SpectrumFrame_VF);
-  SpectrumFrame_VF->AddFrame(ProcessCreateSpectrum_HF, new TGLayoutHints(kLHintsNormal, 20,5,5,5));
+  SpectrumFrame_VF->AddFrame(ProcessCreateSpectrum_HF, new TGLayoutHints(kLHintsNormal, 0,5,5,5));
   
   ProcessCreateSpectrum_HF->AddFrame(ProcessSpectrum_TB = new TGTextButton(ProcessCreateSpectrum_HF, "Process waveforms", ProcessSpectrum_TB_ID),
-				     new TGLayoutHints(kLHintsCenterX | kLHintsTop, 5,5,15,0));
+				     new TGLayoutHints(kLHintsNormal, LOffset+35,5,15,0));
   ProcessSpectrum_TB->Resize(120, 30);
   ProcessSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   ProcessSpectrum_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
@@ -973,7 +975,7 @@ void AAInterface::FillSpectrumFrame()
   ProcessSpectrum_TB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleTextButtons()");
   
   ProcessCreateSpectrum_HF->AddFrame(CreateSpectrum_TB = new TGTextButton(ProcessCreateSpectrum_HF, "Create spectrum", CreateSpectrum_TB_ID),
-				     new TGLayoutHints(kLHintsCenterX | kLHintsTop, 5,5,15,0));
+				     new TGLayoutHints(kLHintsNormal, 5,5,15,0));
   CreateSpectrum_TB->Resize(120, 30);
   CreateSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   CreateSpectrum_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
@@ -996,7 +998,7 @@ void AAInterface::FillAnalysisFrame()
   // Spectrum background fitting 
   
   TGGroupFrame *BackgroundAnalysis_GF = new TGGroupFrame(AnalysisFrame_VF, "Background fitting", kVerticalFrame);
-  AnalysisFrame_VF->AddFrame(BackgroundAnalysis_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
+  AnalysisFrame_VF->AddFrame(BackgroundAnalysis_GF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
   
   TGHorizontalFrame *SpectrumBackgroundOptions0_HF = new TGHorizontalFrame(BackgroundAnalysis_GF);
   BackgroundAnalysis_GF->AddFrame(SpectrumBackgroundOptions0_HF);
@@ -1110,7 +1112,7 @@ void AAInterface::FillAnalysisFrame()
   // Spectrum integration and peak fitting
   
   TGGroupFrame *SpectrumAnalysis_GF = new TGGroupFrame(AnalysisFrame_VF, "Integration and peak fitting", kVerticalFrame);
-  AnalysisFrame_VF->AddFrame(SpectrumAnalysis_GF, new TGLayoutHints(kLHintsCenterX, 15,5,5,5));
+  AnalysisFrame_VF->AddFrame(SpectrumAnalysis_GF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
   
   TGHorizontalFrame *Horizontal0_HF = new TGHorizontalFrame(SpectrumAnalysis_GF);
   SpectrumAnalysis_GF->AddFrame(Horizontal0_HF, new TGLayoutHints(kLHintsNormal, 0,0,5,5));
@@ -1204,10 +1206,9 @@ void AAInterface::FillAnalysisFrame()
 
   ////////////////////////////////
   // Spectrum energy analysis (EA)
-
+  
   TGGroupFrame *EA_GF = new TGGroupFrame(AnalysisFrame_VF, "Energy analysis", kVerticalFrame);
-  AnalysisFrame_VF->AddFrame(EA_GF, new TGLayoutHints(kLHintsNormal, 15,5,5,5));
-
+  AnalysisFrame_VF->AddFrame(EA_GF, new TGLayoutHints(kLHintsLeft, 15,5,5,5));
 
   TGHorizontalFrame *EA_HF0 = new TGHorizontalFrame(EA_GF);
   EA_GF->AddFrame(EA_HF0, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
@@ -1305,20 +1306,21 @@ void AAInterface::FillPSDFrame()
   TGVerticalFrame *PSDFrame_VF = new TGVerticalFrame(PSDFrame_C->GetViewPort(), TabFrameWidth-10, TabFrameLength);
   PSDFrame_C->SetContainer(PSDFrame_VF);
 
+
+  //////////////////////////
+  // PSD creation widgets //
+  //////////////////////////
   
-  ///////////////////////////////////////////
-  // Pulse-shape discrimination (PSD) options
+  TGGroupFrame *PSDCreation_GF = new TGGroupFrame(PSDFrame_VF, "PSD histogram creation", kVerticalFrame);
+  PSDFrame_VF->AddFrame(PSDCreation_GF, new TGLayoutHints(kLHintsCenterX | kLHintsExpandX, 5,5,5,5));
   
-  TGGroupFrame *PSDAnalysis_GF = new TGGroupFrame(PSDFrame_VF, "Pulse Shape Discrimination", kVerticalFrame);
-  PSDFrame_VF->AddFrame(PSDAnalysis_GF, new TGLayoutHints(kLHintsCenterX | kLHintsExpandX, 5,5,5,5));
-  
-  PSDAnalysis_GF->AddFrame(PSDEnable_CB = new TGCheckButton(PSDAnalysis_GF, "Discriminate pulse shapes", PSDEnable_CB_ID),
+  PSDCreation_GF->AddFrame(PSDEnable_CB = new TGCheckButton(PSDCreation_GF, "Discriminate pulse shapes", PSDEnable_CB_ID),
                            new TGLayoutHints(kLHintsNormal, 0,5,5,0));
   PSDEnable_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
   
   
-  TGHorizontalFrame *PSD_HF0 = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSD_HF0, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  TGHorizontalFrame *PSD_HF0 = new TGHorizontalFrame(PSDCreation_GF);
+  PSDCreation_GF->AddFrame(PSD_HF0, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   
   PSD_HF0->AddFrame(PSDChannel_CBL = new ADAQComboBoxWithLabel(PSD_HF0, "", -1),
 		    new TGLayoutHints(kLHintsNormal, 0,5,5,0));
@@ -1344,8 +1346,8 @@ void AAInterface::FillPSDFrame()
   PSDWaveforms_NEL->GetEntry()->SetState(false);
 
 
-  TGHorizontalFrame *PSDProcessingType_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSDProcessingType_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  TGHorizontalFrame *PSDProcessingType_HF = new TGHorizontalFrame(PSDCreation_GF);
+  PSDCreation_GF->AddFrame(PSDProcessingType_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   
   PSDProcessingType_HF->AddFrame(PSDAlgorithmSMS_RB = new TGRadioButton(PSDProcessingType_HF,"Simple\nmax/sum",PSDAlgorithmSMS_RB_ID),
 				 new TGLayoutHints(kLHintsNormal,0,0,5,5));
@@ -1364,11 +1366,11 @@ void AAInterface::FillPSDFrame()
   PSDAlgorithmWD_RB->SetState(kButtonDisabled);
 
   
-  PSDAnalysis_GF->AddFrame(new TGLabel(PSDAnalysis_GF, "Integral limits (sample rel. to peak)"),
+  PSDCreation_GF->AddFrame(new TGLabel(PSDCreation_GF, "Integral limits (sample rel. to peak)"),
 			   new TGLayoutHints(kLHintsLeft,0,0,5,5));
 
-  TGHorizontalFrame *PSDTotal_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSDTotal_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  TGHorizontalFrame *PSDTotal_HF = new TGHorizontalFrame(PSDCreation_GF);
+  PSDCreation_GF->AddFrame(PSDTotal_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   
   PSDTotal_HF->AddFrame(PSDTotalStart_NEL = new ADAQNumberEntryWithLabel(PSDTotal_HF,
 									 "Total start",
@@ -1392,8 +1394,8 @@ void AAInterface::FillPSDFrame()
 
 
 
-  TGHorizontalFrame *DGPSDTail_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(DGPSDTail_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  TGHorizontalFrame *DGPSDTail_HF = new TGHorizontalFrame(PSDCreation_GF);
+  PSDCreation_GF->AddFrame(DGPSDTail_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
 
 
   DGPSDTail_HF->AddFrame(PSDTailStart_NEL = new ADAQNumberEntryWithLabel(DGPSDTail_HF,
@@ -1417,7 +1419,7 @@ void AAInterface::FillPSDFrame()
   PSDTailStop_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
 
 
-  PSDAnalysis_GF->AddFrame(PSDThreshold_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Threshold (ADC)", -1),
+  PSDCreation_GF->AddFrame(PSDThreshold_NEL = new ADAQNumberEntryWithLabel(PSDCreation_GF, "Threshold (ADC)", -1),
                            new TGLayoutHints(kLHintsNormal, 0,5,5,0));
   PSDThreshold_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDThreshold_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -1425,15 +1427,15 @@ void AAInterface::FillPSDFrame()
   PSDThreshold_NEL->GetEntry()->SetState(false);
   
 
-  PSDAnalysis_GF->AddFrame(PSDNumTotalBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. total bins (X axis)", -1),
+  PSDCreation_GF->AddFrame(PSDNumTotalBins_NEL = new ADAQNumberEntryWithLabel(PSDCreation_GF, "Num. total bins (X axis)", -1),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
   PSDNumTotalBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDNumTotalBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PSDNumTotalBins_NEL->GetEntry()->SetNumber(150);
   PSDNumTotalBins_NEL->GetEntry()->SetState(false);
 
-  TGHorizontalFrame *TotalBins_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(TotalBins_HF);
+  TGHorizontalFrame *TotalBins_HF = new TGHorizontalFrame(PSDCreation_GF);
+  PSDCreation_GF->AddFrame(TotalBins_HF);
 
   TotalBins_HF->AddFrame(PSDMinTotalBin_NEL = new ADAQNumberEntryWithLabel(TotalBins_HF, "Min.", -1),
 			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
@@ -1450,15 +1452,15 @@ void AAInterface::FillPSDFrame()
   PSDMaxTotalBin_NEL->GetEntry()->SetState(false);
 
   
-  PSDAnalysis_GF->AddFrame(PSDNumTailBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. Y axis bins", -1),
+  PSDCreation_GF->AddFrame(PSDNumTailBins_NEL = new ADAQNumberEntryWithLabel(PSDCreation_GF, "Num. Y axis bins", -1),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
   PSDNumTailBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDNumTailBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PSDNumTailBins_NEL->GetEntry()->SetNumber(150);
   PSDNumTailBins_NEL->GetEntry()->SetState(false);
 
-  TGHorizontalFrame *TailBins_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(TailBins_HF);
+  TGHorizontalFrame *TailBins_HF = new TGHorizontalFrame(PSDCreation_GF);
+  PSDCreation_GF->AddFrame(TailBins_HF);
 
   TailBins_HF->AddFrame(PSDMinTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Min.", -1),
 			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
@@ -1474,8 +1476,8 @@ void AAInterface::FillPSDFrame()
   PSDMaxTailBin_NEL->GetEntry()->SetNumber(2000);
   PSDMaxTailBin_NEL->GetEntry()->SetState(false);
 
-  TGHorizontalFrame *PSDAlgorithm_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSDAlgorithm_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  TGHorizontalFrame *PSDAlgorithm_HF = new TGHorizontalFrame(PSDCreation_GF);
+  PSDCreation_GF->AddFrame(PSDAlgorithm_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
 
   PSDAlgorithm_HF->AddFrame(new TGLabel(PSDAlgorithm_HF, "Y axis: "),
 		       new TGLayoutHints(kLHintsNormal,0,0,0,0));
@@ -1489,8 +1491,8 @@ void AAInterface::FillPSDFrame()
 		       new TGLayoutHints(kLHintsNormal,20,0,0,0));
   PSDYAxisTailTotal_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
 
-  TGHorizontalFrame *PSDPlotOptions_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSDPlotOptions_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  TGHorizontalFrame *PSDPlotOptions_HF = new TGHorizontalFrame(PSDCreation_GF);
+  PSDCreation_GF->AddFrame(PSDPlotOptions_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   
   PSDPlotOptions_HF->AddFrame(PSDPlotType_CBL = new ADAQComboBoxWithLabel(PSDPlotOptions_HF, "Style", PSDPlotType_CBL_ID),
 			      new TGLayoutHints(kLHintsNormal, 0,5,10,5));
@@ -1522,8 +1524,8 @@ void AAInterface::FillPSDFrame()
   PSDPlotPalette_CBL->GetComboBox()->Connect("Selected(int,int)", "AAProcessingSlots", ProcessingSlots, "HandleComboBoxes(int,int)");
   PSDPlotPalette_CBL->GetComboBox()->SetEnabled(false);
   
-  TGHorizontalFrame *ProcessCreatePSDHistogram_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(ProcessCreatePSDHistogram_HF, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  TGHorizontalFrame *ProcessCreatePSDHistogram_HF = new TGHorizontalFrame(PSDCreation_GF);
+  PSDCreation_GF->AddFrame(ProcessCreatePSDHistogram_HF, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
   
   ProcessCreatePSDHistogram_HF->AddFrame(ProcessPSDHistogram_TB = new TGTextButton(ProcessCreatePSDHistogram_HF, "Process waveforms", ProcessPSDHistogram_TB_ID),
 					 new TGLayoutHints(kLHintsCenterX | kLHintsTop, 0,5,5,0));
@@ -1543,6 +1545,13 @@ void AAInterface::FillPSDFrame()
   CreatePSDHistogram_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
   CreatePSDHistogram_TB->SetState(kButtonDisabled);
 
+
+  //////////////////////////
+  // PSD analysis widgets //
+  //////////////////////////
+
+  TGGroupFrame *PSDAnalysis_GF = new TGGroupFrame(PSDFrame_VF, "PSD histogram creation", kVerticalFrame);
+  PSDFrame_VF->AddFrame(PSDAnalysis_GF, new TGLayoutHints(kLHintsCenterX | kLHintsExpandX, 5,5,5,5));
 
   PSDAnalysis_GF->AddFrame(PSDEnableHistogramSlicing_CB = new TGCheckButton(PSDAnalysis_GF, "Enable histogram slicing", PSDEnableHistogramSlicing_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,10,0));
