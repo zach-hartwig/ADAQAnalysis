@@ -12,19 +12,19 @@
 
 /////////////////////////////////////////////////////////////////////////////////
 // 
-// name: AASpectrumSlots.hh
-// date: 11 Aug 14
+// name: AAPSDSlots.hh
+// date: 10 Apr 16
 // auth: Zach Hartwig
 // mail: hartwig@psfc.mit.edu
 // 
-// desc: The AASpectrumSlots class contains widget slot methods to
+// desc: The AAPSDSlots class contains widget slot methods to
 //       handle signals generated from widgets contained on the
-//       "spectrum" tab of the ADAQAnalysis GUI
+//       "PSD" tab of the ADAQAnalysis GUI
 //
 /////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __AASpectrumSlots_hh__
-#define __AASpectrumSlots_hh__ 1
+#ifndef __AAPSDSlots_hh__
+#define __AAPSDSlots_hh__ 1
 
 #include <TObject.h>
 
@@ -33,23 +33,23 @@
 
 class AAInterface;
 
-class AASpectrumSlots : public TObject
+class AAPSDSlots : public TObject
 {
 public:
-  AASpectrumSlots(AAInterface *);
-  ~AASpectrumSlots();
-
+  AAPSDSlots(AAInterface *);
+  ~AAPSDSlots();
+  
   void HandleCheckButtons();
   void HandleComboBoxes(int, int);
   void HandleNumberEntries();
   void HandleRadioButtons();
   void HandleTextButtons();
-
-  ClassDef(AASpectrumSlots, 0);
-
+  
+  ClassDef(AAPSDSlots, 0);
+  
 private:
   AAInterface *TheInterface;
-
+  
   AAComputation *ComputationMgr;
   AAGraphics *GraphicsMgr;
 };

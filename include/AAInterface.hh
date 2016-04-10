@@ -75,6 +75,7 @@ using namespace std;
 class AAWaveformSlots;
 class AASpectrumSlots;
 class AAAnalysisSlots;
+class AAPSDSlots;
 class AAGraphicsSlots;
 class AAProcessingSlots;
 class AANontabSlots;
@@ -85,6 +86,7 @@ class AAInterface : public TGMainFrame
   friend class AAWaveformSlots;
   friend class AASpectrumSlots;
   friend class AAAnalysisSlots;
+  friend class AAPSDSlots;
   friend class AAGraphicsSlots;
   friend class AAProcessingSlots;
   friend class AANontabSlots;
@@ -100,6 +102,7 @@ public:
   void FillWaveformFrame();
   void FillSpectrumFrame();
   void FillAnalysisFrame();
+  void FillPSDFrame();
   void FillGraphicsFrame();
   void FillProcessingFrame();
   void FillCanvasFrame();
@@ -137,6 +140,9 @@ private:
 
   TGCompositeFrame *AnalysisOptionsTab_CF;
   TGCompositeFrame *AnalysisOptions_CF;
+  
+  TGCompositeFrame *PSDOptionsTab_CF;
+  TGCompositeFrame *PSDOptions_CF;
 
   TGCompositeFrame *GraphicsOptionsTab_CF;
   TGCompositeFrame *GraphicsOptions_CF;
@@ -440,8 +446,9 @@ private:
   const int NumProcessors;
 
   // Variables for size adjustment of widget layout
-  int CanvasX, CanvasY, CanvasFrameWidth, SliderBuffer, LeftFrameLength;
+  int CanvasX, CanvasY, CanvasFrameWidth, SliderBuffer;
   int TotalX, TotalY;
+  int TabFrameWidth, TabFrameLength;
   int NumEdgeBoundingPoints;
   double EdgeBoundX0, EdgeBoundY0;
   
@@ -465,10 +472,11 @@ private:
   AAComputation *ComputationMgr;
   AAGraphics *GraphicsMgr;
   AAInterpolation *InterpolationMgr;
-
+  
   AAWaveformSlots *WaveformSlots;
   AASpectrumSlots *SpectrumSlots;
   AAAnalysisSlots *AnalysisSlots;
+  AAPSDSlots *PSDSlots;
   AAGraphicsSlots *GraphicsSlots;
   AAProcessingSlots *ProcessingSlots;
   AANontabSlots *NontabSlots;

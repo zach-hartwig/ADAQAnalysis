@@ -37,6 +37,7 @@
 #pragma link C++ class AAWaveformSlots+;
 #pragma link C++ class AASpectrumSlots+;
 #pragma link C++ class AAAnalysisSlots+;
+#pragma link C++ class AAPSDSlots+;
 #pragma link C++ class AAGraphicsSlots+;
 #pragma link C++ class AAProcessingSlots+;
 #pragma link C++ class AANontabSlots+;

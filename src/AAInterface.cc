@@ -56,6 +56,7 @@ using namespace std;
 #include "AAWaveformSlots.hh"
 #include "AASpectrumSlots.hh"
 #include "AAAnalysisSlots.hh"
+#include "AAPSDSlots.hh"
 #include "AAGraphicsSlots.hh"
 #include "AAProcessingSlots.hh"
 #include "AANontabSlots.hh"
@@ -66,7 +67,8 @@ AAInterface::AAInterface(string CmdLineArg)
   : TGMainFrame(gClient->GetRoot()),
     NumDataChannels(16), NumProcessors(boost::thread::hardware_concurrency()),
     CanvasX(700), CanvasY(500), CanvasFrameWidth(700), 
-    SliderBuffer(45), LeftFrameLength(720), TotalX(1125), TotalY(800),
+    SliderBuffer(30), TotalX(1170), TotalY(800),
+    TabFrameWidth(365), TabFrameLength(720),
     NumEdgeBoundingPoints(0), EdgeBoundX0(0.), EdgeBoundY0(0.),
     DataDirectory(getenv("PWD")), PrintDirectory(getenv("HOME")),
     DesplicedDirectory(getenv("HOME")), HistogramDirectory(getenv("HOME")),
@@ -80,7 +82,7 @@ AAInterface::AAInterface(string CmdLineArg)
     CanvasX = 500;
     CanvasY = 300;
     CanvasFrameWidth = 400;
-    LeftFrameLength = 540;
+    TabFrameLength = 540;
     TotalX = 950;
     TotalY = 610;
   }
@@ -90,6 +92,7 @@ AAInterface::AAInterface(string CmdLineArg)
   WaveformSlots = new AAWaveformSlots(this);
   SpectrumSlots = new AASpectrumSlots(this);
   AnalysisSlots = new AAAnalysisSlots(this);
+  PSDSlots = new AAPSDSlots(this);
   GraphicsSlots = new AAGraphicsSlots(this);
   ProcessingSlots = new AAProcessingSlots(this);
   NontabSlots = new AANontabSlots(this);
@@ -264,36 +267,43 @@ void AAInterface::CreateTheMainFrames()
   // The tabbed frame to hold waveform widgets
   WaveformOptionsTab_CF = OptionsTabs_T->AddTab("Waveform");
   WaveformOptionsTab_CF->AddFrame(WaveformOptions_CF = new TGCompositeFrame(WaveformOptionsTab_CF, 1, 1, kVerticalFrame));
-  WaveformOptions_CF->Resize(320,LeftFrameLength);
+  WaveformOptions_CF->Resize(TabFrameWidth, TabFrameLength);
   WaveformOptions_CF->ChangeOptions(WaveformOptions_CF->GetOptions() | kFixedSize);
 
   // The tabbed frame to hold spectrum widgets
   SpectrumOptionsTab_CF = OptionsTabs_T->AddTab("Spectrum");
   SpectrumOptionsTab_CF->AddFrame(SpectrumOptions_CF = new TGCompositeFrame(SpectrumOptionsTab_CF, 1, 1, kVerticalFrame));
-  SpectrumOptions_CF->Resize(320,LeftFrameLength);
+  SpectrumOptions_CF->Resize(TabFrameWidth, TabFrameLength);
   SpectrumOptions_CF->ChangeOptions(SpectrumOptions_CF->GetOptions() | kFixedSize);
 
   // The tabbed frame to hold analysis widgets
   AnalysisOptionsTab_CF = OptionsTabs_T->AddTab("Analysis");
   AnalysisOptionsTab_CF->AddFrame(AnalysisOptions_CF = new TGCompositeFrame(AnalysisOptionsTab_CF, 1, 1, kVerticalFrame));
-  AnalysisOptions_CF->Resize(320,LeftFrameLength);
+  AnalysisOptions_CF->Resize(TabFrameWidth, TabFrameLength);
   AnalysisOptions_CF->ChangeOptions(AnalysisOptions_CF->GetOptions() | kFixedSize);
+
+  // The tabbed frame to hold PSD widgets
+  PSDOptionsTab_CF = OptionsTabs_T->AddTab("  PSD  ");
+  PSDOptionsTab_CF->AddFrame(PSDOptions_CF = new TGCompositeFrame(PSDOptionsTab_CF, 1, 1, kVerticalFrame));
+  PSDOptions_CF->Resize(TabFrameWidth, TabFrameLength);
+  PSDOptions_CF->ChangeOptions(PSDOptions_CF->GetOptions() | kFixedSize);
 
   // The tabbed frame to hold graphical widgets
   GraphicsOptionsTab_CF = OptionsTabs_T->AddTab("Graphics");
   GraphicsOptionsTab_CF->AddFrame(GraphicsOptions_CF = new TGCompositeFrame(GraphicsOptionsTab_CF, 1, 1, kVerticalFrame));
-  GraphicsOptions_CF->Resize(320,LeftFrameLength);
+  GraphicsOptions_CF->Resize(TabFrameWidth, TabFrameLength);
   GraphicsOptions_CF->ChangeOptions(GraphicsOptions_CF->GetOptions() | kFixedSize);
 
   // The tabbed frame to hold parallel processing widgets
   ProcessingOptionsTab_CF = OptionsTabs_T->AddTab("Processing");
   ProcessingOptionsTab_CF->AddFrame(ProcessingOptions_CF = new TGCompositeFrame(ProcessingOptionsTab_CF, 1, 1, kVerticalFrame));
-  ProcessingOptions_CF->Resize(320,LeftFrameLength);
+  ProcessingOptions_CF->Resize(TabFrameWidth, TabFrameLength);
   ProcessingOptions_CF->ChangeOptions(ProcessingOptions_CF->GetOptions() | kFixedSize);
 
   FillWaveformFrame();
   FillSpectrumFrame();
   FillAnalysisFrame();
+  FillPSDFrame();
   FillGraphicsFrame();
   FillProcessingFrame();
   FillCanvasFrame();
@@ -325,10 +335,10 @@ void AAInterface::FillWaveformFrame()
   /////////////////////////////////////////
   // Fill the waveform options tabbed frame
   
-  TGCanvas *WaveformFrame_C = new TGCanvas(WaveformOptions_CF, 320, LeftFrameLength-20, kDoubleBorder);
+  TGCanvas *WaveformFrame_C = new TGCanvas(WaveformOptions_CF, TabFrameWidth-10, TabFrameLength-20, kDoubleBorder);
   WaveformOptions_CF->AddFrame(WaveformFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
-
-  TGVerticalFrame *WaveformFrame_VF = new TGVerticalFrame(WaveformFrame_C->GetViewPort(), 320, LeftFrameLength);
+  
+  TGVerticalFrame *WaveformFrame_VF = new TGVerticalFrame(WaveformFrame_C->GetViewPort(), TabFrameWidth-10, TabFrameLength);
   WaveformFrame_C->SetContainer(WaveformFrame_VF);
   
   TGHorizontalFrame *WaveformSelection_HF = new TGHorizontalFrame(WaveformFrame_VF);
@@ -627,10 +637,10 @@ void AAInterface::FillSpectrumFrame()
   /////////////////////////////////////////
   // Fill the spectrum options tabbed frame
   
-  TGCanvas *SpectrumFrame_C = new TGCanvas(SpectrumOptions_CF, 320, LeftFrameLength-20, kDoubleBorder);
+  TGCanvas *SpectrumFrame_C = new TGCanvas(SpectrumOptions_CF, TabFrameWidth-10, TabFrameLength-20, kDoubleBorder);
   SpectrumOptions_CF->AddFrame(SpectrumFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
   
-  TGVerticalFrame *SpectrumFrame_VF = new TGVerticalFrame(SpectrumFrame_C->GetViewPort(), 320, LeftFrameLength);
+  TGVerticalFrame *SpectrumFrame_VF = new TGVerticalFrame(SpectrumFrame_C->GetViewPort(), TabFrameWidth-10, TabFrameLength);
   SpectrumFrame_C->SetContainer(SpectrumFrame_VF);
   
   TGHorizontalFrame *WaveformAndBins_HF = new TGHorizontalFrame(SpectrumFrame_VF);
@@ -975,10 +985,10 @@ void AAInterface::FillSpectrumFrame()
 
 void AAInterface::FillAnalysisFrame()
 {
-  TGCanvas *AnalysisFrame_C = new TGCanvas(AnalysisOptions_CF, 320, LeftFrameLength-20, kDoubleBorder);
+  TGCanvas *AnalysisFrame_C = new TGCanvas(AnalysisOptions_CF, TabFrameWidth-10, TabFrameLength-20, kDoubleBorder);
   AnalysisOptions_CF->AddFrame(AnalysisFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
 
-  TGVerticalFrame *AnalysisFrame_VF = new TGVerticalFrame(AnalysisFrame_C->GetViewPort(), 320, LeftFrameLength);
+  TGVerticalFrame *AnalysisFrame_VF = new TGVerticalFrame(AnalysisFrame_C->GetViewPort(), TabFrameWidth-10, TabFrameLength);
   AnalysisFrame_C->SetContainer(AnalysisFrame_VF);
 
   
@@ -1287,15 +1297,330 @@ void AAInterface::FillAnalysisFrame()
 }
 
 
+void AAInterface::FillPSDFrame()
+{
+  TGCanvas *PSDFrame_C = new TGCanvas(PSDOptions_CF, TabFrameWidth-10, TabFrameLength-20, kDoubleBorder);
+  PSDOptions_CF->AddFrame(PSDFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
+
+  TGVerticalFrame *PSDFrame_VF = new TGVerticalFrame(PSDFrame_C->GetViewPort(), TabFrameWidth-10, TabFrameLength);
+  PSDFrame_C->SetContainer(PSDFrame_VF);
+
+  
+  ///////////////////////////////////////////
+  // Pulse-shape discrimination (PSD) options
+  
+  TGGroupFrame *PSDAnalysis_GF = new TGGroupFrame(PSDFrame_VF, "Pulse Shape Discrimination", kVerticalFrame);
+  PSDFrame_VF->AddFrame(PSDAnalysis_GF, new TGLayoutHints(kLHintsCenterX | kLHintsExpandX, 5,5,5,5));
+  
+  PSDAnalysis_GF->AddFrame(PSDEnable_CB = new TGCheckButton(PSDAnalysis_GF, "Discriminate pulse shapes", PSDEnable_CB_ID),
+                           new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  PSDEnable_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
+  
+  
+  TGHorizontalFrame *PSD_HF0 = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSD_HF0, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  
+  PSD_HF0->AddFrame(PSDChannel_CBL = new ADAQComboBoxWithLabel(PSD_HF0, "", -1),
+		    new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  
+  stringstream ss;
+  string entry;
+  for(int ch=0; ch<NumDataChannels; ch++){
+    ss << ch;
+    entry.assign("Channel " + ss.str());
+    PSDChannel_CBL->GetComboBox()->AddEntry(entry.c_str(),ch);
+    ss.str("");
+  }
+  PSDChannel_CBL->GetComboBox()->Resize(85,20);
+  PSDChannel_CBL->GetComboBox()->Select(0);
+  PSDChannel_CBL->GetComboBox()->SetEnabled(false);
+
+  PSD_HF0->AddFrame(PSDWaveforms_NEL = new ADAQNumberEntryWithLabel(PSD_HF0, "Waveforms", -1),
+                           new TGLayoutHints(kLHintsNormal, 10,5,5,0));
+  PSDWaveforms_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  PSDWaveforms_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
+  PSDWaveforms_NEL->GetEntry()->SetLimitValues(0,1); // Updated when ADAQ ROOT file loaded
+  PSDWaveforms_NEL->GetEntry()->SetNumber(0); // Updated when ADAQ ROOT file loaded
+  PSDWaveforms_NEL->GetEntry()->SetState(false);
+
+
+  TGHorizontalFrame *PSDProcessingType_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSDProcessingType_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  
+  PSDProcessingType_HF->AddFrame(PSDAlgorithmSMS_RB = new TGRadioButton(PSDProcessingType_HF,"Simple\nmax/sum",PSDAlgorithmSMS_RB_ID),
+				 new TGLayoutHints(kLHintsNormal,0,0,5,5));
+  PSDAlgorithmSMS_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDAlgorithmSMS_RB->SetState(kButtonDown);
+  PSDAlgorithmSMS_RB->SetState(kButtonDisabled);
+  
+  PSDProcessingType_HF->AddFrame(PSDAlgorithmPF_RB = new TGRadioButton(PSDProcessingType_HF,"Peak\nfinder",PSDAlgorithmPF_RB_ID),
+				 new TGLayoutHints(kLHintsNormal,20,0,5,5));
+  PSDAlgorithmPF_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDAlgorithmPF_RB->SetState(kButtonDisabled);
+  
+  PSDProcessingType_HF->AddFrame(PSDAlgorithmWD_RB = new TGRadioButton(PSDProcessingType_HF,"Waveform\ndata",PSDAlgorithmWD_RB_ID),
+				 new TGLayoutHints(kLHintsNormal,20,0,5,5));
+  PSDAlgorithmWD_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDAlgorithmWD_RB->SetState(kButtonDisabled);
+
+  
+  PSDAnalysis_GF->AddFrame(new TGLabel(PSDAnalysis_GF, "Integral limits (sample rel. to peak)"),
+			   new TGLayoutHints(kLHintsLeft,0,0,5,5));
+
+  TGHorizontalFrame *PSDTotal_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSDTotal_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  
+  PSDTotal_HF->AddFrame(PSDTotalStart_NEL = new ADAQNumberEntryWithLabel(PSDTotal_HF,
+									 "Total start",
+									 PSDTotalStart_NEL_ID),
+			  new TGLayoutHints(kLHintsNormal, 0,10,0,0));
+  PSDTotalStart_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  PSDTotalStart_NEL->GetEntry()->SetNumber(-5);
+  PSDTotalStart_NEL->GetEntry()->Resize(45,20);
+  PSDTotalStart_NEL->GetEntry()->SetState(false);
+  PSDTotalStart_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
+    
+  PSDTotal_HF->AddFrame(PSDTotalStop_NEL = new ADAQNumberEntryWithLabel(PSDTotal_HF,
+									"Stop",
+									PSDTotalStop_NEL_ID),
+			  new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  PSDTotalStop_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  PSDTotalStop_NEL->GetEntry()->SetNumber(40);
+  PSDTotalStop_NEL->GetEntry()->Resize(45,20);
+  PSDTotalStop_NEL->GetEntry()->SetState(false);
+  PSDTotalStop_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
+
+
+
+  TGHorizontalFrame *DGPSDTail_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(DGPSDTail_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+
+
+  DGPSDTail_HF->AddFrame(PSDTailStart_NEL = new ADAQNumberEntryWithLabel(DGPSDTail_HF,
+									 "Tail start ",
+									 PSDTailStart_NEL_ID),
+			 new TGLayoutHints(kLHintsNormal, 0,10,0,0));
+  PSDTailStart_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  PSDTailStart_NEL->GetEntry()->SetNumber(7);
+  PSDTailStart_NEL->GetEntry()->Resize(45,20);
+  PSDTailStart_NEL->GetEntry()->SetState(false);
+  PSDTailStart_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
+    
+  DGPSDTail_HF->AddFrame(PSDTailStop_NEL = new ADAQNumberEntryWithLabel(DGPSDTail_HF,
+									"Stop",
+									PSDTailStop_NEL_ID),
+			 new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  PSDTailStop_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  PSDTailStop_NEL->GetEntry()->SetNumber(40);
+  PSDTailStop_NEL->GetEntry()->Resize(45,20);
+  PSDTailStop_NEL->GetEntry()->SetState(false);
+  PSDTailStop_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
+
+
+  PSDAnalysis_GF->AddFrame(PSDThreshold_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Threshold (ADC)", -1),
+                           new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  PSDThreshold_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  PSDThreshold_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PSDThreshold_NEL->GetEntry()->SetNumber(100);
+  PSDThreshold_NEL->GetEntry()->SetState(false);
+  
+
+  PSDAnalysis_GF->AddFrame(PSDNumTotalBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. total bins (X axis)", -1),
+			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  PSDNumTotalBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  PSDNumTotalBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PSDNumTotalBins_NEL->GetEntry()->SetNumber(150);
+  PSDNumTotalBins_NEL->GetEntry()->SetState(false);
+
+  TGHorizontalFrame *TotalBins_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(TotalBins_HF);
+
+  TotalBins_HF->AddFrame(PSDMinTotalBin_NEL = new ADAQNumberEntryWithLabel(TotalBins_HF, "Min.", -1),
+			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  PSDMinTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDMinTotalBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
+  PSDMinTotalBin_NEL->GetEntry()->SetNumber(0);
+  PSDMinTotalBin_NEL->GetEntry()->SetState(false);
+
+  TotalBins_HF->AddFrame(PSDMaxTotalBin_NEL = new ADAQNumberEntryWithLabel(TotalBins_HF, "Max.", -1),
+			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  PSDMaxTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDMaxTotalBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PSDMaxTotalBin_NEL->GetEntry()->SetNumber(10000);
+  PSDMaxTotalBin_NEL->GetEntry()->SetState(false);
+
+  
+  PSDAnalysis_GF->AddFrame(PSDNumTailBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. Y axis bins", -1),
+			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  PSDNumTailBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
+  PSDNumTailBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PSDNumTailBins_NEL->GetEntry()->SetNumber(150);
+  PSDNumTailBins_NEL->GetEntry()->SetState(false);
+
+  TGHorizontalFrame *TailBins_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(TailBins_HF);
+
+  TailBins_HF->AddFrame(PSDMinTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Min.", -1),
+			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  PSDMinTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDMinTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
+  PSDMinTailBin_NEL->GetEntry()->SetNumber(0);
+  PSDMinTailBin_NEL->GetEntry()->SetState(false);
+
+  TailBins_HF->AddFrame(PSDMaxTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Max.", -1),
+			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  PSDMaxTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDMaxTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
+  PSDMaxTailBin_NEL->GetEntry()->SetNumber(2000);
+  PSDMaxTailBin_NEL->GetEntry()->SetState(false);
+
+  TGHorizontalFrame *PSDAlgorithm_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSDAlgorithm_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+
+  PSDAlgorithm_HF->AddFrame(new TGLabel(PSDAlgorithm_HF, "Y axis: "),
+		       new TGLayoutHints(kLHintsNormal,0,0,0,0));
+				   
+  PSDAlgorithm_HF->AddFrame(PSDYAxisTail_RB = new TGRadioButton(PSDAlgorithm_HF, "Tail", PSDYAxisTail_RB_ID),
+		       new TGLayoutHints(kLHintsNormal,10,0,0,0));
+  PSDYAxisTail_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDYAxisTail_RB->SetState(kButtonDown);
+  
+  PSDAlgorithm_HF->AddFrame(PSDYAxisTailTotal_RB = new TGRadioButton(PSDAlgorithm_HF, "(Tail / Total)", PSDYAxisTailTotal_RB_ID),
+		       new TGLayoutHints(kLHintsNormal,20,0,0,0));
+  PSDYAxisTailTotal_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+
+  TGHorizontalFrame *PSDPlotOptions_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSDPlotOptions_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  
+  PSDPlotOptions_HF->AddFrame(PSDPlotType_CBL = new ADAQComboBoxWithLabel(PSDPlotOptions_HF, "Style", PSDPlotType_CBL_ID),
+			      new TGLayoutHints(kLHintsNormal, 0,5,10,5));
+  PSDPlotType_CBL->GetComboBox()->AddEntry("COLZ",0);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("LEGO",1);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("LEGO1",2);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("LEGO2Z0",3);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("SURF",4);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("SURF1Z0",5);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("SURF3Z0",6);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("CONTZ0",7);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("CONT1Z",8);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("SCAT",9);
+  PSDPlotType_CBL->GetComboBox()->AddEntry("TEXT",10);
+  PSDPlotType_CBL->GetComboBox()->Select(0);
+  PSDPlotType_CBL->GetComboBox()->Resize(75, 20);
+  PSDPlotType_CBL->GetComboBox()->Connect("Selected(int,int)", "AAProcessingSlots", ProcessingSlots, "HandleComboBoxes(int,int)");
+  PSDPlotType_CBL->GetComboBox()->SetEnabled(false);
+
+  PSDPlotOptions_HF->AddFrame(PSDPlotPalette_CBL = new ADAQComboBoxWithLabel(PSDPlotOptions_HF, "Palette", PSDPlotPalette_CBL_ID),
+			      new TGLayoutHints(kLHintsNormal, 0,5,10,5));
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Deep sea", 51);
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Radiator",53);
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Two hue",54);
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Rainbow",55);
+  //PSDPlotPalette_CBL->GetComboBox()->AddEntry("Bird", 57);
+  PSDPlotPalette_CBL->GetComboBox()->Select(55);
+  PSDPlotPalette_CBL->GetComboBox()->Resize(75, 20);
+  PSDPlotPalette_CBL->GetComboBox()->Connect("Selected(int,int)", "AAProcessingSlots", ProcessingSlots, "HandleComboBoxes(int,int)");
+  PSDPlotPalette_CBL->GetComboBox()->SetEnabled(false);
+  
+  TGHorizontalFrame *ProcessCreatePSDHistogram_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(ProcessCreatePSDHistogram_HF, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
+  
+  ProcessCreatePSDHistogram_HF->AddFrame(ProcessPSDHistogram_TB = new TGTextButton(ProcessCreatePSDHistogram_HF, "Process waveforms", ProcessPSDHistogram_TB_ID),
+					 new TGLayoutHints(kLHintsCenterX | kLHintsTop, 0,5,5,0));
+  ProcessPSDHistogram_TB->Resize(120, 30);
+  ProcessPSDHistogram_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  ProcessPSDHistogram_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
+  ProcessPSDHistogram_TB->ChangeOptions(ProcessPSDHistogram_TB->GetOptions() | kFixedSize);
+  ProcessPSDHistogram_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
+  ProcessPSDHistogram_TB->SetState(kButtonDisabled);
+  
+  ProcessCreatePSDHistogram_HF->AddFrame(CreatePSDHistogram_TB = new TGTextButton(ProcessCreatePSDHistogram_HF, "Create PSD hist", CreatePSDHistogram_TB_ID),
+					 new TGLayoutHints(kLHintsCenterX | kLHintsTop, 5,0,5,0));
+  CreatePSDHistogram_TB->Resize(120, 30);
+  CreatePSDHistogram_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
+  CreatePSDHistogram_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
+  CreatePSDHistogram_TB->ChangeOptions(CreatePSDHistogram_TB->GetOptions() | kFixedSize);
+  CreatePSDHistogram_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
+  CreatePSDHistogram_TB->SetState(kButtonDisabled);
+
+
+  PSDAnalysis_GF->AddFrame(PSDEnableHistogramSlicing_CB = new TGCheckButton(PSDAnalysis_GF, "Enable histogram slicing", PSDEnableHistogramSlicing_CB_ID),
+			   new TGLayoutHints(kLHintsNormal, 0,5,10,0));
+  PSDEnableHistogramSlicing_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
+  PSDEnableHistogramSlicing_CB->SetState(kButtonDisabled);
+
+  TGHorizontalFrame *PSDHistogramSlicing_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSDHistogramSlicing_HF, new TGLayoutHints(kLHintsNormal, 15,5,0,5));
+  
+  PSDHistogramSlicing_HF->AddFrame(PSDHistogramSliceX_RB = new TGRadioButton(PSDHistogramSlicing_HF, "X slice", PSDHistogramSliceX_RB_ID),
+				   new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  PSDHistogramSliceX_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDHistogramSliceX_RB->SetState(kButtonDown);
+  PSDHistogramSliceX_RB->SetState(kButtonDisabled);
+
+  PSDHistogramSlicing_HF->AddFrame(PSDHistogramSliceY_RB = new TGRadioButton(PSDHistogramSlicing_HF, "Y slice", PSDHistogramSliceY_RB_ID),
+				   new TGLayoutHints(kLHintsNormal, 20,0,0,0));
+  PSDHistogramSliceY_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDHistogramSliceY_RB->SetState(kButtonDisabled);
+  
+  PSDAnalysis_GF->AddFrame(PSDEnableRegionCreation_CB = new TGCheckButton(PSDAnalysis_GF, "Enable PSD region creation", PSDEnableRegionCreation_CB_ID),
+			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
+  PSDEnableRegionCreation_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
+  PSDEnableRegionCreation_CB->SetState(kButtonDisabled);
+
+  TGHorizontalFrame *PSDCreateClear_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSDCreateClear_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  
+  PSDCreateClear_HF->AddFrame(PSDCreateRegion_TB = new TGTextButton(PSDCreateClear_HF, "Create PSD region", PSDCreateRegion_TB_ID),
+			   new TGLayoutHints(kLHintsLeft, 15,5,5,5));
+  PSDCreateRegion_TB->Resize(115,30);
+  PSDCreateRegion_TB->ChangeOptions(PSDCreateRegion_TB->GetOptions() | kFixedSize);
+  PSDCreateRegion_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
+  PSDCreateRegion_TB->SetState(kButtonDisabled);
+
+  PSDCreateClear_HF->AddFrame(PSDClearRegion_TB = new TGTextButton(PSDCreateClear_HF, "Clear PSD region", PSDClearRegion_TB_ID),
+			   new TGLayoutHints(kLHintsLeft, 5,5,5,5));
+  PSDClearRegion_TB->Resize(115,30);
+  PSDClearRegion_TB->ChangeOptions(PSDClearRegion_TB->GetOptions() | kFixedSize);
+  PSDClearRegion_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
+  PSDClearRegion_TB->SetState(kButtonDisabled);
+
+  
+  PSDAnalysis_GF->AddFrame(PSDEnableRegion_CB = new TGCheckButton(PSDAnalysis_GF, "Enable PSD region", PSDEnableRegion_CB_ID),
+			   new TGLayoutHints(kLHintsNormal, 0,5,10,0));
+  PSDEnableRegion_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
+  PSDEnableRegion_CB->SetState(kButtonDisabled);
+
+  TGHorizontalFrame *PSDRegionPolarity_HF = new TGHorizontalFrame(PSDAnalysis_GF);
+  PSDAnalysis_GF->AddFrame(PSDRegionPolarity_HF, new TGLayoutHints(kLHintsNormal, 15,5,0,5));
+  
+  PSDRegionPolarity_HF->AddFrame(PSDInsideRegion_RB = new TGRadioButton(PSDRegionPolarity_HF, "Inside  ", PSDInsideRegion_RB_ID),
+				 new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+  PSDInsideRegion_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDInsideRegion_RB->SetState(kButtonDown);
+  PSDInsideRegion_RB->SetState(kButtonDisabled);
+
+  PSDRegionPolarity_HF->AddFrame(PSDOutsideRegion_RB = new TGRadioButton(PSDRegionPolarity_HF, "Outside", PSDOutsideRegion_RB_ID),
+				 new TGLayoutHints(kLHintsNormal, 20,0,0,0));
+  PSDOutsideRegion_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDOutsideRegion_RB->SetState(kButtonDisabled);
+
+  PSDAnalysis_GF->AddFrame(PSDPlotTailIntegration_CB = new TGCheckButton(PSDAnalysis_GF, "Plot tail integration region", PSDPlotTailIntegration_CB_ID),
+                           new TGLayoutHints(kLHintsNormal, 0,5,5,5));
+  PSDPlotTailIntegration_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
+  PSDPlotTailIntegration_CB->SetState(kButtonDisabled);
+}
+
+
 void AAInterface::FillGraphicsFrame()
 {
   /////////////////////////////////////////
   // Fill the graphics options tabbed frame
 
-  TGCanvas *GraphicsFrame_C = new TGCanvas(GraphicsOptions_CF, 320, LeftFrameLength-20, kDoubleBorder);
+  TGCanvas *GraphicsFrame_C = new TGCanvas(GraphicsOptions_CF, TabFrameWidth-10, TabFrameLength-20, kDoubleBorder);
   GraphicsOptions_CF->AddFrame(GraphicsFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
   
-  TGVerticalFrame *GraphicsFrame_VF = new TGVerticalFrame(GraphicsFrame_C->GetViewPort(), 320, LeftFrameLength);
+  TGVerticalFrame *GraphicsFrame_VF = new TGVerticalFrame(GraphicsFrame_C->GetViewPort(), TabFrameWidth-10, TabFrameLength);
   GraphicsFrame_C->SetContainer(GraphicsFrame_VF);
 
   ////////////////////////////
@@ -1689,10 +2014,10 @@ void AAInterface::FillGraphicsFrame()
 
 void AAInterface::FillProcessingFrame()
 {
-  TGCanvas *ProcessingFrame_C = new TGCanvas(ProcessingOptions_CF, 320, LeftFrameLength-20, kDoubleBorder);
+  TGCanvas *ProcessingFrame_C = new TGCanvas(ProcessingOptions_CF, TabFrameWidth-10, TabFrameLength-20, kDoubleBorder);
   ProcessingOptions_CF->AddFrame(ProcessingFrame_C, new TGLayoutHints(kLHintsCenterX, 0,0,10,10));
   
-  TGVerticalFrame *ProcessingFrame_VF = new TGVerticalFrame(ProcessingFrame_C->GetViewPort(), 320, LeftFrameLength);
+  TGVerticalFrame *ProcessingFrame_VF = new TGVerticalFrame(ProcessingFrame_C->GetViewPort(), TabFrameWidth-10, TabFrameLength);
   ProcessingFrame_C->SetContainer(ProcessingFrame_VF);
 
 
@@ -1730,309 +2055,6 @@ void AAInterface::FillProcessingFrame()
   UpdateFreq_NEL->GetEntry()->SetNumber(2);
 
   
-  ///////////////////////////////////////////
-  // Pulse-shape discrimination (PSD) options
-
-  TGGroupFrame *PSDAnalysis_GF = new TGGroupFrame(ProcessingFrame_VF, "Pulse Shape Discrimination", kVerticalFrame);
-  ProcessingFrame_VF->AddFrame(PSDAnalysis_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
-  
-  PSDAnalysis_GF->AddFrame(PSDEnable_CB = new TGCheckButton(PSDAnalysis_GF, "Discriminate pulse shapes", PSDEnable_CB_ID),
-                           new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PSDEnable_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
-
-
-  TGHorizontalFrame *PSD_HF0 = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSD_HF0, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  
-  PSD_HF0->AddFrame(PSDChannel_CBL = new ADAQComboBoxWithLabel(PSD_HF0, "", -1),
-		    new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  
-  stringstream ss;
-  string entry;
-  for(int ch=0; ch<NumDataChannels; ch++){
-    ss << ch;
-    entry.assign("Channel " + ss.str());
-    PSDChannel_CBL->GetComboBox()->AddEntry(entry.c_str(),ch);
-    ss.str("");
-  }
-  PSDChannel_CBL->GetComboBox()->Resize(85,20);
-  PSDChannel_CBL->GetComboBox()->Select(0);
-  PSDChannel_CBL->GetComboBox()->SetEnabled(false);
-
-  PSD_HF0->AddFrame(PSDWaveforms_NEL = new ADAQNumberEntryWithLabel(PSD_HF0, "Waveforms", -1),
-                           new TGLayoutHints(kLHintsNormal, 10,5,5,0));
-  PSDWaveforms_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDWaveforms_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
-  PSDWaveforms_NEL->GetEntry()->SetLimitValues(0,1); // Updated when ADAQ ROOT file loaded
-  PSDWaveforms_NEL->GetEntry()->SetNumber(0); // Updated when ADAQ ROOT file loaded
-  PSDWaveforms_NEL->GetEntry()->SetState(false);
-
-
-  TGHorizontalFrame *PSDProcessingType_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSDProcessingType_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  
-  PSDProcessingType_HF->AddFrame(PSDAlgorithmSMS_RB = new TGRadioButton(PSDProcessingType_HF,"Simple\nmax/sum",PSDAlgorithmSMS_RB_ID),
-				 new TGLayoutHints(kLHintsNormal,0,0,5,5));
-  PSDAlgorithmSMS_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-  PSDAlgorithmSMS_RB->SetState(kButtonDown);
-  PSDAlgorithmSMS_RB->SetState(kButtonDisabled);
-  
-  PSDProcessingType_HF->AddFrame(PSDAlgorithmPF_RB = new TGRadioButton(PSDProcessingType_HF,"Peak\nfinder",PSDAlgorithmPF_RB_ID),
-				 new TGLayoutHints(kLHintsNormal,20,0,5,5));
-  PSDAlgorithmPF_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-  PSDAlgorithmPF_RB->SetState(kButtonDisabled);
-  
-  PSDProcessingType_HF->AddFrame(PSDAlgorithmWD_RB = new TGRadioButton(PSDProcessingType_HF,"Waveform\ndata",PSDAlgorithmWD_RB_ID),
-				 new TGLayoutHints(kLHintsNormal,20,0,5,5));
-  PSDAlgorithmWD_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-  PSDAlgorithmWD_RB->SetState(kButtonDisabled);
-
-  
-  PSDAnalysis_GF->AddFrame(new TGLabel(PSDAnalysis_GF, "Integral limits (sample rel. to peak)"),
-			   new TGLayoutHints(kLHintsLeft,0,0,5,5));
-
-  TGHorizontalFrame *PSDTotal_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSDTotal_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  
-  PSDTotal_HF->AddFrame(PSDTotalStart_NEL = new ADAQNumberEntryWithLabel(PSDTotal_HF,
-									 "Total start",
-									 PSDTotalStart_NEL_ID),
-			  new TGLayoutHints(kLHintsNormal, 0,10,0,0));
-  PSDTotalStart_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDTotalStart_NEL->GetEntry()->SetNumber(-5);
-  PSDTotalStart_NEL->GetEntry()->Resize(45,20);
-  PSDTotalStart_NEL->GetEntry()->SetState(false);
-  PSDTotalStart_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
-    
-  PSDTotal_HF->AddFrame(PSDTotalStop_NEL = new ADAQNumberEntryWithLabel(PSDTotal_HF,
-									"Stop",
-									PSDTotalStop_NEL_ID),
-			  new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  PSDTotalStop_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDTotalStop_NEL->GetEntry()->SetNumber(40);
-  PSDTotalStop_NEL->GetEntry()->Resize(45,20);
-  PSDTotalStop_NEL->GetEntry()->SetState(false);
-  PSDTotalStop_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
-
-
-
-  TGHorizontalFrame *DGPSDTail_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(DGPSDTail_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-
-
-  DGPSDTail_HF->AddFrame(PSDTailStart_NEL = new ADAQNumberEntryWithLabel(DGPSDTail_HF,
-									 "Tail start ",
-									 PSDTailStart_NEL_ID),
-			 new TGLayoutHints(kLHintsNormal, 0,10,0,0));
-  PSDTailStart_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDTailStart_NEL->GetEntry()->SetNumber(7);
-  PSDTailStart_NEL->GetEntry()->Resize(45,20);
-  PSDTailStart_NEL->GetEntry()->SetState(false);
-  PSDTailStart_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
-    
-  DGPSDTail_HF->AddFrame(PSDTailStop_NEL = new ADAQNumberEntryWithLabel(DGPSDTail_HF,
-									"Stop",
-									PSDTailStop_NEL_ID),
-			 new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  PSDTailStop_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDTailStop_NEL->GetEntry()->SetNumber(40);
-  PSDTailStop_NEL->GetEntry()->Resize(45,20);
-  PSDTailStop_NEL->GetEntry()->SetState(false);
-  PSDTailStop_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
-
-
-  PSDAnalysis_GF->AddFrame(PSDThreshold_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Threshold (ADC)", -1),
-                           new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PSDThreshold_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDThreshold_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDThreshold_NEL->GetEntry()->SetNumber(100);
-  PSDThreshold_NEL->GetEntry()->SetState(false);
-  
-
-  PSDAnalysis_GF->AddFrame(PSDNumTotalBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. total bins (X axis)", -1),
-			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PSDNumTotalBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDNumTotalBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDNumTotalBins_NEL->GetEntry()->SetNumber(150);
-  PSDNumTotalBins_NEL->GetEntry()->SetState(false);
-
-  TGHorizontalFrame *TotalBins_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(TotalBins_HF);
-
-  TotalBins_HF->AddFrame(PSDMinTotalBin_NEL = new ADAQNumberEntryWithLabel(TotalBins_HF, "Min.", -1),
-			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PSDMinTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
-  PSDMinTotalBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
-  PSDMinTotalBin_NEL->GetEntry()->SetNumber(0);
-  PSDMinTotalBin_NEL->GetEntry()->SetState(false);
-
-  TotalBins_HF->AddFrame(PSDMaxTotalBin_NEL = new ADAQNumberEntryWithLabel(TotalBins_HF, "Max.", -1),
-			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PSDMaxTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
-  PSDMaxTotalBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDMaxTotalBin_NEL->GetEntry()->SetNumber(10000);
-  PSDMaxTotalBin_NEL->GetEntry()->SetState(false);
-
-  
-  PSDAnalysis_GF->AddFrame(PSDNumTailBins_NEL = new ADAQNumberEntryWithLabel(PSDAnalysis_GF, "Num. Y axis bins", -1),
-			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PSDNumTailBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDNumTailBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDNumTailBins_NEL->GetEntry()->SetNumber(150);
-  PSDNumTailBins_NEL->GetEntry()->SetState(false);
-
-  TGHorizontalFrame *TailBins_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(TailBins_HF);
-
-  TailBins_HF->AddFrame(PSDMinTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Min.", -1),
-			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PSDMinTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
-  PSDMinTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
-  PSDMinTailBin_NEL->GetEntry()->SetNumber(0);
-  PSDMinTailBin_NEL->GetEntry()->SetState(false);
-
-  TailBins_HF->AddFrame(PSDMaxTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Max.", -1),
-			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PSDMaxTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
-  PSDMaxTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDMaxTailBin_NEL->GetEntry()->SetNumber(2000);
-  PSDMaxTailBin_NEL->GetEntry()->SetState(false);
-
-  TGHorizontalFrame *PSDAlgorithm_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSDAlgorithm_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-
-  PSDAlgorithm_HF->AddFrame(new TGLabel(PSDAlgorithm_HF, "Y axis: "),
-		       new TGLayoutHints(kLHintsNormal,0,0,0,0));
-				   
-  PSDAlgorithm_HF->AddFrame(PSDYAxisTail_RB = new TGRadioButton(PSDAlgorithm_HF, "Tail", PSDYAxisTail_RB_ID),
-		       new TGLayoutHints(kLHintsNormal,10,0,0,0));
-  PSDYAxisTail_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-  PSDYAxisTail_RB->SetState(kButtonDown);
-  
-  PSDAlgorithm_HF->AddFrame(PSDYAxisTailTotal_RB = new TGRadioButton(PSDAlgorithm_HF, "(Tail / Total)", PSDYAxisTailTotal_RB_ID),
-		       new TGLayoutHints(kLHintsNormal,20,0,0,0));
-  PSDYAxisTailTotal_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-
-  TGHorizontalFrame *PSDPlotOptions_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSDPlotOptions_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  
-  PSDPlotOptions_HF->AddFrame(PSDPlotType_CBL = new ADAQComboBoxWithLabel(PSDPlotOptions_HF, "Style", PSDPlotType_CBL_ID),
-			      new TGLayoutHints(kLHintsNormal, 0,5,10,5));
-  PSDPlotType_CBL->GetComboBox()->AddEntry("COLZ",0);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("LEGO",1);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("LEGO1",2);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("LEGO2Z0",3);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("SURF",4);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("SURF1Z0",5);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("SURF3Z0",6);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("CONTZ0",7);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("CONT1Z",8);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("SCAT",9);
-  PSDPlotType_CBL->GetComboBox()->AddEntry("TEXT",10);
-  PSDPlotType_CBL->GetComboBox()->Select(0);
-  PSDPlotType_CBL->GetComboBox()->Resize(75, 20);
-  PSDPlotType_CBL->GetComboBox()->Connect("Selected(int,int)", "AAProcessingSlots", ProcessingSlots, "HandleComboBoxes(int,int)");
-  PSDPlotType_CBL->GetComboBox()->SetEnabled(false);
-
-  PSDPlotOptions_HF->AddFrame(PSDPlotPalette_CBL = new ADAQComboBoxWithLabel(PSDPlotOptions_HF, "Palette", PSDPlotPalette_CBL_ID),
-			      new TGLayoutHints(kLHintsNormal, 0,5,10,5));
-  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Deep sea", 51);
-  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Radiator",53);
-  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Two hue",54);
-  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Rainbow",55);
-  //PSDPlotPalette_CBL->GetComboBox()->AddEntry("Bird", 57);
-  PSDPlotPalette_CBL->GetComboBox()->Select(55);
-  PSDPlotPalette_CBL->GetComboBox()->Resize(75, 20);
-  PSDPlotPalette_CBL->GetComboBox()->Connect("Selected(int,int)", "AAProcessingSlots", ProcessingSlots, "HandleComboBoxes(int,int)");
-  PSDPlotPalette_CBL->GetComboBox()->SetEnabled(false);
-  
-  TGHorizontalFrame *ProcessCreatePSDHistogram_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(ProcessCreatePSDHistogram_HF, new TGLayoutHints(kLHintsNormal, 5,5,5,5));
-  
-  ProcessCreatePSDHistogram_HF->AddFrame(ProcessPSDHistogram_TB = new TGTextButton(ProcessCreatePSDHistogram_HF, "Process waveforms", ProcessPSDHistogram_TB_ID),
-					 new TGLayoutHints(kLHintsCenterX | kLHintsTop, 0,5,5,0));
-  ProcessPSDHistogram_TB->Resize(120, 30);
-  ProcessPSDHistogram_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
-  ProcessPSDHistogram_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
-  ProcessPSDHistogram_TB->ChangeOptions(ProcessPSDHistogram_TB->GetOptions() | kFixedSize);
-  ProcessPSDHistogram_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
-  ProcessPSDHistogram_TB->SetState(kButtonDisabled);
-  
-  ProcessCreatePSDHistogram_HF->AddFrame(CreatePSDHistogram_TB = new TGTextButton(ProcessCreatePSDHistogram_HF, "Create PSD hist", CreatePSDHistogram_TB_ID),
-					 new TGLayoutHints(kLHintsCenterX | kLHintsTop, 5,0,5,0));
-  CreatePSDHistogram_TB->Resize(120, 30);
-  CreatePSDHistogram_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
-  CreatePSDHistogram_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
-  CreatePSDHistogram_TB->ChangeOptions(CreatePSDHistogram_TB->GetOptions() | kFixedSize);
-  CreatePSDHistogram_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
-  CreatePSDHistogram_TB->SetState(kButtonDisabled);
-
-
-  PSDAnalysis_GF->AddFrame(PSDEnableHistogramSlicing_CB = new TGCheckButton(PSDAnalysis_GF, "Enable histogram slicing", PSDEnableHistogramSlicing_CB_ID),
-			   new TGLayoutHints(kLHintsNormal, 0,5,10,0));
-  PSDEnableHistogramSlicing_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
-  PSDEnableHistogramSlicing_CB->SetState(kButtonDisabled);
-
-  TGHorizontalFrame *PSDHistogramSlicing_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSDHistogramSlicing_HF, new TGLayoutHints(kLHintsNormal, 15,5,0,5));
-  
-  PSDHistogramSlicing_HF->AddFrame(PSDHistogramSliceX_RB = new TGRadioButton(PSDHistogramSlicing_HF, "X slice", PSDHistogramSliceX_RB_ID),
-				   new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  PSDHistogramSliceX_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-  PSDHistogramSliceX_RB->SetState(kButtonDown);
-  PSDHistogramSliceX_RB->SetState(kButtonDisabled);
-
-  PSDHistogramSlicing_HF->AddFrame(PSDHistogramSliceY_RB = new TGRadioButton(PSDHistogramSlicing_HF, "Y slice", PSDHistogramSliceY_RB_ID),
-				   new TGLayoutHints(kLHintsNormal, 20,0,0,0));
-  PSDHistogramSliceY_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-  PSDHistogramSliceY_RB->SetState(kButtonDisabled);
-  
-  PSDAnalysis_GF->AddFrame(PSDEnableRegionCreation_CB = new TGCheckButton(PSDAnalysis_GF, "Enable PSD region creation", PSDEnableRegionCreation_CB_ID),
-			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PSDEnableRegionCreation_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
-  PSDEnableRegionCreation_CB->SetState(kButtonDisabled);
-
-  TGHorizontalFrame *PSDCreateClear_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSDCreateClear_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  
-  PSDCreateClear_HF->AddFrame(PSDCreateRegion_TB = new TGTextButton(PSDCreateClear_HF, "Create PSD region", PSDCreateRegion_TB_ID),
-			   new TGLayoutHints(kLHintsLeft, 15,5,5,5));
-  PSDCreateRegion_TB->Resize(115,30);
-  PSDCreateRegion_TB->ChangeOptions(PSDCreateRegion_TB->GetOptions() | kFixedSize);
-  PSDCreateRegion_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
-  PSDCreateRegion_TB->SetState(kButtonDisabled);
-
-  PSDCreateClear_HF->AddFrame(PSDClearRegion_TB = new TGTextButton(PSDCreateClear_HF, "Clear PSD region", PSDClearRegion_TB_ID),
-			   new TGLayoutHints(kLHintsLeft, 5,5,5,5));
-  PSDClearRegion_TB->Resize(115,30);
-  PSDClearRegion_TB->ChangeOptions(PSDClearRegion_TB->GetOptions() | kFixedSize);
-  PSDClearRegion_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
-  PSDClearRegion_TB->SetState(kButtonDisabled);
-
-  
-  PSDAnalysis_GF->AddFrame(PSDEnableRegion_CB = new TGCheckButton(PSDAnalysis_GF, "Enable PSD region", PSDEnableRegion_CB_ID),
-			   new TGLayoutHints(kLHintsNormal, 0,5,10,0));
-  PSDEnableRegion_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
-  PSDEnableRegion_CB->SetState(kButtonDisabled);
-
-  TGHorizontalFrame *PSDRegionPolarity_HF = new TGHorizontalFrame(PSDAnalysis_GF);
-  PSDAnalysis_GF->AddFrame(PSDRegionPolarity_HF, new TGLayoutHints(kLHintsNormal, 15,5,0,5));
-  
-  PSDRegionPolarity_HF->AddFrame(PSDInsideRegion_RB = new TGRadioButton(PSDRegionPolarity_HF, "Inside  ", PSDInsideRegion_RB_ID),
-				 new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-  PSDInsideRegion_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-  PSDInsideRegion_RB->SetState(kButtonDown);
-  PSDInsideRegion_RB->SetState(kButtonDisabled);
-
-  PSDRegionPolarity_HF->AddFrame(PSDOutsideRegion_RB = new TGRadioButton(PSDRegionPolarity_HF, "Outside", PSDOutsideRegion_RB_ID),
-				 new TGLayoutHints(kLHintsNormal, 20,0,0,0));
-  PSDOutsideRegion_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-  PSDOutsideRegion_RB->SetState(kButtonDisabled);
-
-  PSDAnalysis_GF->AddFrame(PSDPlotTailIntegration_CB = new TGCheckButton(PSDAnalysis_GF, "Plot tail integration region", PSDPlotTailIntegration_CB_ID),
-                           new TGLayoutHints(kLHintsNormal, 0,5,5,5));
-  PSDPlotTailIntegration_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
-  PSDPlotTailIntegration_CB->SetState(kButtonDisabled);
 
 
   TGGroupFrame *PearsonAnalysis_GF = new TGGroupFrame(ProcessingFrame_VF, "Pearson (RFQ current) integration", kVerticalFrame);
@@ -2058,8 +2080,8 @@ void AAInterface::FillProcessingFrame()
   
   PearsonAnalysis_GF->AddFrame(PearsonChannel_CBL = new ADAQComboBoxWithLabel(PearsonAnalysis_GF, "Contains signal", -1),
 			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-
-  ss.str("");
+  stringstream ss;
+  string entry;
   for(int ch=0; ch<NumDataChannels; ch++){
     ss << ch;
     entry.assign("Channel " + ss.str());

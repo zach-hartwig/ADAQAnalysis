@@ -144,7 +144,7 @@ $(BUILDDIR)/ADAQAnalysisDict.cc : $(INCLS) $(INCLDIR)/RootLinkDef.h
 .PHONY: 
 clean:
 	@echo -e "\nCleaning up the build files ..."
-	rm -f $(BUILDDIR)/* $(BINDIR)/*
+	@rm -f $(BUILDDIR)/* $(BINDIR)/*
 	@echo -e ""
 
 # Automatically determine the number of processors on the
