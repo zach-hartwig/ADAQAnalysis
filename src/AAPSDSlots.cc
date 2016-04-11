@@ -84,10 +84,9 @@ void AAPSDSlots::HandleCheckButtons()
     }
     break;
   }
-  
+    
   case PSDEnableRegion_CB_ID:{
-    // FIX THIS FOR PSDOVERHAUL : ZSH 10 APR 16
-    if(true){
+    if(TheInterface->PSDEnableRegion_CB->IsDown()){
       ComputationMgr->SetUsePSDRegions(TheInterface->ChannelSelector_CBL->GetComboBox()->GetSelected(), true);
       TheInterface->FindPeaks_CB->SetState(kButtonDown);
     }
