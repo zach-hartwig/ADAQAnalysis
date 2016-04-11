@@ -3061,8 +3061,9 @@ void AAInterface::UpdateForSpectrumCreation()
 void AAInterface::UpdateForPSDHistogramCreation()
 {
   CreatePSDHistogram_TB->SetState(kButtonUp);
-  
   ProcessPSDHistogram_TB->SetBackgroundColor(ColorMgr->Number2Pixel(32));
+  PSDEnableRegionCreation_CB->SetState(kButtonUp);
+  PSDEnableHistogramSlicing_CB->SetState(kButtonUp);
 }
 
 

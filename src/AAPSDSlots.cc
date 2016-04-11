@@ -64,15 +64,27 @@ void AAPSDSlots::HandleCheckButtons()
     
   case PSDEnableRegionCreation_CB_ID:{
     
-    if(TheInterface->PSDEnableRegionCreation_CB->IsDown() and 
-       GraphicsMgr->GetCanvasContentType() != zPSDHistogram){
-      TheInterface->CreateMessageBox("The canvas does not presently contain a PSD histogram! PSD filter creation is not possible!","Stop");
-      TheInterface->PSDEnableRegionCreation_CB->SetState(kButtonUp);
-      break;
+    if(TheInterface->PSDEnableRegionCreation_CB->IsDown()){
+      
+      // No PSD histogram is presently available
+      if(GraphicsMgr->GetCanvasContentType() != zPSDHistogram){
+	TheInterface->CreateMessageBox("The canvas does not presently contain a PSD histogram! PSD filter creation is not possible!","Stop");
+	TheInterface->PSDEnableRegionCreation_CB->SetState(kButtonUp);
+      }
+
+      // Enable necessary widgets
+      else{
+	TheInterface->PSDCreateRegion_TB->SetState(kButtonUp);
+	TheInterface->PSDClearRegion_TB->SetState(kButtonUp);
+      }
+    }
+    else{
+      TheInterface->PSDCreateRegion_TB->SetState(kButtonDisabled);
+      TheInterface->PSDClearRegion_TB->SetState(kButtonDisabled);
     }
     break;
   }
-
+  
   case PSDEnableRegion_CB_ID:{
     // FIX THIS FOR PSDOVERHAUL : ZSH 10 APR 16
     if(true){
@@ -322,9 +334,9 @@ void AAPSDSlots::HandleTextButtons()
    }
 
     break;
-
+    
   case PSDClearRegion_TB_ID:
-
+    
     if(TheInterface->ADAQFileLoaded){
       
       ComputationMgr->ClearPSDRegion();
@@ -332,8 +344,8 @@ void AAPSDSlots::HandleTextButtons()
       TheInterface->PSDEnableRegion_CB->SetState(kButtonDisabled);
       TheInterface->PSDInsideRegion_RB->SetState(kButtonDisabled);
       TheInterface->PSDOutsideRegion_RB->SetState(kButtonDisabled);
-
-      TheInterface->PSDCreateRegion_TB->SetText("Create PSD region!");
+      
+      TheInterface->PSDCreateRegion_TB->SetText("Create PSD region");
       TheInterface->PSDCreateRegion_TB->SetForegroundColor(TheInterface->ColorMgr->Number2Pixel(1));
       TheInterface->PSDCreateRegion_TB->SetBackgroundColor(TheInterface->ColorMgr->Number2Pixel(18));						   
       
