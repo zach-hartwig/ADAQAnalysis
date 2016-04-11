@@ -1132,13 +1132,15 @@ void AAInterface::FillAnalysisFrame()
 				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumIntegral_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal, TGNumberFormat::kNEANonNegative);
   SpectrumIntegral_NEFL->GetEntry()->Resize(100,20);
-  SpectrumIntegral_NEFL->GetEntry()->SetState(false);
+  SpectrumIntegral_NEFL->GetEntry()->SetState(true);
+  SpectrumIntegral_NEFL->GetEntry()->SetBackgroundColor(ColorMgr->Number2Pixel(19));
   
   SpectrumAnalysis_GF->AddFrame(SpectrumIntegralError_NEFL = new ADAQNumberEntryFieldWithLabel(SpectrumAnalysis_GF, "Error", -1),
 				new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumIntegralError_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal, TGNumberFormat::kNEANonNegative);
   SpectrumIntegralError_NEFL->GetEntry()->Resize(100,20);
-  SpectrumIntegralError_NEFL->GetEntry()->SetState(false);
+  SpectrumIntegralError_NEFL->GetEntry()->SetState(true);
+  SpectrumIntegralError_NEFL->GetEntry()->SetBackgroundColor(ColorMgr->Number2Pixel(19));
 
 
   TGHorizontalFrame *Horizontal2_HF = new TGHorizontalFrame(SpectrumAnalysis_GF);
@@ -1155,13 +1157,15 @@ void AAInterface::FillAnalysisFrame()
   Horizontal3_HF->AddFrame(SpectrumFitHeight_NEFL = new ADAQNumberEntryFieldWithLabel(Horizontal3_HF, "Height",-1),
 			   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumFitHeight_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal);
-  SpectrumFitHeight_NEFL->GetEntry()->SetState(false);
+  SpectrumFitHeight_NEFL->GetEntry()->SetState(true);
+  SpectrumFitHeight_NEFL->GetEntry()->SetBackgroundColor(ColorMgr->Number2Pixel(19));
   SpectrumFitHeight_NEFL->GetEntry()->Resize(60, 20);
   
   Horizontal3_HF->AddFrame(SpectrumFitSigma_NEFL = new ADAQNumberEntryFieldWithLabel(Horizontal3_HF, "Sigma  ",-1),
 				new TGLayoutHints(kLHintsNormal, 10,5,0,0));
   SpectrumFitSigma_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal);
-  SpectrumFitSigma_NEFL->GetEntry()->SetState(false);
+  SpectrumFitSigma_NEFL->GetEntry()->SetState(true);
+  SpectrumFitSigma_NEFL->GetEntry()->SetBackgroundColor(ColorMgr->Number2Pixel(19));
   SpectrumFitSigma_NEFL->GetEntry()->Resize(60, 20);
   
   
@@ -1171,13 +1175,15 @@ void AAInterface::FillAnalysisFrame()
   Horizontal4_HF->AddFrame(SpectrumFitMean_NEFL = new ADAQNumberEntryFieldWithLabel(Horizontal4_HF, "Mean  ",-1),
 			   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumFitMean_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal);
-  SpectrumFitMean_NEFL->GetEntry()->SetState(false);
+  SpectrumFitMean_NEFL->GetEntry()->SetState(true);
+  SpectrumFitMean_NEFL->GetEntry()->SetBackgroundColor(ColorMgr->Number2Pixel(19));
   SpectrumFitMean_NEFL->GetEntry()->Resize(60, 20);
 
   Horizontal4_HF->AddFrame(SpectrumFitRes_NEFL = new ADAQNumberEntryFieldWithLabel(Horizontal4_HF, "Res. (%)",-1),
 				new TGLayoutHints(kLHintsNormal, 10,5,0,0));
   SpectrumFitRes_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal);
-  SpectrumFitRes_NEFL->GetEntry()->SetState(false);
+  SpectrumFitRes_NEFL->GetEntry()->SetState(true);
+  SpectrumFitRes_NEFL->GetEntry()->SetBackgroundColor(ColorMgr->Number2Pixel(19));
   SpectrumFitRes_NEFL->GetEntry()->Resize(60, 20);
 
 
@@ -1686,6 +1692,7 @@ void AAInterface::FillPSDFrame()
 			  new TGLayoutHints(kLHintsNormal, 15,0,5,0));
   PSDFigureOfMerit_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
   PSDFigureOfMerit_NEFL->GetEntry()->Resize(75, 20);
+  PSDFigureOfMerit_NEFL->GetEntry()->SetBackgroundColor(ColorMgr->Number2Pixel(19));
   PSDFigureOfMerit_NEFL->GetEntry()->SetState(false);
 }
 
