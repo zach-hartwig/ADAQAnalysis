@@ -402,9 +402,13 @@ void AASpectrumSlots::HandleTextButtons()
     bool Success = ComputationMgr->SetCalibration(Channel);
 
     if(Success){
+      // Update the spectrum calibration widgets
       TheInterface->SpectrumCalibrationCalibrate_TB->SetText("Calibrated");
       TheInterface->SpectrumCalibrationCalibrate_TB->SetForegroundColor(TheInterface->ColorMgr->Number2Pixel(0));
       TheInterface->SpectrumCalibrationCalibrate_TB->SetBackgroundColor(TheInterface->ColorMgr->Number2Pixel(32));
+      
+      // Update the PSD histogram widgets that require calibration
+      TheInterface->PSDXAxisEnergy_RB->SetState(kButtonUp);
     }
     else
       TheInterface->CreateMessageBox("The calibration could not be set!","Stop");
@@ -433,21 +437,25 @@ void AASpectrumSlots::HandleTextButtons()
     
     bool Success = ComputationMgr->ClearCalibration(Channel);
 
-    // Reset the calibration widgets
     if(Success){
+      // Set the state of the spectrum widgets appropriately
       TheInterface->SpectrumCalibrationCalibrate_TB->SetText("Calibrate");
       TheInterface->SpectrumCalibrationCalibrate_TB->SetForegroundColor(TheInterface->ColorMgr->Number2Pixel(1));
       TheInterface->SpectrumCalibrationCalibrate_TB->SetBackgroundColor(TheInterface->ThemeForegroundColor);
-
       TheInterface->SpectrumCalibrationPoint_CBL->GetComboBox()->RemoveAll();
       TheInterface->SpectrumCalibrationPoint_CBL->GetComboBox()->AddEntry("Calibration point 0", 0);
       TheInterface->SpectrumCalibrationPoint_CBL->GetComboBox()->Select(0);
       TheInterface->SpectrumCalibrationEnergy_NEL->GetEntry()->SetNumber(0.0);
       TheInterface->SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(1.0);
+      
+      // Set the state of the PSD histogram widgets appropriately
+      if(TheInterface->PSDXAxisEnergy_RB->IsDown())
+	TheInterface->PSDXAxisADC_RB->SetState(kButtonDown);
+      TheInterface->PSDXAxisEnergy_RB->SetState(kButtonDisabled);
     }
     break;
   }
-
+    
   case SpectrumCalibrationLoad_TB_ID:{
 
     const char *FileTypes[] = {"ADAQ calibration file", "*.acal",
@@ -510,6 +518,8 @@ void AASpectrumSlots::HandleTextButtons()
 	TheInterface->SpectrumCalibrationCalibrate_TB->SetText("Calibrated");
 	TheInterface->SpectrumCalibrationCalibrate_TB->SetForegroundColor(TheInterface->ColorMgr->Number2Pixel(0));
 	TheInterface->SpectrumCalibrationCalibrate_TB->SetBackgroundColor(TheInterface->ColorMgr->Number2Pixel(32));
+
+	TheInterface->PSDXAxisEnergy_RB->SetState(kButtonUp);
       }
       else
 	TheInterface->CreateMessageBox("The calibration could not be set! Please check file format.","Stop");
