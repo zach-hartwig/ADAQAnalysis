@@ -378,7 +378,7 @@ void AAGraphics::PlotWaveform(int Color)
     ComputationMgr->FindPeaks(Waveform_H, zWholeWaveform);
     
     
-  if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel])
+  if(ADAQSettings->UsePSDRegions[ADAQSettings->WaveformChannel])
     ComputationMgr->CalculatePSDIntegrals(false);
     
   vector<PeakInfoStruct> PeakInfoVec = ComputationMgr->GetPeakInfoVec();
@@ -389,7 +389,7 @@ void AAGraphics::PlotWaveform(int Color)
     ////////////////////////
     // Color waveform by PSD 
     
-    if(ADAQSettings->UsePSDRegions[ADAQSettings->PSDChannel]){
+    if(ADAQSettings->UsePSDRegions[ADAQSettings->WaveformChannel]){
       
       if((*it).PSDFilterFlag)
 	Waveform_H->SetLineColor(kRed);
@@ -468,50 +468,49 @@ void AAGraphics::PlotWaveform(int Color)
     //////////////////////////////
     // Plot PSD integration region
     
-    if(ADAQSettings->PSDEnable and ADAQSettings->PSDPlotTailIntegrationRegion)
-      if(ADAQSettings->PSDChannel == ADAQSettings->WaveformChannel){
-	
-	Double_t Peak = (*it).PeakPosX;
-	
-	Double_t TotalStart = Peak + ADAQSettings->PSDTotalStart;
-	Double_t TotalStop = Peak + ADAQSettings->PSDTotalStop;
-	Double_t TailStart = Peak + ADAQSettings->PSDTailStart;
-	Double_t TailStop = Peak + ADAQSettings->PSDTailStop;
-	
-	PSDTotal_B->DrawBox(TotalStart, YMin, TotalStop, YMax);
-	PSDPeak_L->DrawLine(Peak, YMin, Peak, YMax);
-	PSDTail_L0->DrawLine(TailStart, YMin, TailStart, YMax);
-	PSDTail_L1->DrawLine(TailStop, YMin, TailStop, YMax);
-      }
+    if(ADAQSettings->PSDPlotIntegrationLimits){
+      
+      Double_t Peak = (*it).PeakPosX;
+    
+      Double_t TotalStart = Peak + ADAQSettings->PSDTotalStart;
+      Double_t TotalStop = Peak + ADAQSettings->PSDTotalStop;
+      Double_t TailStart = Peak + ADAQSettings->PSDTailStart;
+      Double_t TailStop = Peak + ADAQSettings->PSDTailStop;
+    
+      PSDTotal_B->DrawBox(TotalStart, YMin, TotalStop, YMax);
+      PSDPeak_L->DrawLine(Peak, YMin, Peak, YMax);
+      PSDTail_L0->DrawLine(TailStart, YMin, TailStart, YMax);
+      PSDTail_L1->DrawLine(TailStop, YMin, TailStop, YMax);
+    }
+    
+    // Set the class member int that tells the code what is currently
+    // plotted on the embedded canvas. This is important for influencing
+    // the behavior of the vertical and horizontal double sliders used
+    // to "zoom" on the canvas contents
+    CanvasContentType = zWaveform;
+    
+    if(ADAQSettings->PlotPearsonIntegration){
+      ComputationMgr->IntegratePearsonWaveform(ADAQSettings->WaveformToPlot);
+      PlotPearsonIntegration();
+      
+      PearsonLowerLimit_L->DrawLine(ADAQSettings->PearsonLowerLimit,
+				    YMin,
+				    ADAQSettings->PearsonLowerLimit,
+				    YMax);
+      
+      if(ADAQSettings->IntegrateFitToPearson)
+	PearsonMiddleLimit_L->DrawLine(ADAQSettings->PearsonMiddleLimit,
+				       YMin,
+				       ADAQSettings->PearsonMiddleLimit,
+				       YMax);
+      
+      PearsonUpperLimit_L->DrawLine(ADAQSettings->PearsonUpperLimit,
+				    YMin,
+				    ADAQSettings->PearsonUpperLimit,
+				    YMax);
+    }
   }
-    
-  // Set the class member int that tells the code what is currently
-  // plotted on the embedded canvas. This is important for influencing
-  // the behavior of the vertical and horizontal double sliders used
-  // to "zoom" on the canvas contents
-  CanvasContentType = zWaveform;
-  
-  if(ADAQSettings->PlotPearsonIntegration){
-    ComputationMgr->IntegratePearsonWaveform(ADAQSettings->WaveformToPlot);
-    PlotPearsonIntegration();
-    
-    PearsonLowerLimit_L->DrawLine(ADAQSettings->PearsonLowerLimit,
-				  YMin,
-				  ADAQSettings->PearsonLowerLimit,
-				  YMax);
-    
-    if(ADAQSettings->IntegrateFitToPearson)
-      PearsonMiddleLimit_L->DrawLine(ADAQSettings->PearsonMiddleLimit,
-				     YMin,
-				     ADAQSettings->PearsonMiddleLimit,
-				     YMax);
-    
-    PearsonUpperLimit_L->DrawLine(ADAQSettings->PearsonUpperLimit,
-				  YMin,
-				  ADAQSettings->PearsonUpperLimit,
-				  YMax);
-  }
-  TheCanvas->Update();
+    TheCanvas->Update();
 }
 
 
@@ -1216,7 +1215,7 @@ void AAGraphics::PlotPSDRegion()
 
   vector<TCutG *> PSDRegions = ComputationMgr->GetPSDRegions();
   
-  int Channel = ADAQSettings->PSDChannel;
+  int Channel = ADAQSettings->WaveformChannel;
   
   PSDRegions[Channel]->SetMarkerStyle(20);
   PSDRegions[Channel]->SetMarkerSize(1.);

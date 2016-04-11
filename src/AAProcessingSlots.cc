@@ -57,90 +57,8 @@ void AAProcessingSlots::HandleCheckButtons()
   TheInterface->SaveSettings();
 
   switch(CheckButtonID){
-
-  case PSDEnable_CB_ID:{
-    EButtonState ButtonState = kButtonDisabled;
-    bool WidgetState = false;
     
-    if(TheInterface->PSDEnable_CB->IsDown()){
-      ButtonState = kButtonUp;
-      WidgetState = true;
-    }
-    
-    // Be sure to turn off PSD filtering if the user does not want to
-    // discriminate by pulse shape
-    else{
-      TheInterface->PSDEnableRegion_CB->SetState(kButtonUp);
-      if(GraphicsMgr->GetCanvasContentType() == zWaveform)
-	GraphicsMgr->PlotWaveform();
-    }
-    
-    TheInterface->SetPSDWidgetState(WidgetState, ButtonState);
-
-    break;
-  }
-
-  case PSDEnableRegionCreation_CB_ID:{
-    
-    if(TheInterface->PSDEnableRegionCreation_CB->IsDown() and 
-       GraphicsMgr->GetCanvasContentType() != zPSDHistogram){
-      TheInterface->CreateMessageBox("The canvas does not presently contain a PSD histogram! PSD filter creation is not possible!","Stop");
-      TheInterface->PSDEnableRegionCreation_CB->SetState(kButtonUp);
-      break;
-    }
-    break;
-  }
-
-  case PSDEnableRegion_CB_ID:{
-    if(TheInterface->PSDEnableRegion_CB->IsDown()){
-      ComputationMgr->SetUsePSDRegions(TheInterface->PSDChannel_CBL->GetComboBox()->GetSelected(), true);
-      TheInterface->FindPeaks_CB->SetState(kButtonDown);
-    }
-    else
-      ComputationMgr->SetUsePSDRegions(TheInterface->PSDChannel_CBL->GetComboBox()->GetSelected(), false);
-    break;
-  }
-    
-  case PSDPlotTailIntegration_CB_ID:{
-    GraphicsMgr->PlotWaveform();
-    break;
-  }
-
-  case PSDEnableHistogramSlicing_CB_ID:{
-    
-    if(TheInterface->PSDEnableHistogramSlicing_CB->IsDown() and 
-       GraphicsMgr->GetCanvasContentType() != zPSDHistogram){
-      TheInterface->CreateMessageBox("The canvas does not presently contain a PSD histogram! PSD filter creation is not possible!","Stop");
-      TheInterface->PSDEnableHistogramSlicing_CB->SetState(kButtonUp);
-    }
-    else{
-      
-      if(TheInterface->PSDEnableHistogramSlicing_CB->IsDown()){
-	TheInterface->PSDHistogramSliceX_RB->SetState(kButtonUp);
-	TheInterface->PSDHistogramSliceY_RB->SetState(kButtonUp);
-	
-	// Temporary hack ZSH 12 Feb 13
-	TheInterface->PSDHistogramSliceX_RB->SetState(kButtonDown);
-      }
-      else{
-	// Disable histogram buttons
-	TheInterface->PSDHistogramSliceX_RB->SetState(kButtonDisabled);
-	TheInterface->PSDHistogramSliceY_RB->SetState(kButtonDisabled);
-	
-	// Replot the PSD histogram
-	GraphicsMgr->PlotPSDHistogram();
-      
-	// Delete the canvas containing the PSD slice histogram and
-	// close the window (formerly) containing the canvas
-	TCanvas *PSDSlice_C = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("PSDSlice_C");
-	if(PSDSlice_C)
-	  PSDSlice_C->Close();
-      }
-    }
-    break;
-  }
-
-case IntegratePearson_CB_ID:{
+  case IntegratePearson_CB_ID:{
     EButtonState ButtonState = kButtonDisabled;
     bool WidgetState = false;
     
@@ -151,10 +69,10 @@ case IntegratePearson_CB_ID:{
     }
 
     TheInterface->SetPearsonWidgetState(WidgetState, ButtonState);
-
+    
     if(TheInterface->IntegratePearson_CB->IsDown() and 
        TheInterface->PlotPearsonIntegration_CB->IsDown()){
-
+      
       GraphicsMgr->PlotWaveform();
       
       double DeuteronsInWaveform = ComputationMgr->GetDeuteronsInWaveform();
@@ -181,17 +99,6 @@ void AAProcessingSlots::HandleComboBoxes(int ComboBoxID, int SelectedID)
   TheInterface->SaveSettings();
   
   switch(ComboBoxID){
-    
-  case PSDPlotType_CBL_ID:
-    if(ComputationMgr->GetPSDHistogramExists())
-      GraphicsMgr->PlotPSDHistogram();
-    break;
-    
-  case PSDPlotPalette_CBL_ID:
-    gStyle->SetPalette(SelectedID);
-    if(ComputationMgr->GetPSDHistogramExists())
-      GraphicsMgr->PlotPSDHistogram();
-    break;
   }
 }
 
@@ -207,14 +114,6 @@ void AAProcessingSlots::HandleNumberEntries()
   TheInterface->SaveSettings();
   
   switch(NumberEntryID){
-    
-  case PSDTotalStart_NEL_ID:
-  case PSDTotalStop_NEL_ID:
-  case PSDTailStart_NEL_ID:
-  case PSDTailStop_NEL_ID:
-    if(TheInterface->PSDPlotTailIntegration_CB->IsDown())
-      GraphicsMgr->PlotWaveform();
-    break;
     
   default:
     break;
@@ -250,64 +149,6 @@ void AAProcessingSlots::HandleRadioButtons()
     TheInterface->NumProcessors_NEL->GetEntry()->SetNumber(TheInterface->NumProcessors);
     break;
     
-  case PSDAlgorithmPF_RB_ID:
-    if(TheInterface->PSDAlgorithmPF_RB->IsDown()){
-      TheInterface->PSDAlgorithmSMS_RB->SetState(kButtonUp);
-      TheInterface->PSDAlgorithmWD_RB->SetState(kButtonUp);
-      TheInterface->SaveSettings();
-    }
-    break;
-    
-  case PSDAlgorithmSMS_RB_ID:
-    if(TheInterface->PSDAlgorithmSMS_RB->IsDown()){
-      TheInterface->PSDAlgorithmPF_RB->SetState(kButtonUp);
-      TheInterface->PSDAlgorithmWD_RB->SetState(kButtonUp);
-      TheInterface->SaveSettings();
-    }
-    break;
-    
-  case PSDAlgorithmWD_RB_ID:
-    if(TheInterface->PSDAlgorithmWD_RB->IsDown()){
-      TheInterface->PSDAlgorithmSMS_RB->SetState(kButtonUp);
-      TheInterface->PSDAlgorithmPF_RB->SetState(kButtonUp);
-      TheInterface->SaveSettings();
-    }
-    break;
-
-
-  case PSDYAxisTail_RB_ID:
-    if(TheInterface->PSDYAxisTail_RB->IsDown()){
-      TheInterface->PSDYAxisTailTotal_RB->SetState(kButtonUp);
-    }
-    break;
-
-  case PSDYAxisTailTotal_RB_ID:
-    if(TheInterface->PSDYAxisTailTotal_RB->IsDown()){
-      TheInterface->PSDYAxisTail_RB->SetState(kButtonUp);
-    }
-    break;
-
-  case PSDInsideRegion_RB_ID:
-    if(TheInterface->PSDInsideRegion_RB->IsDown()){
-      TheInterface->PSDOutsideRegion_RB->SetState(kButtonUp);
-    }
-    break;
-
-  case PSDOutsideRegion_RB_ID:
-    if(TheInterface->PSDOutsideRegion_RB->IsDown()){
-      TheInterface->PSDInsideRegion_RB->SetState(kButtonUp);
-    }
-    break;
-
-  case PSDHistogramSliceX_RB_ID:
-    if(TheInterface->PSDHistogramSliceX_RB->IsDown())
-      TheInterface->PSDHistogramSliceY_RB->SetState(kButtonUp);
-    break;
-    
-  case PSDHistogramSliceY_RB_ID:
-    if(TheInterface->PSDHistogramSliceY_RB->IsDown())
-      TheInterface->PSDHistogramSliceX_RB->SetState(kButtonUp);
-    break;
 
   case IntegrateRawPearson_RB_ID:
     TheInterface->IntegrateFitToPearson_RB->SetState(kButtonUp);
@@ -350,106 +191,11 @@ void AAProcessingSlots::HandleTextButtons()
   
   switch(TextButtonID){
 
-  case ProcessPSDHistogram_TB_ID:
-    
-    if(TheInterface->ADAQFileLoaded){
-      
-      // Sequential waveform processing
-      if(TheInterface->ProcessingSeq_RB->IsDown()){
-	
-	if(TheInterface->ADAQFileLoaded)
-	  ComputationMgr->ProcessPSDHistogramWaveforms();
-	
-	if(ComputationMgr->GetPSDHistogramExists())
-	  GraphicsMgr->PlotPSDHistogram();
-      }
-      
-      // Parallel waveform processing
-      else{
-	TheInterface->SaveSettings(true);
-	
-	if(TheInterface->PSDAlgorithmWD_RB->IsDown())
-	  TheInterface->CreateMessageBox("Error! Waveform data can only be processed sequentially!\n","Stop");
-	else
-	  ComputationMgr->ProcessWaveformsInParallel("discriminating");
-      }
-      GraphicsMgr->PlotPSDHistogram();
-    }
-    else if(TheInterface->ASIMFileLoaded)
-      TheInterface->CreateMessageBox("ASIM files cannot be processed for pulse shape at this time!","Stop");
-
-    TheInterface->UpdateForPSDHistogramCreation();
-    
-    break;
-
-
-  case CreatePSDHistogram_TB_ID:
-    
-    if(TheInterface->ADAQFileLoaded)
-      ComputationMgr->CreatePSDHistogram();
-    else
-      TheInterface->CreateMessageBox("ASIM files cannot be processed for PSD at this time!","Stop");
-    
-    if(ComputationMgr->GetPSDHistogramExists())
-      GraphicsMgr->PlotPSDHistogram();
-    
-    break;
-    
-
-  case PSDCreateRegion_TB_ID:
-
-    if(TheInterface->ADAQFileLoaded){
-      ComputationMgr->CreatePSDRegion();
-      GraphicsMgr->PlotPSDRegion();
-      TheInterface->PSDEnableRegionCreation_CB->SetState(kButtonUp);
-      
-      TheInterface->PSDCreateRegion_TB->SetText("Region created!");
-      TheInterface->PSDCreateRegion_TB->SetForegroundColor(TheInterface->ColorMgr->Number2Pixel(0));
-      TheInterface->PSDCreateRegion_TB->SetBackgroundColor(TheInterface->ColorMgr->Number2Pixel(32));						   
-
-      TheInterface->PSDEnableRegion_CB->SetState(kButtonUp);
-      TheInterface->PSDInsideRegion_RB->SetState(kButtonUp);
-      TheInterface->PSDOutsideRegion_RB->SetState(kButtonUp);
-   }
-
-    break;
-
-  case PSDClearRegion_TB_ID:
-
-    if(TheInterface->ADAQFileLoaded){
-      
-      ComputationMgr->ClearPSDRegion();
-      TheInterface->PSDEnableRegion_CB->SetState(kButtonUp);
-      TheInterface->PSDEnableRegion_CB->SetState(kButtonDisabled);
-      TheInterface->PSDInsideRegion_RB->SetState(kButtonDisabled);
-      TheInterface->PSDOutsideRegion_RB->SetState(kButtonDisabled);
-
-      TheInterface->PSDCreateRegion_TB->SetText("Create PSD region!");
-      TheInterface->PSDCreateRegion_TB->SetForegroundColor(TheInterface->ColorMgr->Number2Pixel(1));
-      TheInterface->PSDCreateRegion_TB->SetBackgroundColor(TheInterface->ColorMgr->Number2Pixel(18));						   
-      
-      switch((int)GraphicsMgr->GetCanvasContentType()){
-      case zWaveform:
-	GraphicsMgr->PlotWaveform();
-	break;
-	
-      case zSpectrum:
-	GraphicsMgr->PlotSpectrum();
-	break;
-	
-      case zPSDHistogram:
-	GraphicsMgr->PlotPSDHistogram();
-	break;
-      }
-    }
-    
-    break;
-
   case CountRate_TB_ID:
     if(TheInterface->ADAQFileLoaded)
       ComputationMgr->CalculateCountRate();
     break;
-
+    
   case DesplicedFileSelection_TB_ID:{
 
     const char *FileTypes[] = {"ADAQ-formatted ROOT file", "*.root",
@@ -516,7 +262,7 @@ void AAProcessingSlots::HandleTextButtons()
   case DesplicedFileCreation_TB_ID:
     // Alert the user the filtering particles by PSD into the spectra
     // requires integration type peak finder to be used
-    if(ComputationMgr->GetUsePSDRegions()[TheInterface->ADAQSettings->PSDChannel] and 
+    if(ComputationMgr->GetUsePSDRegions()[TheInterface->ADAQSettings->WaveformChannel] and 
        TheInterface->ADAQSettings->ADAQSpectrumAlgorithmSMS)
       TheInterface->CreateMessageBox("Warning! Use of the PSD filter with spectra creation requires peak finding integration","Asterisk");
 

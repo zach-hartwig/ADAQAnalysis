@@ -297,7 +297,35 @@ private:
   ADAQNumberEntryWithLabel *EAErrorWidth_NEL;
   ADAQNumberEntryWithLabel *EAElectronEnergy_NEL, *EAGammaEnergy_NEL;
   ADAQNumberEntryWithLabel *EAProtonEnergy_NEL, *EAAlphaEnergy_NEL, *EACarbonEnergy_NEL;
-    
+
+
+  //////////////////////////////////////
+  // Widgets for the PSD tabbed frame //
+  //////////////////////////////////////
+
+  // PSD histogram creation
+  ADAQNumberEntryWithLabel *PSDWaveforms_NEL, *PSDThreshold_NEL;
+  ADAQNumberEntryWithLabel *PSDNumTotalBins_NEL, *PSDMinTotalBin_NEL, *PSDMaxTotalBin_NEL;
+  ADAQNumberEntryWithLabel *PSDNumTailBins_NEL, *PSDMinTailBin_NEL, *PSDMaxTailBin_NEL;
+  TGRadioButton *PSDYAxisTail_RB, *PSDYAxisTailTotal_RB;
+  ADAQNumberEntryWithLabel *PSDTotalStart_NEL, *PSDTotalStop_NEL;
+  ADAQNumberEntryWithLabel *PSDTailStart_NEL, *PSDTailStop_NEL;
+  TGCheckButton *PSDPlotIntegrationLimits_CB;
+  TGRadioButton *PSDAlgorithmPF_RB, *PSDAlgorithmSMS_RB, *PSDAlgorithmWD_RB;
+  ADAQComboBoxWithLabel *PSDPlotType_CBL, *PSDPlotPalette_CBL;
+  TGTextButton *ProcessPSDHistogram_TB, *CreatePSDHistogram_TB;
+
+  // PSD region creation
+  TGCheckButton *PSDEnableRegionCreation_CB;
+  TGCheckButton *PSDEnableRegion_CB;
+  TGRadioButton *PSDInsideRegion_RB, *PSDOutsideRegion_RB;
+  TGTextButton *PSDCreateRegion_TB, *PSDClearRegion_TB;
+
+  // PSD histogram slicing and 1D analysis
+  TGCheckButton *PSDEnableHistogramSlicing_CB;
+  TGRadioButton *PSDHistogramSliceX_RB, *PSDHistogramSliceY_RB;
+
+  
   ///////////////////////////////////////////
   // Widgets for the graphics tabbed frame //
   ///////////////////////////////////////////
@@ -349,38 +377,6 @@ private:
   ADAQNumberEntryWithLabel *NumProcessors_NEL;
   ADAQNumberEntryWithLabel *UpdateFreq_NEL;
 
-  TGCheckButton *PSDEnable_CB;
-  ADAQComboBoxWithLabel *PSDChannel_CBL;
-  TGRadioButton *PSDAlgorithmPF_RB, *PSDAlgorithmSMS_RB, *PSDAlgorithmWD_RB;
-  
-  ADAQNumberEntryWithLabel *PSDTotalStart_NEL, *PSDTotalStop_NEL;
-  ADAQNumberEntryWithLabel *PSDTailStart_NEL, *PSDTailStop_NEL;
-  
-  ADAQNumberEntryWithLabel *PSDPeakOffset_NEL;
-  ADAQNumberEntryWithLabel *PSDTailOffset_NEL;
-  ADAQNumberEntryWithLabel *PSDWaveforms_NEL;
-
-  ADAQNumberEntryWithLabel *PSDNumTailBins_NEL, *PSDMinTailBin_NEL, *PSDMaxTailBin_NEL;
-  ADAQNumberEntryWithLabel *PSDNumTotalBins_NEL, *PSDMinTotalBin_NEL, *PSDMaxTotalBin_NEL;
-  ADAQNumberEntryWithLabel *PSDThreshold_NEL;
-
-  ADAQComboBoxWithLabel *PSDPlotType_CBL, *PSDPlotPalette_CBL;
-
-  TGRadioButton *PSDYAxisTail_RB, *PSDYAxisTailTotal_RB;
-
-  TGCheckButton *PSDPlotTailIntegration_CB;
-  
-  TGCheckButton *PSDEnableHistogramSlicing_CB;
-  TGRadioButton *PSDHistogramSliceX_RB, *PSDHistogramSliceY_RB;
-
-  TGTextButton *ProcessPSDHistogram_TB, *CreatePSDHistogram_TB;
-  
-  TGTextButton *PSDCalculate_TB;
-  
-  TGCheckButton *PSDEnableRegionCreation_CB;
-  TGCheckButton *PSDEnableRegion_CB;
-  TGRadioButton *PSDInsideRegion_RB, *PSDOutsideRegion_RB;
-  TGTextButton *PSDCreateRegion_TB, *PSDClearRegion_TB;
 
   TGCheckButton *IntegratePearson_CB;
   ADAQComboBoxWithLabel *PearsonChannel_CBL;

@@ -237,8 +237,38 @@ enum{
   EAAlphaEnergy_NEL_ID,
   EACarbonEnergy_NEL_ID,
 
-  CountRate_TB_ID,
+  ///////////////////////////
+  // Values for the PSD frame
 
+  PSDYAxisTail_RB_ID,
+  PSDYAxisTailTotal_RB_ID,
+  
+  PSDTotalStart_NEL_ID,
+  PSDTotalStop_NEL_ID,
+  PSDTailStart_NEL_ID,
+  PSDTailStop_NEL_ID,
+  PSDPlotIntegrationLimits_CB_ID,
+
+  PSDAlgorithmPF_RB_ID,
+  PSDAlgorithmSMS_RB_ID,
+  PSDAlgorithmWD_RB_ID,
+
+  PSDPlotType_CBL_ID,
+  PSDPlotPalette_CBL_ID,
+
+  ProcessPSDHistogram_TB_ID,
+  CreatePSDHistogram_TB_ID,
+
+  PSDEnableRegionCreation_CB_ID,
+  PSDEnableRegion_CB_ID,
+  PSDInsideRegion_RB_ID,
+  PSDOutsideRegion_RB_ID,
+  PSDCreateRegion_TB_ID,
+  PSDClearRegion_TB_ID,
+  
+  PSDEnableHistogramSlicing_CB_ID,
+  PSDHistogramSliceX_RB_ID,
+  PSDHistogramSliceY_RB_ID,
 
   /////////////////////////////////////////
   // Values for the "Graphics" tabbed frame
@@ -308,36 +338,6 @@ enum{
   ProcessingSeq_RB_ID,
   ProcessingPar_RB_ID,
 
-  PSDEnable_CB_ID,
-  
-  PSDAlgorithmPF_RB_ID,
-  PSDAlgorithmSMS_RB_ID,
-  PSDAlgorithmWD_RB_ID,
-
-  PSDTotalStart_NEL_ID,
-  PSDTotalStop_NEL_ID,
-  PSDTailStart_NEL_ID,
-  PSDTailStop_NEL_ID,
-  PSDPlotType_CBL_ID,
-  PSDPlotPalette_CBL_ID,
-  PSDPlotTailIntegration_CB_ID,
-  PSDYAxisTail_RB_ID,
-  PSDYAxisTailTotal_RB_ID,
-
-  PSDEnableHistogramSlicing_CB_ID,
-  PSDHistogramSliceX_RB_ID,
-  PSDHistogramSliceY_RB_ID,
-
-  PSDEnableRegionCreation_CB_ID,
-  PSDEnableRegion_CB_ID,
-  PSDInsideRegion_RB_ID,
-  PSDOutsideRegion_RB_ID,
-  PSDCreateRegion_TB_ID,
-  PSDClearRegion_TB_ID,
-  
-  ProcessPSDHistogram_TB_ID,
-  CreatePSDHistogram_TB_ID,
-
   IntegratePearson_CB_ID,
   PlotPearsonIntegration_CB_ID,
   PearsonLowerLimit_NEL_ID,
@@ -352,6 +352,8 @@ enum{
 
   DesplicedFileSelection_TB_ID,
   DesplicedFileCreation_TB_ID,
+
+  CountRate_TB_ID,
 
   
   //////////////////////////////////////////

@@ -96,8 +96,32 @@ public:
 
   Bool_t SpectrumFindIntegral, SpectrumIntegralInCounts;
   Bool_t SpectrumUseGaussianFit, SpectrumNormalizeToCurrent;
-  
 
+
+  ///////////////
+  // PSD frame //
+  ///////////////
+  
+  Int_t PSDWaveformsToDiscriminate, PSDThreshold;
+  Int_t PSDNumTotalBins;
+  Double_t PSDMinTotalBin, PSDMaxTotalBin;
+  Int_t PSDNumTailBins;
+  Double_t PSDMinTailBin, PSDMaxTailBin;
+  Bool_t PSDYAxisTail, PSDYAxisTailTotal;
+  Int_t PSDTotalStart, PSDTotalStop, PSDTailStart, PSDTailStop;
+  Bool_t PSDPlotIntegrationLimits;
+  Bool_t PSDAlgorithmPF, PSDAlgorithmSMS, PSDAlgorithmWD;
+  string PSDPlotType, PSDPlotPalette;
+
+  Bool_t PSDEnableRegionCreation, PSDEnableFilterUse;
+  Bool_t PSDInsideRegion, PSDOutsideRegion;
+
+  vector<TCutG *> PSDRegions;
+  vector<bool> UsePSDRegions;
+  
+  Bool_t EnableHistogramSlicing, PSDXSlice, PSDYSlice;
+
+  
   ////////////////////
   // Graphics frame //
   ////////////////////
@@ -125,26 +149,6 @@ public:
 
   Bool_t SeqProcessing, ParProcessing;
   Int_t NumProcessors, UpdateFreq;
-
-  Bool_t PSDEnable;
-  Int_t PSDChannel, PSDWaveformsToDiscriminate;
-  Bool_t PSDAlgorithmPF, PSDAlgorithmSMS, PSDAlgorithmWD;
-  Int_t PSDTotalStart, PSDTotalStop, PSDTailStart, PSDTailStop;
-  Int_t PSDThreshold, PSDTailOffset, PSDPeakOffset;
-  Int_t PSDNumTotalBins;
-  Double_t PSDMinTotalBin, PSDMaxTotalBin;
-  Int_t PSDNumTailBins;
-  Double_t PSDMinTailBin, PSDMaxTailBin;
-  Bool_t PSDYAxisTail, PSDYAxisTailTotal;
-
-  string PSDPlotType, PSDPlotPalette;
-  Bool_t PSDPlotTailIntegrationRegion, EnableHistogramSlicing, PSDXSlice, PSDYSlice;
-
-  Bool_t PSDEnableRegionCreation, PSDEnableFilterUse;
-  Bool_t PSDInsideRegion, PSDOutsideRegion;
-
-  vector<TCutG *> PSDRegions;
-  vector<bool> UsePSDRegions;
 
   Double_t RFQPulseWidth, RFQRepRate;
   Int_t RFQCountRateWaveforms;
