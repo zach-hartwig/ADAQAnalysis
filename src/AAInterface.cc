@@ -1562,7 +1562,7 @@ void AAInterface::FillPSDFrame()
   // PSD region creation
   
   TGGroupFrame *PSDRegion_GF = new TGGroupFrame(PSDFrame_VF, "PSD region creation", kVerticalFrame);
-  PSDFrame_VF->AddFrame(PSDRegion_GF, new TGLayoutHints(kLHintsCenterX | kLHintsExpandX, 5,5,5,5));
+  PSDFrame_VF->AddFrame(PSDRegion_GF, new TGLayoutHints(kLHintsCenterX | kLHintsExpandX, 5,5,10,5));
   
   PSDRegion_GF->AddFrame(PSDEnableRegionCreation_CB = new TGCheckButton(PSDRegion_GF, "Enable PSD region creation", PSDEnableRegionCreation_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,5,0));
@@ -1611,7 +1611,7 @@ void AAInterface::FillPSDFrame()
   // PSD slicing and analysis
   
   TGGroupFrame *PSDSlicing_GF = new TGGroupFrame(PSDFrame_VF, "PSD slicing and 1D analysis", kVerticalFrame);
-  PSDFrame_VF->AddFrame(PSDSlicing_GF, new TGLayoutHints(kLHintsCenterX | kLHintsExpandX, 5,5,5,5));
+  PSDFrame_VF->AddFrame(PSDSlicing_GF, new TGLayoutHints(kLHintsCenterX | kLHintsExpandX, 5,5,10,5));
   
   PSDSlicing_GF->AddFrame(PSDEnableHistogramSlicing_CB = new TGCheckButton(PSDSlicing_GF, "Enable histogram slicing", PSDEnableHistogramSlicing_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 0,5,10,0));
