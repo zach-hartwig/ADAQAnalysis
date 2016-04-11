@@ -107,10 +107,10 @@ void AAProcessingSlots::HandleNumberEntries()
 {
   if(!TheInterface->EnableInterface or !TheInterface->ADAQFileLoaded)
     return;
-
+  
   TGNumberEntry *NumberEntry = (TGNumberEntry *) gTQSender;
   int NumberEntryID = NumberEntry->WidgetId();
-
+  
   TheInterface->SaveSettings();
   
   switch(NumberEntryID){

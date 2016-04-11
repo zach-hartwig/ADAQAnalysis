@@ -239,7 +239,9 @@ enum{
 
   ///////////////////////////
   // Values for the PSD frame
-
+  
+  PSDMinTailBin_NEL_ID,
+  PSDMaxTailBin_NEL_ID,
   PSDYAxisTail_RB_ID,
   PSDYAxisTailTotal_RB_ID,
   
@@ -269,6 +271,12 @@ enum{
   PSDEnableHistogramSlicing_CB_ID,
   PSDHistogramSliceX_RB_ID,
   PSDHistogramSliceY_RB_ID,
+
+  PSDCalculateFOM_CB_ID,
+  PSDLowerFOMFitMin_NEL_ID,
+  PSDLowerFOMFitMax_NEL_ID,
+  PSDUpperFOMFitMin_NEL_ID,
+  PSDUpperFOMFitMax_NEL_ID,
 
   /////////////////////////////////////////
   // Values for the "Graphics" tabbed frame

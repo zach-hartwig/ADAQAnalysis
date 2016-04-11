@@ -80,6 +80,11 @@ void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *S
     else{
       ComputationMgr->CreatePSDHistogramSlice(XPixel, YPixel);
       GraphicsMgr->PlotPSDHistogramSlice(XPixel, YPixel);
+      
+      if(TheInterface->PSDCalculateFOM_CB->IsDown()){
+	Double_t FOM = GraphicsMgr->GetPSDFigureOfMerit();
+	TheInterface->PSDFigureOfMerit_NEFL->GetEntry()->SetNumber(FOM);
+      }
     }
   }
 

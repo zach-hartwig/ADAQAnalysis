@@ -42,6 +42,7 @@
 #include <THashList.h>
 #include <TLegend.h>
 #include <TLatex.h>
+#include <TF1.h>
 
 // C++
 #include <iostream>
@@ -73,7 +74,7 @@ AAGraphics::AAGraphics()
     CanvasContentType(zEmpty), 
     WaveformColor(kBlue), WaveformLineWidth(1), WaveformMarkerSize(1.),
     SpectrumLineColor(kBlue), SpectrumLineWidth(2), 
-    SpectrumFillColor(kRed), SpectrumFillStyle(3002)
+    SpectrumFillColor(kRed), SpectrumFillStyle(3002), PSDFigureOfMerit(0.)
 {
   if(TheGraphicsManager)
     cout << "\nERROR! TheGraphicsManager was constructed twice\n" << endl;
@@ -1307,8 +1308,53 @@ void AAGraphics::PlotPSDHistogramSlice(int XPixel, int YPixel)
   PSDHistogramSlice_H->GetYaxis()->SetNdivisions(505);
   PSDHistogramSlice_H->GetYaxis()->CenterTitle();
   
-  PSDHistogramSlice_H->SetFillColor(SpectrumLineColor);
-  PSDHistogramSlice_H->Draw("B");
+  PSDHistogramSlice_H->SetLineColor(kBlue);
+  PSDHistogramSlice_H->SetLineWidth(2);
+  PSDHistogramSlice_H->Draw("");
+  
+  // Because the PSD histogram slice only exists temporarily within
+  // this method, we need to perform the fitting here (rather than in
+  // the AAComputation class) and store the results within the
+  // AAGraphics class for later access
+  
+  if(ADAQSettings->PSDCalculateFOM){
+
+    // Fit the lower gaussian (typically gamma / electron group)
+
+    TF1 *LowerFOMFit = new TF1("LowerFOMFit",
+			       "gaus",
+			       ADAQSettings->PSDLowerFOMFitMin,
+			       ADAQSettings->PSDLowerFOMFitMax);
+    LowerFOMFit->SetLineColor(kGreen+2);
+    LowerFOMFit->SetLineWidth(2);
+
+    PSDHistogramSlice_H->Fit("LowerFOMFit", "RNQ");
+
+    LowerFOMFit->Draw("SAME");
+    
+    // Fit the upper gaussian (typically neutron / proton group)
+    
+    TF1 *UpperFOMFit = new TF1("UpperFOMFit",
+			       "gaus",
+			       ADAQSettings->PSDUpperFOMFitMin,
+			       ADAQSettings->PSDUpperFOMFitMax);
+    UpperFOMFit->SetLineColor(kRed);
+    UpperFOMFit->SetLineWidth(2);
+
+    PSDHistogramSlice_H->Fit("UpperFOMFit", "RNQ");
+
+    UpperFOMFit->Draw("SAME");
+
+    // Calculate the PSD figure-of-merit (FOM)
+
+    Double_t LowerMean = LowerFOMFit->GetParameter(1);
+    Double_t LowerFWHM = LowerFOMFit->GetParameter(2) * 2.35;
+    
+    Double_t UpperMean = UpperFOMFit->GetParameter(1);
+    Double_t UpperFWHM = UpperFOMFit->GetParameter(2) * 2.35;
+
+    PSDFigureOfMerit = (UpperMean - LowerMean) / (UpperFWHM + LowerFWHM);
+  }
   
   // Update the standalone canvas
   PSDSlice_C->Update();

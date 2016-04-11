@@ -1384,29 +1384,30 @@ void AAInterface::FillPSDFrame()
   PSDYAxis_HF->AddFrame(PSDYAxisTail_RB = new TGRadioButton(PSDYAxis_HF, "Tail", PSDYAxisTail_RB_ID),
 			new TGLayoutHints(kLHintsNormal,25,0,10,0));
   PSDYAxisTail_RB->Connect("Clicked()", "AAPSDSlots", ProcessingSlots, "HandleRadioButtons()");
-  PSDYAxisTail_RB->SetState(kButtonDown);
   
   PSDYAxis_HF->AddFrame(PSDYAxisTailTotal_RB = new TGRadioButton(PSDYAxis_HF, "Tail/Total", PSDYAxisTailTotal_RB_ID),
 			new TGLayoutHints(kLHintsNormal,10,0,10,0));
   PSDYAxisTailTotal_RB->Connect("Clicked()", "AAPSDSlots", ProcessingSlots, "HandleRadioButtons()");
-  
+  PSDYAxisTailTotal_RB->SetState(kButtonDown);
 
   TGHorizontalFrame *TailBins_HF = new TGHorizontalFrame(PSDFrame_VF);
   PSDFrame_VF->AddFrame(TailBins_HF);
-
-  TailBins_HF->AddFrame(PSDMinTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Minimum  ", -1),
-			   new TGLayoutHints(kLHintsNormal, LOffset0,5,0,0));
+  
+  TailBins_HF->AddFrame(PSDMinTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Minimum  ", PSDMinTailBin_NEL_ID),
+			new TGLayoutHints(kLHintsNormal, LOffset0,5,0,0));
   PSDMinTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PSDMinTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
   PSDMinTailBin_NEL->GetEntry()->SetNumber(0);
-
-  TailBins_HF->AddFrame(PSDMaxTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Maximum", -1),
-			   new TGLayoutHints(kLHintsNormal, 0,5,0,0));
+  PSDMinTailBin_NEL->Connect("Clicked()", "AAPSDSlots", ProcessingSlots, "HandleNumberEntries()");
+  
+  TailBins_HF->AddFrame(PSDMaxTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Maximum", PSDMaxTailBin_NEL_ID),
+			new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMaxTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PSDMaxTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDMaxTailBin_NEL->GetEntry()->SetNumber(2000);
-
-
+  PSDMaxTailBin_NEL->GetEntry()->SetNumber(1);
+  PSDMaxTailBin_NEL->Connect("Clicked()", "AAPSDSlots", ProcessingSlots, "HandleNumberEntries()");
+  
+  
   /////////////////////////
   // Waveform PSD integrals
   
@@ -1615,15 +1616,77 @@ void AAInterface::FillPSDFrame()
   PSDSlicing_GF->AddFrame(PSDHistogramSlicing_HF, new TGLayoutHints(kLHintsNormal, 15,5,0,5));
   
   PSDHistogramSlicing_HF->AddFrame(PSDHistogramSliceX_RB = new TGRadioButton(PSDHistogramSlicing_HF, "X slice", PSDHistogramSliceX_RB_ID),
-				   new TGLayoutHints(kLHintsNormal, 0,0,0,0));
+				   new TGLayoutHints(kLHintsNormal, 0,0,3,0));
   PSDHistogramSliceX_RB->Connect("Clicked()", "AAPSDSlots", ProcessingSlots, "HandleRadioButtons()");
   PSDHistogramSliceX_RB->SetState(kButtonDown);
   PSDHistogramSliceX_RB->SetState(kButtonDisabled);
 
   PSDHistogramSlicing_HF->AddFrame(PSDHistogramSliceY_RB = new TGRadioButton(PSDHistogramSlicing_HF, "Y slice", PSDHistogramSliceY_RB_ID),
-				   new TGLayoutHints(kLHintsNormal, 20,0,0,0));
+				   new TGLayoutHints(kLHintsNormal, 20,0,3,0));
   PSDHistogramSliceY_RB->Connect("Clicked()", "AAPSDSlots", ProcessingSlots, "HandleRadioButtons()");
   PSDHistogramSliceY_RB->SetState(kButtonDisabled);
+
+  
+  PSDSlicing_GF->AddFrame(PSDCalculateFOM_CB = new TGCheckButton(PSDSlicing_GF, "Calculate FOM", PSDCalculateFOM_CB_ID),
+			  new TGLayoutHints(kLHintsNormal, 0,5,10,0));
+  PSDCalculateFOM_CB->Connect("Clicked()", "AAPSDSlots", ProcessingSlots, "HandleCheckButtons()");
+  PSDCalculateFOM_CB->SetState(kButtonDisabled);
+
+  
+  PSDSlicing_GF->AddFrame(new TGLabel(PSDSlicing_GF, "Lower PSD fit range (ADC)"),
+			  new TGLayoutHints(kLHintsLeft, 15,5,5,0));
+  
+  TGHorizontalFrame *PSDFOM_HF0 = new TGHorizontalFrame(PSDSlicing_GF);
+  PSDSlicing_GF->AddFrame(PSDFOM_HF0, new TGLayoutHints(kLHintsNormal, 15,0,0,0));
+
+  PSDFOM_HF0->AddFrame(PSDLowerFOMFitMin_NEL = new ADAQNumberEntryWithLabel(PSDFOM_HF0, "Minimum  ", PSDLowerFOMFitMin_NEL_ID),
+		       new TGLayoutHints(kLHintsLeft, 0,0,5,0));
+  PSDLowerFOMFitMin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDLowerFOMFitMin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
+  PSDLowerFOMFitMin_NEL->GetEntry()->SetNumber(0);
+  PSDLowerFOMFitMin_NEL->GetEntry()->Connect("ValueSet(long)", "AAPSDSlots", SpectrumSlots, "HandleNumberEntries()");
+  PSDLowerFOMFitMin_NEL->GetEntry()->SetState(false);
+  
+  PSDFOM_HF0->AddFrame(PSDLowerFOMFitMax_NEL = new ADAQNumberEntryWithLabel(PSDFOM_HF0, "Maximum  ", PSDLowerFOMFitMax_NEL_ID),
+		       new TGLayoutHints(kLHintsLeft, 0,0,5,0));
+  PSDLowerFOMFitMax_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDLowerFOMFitMax_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
+  PSDLowerFOMFitMax_NEL->GetEntry()->SetNumber(0.5);
+  PSDLowerFOMFitMax_NEL->GetEntry()->Connect("ValueSet(long)", "AAPSDSlots", SpectrumSlots, "HandleNumberEntries()");
+  PSDLowerFOMFitMax_NEL->GetEntry()->SetState(false);
+
+  
+  PSDSlicing_GF->AddFrame(new TGLabel(PSDSlicing_GF, "Upper PSD fit range (ADC)"),
+			  new TGLayoutHints(kLHintsLeft, 15,5,5,0));
+  
+  TGHorizontalFrame *PSDFOM_HF1 = new TGHorizontalFrame(PSDSlicing_GF);
+  PSDSlicing_GF->AddFrame(PSDFOM_HF1, new TGLayoutHints(kLHintsNormal, 15,0,0,0));
+
+  PSDFOM_HF1->AddFrame(PSDUpperFOMFitMin_NEL = new ADAQNumberEntryWithLabel(PSDFOM_HF1, "Minimum  ", PSDUpperFOMFitMin_NEL_ID),
+		       new TGLayoutHints(kLHintsLeft, 0,0,5,0));
+  PSDUpperFOMFitMin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDUpperFOMFitMin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
+  PSDUpperFOMFitMin_NEL->GetEntry()->SetNumber(0.5);
+  PSDUpperFOMFitMin_NEL->GetEntry()->Connect("ValueSet(long)", "AAPSDSlots", SpectrumSlots, "HandleNumberEntries()");
+  PSDUpperFOMFitMin_NEL->GetEntry()->SetState(false);
+  
+  PSDFOM_HF1->AddFrame(PSDUpperFOMFitMax_NEL = new ADAQNumberEntryWithLabel(PSDFOM_HF1, "Maximum  ", PSDUpperFOMFitMax_NEL_ID),
+		       new TGLayoutHints(kLHintsLeft, 0,0,5,0));
+  PSDUpperFOMFitMax_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDUpperFOMFitMax_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
+  PSDUpperFOMFitMax_NEL->GetEntry()->SetNumber(1.0);
+  PSDUpperFOMFitMax_NEL->GetEntry()->Connect("ValueSet(long)", "AAPSDSlots", SpectrumSlots, "HandleNumberEntries()");
+  PSDUpperFOMFitMax_NEL->GetEntry()->SetState(false);
+
+
+  PSDSlicing_GF->AddFrame(new TGLabel(PSDSlicing_GF, "PSD figure of merit"),
+			  new TGLayoutHints(kLHintsLeft, 15,5,5,0));
+
+  PSDSlicing_GF->AddFrame(PSDFigureOfMerit_NEFL = new ADAQNumberEntryFieldWithLabel(PSDSlicing_GF, "", -1),
+			  new TGLayoutHints(kLHintsNormal, 15,0,5,0));
+  PSDFigureOfMerit_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
+  PSDFigureOfMerit_NEFL->GetEntry()->Resize(75, 20);
+  PSDFigureOfMerit_NEFL->GetEntry()->SetState(false);
 }
 
 
@@ -1642,8 +1705,7 @@ void AAInterface::FillGraphicsFrame()
   // Waveform graphics options
 
   TGGroupFrame *WaveformDrawOptions_GF = new TGGroupFrame(GraphicsFrame_VF, "Waveform draw options", kVerticalFrame);
-  GraphicsFrame_VF->AddFrame(WaveformDrawOptions_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
-
+  GraphicsFrame_VF->AddFrame(WaveformDrawOptions_GF, new TGLayoutHints(kLHintsLeft, 5,5,5,5));
 
   TGHorizontalFrame *WaveformDrawOptions_HF0 = new TGHorizontalFrame(WaveformDrawOptions_GF);
   WaveformDrawOptions_GF->AddFrame(WaveformDrawOptions_HF0, new TGLayoutHints(kLHintsCenterX, 3,-10,3,0));
@@ -1698,7 +1760,7 @@ void AAInterface::FillGraphicsFrame()
   // Spectrum graphics options
 
   TGGroupFrame *SpectrumDrawOptions_GF = new TGGroupFrame(GraphicsFrame_VF, "Spectrum draw options", kVerticalFrame);
-  GraphicsFrame_VF->AddFrame(SpectrumDrawOptions_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
+  GraphicsFrame_VF->AddFrame(SpectrumDrawOptions_GF, new TGLayoutHints(kLHintsLeft, 5,5,5,5));
 
   TGHorizontalFrame *SpectrumDrawOptions_HF0 = new TGHorizontalFrame(SpectrumDrawOptions_GF);
   SpectrumDrawOptions_GF->AddFrame(SpectrumDrawOptions_HF0, new TGLayoutHints(kLHintsCenterX, 3,0,3,0));
@@ -2573,6 +2635,11 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->PSDXSlice = PSDHistogramSliceX_RB->IsDown();
   ADAQSettings->PSDYSlice = PSDHistogramSliceY_RB->IsDown();
 
+  ADAQSettings->PSDCalculateFOM = PSDCalculateFOM_CB->IsDown();
+  ADAQSettings->PSDLowerFOMFitMin = PSDLowerFOMFitMin_NEL->GetEntry()->GetNumber();
+  ADAQSettings->PSDLowerFOMFitMax = PSDLowerFOMFitMax_NEL->GetEntry()->GetNumber();
+  ADAQSettings->PSDUpperFOMFitMin = PSDUpperFOMFitMin_NEL->GetEntry()->GetNumber();
+  ADAQSettings->PSDUpperFOMFitMax = PSDUpperFOMFitMax_NEL->GetEntry()->GetNumber();
 
   //////////////////////////////////////////
   // Values from the "Graphics" tabbed frame
@@ -3062,8 +3129,17 @@ void AAInterface::UpdateForPSDHistogramCreation()
 {
   CreatePSDHistogram_TB->SetState(kButtonUp);
   ProcessPSDHistogram_TB->SetBackgroundColor(ColorMgr->Number2Pixel(32));
+
   PSDEnableRegionCreation_CB->SetState(kButtonUp);
+
   PSDEnableHistogramSlicing_CB->SetState(kButtonUp);
+
+  PSDCalculateFOM_CB->SetState(kButtonUp);
+  PSDLowerFOMFitMin_NEL->GetEntry()->SetState(true);
+  PSDLowerFOMFitMax_NEL->GetEntry()->SetState(true);
+  PSDUpperFOMFitMin_NEL->GetEntry()->SetState(true);
+  PSDUpperFOMFitMax_NEL->GetEntry()->SetState(true);
+  PSDFigureOfMerit_NEFL->GetEntry()->SetState(true);
 }
 
 

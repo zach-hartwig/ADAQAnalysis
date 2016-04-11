@@ -101,6 +101,8 @@ public:
   void PlotPSDHistogramSlice(int, int);
   void PlotPSDRegionProgress();
   void PlotPSDRegion();
+ 
+  Double_t GetPSDFigureOfMerit() {return PSDFigureOfMerit;}
 
 
   ///////////////////////////////////////////
@@ -157,6 +159,8 @@ private:
   int SpectrumFillColor, SpectrumFillStyle;
 
   enum{zWaveformColor, zSpectrumLineColor, zSpectrumFillColor};
+
+  Double_t PSDFigureOfMerit;
 
   ClassDef(AAGraphics, 1)
 };

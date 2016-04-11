@@ -181,6 +181,12 @@ void AAPSDSlots::HandleNumberEntries()
     if(TheInterface->PSDPlotIntegrationLimits_CB->IsDown())
       GraphicsMgr->PlotWaveform();
     break;
+
+  case PSDLowerFOMFitMin_NEL_ID:
+  case PSDLowerFOMFitMax_NEL_ID:
+  case PSDUpperFOMFitMin_NEL_ID:
+  case PSDUpperFOMFitMax_NEL_ID:
+    break;
   }
 }
 
@@ -331,7 +337,6 @@ void AAPSDSlots::HandleTextButtons()
       TheInterface->PSDInsideRegion_RB->SetState(kButtonUp);
       TheInterface->PSDOutsideRegion_RB->SetState(kButtonUp);
    }
-
     break;
     
   case PSDClearRegion_TB_ID:

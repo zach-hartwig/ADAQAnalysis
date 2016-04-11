@@ -120,7 +120,11 @@ public:
   vector<bool> UsePSDRegions;
   
   Bool_t EnableHistogramSlicing, PSDXSlice, PSDYSlice;
-
+  
+  Bool_t PSDCalculateFOM;
+  Double_t PSDLowerFOMFitMin, PSDLowerFOMFitMax;
+  Double_t PSDUpperFOMFitMin, PSDUpperFOMFitMax;
+  
   
   ////////////////////
   // Graphics frame //

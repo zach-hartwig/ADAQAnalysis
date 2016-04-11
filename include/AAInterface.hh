@@ -324,7 +324,12 @@ private:
   // PSD histogram slicing and 1D analysis
   TGCheckButton *PSDEnableHistogramSlicing_CB;
   TGRadioButton *PSDHistogramSliceX_RB, *PSDHistogramSliceY_RB;
-
+  
+  TGCheckButton *PSDCalculateFOM_CB;
+  ADAQNumberEntryWithLabel *PSDLowerFOMFitMin_NEL, *PSDLowerFOMFitMax_NEL;
+  ADAQNumberEntryWithLabel *PSDUpperFOMFitMin_NEL, *PSDUpperFOMFitMax_NEL;
+  ADAQNumberEntryFieldWithLabel *PSDFigureOfMerit_NEFL;
+  
   
   ///////////////////////////////////////////
   // Widgets for the graphics tabbed frame //
