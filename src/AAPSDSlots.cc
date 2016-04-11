@@ -215,6 +215,30 @@ void AAPSDSlots::HandleRadioButtons()
   TheInterface->SaveSettings();
 
   switch(RadioButtonID){
+    
+  case PSDXAxisADC_RB_ID:
+    if(TheInterface->PSDXAxisADC_RB->IsDown()){
+      TheInterface->PSDXAxisEnergy_RB->SetState(kButtonUp);
+    }
+    break;
+    
+  case PSDXAxisEnergy_RB_ID:
+    if(TheInterface->PSDXAxisEnergy_RB->IsDown()){
+      TheInterface->PSDXAxisADC_RB->SetState(kButtonUp);
+    }
+    break;
+    
+  case PSDYAxisTail_RB_ID:
+    if(TheInterface->PSDYAxisTail_RB->IsDown()){
+      TheInterface->PSDYAxisTailTotal_RB->SetState(kButtonUp);
+    }
+    break;
+
+  case PSDYAxisTailTotal_RB_ID:
+    if(TheInterface->PSDYAxisTailTotal_RB->IsDown()){
+      TheInterface->PSDYAxisTail_RB->SetState(kButtonUp);
+    }
+    break;
 
   case PSDAlgorithmPF_RB_ID:
     if(TheInterface->PSDAlgorithmPF_RB->IsDown()){
@@ -237,18 +261,6 @@ void AAPSDSlots::HandleRadioButtons()
       TheInterface->PSDAlgorithmSMS_RB->SetState(kButtonUp);
       TheInterface->PSDAlgorithmPF_RB->SetState(kButtonUp);
       TheInterface->SaveSettings();
-    }
-    break;
-
-  case PSDYAxisTail_RB_ID:
-    if(TheInterface->PSDYAxisTail_RB->IsDown()){
-      TheInterface->PSDYAxisTailTotal_RB->SetState(kButtonUp);
-    }
-    break;
-
-  case PSDYAxisTailTotal_RB_ID:
-    if(TheInterface->PSDYAxisTailTotal_RB->IsDown()){
-      TheInterface->PSDYAxisTail_RB->SetState(kButtonUp);
     }
     break;
 

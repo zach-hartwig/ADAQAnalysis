@@ -306,6 +306,7 @@ private:
   // PSD histogram creation
   ADAQNumberEntryWithLabel *PSDWaveforms_NEL, *PSDThreshold_NEL;
   ADAQNumberEntryWithLabel *PSDNumTotalBins_NEL, *PSDMinTotalBin_NEL, *PSDMaxTotalBin_NEL;
+  TGRadioButton *PSDXAxisADC_RB, *PSDXAxisEnergy_RB;
   ADAQNumberEntryWithLabel *PSDNumTailBins_NEL, *PSDMinTailBin_NEL, *PSDMaxTailBin_NEL;
   TGRadioButton *PSDYAxisTail_RB, *PSDYAxisTailTotal_RB;
   ADAQNumberEntryWithLabel *PSDTotalStart_NEL, *PSDTotalStop_NEL;

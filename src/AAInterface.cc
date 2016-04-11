@@ -1349,13 +1349,26 @@ void AAInterface::FillPSDFrame()
 
   PSDFrame_VF->AddFrame(new TGLabel(PSDFrame_VF, "X-axis binning"),
 			new TGLayoutHints(kLHintsLeft, LOffset0,0,5,0));
+
+  TGHorizontalFrame *PSDXAxis_HF = new TGHorizontalFrame(PSDFrame_VF);
+  PSDFrame_VF->AddFrame(PSDXAxis_HF);
   
-  PSDFrame_VF->AddFrame(PSDNumTotalBins_NEL = new ADAQNumberEntryWithLabel(PSDFrame_VF, "Bins", -1),
+  PSDXAxis_HF->AddFrame(PSDNumTotalBins_NEL = new ADAQNumberEntryWithLabel(PSDXAxis_HF, "Bins ", -1),
 			new TGLayoutHints(kLHintsNormal, LOffset0,5,5,0));
   PSDNumTotalBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDNumTotalBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PSDNumTotalBins_NEL->GetEntry()->SetNumber(150);
-
+  
+  PSDXAxis_HF->AddFrame(PSDXAxisADC_RB = new TGRadioButton(PSDXAxis_HF, "ADC", PSDXAxisADC_RB_ID),
+			new TGLayoutHints(kLHintsNormal,25,0,10,0));
+  PSDXAxisADC_RB->Connect("Clicked()", "AAPSDSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDXAxisADC_RB->SetState(kButtonDown);
+  
+  PSDXAxis_HF->AddFrame(PSDXAxisEnergy_RB = new TGRadioButton(PSDXAxis_HF, "Energy", PSDXAxisEnergy_RB_ID),
+			new TGLayoutHints(kLHintsNormal,10,0,10,0));
+  PSDXAxisEnergy_RB->Connect("Clicked()", "AAPSDSlots", ProcessingSlots, "HandleRadioButtons()");
+  PSDXAxisEnergy_RB->SetState(kButtonDisabled);
+  
   TGHorizontalFrame *TotalBins_HF = new TGHorizontalFrame(PSDFrame_VF);
   PSDFrame_VF->AddFrame(TotalBins_HF);
 
@@ -1383,9 +1396,6 @@ void AAInterface::FillPSDFrame()
   PSDNumTailBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDNumTailBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
   PSDNumTailBins_NEL->GetEntry()->SetNumber(150);
-  
-  //PSDYAxis_HF->AddFrame(new TGLabel(PSDYAxis_HF, "Type"),
-  //new TGLayoutHints(kLHintsNormal, 25,0,10,0));
   
   PSDYAxis_HF->AddFrame(PSDYAxisTail_RB = new TGRadioButton(PSDYAxis_HF, "Tail", PSDYAxisTail_RB_ID),
 			new TGLayoutHints(kLHintsNormal,25,0,10,0));

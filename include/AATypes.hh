@@ -242,6 +242,9 @@ enum{
   
   PSDMinTailBin_NEL_ID,
   PSDMaxTailBin_NEL_ID,
+
+  PSDXAxisADC_RB_ID,
+  PSDXAxisEnergy_RB_ID,
   PSDYAxisTail_RB_ID,
   PSDYAxisTailTotal_RB_ID,
   
