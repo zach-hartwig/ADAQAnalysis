@@ -75,6 +75,17 @@ void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *S
     // point remains plotted in the standalone canvas
     if(EventID == 1){
       TheInterface->PSDEnableHistogramSlicing_CB->SetState(kButtonUp);
+
+      // Properly disabled PSD histogram widgets
+      TheInterface->PSDHistogramSliceX_RB->SetState(kButtonDisabled);
+      TheInterface->PSDHistogramSliceY_RB->SetState(kButtonDisabled);
+      TheInterface->PSDCalculateFOM_CB->SetState(kButtonDisabled);
+      TheInterface->PSDLowerFOMFitMin_NEL->GetEntry()->SetState(false);
+      TheInterface->PSDLowerFOMFitMax_NEL->GetEntry()->SetState(false);
+      TheInterface->PSDUpperFOMFitMin_NEL->GetEntry()->SetState(false);
+      TheInterface->PSDUpperFOMFitMax_NEL->GetEntry()->SetState(false);
+      TheInterface->PSDFigureOfMerit_NEFL->GetEntry()->SetState(false);
+
       return;
     }
     else{

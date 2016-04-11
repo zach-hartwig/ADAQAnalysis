@@ -112,20 +112,33 @@ void AAPSDSlots::HandleCheckButtons()
     }
     else{
       if(TheInterface->PSDEnableHistogramSlicing_CB->IsDown()){
+	// Enable PSD histogram slicing buttons
 	TheInterface->PSDHistogramSliceX_RB->SetState(kButtonUp);
 	TheInterface->PSDHistogramSliceY_RB->SetState(kButtonUp);
+	TheInterface->PSDCalculateFOM_CB->SetState(kButtonUp);
+	TheInterface->PSDLowerFOMFitMin_NEL->GetEntry()->SetState(true);
+	TheInterface->PSDLowerFOMFitMax_NEL->GetEntry()->SetState(true);
+	TheInterface->PSDUpperFOMFitMin_NEL->GetEntry()->SetState(true);
+	TheInterface->PSDUpperFOMFitMax_NEL->GetEntry()->SetState(true);
+	TheInterface->PSDFigureOfMerit_NEFL->GetEntry()->SetState(true);
 	
 	// Temporary hack ZSH 12 Feb 13
 	TheInterface->PSDHistogramSliceX_RB->SetState(kButtonDown);
       }
       else{
-	// Disable histogram buttons
+	// Disable PSD histogram slicing buttons
 	TheInterface->PSDHistogramSliceX_RB->SetState(kButtonDisabled);
 	TheInterface->PSDHistogramSliceY_RB->SetState(kButtonDisabled);
+	TheInterface->PSDCalculateFOM_CB->SetState(kButtonDisabled);
+	TheInterface->PSDLowerFOMFitMin_NEL->GetEntry()->SetState(false);
+	TheInterface->PSDLowerFOMFitMax_NEL->GetEntry()->SetState(false);
+	TheInterface->PSDUpperFOMFitMin_NEL->GetEntry()->SetState(false);
+	TheInterface->PSDUpperFOMFitMax_NEL->GetEntry()->SetState(false);
+	TheInterface->PSDFigureOfMerit_NEFL->GetEntry()->SetState(false);
 	
 	// Replot the PSD histogram
 	GraphicsMgr->PlotPSDHistogram();
-      
+	
 	// Delete the canvas containing the PSD slice histogram and
 	// close the window (formerly) containing the canvas
 	TCanvas *PSDSlice_C = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("PSDSlice_C");

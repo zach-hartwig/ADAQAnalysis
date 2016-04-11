@@ -1479,16 +1479,16 @@ void AAInterface::FillPSDFrame()
   PSDFrame_VF->AddFrame(PSDAlgorithm_HF, new TGLayoutHints(kLHintsNormal, LOffset0,0,0,0));
   
   PSDAlgorithm_HF->AddFrame(PSDAlgorithmSMS_RB = new TGRadioButton(PSDAlgorithm_HF,"Simple\nmax/sum",PSDAlgorithmSMS_RB_ID),
-				 new TGLayoutHints(kLHintsNormal, LOffset0,0,0,5));
+				 new TGLayoutHints(kLHintsNormal, 0,0,0,5));
   PSDAlgorithmSMS_RB->Connect("Clicked()", "AAPSDSlots", ProcessingSlots, "HandleRadioButtons()");
   PSDAlgorithmSMS_RB->SetState(kButtonDown);
   
   PSDAlgorithm_HF->AddFrame(PSDAlgorithmPF_RB = new TGRadioButton(PSDAlgorithm_HF,"Peak\nfinder",PSDAlgorithmPF_RB_ID),
-				 new TGLayoutHints(kLHintsNormal,30,0,0,5));
+				 new TGLayoutHints(kLHintsNormal,35,0,0,5));
   PSDAlgorithmPF_RB->Connect("Clicked()", "AAPSDSlots", ProcessingSlots, "HandleRadioButtons()");
   
   PSDAlgorithm_HF->AddFrame(PSDAlgorithmWD_RB = new TGRadioButton(PSDAlgorithm_HF,"Waveform\ndata",PSDAlgorithmWD_RB_ID),
-				 new TGLayoutHints(kLHintsNormal,30,0,0,5));
+				 new TGLayoutHints(kLHintsNormal,35,0,0,5));
   PSDAlgorithmWD_RB->Connect("Clicked()", "AAPSDSlots", ProcessingSlots, "HandleRadioButtons()");
 
 
@@ -3140,13 +3140,6 @@ void AAInterface::UpdateForPSDHistogramCreation()
   PSDEnableRegionCreation_CB->SetState(kButtonUp);
 
   PSDEnableHistogramSlicing_CB->SetState(kButtonUp);
-
-  PSDCalculateFOM_CB->SetState(kButtonUp);
-  PSDLowerFOMFitMin_NEL->GetEntry()->SetState(true);
-  PSDLowerFOMFitMax_NEL->GetEntry()->SetState(true);
-  PSDUpperFOMFitMin_NEL->GetEntry()->SetState(true);
-  PSDUpperFOMFitMax_NEL->GetEntry()->SetState(true);
-  PSDFigureOfMerit_NEFL->GetEntry()->SetState(true);
 }
 
 
