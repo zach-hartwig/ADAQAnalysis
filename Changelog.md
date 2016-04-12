@@ -14,13 +14,16 @@ Major new developments in this series include:
    should make finding/using them much easier
 
  - New ability to automatically calculate the PSD figure-of-merit when
-   slicing PSD histograms
+   slicing PSD histograms along the Y direction
 
- - A lot of bug fixes and minor updates:
-   - Interface/widget-behavior corrections
-   - Enabled user ability to use/not-use an existing PSD region
+ - New ability to plot the X-axis of the PSD histogram in energy units
+   [keVee or MeVee] when a spectral calibration has been specified
+
+ - A lot of bug fixes and minor updates, including:
+   - Varoius interface/widget-behavior corrections and improvements
+   - Corrected user ability to use/not-use an existing PSD region
    - New PSD color palettes available
-   - PSD slice plot updates
+   - Updates to PSD slice plot graphical attributes
    - Depracated code removed in various places; code standardization
 
 
