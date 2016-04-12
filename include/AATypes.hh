@@ -349,23 +349,8 @@ enum{
   ProcessingSeq_RB_ID,
   ProcessingPar_RB_ID,
 
-  IntegratePearson_CB_ID,
-  PlotPearsonIntegration_CB_ID,
-  PearsonLowerLimit_NEL_ID,
-  PearsonMiddleLimit_NEL_ID,
-  PearsonUpperLimit_NEL_ID,
-  
-  PearsonPolarityPositive_RB_ID,
-  PearsonPolarityNegative_RB_ID,
-
-  IntegrateRawPearson_RB_ID,
-  IntegrateFitToPearson_RB_ID,
-
   DesplicedFileSelection_TB_ID,
   DesplicedFileCreation_TB_ID,
-
-  CountRate_TB_ID,
-
   
   //////////////////////////////////////////
   // Values for the "Canvas + Sliders" frame

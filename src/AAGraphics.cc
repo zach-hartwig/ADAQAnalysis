@@ -67,7 +67,6 @@ AAGraphics::AAGraphics()
     Analysis_B(new TBox), Baseline_B(new TBox), 
     LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine), IntegrationRegion_B(new TBox),
     PSDTotal_B(new TBox), PSDPeak_L(new TLine), PSDTail_L0(new TLine), PSDTail_L1(new TLine),
-    PearsonLowerLimit_L(new TLine), PearsonMiddleLimit_L(new TLine), PearsonUpperLimit_L(new TLine),
     HCalibration_L(new TLine), VCalibration_L(new TLine), EdgeBoundingBox_B(new TBox),
     EALine_L(new TLine), EABox_B(new TBox), DerivativeReference_L(new TLine),
     PSDRegionProgress_G(new TGraph),
@@ -134,19 +133,6 @@ AAGraphics::AAGraphics()
   PSDTail_L1->SetLineStyle(7);
   PSDTail_L1->SetLineColor(kMagenta+1);
   PSDTail_L1->SetLineWidth(2);
-
-  PearsonLowerLimit_L->SetLineStyle(7);
-  PearsonLowerLimit_L->SetLineColor(kBlue);
-  PearsonLowerLimit_L->SetLineWidth(2);
-
-  PearsonMiddleLimit_L->SetLineStyle(7);
-  PearsonMiddleLimit_L->SetLineColor(kGreen+2);
-  PearsonMiddleLimit_L->SetLineWidth(2);
-  
-  PearsonUpperLimit_L->SetLineStyle(7);
-  PearsonUpperLimit_L->SetLineColor(kBlue);
-  PearsonUpperLimit_L->SetLineWidth(2);
-
 
   // Graphical objects for spectral analysis
   
@@ -490,67 +476,10 @@ void AAGraphics::PlotWaveform(int Color)
     // to "zoom" on the canvas contents
     CanvasContentType = zWaveform;
     
-    if(ADAQSettings->PlotPearsonIntegration){
-      ComputationMgr->IntegratePearsonWaveform(ADAQSettings->WaveformToPlot);
-      PlotPearsonIntegration();
-      
-      PearsonLowerLimit_L->DrawLine(ADAQSettings->PearsonLowerLimit,
-				    YMin,
-				    ADAQSettings->PearsonLowerLimit,
-				    YMax);
-      
-      if(ADAQSettings->IntegrateFitToPearson)
-	PearsonMiddleLimit_L->DrawLine(ADAQSettings->PearsonMiddleLimit,
-				       YMin,
-				       ADAQSettings->PearsonMiddleLimit,
-				       YMax);
-      
-      PearsonUpperLimit_L->DrawLine(ADAQSettings->PearsonUpperLimit,
-				    YMin,
-				    ADAQSettings->PearsonUpperLimit,
-				    YMax);
-    }
   }
-    TheCanvas->Update();
+  TheCanvas->Update();
 }
 
-
-void AAGraphics::PlotPearsonIntegration()
-{
-  // The RFQ current signal is overplotted on the current canvas and
-  // then the integration region is overplotted on top of that
-
-  TH1F *PearsonSignal_H = ComputationMgr->CalculateBSWaveform(ADAQSettings->PearsonChannel,
-							      ADAQSettings->WaveformToPlot,
-							      true);
-
-  PearsonSignal_H->SetLineColor(kRed);
-  PearsonSignal_H->Draw("SAME");
-
-  if(ADAQSettings->IntegrateRawPearson){
-    TH1F *PearsonIntegration_H = ComputationMgr->GetPearsonRawIntegration();
-
-    PearsonIntegration_H->SetFillColor(kBlue);
-    PearsonIntegration_H->SetLineColor(2);
-    PearsonIntegration_H->SetFillStyle(3001);
-    PearsonIntegration_H->GetXaxis()->SetRangeUser(ADAQSettings->PearsonLowerLimit, 
-						   ADAQSettings->PearsonUpperLimit);
-    PearsonIntegration_H->Draw("BC SAME");
-  }
-  else if(ADAQSettings->IntegrateFitToPearson){
-    TH1F *PearsonRiseFit_H = ComputationMgr->GetPearsonRiseFit();
-    PearsonRiseFit_H->SetLineColor(kGreen+2);
-    PearsonRiseFit_H->SetFillColor(kGreen+2);
-    PearsonRiseFit_H->SetFillStyle(3001);
-    PearsonRiseFit_H->Draw("BC SAME");
-
-    TH1F *PearsonPlateauFit_H = ComputationMgr->GetPearsonPlateauFit();
-    PearsonPlateauFit_H->SetLineColor(kBlue);
-    PearsonPlateauFit_H->SetFillColor(kBlue);
-    PearsonPlateauFit_H->SetFillStyle(3001);
-    PearsonPlateauFit_H->Draw("BC SAME");
-  }
-}
 
 void AAGraphics::PlotSpectrum()
 {

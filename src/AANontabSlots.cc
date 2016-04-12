@@ -630,15 +630,6 @@ void AANontabSlots::HandleSliders(int SliderPosition)
   
   GraphicsMgr->PlotWaveform();
 
-  // Update the deuteron/Pearson integration widgets
-  if(TheInterface->IntegratePearson_CB->IsDown()){
-    double DeuteronsInWaveform = ComputationMgr->GetDeuteronsInWaveform();
-    TheInterface->DeuteronsInWaveform_NEFL->GetEntry()->SetNumber(DeuteronsInWaveform);
-    
-    double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
-    TheInterface->DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
-  }
-
   // Update the waveform analysis widgets
   if(TheInterface->WaveformAnalysis_CB->IsDown()){
     double Height = ComputationMgr->GetWaveformAnalysisHeight();

@@ -155,17 +155,6 @@ public:
 
   Bool_t SeqProcessing, ParProcessing;
   Int_t NumProcessors, UpdateFreq;
-
-  Double_t RFQPulseWidth, RFQRepRate;
-  Int_t RFQCountRateWaveforms;
-
-  Bool_t IntegratePearson;
-  Int_t PearsonChannel, PearsonPolarity;
-  Bool_t IntegrateRawPearson, IntegrateFitToPearson;
-  Int_t PearsonLowerLimit, PearsonMiddleLimit, PearsonUpperLimit;
-  Bool_t PlotPearsonIntegration;
-
-  Int_t TotalDeuterons;
   
   Int_t WaveformsToDesplice, DesplicedWaveformBuffer, DesplicedWaveformLength;
   string DesplicedFileName;

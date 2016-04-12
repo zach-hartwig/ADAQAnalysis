@@ -84,7 +84,6 @@ public:
   // Waveform plotting methods
   
   void PlotWaveform(int Color=kBlue);
-  void PlotPearsonIntegration();
 
 
   ///////////////////////////
@@ -134,7 +133,6 @@ private:
   TBox *IntegrationRegion_B;
   TBox *PSDTotal_B;
   TLine *PSDPeak_L, *PSDTail_L0, *PSDTail_L1;
-  TLine *PearsonLowerLimit_L, *PearsonMiddleLimit_L, *PearsonUpperLimit_L;
 
   // Objects for spectral analysis
 

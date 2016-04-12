@@ -57,34 +57,6 @@ void AAProcessingSlots::HandleCheckButtons()
   TheInterface->SaveSettings();
 
   switch(CheckButtonID){
-    
-  case IntegratePearson_CB_ID:{
-    EButtonState ButtonState = kButtonDisabled;
-    bool WidgetState = false;
-    
-    if(TheInterface->IntegratePearson_CB->IsDown()){
-      // Set states to activate buttons
-      ButtonState = kButtonUp;
-      WidgetState = true;
-    }
-
-    TheInterface->SetPearsonWidgetState(WidgetState, ButtonState);
-    
-    if(TheInterface->IntegratePearson_CB->IsDown() and 
-       TheInterface->PlotPearsonIntegration_CB->IsDown()){
-      
-      GraphicsMgr->PlotWaveform();
-      
-      double DeuteronsInWaveform = ComputationMgr->GetDeuteronsInWaveform();
-      TheInterface->DeuteronsInWaveform_NEFL->GetEntry()->SetNumber(DeuteronsInWaveform);
-      
-      double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
-      TheInterface->DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
-    }
-
-    break;
- }
-  
   default:
     break;
   }
@@ -149,29 +121,6 @@ void AAProcessingSlots::HandleRadioButtons()
     TheInterface->NumProcessors_NEL->GetEntry()->SetNumber(TheInterface->NumProcessors);
     break;
     
-
-  case IntegrateRawPearson_RB_ID:
-    TheInterface->IntegrateFitToPearson_RB->SetState(kButtonUp);
-    TheInterface->PearsonMiddleLimit_NEL->GetEntry()->SetState(false);
-    GraphicsMgr->PlotWaveform();
-    break;
-
-  case IntegrateFitToPearson_RB_ID:
-    TheInterface->IntegrateRawPearson_RB->SetState(kButtonUp);
-    TheInterface->PearsonMiddleLimit_NEL->GetEntry()->SetState(true);
-    GraphicsMgr->PlotWaveform();
-    break;
-
-  case PearsonPolarityPositive_RB_ID:
-    TheInterface->PearsonPolarityNegative_RB->SetState(kButtonUp);
-    GraphicsMgr->PlotWaveform();
-    break;
-
-  case PearsonPolarityNegative_RB_ID:
-    TheInterface->PearsonPolarityPositive_RB->SetState(kButtonUp);
-    GraphicsMgr->PlotWaveform();
-    break;
-  
   default:
     break;
   }
@@ -191,11 +140,6 @@ void AAProcessingSlots::HandleTextButtons()
   
   switch(TextButtonID){
 
-  case CountRate_TB_ID:
-    if(TheInterface->ADAQFileLoaded)
-      ComputationMgr->CalculateCountRate();
-    break;
-    
   case DesplicedFileSelection_TB_ID:{
 
     const char *FileTypes[] = {"ADAQ-formatted ROOT file", "*.root",

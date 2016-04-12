@@ -77,23 +77,7 @@ void AAWaveformSlots::HandleCheckButtons()
   case UsePileupRejection_CB_ID:
   case AutoYAxisRange_CB_ID:
   case WaveformAnalysis_CB_ID:
-    
-    if(TheInterface->PlotPearsonIntegration_CB->IsDown()){
-      
-      // Reset the total number of deuterons
-      ComputationMgr->SetDeuteronsInTotal(0.);
-      TheInterface->DeuteronsInTotal_NEFL->GetEntry()->SetNumber(0.);
-
-      GraphicsMgr->PlotWaveform();
-      
-      double DeuteronsInWaveform = ComputationMgr->GetDeuteronsInWaveform();
-      TheInterface->DeuteronsInWaveform_NEFL->GetEntry()->SetNumber(DeuteronsInWaveform);
-      
-      double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
-      TheInterface->DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
-    }
-    else
-      GraphicsMgr->PlotWaveform();
+    GraphicsMgr->PlotWaveform();
     break;
   }
 }
@@ -136,14 +120,6 @@ void AAWaveformSlots::HandleNumberEntries()
     TheInterface->WaveformSelector_HS->SetPosition(Num);
     
     GraphicsMgr->PlotWaveform();
-
-    if(TheInterface->IntegratePearson_CB->IsDown()){
-      double DeuteronsInWaveform = ComputationMgr->GetDeuteronsInWaveform();
-      TheInterface->DeuteronsInWaveform_NEFL->GetEntry()->SetNumber(DeuteronsInWaveform);
-
-      double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
-      TheInterface->DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
-    }
 
     if(TheInterface->WaveformAnalysis_CB->IsDown()){
       double Height = ComputationMgr->GetWaveformAnalysisHeight();

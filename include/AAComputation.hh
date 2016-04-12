@@ -109,8 +109,6 @@ public:
   void IntegratePeaks();
   void FindPeakHeights();
   void RejectPileup(TH1F *);
-  void IntegratePearsonWaveform(Int_t);
-  void CalculateCountRate();
   void AnalyzeWaveform(TH1F *);
   
   // Spectrum creation
@@ -160,15 +158,6 @@ public:
 
   // Waveform peak data
   vector<PeakInfoStruct> GetPeakInfoVec() {return PeakInfoVec;}
-  
-  TH1F *GetPearsonRawIntegration() {return PearsonRawIntegration_H;}
-  TH1F *GetPearsonRiseFit() {return PearsonRiseFit_H;}
-  TH1F *GetPearsonPlateauFit() {return PearsonPlateauFit_H;}
-  Double_t GetPearsonIntegralValue() {return PearsonIntegralValue;}
-  
-  Double_t GetDeuteronsInWaveform() {return DeuteronsInWaveform;}
-  void SetDeuteronsInTotal(Double_t DIT) {DeuteronsInTotal = DIT;}
-  Double_t GetDeuteronsInTotal() {return DeuteronsInTotal;}
   
   // Spectra
   void SetSpectrum(TH1F *H) 
@@ -301,9 +290,6 @@ private:
   // Waveform analysis results
   Double_t WaveformAnalysisHeight, WaveformAnalysisArea;
 
-  TH1F *PearsonRawIntegration_H, *PearsonRiseFit_H, *PearsonPlateauFit_H;
-  Double_t PearsonIntegralValue;
-
   
   /////////////////////
   // Spectrum variables
@@ -377,8 +363,6 @@ private:
 
   // A ROOT random number generator (RNG)
   TRandom *RNG;
-
-  Double_t DeuteronsInWaveform, DeuteronsInTotal;
 
   vector<Double_t> EdgeHBound, EdgeVBound;
   Double_t HalfHeight, EdgePosition;

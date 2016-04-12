@@ -77,7 +77,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     PeakFinder(new TSpectrum), NumPeaks(0), PeakInfoVec(0), 
     PeakIntegral_LowerLimit(0), PeakIntegral_UpperLimit(0), PeakLimits(0),
     WaveformStart(0), WaveformEnd(0),
-    WaveformAnalysisHeight(0.), WaveformAnalysisArea(0.), PearsonIntegralValue(0),
+    WaveformAnalysisHeight(0.), WaveformAnalysisArea(0.), 
     Spectrum_H(new TH1F), SpectrumDerivative_H(new TH1F), SpectrumDerivative_G(new TGraph),
     SpectrumBackground_H(new TH1F), SpectrumDeconvolved_H(new TH1F), 
     SpectrumIntegral_H(new TH1F), SpectrumFit_F(new TF1),
@@ -89,7 +89,6 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
 
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelVerbose(true),
     Verbose(false), NumDataChannels(16), TotalPeaks(0), 
-    DeuteronsInWaveform(0.), DeuteronsInTotal(0.),
     HalfHeight(0.), EdgePosition(0.), EdgePositionFound(false)
 {
   if(TheComputationManager){
@@ -357,12 +356,6 @@ void AAComputation::LoadLegacyADAQFile()
   
   // If the ADAQParResults class was loaded then ...
   if(ADAQParResultsLoaded){
-    // Load the total integrated RFQ current and update the number
-    // entry field widget in the "Analysis" tab frame accordingly
-    DeuteronsInTotal = ADAQParResults->DeuteronsInTotal;
-    
-    if(Verbose)
-      cout << "Total RFQ current from despliced file: " << ADAQParResults->DeuteronsInTotal << endl;
   }
   
   // Get the record length (acquisition window)
@@ -482,24 +475,22 @@ TH1F *AAComputation::CalculateRawWaveform(int Channel, int Waveform)
 
 // Method to extract the digitized data on the specified data channel
 // and store it into a TH1F object after calculating and subtracting
-// the waveform baseline. Note that the function argument bool is used
-// to determine which polarity (a standard (detector) waveform or a
-// Pearson (RFQ current) waveform) should be used in processing
+// the waveform baseline. Note that the function argument bool is
+// depracated code but left in place for potential future use
 TH1F* AAComputation::CalculateBSWaveform(int Channel, int Waveform, bool CurrentWaveform)
 {
   ADAQWaveformTree->GetEntry(Waveform);
 
-  vector<int> RawVoltage = *Waveforms[Channel];
-
-  int Size = RawVoltage.size();
+  vector<Int_t> RawVoltage = *Waveforms[Channel];
+  
+  Int_t Size = RawVoltage.size();
 
   if(Waveform_H[Channel])
     delete Waveform_H[Channel];
   Waveform_H[Channel] = new TH1F("Waveform_H","Baseline-subtracted Waveform", Size-1, 0, Size);
   
-  double Polarity;
-  (CurrentWaveform) ? Polarity = ADAQSettings->PearsonPolarity : Polarity = ADAQSettings->WaveformPolarity;
-
+  Double_t Polarity = ADAQSettings->WaveformPolarity;
+  
   if(!RawVoltage.empty()){
     Baseline = CalculateBaseline(&RawVoltage);
     
@@ -515,17 +506,15 @@ TH1F* AAComputation::CalculateBSWaveform(int Channel, int Waveform, bool Current
 // Method to extract the digitized data on the specified data channel
 // and store it into a TH1F object after computing the zero-suppresion
 // (ZS) waveform. The baseline is calculated and stored into the class
-// member for later use.  Note that the function argument bool is used
-// to determine which polarity (a standard (detector) waveform or a
-// Pearson (RFQ current) waveform) should be used in processing
+// member for later use. Note that the function argument bool is
+// depracated but left in place for potential future use.
 TH1F *AAComputation::CalculateZSWaveform(int Channel, int Waveform, bool CurrentWaveform)
 {
   ADAQWaveformTree->GetEntry(Waveform);
   
-  double Polarity;
-  (CurrentWaveform) ? Polarity = ADAQSettings->PearsonPolarity : Polarity = ADAQSettings->WaveformPolarity;
+  Double_t Polarity = ADAQSettings->WaveformPolarity;
   
-  vector<int> RawVoltage = *Waveforms[Channel];
+  vector<Int_t> RawVoltage = *Waveforms[Channel];
   
   if(Waveform_H[Channel])
     delete Waveform_H[Channel];
@@ -536,21 +525,21 @@ TH1F *AAComputation::CalculateZSWaveform(int Channel, int Waveform, bool Current
   else{
     Baseline = CalculateBaseline(&RawVoltage);
     
-    vector<double> ZSVoltage(ADAQSettings->ZeroSuppressionBuffer,0);
+    vector<Double_t> ZSVoltage(ADAQSettings->ZeroSuppressionBuffer,0);
     
     vector<int>::iterator it;
     for(it=RawVoltage.begin(); it!=RawVoltage.end(); it++){
 
-      double VoltageMinusBaseline = Polarity*(*it-Baseline);
+      Double_t VoltageMinusBaseline = Polarity*(*it-Baseline);
       
       if(VoltageMinusBaseline >= ADAQSettings->ZeroSuppressionCeiling)
 	ZSVoltage.push_back(VoltageMinusBaseline);
     }
     
-    for(int sample=0; sample<ADAQSettings->ZeroSuppressionBuffer; sample++)
+    for(Int_t sample=0; sample<ADAQSettings->ZeroSuppressionBuffer; sample++)
       ZSVoltage.push_back(0);
   
-    int ZSWaveformSize = ZSVoltage.size();
+    Int_t ZSWaveformSize = ZSVoltage.size();
     Waveform_H[Channel] = new TH1F("Waveform_H","Zero Suppression Waveform", ZSWaveformSize-1, 0, ZSWaveformSize);
   
     vector<double>::iterator iter;
@@ -1014,13 +1003,6 @@ void AAComputation::ProcessSpectrumWaveforms()
       return;
     }
     
-    // Reset the variable holding accumulated RFQ current if the value
-    // was not loaded directly from an ADAQ ROOT file created during
-    // parallel processing (i.e. a "despliced" file) and will be
-    // calculated from scratch here
-    if(!ADAQParResultsLoaded)
-      DeuteronsInTotal = 0.;
-  
     // Reboot the PeakFinder with up-to-date max peaks
     if(PeakFinder) delete PeakFinder;
     PeakFinder = new TSpectrum(ADAQSettings->MaxPeaks);
@@ -1094,11 +1076,6 @@ void AAComputation::ProcessSpectrumWaveforms()
       else if(ADAQSettings->ZSWaveform)
 	CalculateZSWaveform(Channel, waveform);
     
-      // Calculate the total RFQ current for this waveform.
-      if(ADAQSettings->IntegratePearson)
-	IntegratePearsonWaveform(waveform);
-   
-
       ///////////////////////////////////////////
       // Simple max/sum (SMS) waveform processing
 
@@ -1350,10 +1327,6 @@ void AAComputation::ProcessSpectrumWaveforms()
     PA.Write("PA");
     VectorWrite->Close();
 
-    // Aggregate the total calculated RFQ current (if enabled) from all
-    // nodes to the master node
-    DeuteronsInTotal = AAParallel::GetInstance()->SumDoublesToMaster(DeuteronsInTotal);
-  
     // The master should output the array to a text file, which will be
     // read in by the running sequential binary of ADAQAnalysisGUI
     if(IsMaster){
@@ -1425,11 +1398,6 @@ void AAComputation::ProcessSpectrumWaveforms()
       MasterHistogram_H->Write();
       MasterPHVec.Write("MasterPHVec");
       MasterPAVec.Write("MasterPAVec");
-      
-      // Create/write the aggregated current vector to a file
-      TVectorD AggregatedDeuterons(1);
-      AggregatedDeuterons[0] = DeuteronsInTotal;
-      AggregatedDeuterons.Write("AggregatedDeuterons");
       
       // ... and write the ROOT file to disk
       ParallelFile->Write();
@@ -2313,9 +2281,6 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
 
     VectorWrite->Close();
   
-    // Aggregated the total deuterons from all nodes to the master
-    DeuteronsInTotal = AAParallel::GetInstance()->SumDoublesToMaster(DeuteronsInTotal);
-
     if(IsMaster){
     
       if(ParallelVerbose)
@@ -2378,10 +2343,6 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
       MasterPSDTotalVec.Write("MasterPSDTotalVec");
       MasterPSDTailVec.Write("MasterPSDTailVec");
       
-      TVectorD AggregatedDeuterons(1);
-      AggregatedDeuterons[0] = DeuteronsInTotal;
-      AggregatedDeuterons.Write("AggregatedDeuterons");
-
       ParallelFile->Write();
     }
 #endif
@@ -2655,113 +2616,6 @@ TGraph *AAComputation::CalculateSpectrumDerivative()
 }
 
 
-// Method to integrate the Pearson waveform (which measures the RFQ
-// beam current) in order to calculate the number of deuterons
-// delivered during a single waveform. The deuterons/waveform are
-// aggregated into a class member that stores total deuterons for all
-// waveforms processed.
-void AAComputation::IntegratePearsonWaveform(int Waveform)
-{
-  /*
-
-    AAComputation::IntegrationPearsonWaveform() is an ancient legacy
-    method from the days of the AIMS experiment. It is essentially
-    depracated at this point now that the ADAQ framework has matured
-    and broadened to support generic data analysis. This should
-    probably be removed, but it remains here for sentimental
-    reasons. Ah, the good old days.... ZSH (08 Oct 15).
-
-  // The total deutorons delivered for all waveforms in the presently
-  // loaed ADAQ-formatted ROOT file may be stored in the ROOT file
-  // itself if that ROOT file was created during parallel processing.
-  // If this is the case then return from this function since we
-  // already have the number of primary interest.
-  if(ADAQParResultsLoaded)
-    return;
-
-  // Get the V1720/data channel containing the output of the Pearson
-  int Channel = ADAQSettings->PearsonChannel;
-  
-  // Compute the baseline subtracted Pearson waveform
-  CalculateBSWaveform(Channel, Waveform, true);
-  
-  // There are two integration options for the Pearson waveform:
-  // simply integrating the waveform from a lower limit to an upper
-  // limit (in sample time), "raw integration"; fitting two 1st order
-  // functions to the current trace and integrating (and summing)
-  // their area, "fit integration". The firsbt option is the most CPU
-  // efficient but requires a very clean RFQ current traces: the
-  // second options is more CPU expensive but necessary for very noise
-  // Pearson waveforms;
-  
-  if(ADAQSettings->IntegrateRawPearson){
-    
-    // Integrate the current waveform between the lower/upper limits. 
-    double PearsonIntegralValue = Waveform_H[Channel]->Integral(Waveform_H[Channel]->FindBin(ADAQSettings->PearsonLowerLimit),
-								Waveform_H[Channel]->FindBin(ADAQSettings->PearsonUpperLimit));
-    
-    // Compute the total number of deuterons in this waveform by
-    // converting the result of the integral from units of V / ADC
-    // with the appropriate factors.
-    DeuteronsInWaveform = PearsonIntegralValue * adc2volts_V1720 * sample2seconds_V1720;
-    DeuteronsInWaveform *= (volts2amps_Pearson / amplification_Pearson / electron_charge);
-    
-    if(DeuteronsInWaveform > 0)
-      DeuteronsInTotal += DeuteronsInWaveform;
-    
-    if(Verbose)
-      cout << "Total number of deuterons: " << "\t" << DeuteronsInTotal << endl;
-    
-    PearsonRawIntegration_H = (TH1F *)Waveform_H[Channel]->Clone("PearsonRawIntegration_H");
-  }
-  else if(ADAQSettings->IntegrateFitToPearson){
-    // Create a TF1 object for the initial rise region of the current
-    // trace; place the result into a TH1F for potential plotting
-    TF1 *RiseFit = new TF1("RiseFit", "pol1", 
-			   ADAQSettings->PearsonLowerLimit, 
-			   ADAQSettings->PearsonMiddleLimit);
-    Waveform_H[Channel]->Fit("RiseFit","R N Q C");
-    PearsonRiseFit_H = (TH1F *)RiseFit->GetHistogram()->Clone("PearsonRiseFit_H");
-    
-    // Create a TF1 object for long "flat top" region of the current
-    // trace a TH1F for potential plotting
-    TF1 *PlateauFit = new TF1("PlateauFit", "pol1", 
-			      ADAQSettings->PearsonMiddleLimit, 
-			      ADAQSettings->PearsonUpperLimit);
-    Waveform_H[Channel]->Fit("PlateauFit","R N Q C");
-    PearsonPlateauFit_H = (TH1F *)PlateauFit->GetHistogram()->Clone("PearsonPlateauFit_H");
-    
-    // Compute the integrals. Note the "width" argument is passed to
-    // the integration to specify that the histogram results should be
-    // multiplied by the bin width.
-    double PearsonIntegralValue = PearsonRiseFit_H->Integral(PearsonRiseFit_H->FindBin(ADAQSettings->PearsonLowerLimit), 
-							     PearsonRiseFit_H->FindBin(ADAQSettings->PearsonUpperLimit),
-							     "width");
-    
-    PearsonIntegralValue += PearsonPlateauFit_H->Integral(PearsonPlateauFit_H->FindBin(ADAQSettings->PearsonMiddleLimit),
-							  PearsonPlateauFit_H->FindBin(ADAQSettings->PearsonUpperLimit),
-							  "width");
-    
-    // Compute the total number of deuterons in this waveform by
-    // converting the result of the integrals from units of V / ADC
-    // with the appropriate factors.
-    DeuteronsInWaveform = PearsonIntegralValue * adc2volts_V1720 * sample2seconds_V1720;
-    DeuteronsInWaveform *= (volts2amps_Pearson / amplification_Pearson / electron_charge);
-    
-    if(DeuteronsInWaveform > 0)
-      DeuteronsInTotal += DeuteronsInWaveform;
-    
-    if(Verbose)
-      cout << "Total number of deuterons: " << "\t" << DeuteronsInTotal << endl;
-    
-    // Delete the TF1 objects to prevent bleeding memory
-    delete RiseFit;
-    delete PlateauFit;
-  }
-  */
-}
-
-
 void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
 {
   /////////////////////////////////////
@@ -2850,12 +2704,6 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
       SpectrumPAVec[Channel].clear();
       for(int i=0; i<MasterPAVec->GetNoElements(); i++)
 	SpectrumPAVec[Channel].push_back( (*MasterPAVec)[i]);
-      
-      // Obtain the total number of deuterons integrated during
-      // histogram creation and update the ROOT widget
-
-      TVectorD *AggregatedDeuterons = (TVectorD *)ParallelFile->Get("AggregatedDeuterons");
-      DeuteronsInTotal = (*AggregatedDeuterons)[0];
     }
     
     
@@ -2888,11 +2736,6 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
       PSDHistogramTailVec[PSDChannel].clear();
       for(int i=0; i<MasterPSDTailVec->GetNoElements(); i++)
 	PSDHistogramTailVec[PSDChannel].push_back( (*MasterPSDTailVec)[i]);
-
-
-      
-      TVectorD *AggregatedDeuterons = (TVectorD *)ParallelFile->Get("AggregatedDeuterons");
-      DeuteronsInTotal = (*AggregatedDeuterons)[0];
     }
   }
   else
@@ -3196,10 +3039,6 @@ void AAComputation::CreateDesplicedFile()
   if(PeakFinder) delete PeakFinder;
   PeakFinder = new TSpectrum(ADAQSettings->MaxPeaks);
   
-  // Variable to aggregate the integrated RFQ current. Presently this
-  // feature is NOT implemented. 
-  DeuteronsInTotal = 0.;
-  
   ////////////////////////////////////
   // Assign waveform processing ranges
   
@@ -3362,14 +3201,6 @@ void AAComputation::CreateDesplicedFile()
     else if(ADAQSettings->ZSWaveform)
       CalculateZSWaveform(Channel, waveform);
     
-    // If specified by the user then calculate the RFQ current
-    // integral for each waveform and aggregate the total (into the
-    // 'DeuteronsInTotal' class data member) for persistent storage in the
-    // despliced TFile. The 'false' argument specifies not to plot
-    // integration results on the canvas.
-    if(ADAQSettings->IntegratePearson)
-      IntegratePearsonWaveform(false);
-
 
     ///////////////////////////
     // Find peaks and peak data
@@ -3470,11 +3301,6 @@ void AAComputation::CreateDesplicedFile()
   ///////////////////////////////////////////////////////
   // Finish processing and creation of the despliced file
 
-  // Store the values calculated in parallel into the class for
-  // persistent storage in the despliced ROOT file
-  
-  PR->DeuteronsInTotal = DeuteronsInTotal;
-  
   // Now that we are finished processing waveforms from the original
   // ADAQ ROOT file we want to switch the current TFile (or
   // "directory") to the despliced TFile such that we can store the
@@ -3504,10 +3330,6 @@ void AAComputation::CreateDesplicedFile()
 
   /////////////////////////////////////////////////
   // Aggregrate parallel TFiles into a single TFile
-
-  // Aggregate the total integrated RFQ current (if enabled) on each
-  // of the parallal nodes to a single double value on the master
-  double AggregatedCurrent = AAParallel::GetInstance()->SumDoublesToMaster(DeuteronsInTotal);
 
   // Ensure all nodes are at the same point before aggregating files
   MPI::COMM_WORLD.Barrier();
@@ -3541,10 +3363,6 @@ void AAComputation::CreateDesplicedFile()
     // values set by the user in the despliced widgets.
     WaveformTreeChain->Merge(ADAQSettings->DesplicedFileName.c_str());
     
-    // Store the aggregated RFQ current value on the master into the
-    // persistent parallel results class for writing to the ROOT file
-    PR->DeuteronsInTotal = AggregatedCurrent;
-
     // Open the final despliced TFile, write the measurement
     // parameters and comment objects to it, and close the TFile.
     TFile *F_Final = new TFile(ADAQSettings->DesplicedFileName.c_str(), "update");
@@ -3561,77 +3379,6 @@ void AAComputation::CreateDesplicedFile()
   }
 #endif
 }
-
-
-// Method to compute the instantaneous (within the RFQ deuteron pulse)
-// and time-averaged (in real time) detector count rate. Note that the
-// count rate can only be calculated using sequential
-// architecture. Because only a few thousand waveforms needs to be
-// processed to compute the count rates, it is not presently foreseen
-// that this feature will be implemented in parallel. Note also that
-// count rates can only be calculated for RFQ triggered acquisition
-// windows with a known pulse width and rep. rate.
-void AAComputation::CalculateCountRate()
-{
-  // If the TSPectrum PeakFinder object exists then delete it and
-  // recreate it to account for changes to the MaxPeaks variable
-  if(PeakFinder) delete PeakFinder;
-  PeakFinder = new TSpectrum(ADAQSettings->MaxPeaks);
-  
-  // Reset the total number of identified peaks to zero
-  TotalPeaks = 0;
-  
-  // Get the number of waveforms to process in the calculation
-  int NumWaveforms = ADAQSettings->RFQCountRateWaveforms;
-
-  int Channel = ADAQSettings->WaveformChannel;
-
-  for(int waveform = 0; waveform<NumWaveforms; waveform++){
-    // Process in a separate thread to allow the user to retain
-    // control of the ROOT widgets
-    gSystem->ProcessEvents();
-
-    // Get a waveform
-    ADAQWaveformTree->GetEntry(waveform);
-
-    // Get the raw waveform voltage
-    RawVoltage = *Waveforms[Channel];
-
-    // Calculate either a baseline subtracted waveform or a zero
-    // suppression waveform
-    if(ADAQSettings->RawWaveform or ADAQSettings->BSWaveform)
-      CalculateBSWaveform(Channel, waveform);
-    else if(ADAQSettings->ZSWaveform)
-      CalculateZSWaveform(Channel, waveform);
-  
-    // Find the peaks in the waveform. Note that this function is
-    // responsible for incrementing the 'TotalPeaks' member data
-    FindPeaks(Waveform_H[Channel], zPeakFinder);
-
-    // Update the waveform processing progress bar
-    if((waveform+1) % int(WaveformEnd*ADAQSettings->UpdateFreq*1.0/100) == 0)
-      UpdateProcessingProgress(waveform);
-  }
-  
-  // At this point, the 'TotalPeaks' variable contains the total
-  // number of identified peaks after processing the number of
-  // waveforms specified by the 'NumWaveforms' variable
-
-  // Compute the time (in seconds) that the RFQ beam was 'on'
-  // double TotalTime = ADAQSettings->RFQPulseWidth * us2s * NumWaveforms;
-
-  // Compute the instantaneous count rate, i.e. the detector count
-  // rate only when the RFQ beam is on
-  // double InstCountRate = TotalPeaks * 1.0 / TotalTime;
-  // InstCountRate_NEFL->GetEntry()->SetNumber(InstCountRate);
-  
-  // Compute the average count rate, i.e. the detector count rate in
-  // real time, which requires a knowledge of the RFQ rep rate.
-  // double AvgCountRate = InstCountRate * (ADAQSettings->RFQPulseWidth * us2s * ADAQSettings->RFQRepRate);
-  //  AvgCountRate_NEFL->GetEntry()->SetNumber(AvgCountRate);
-}
-
-
 
 
 // Method used to find peaks in a pulse / energy spectrum

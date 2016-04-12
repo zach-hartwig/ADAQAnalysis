@@ -122,7 +122,6 @@ public:
   // Methods to enable/disable widgets after different actions
   void SetPeakFindingWidgetState(bool, EButtonState);
   void SetPSDWidgetState(bool, EButtonState);
-  void SetPearsonWidgetState(bool, EButtonState);
   void SetCalibrationWidgetState(bool, EButtonState);
   void SetEAGammaWidgetState(bool, EButtonState);
   void SetEANeutronWidgetState(bool, EButtonState);
@@ -383,28 +382,12 @@ private:
   ADAQNumberEntryWithLabel *NumProcessors_NEL;
   ADAQNumberEntryWithLabel *UpdateFreq_NEL;
 
-
-  TGCheckButton *IntegratePearson_CB;
-  ADAQComboBoxWithLabel *PearsonChannel_CBL;
-  TGRadioButton *PearsonPolarityPositive_RB, *PearsonPolarityNegative_RB;
-  TGCheckButton *PlotPearsonIntegration_CB;
-  TGRadioButton *IntegrateRawPearson_RB, *IntegrateFitToPearson_RB;
-  ADAQNumberEntryWithLabel *PearsonLowerLimit_NEL, *PearsonMiddleLimit_NEL, *PearsonUpperLimit_NEL;
-  ADAQNumberEntryFieldWithLabel *DeuteronsInWaveform_NEFL;
-  ADAQNumberEntryFieldWithLabel *DeuteronsInTotal_NEFL;
-
   TGTextButton *DesplicedFileSelection_TB;
   TGTextEntry *DesplicedFileName_TE;
   ADAQNumberEntryWithLabel *DesplicedWaveformBuffer_NEL;
   ADAQNumberEntryWithLabel *DesplicedWaveformNumber_NEL;
   ADAQNumberEntryWithLabel *DesplicedWaveformLength_NEL;
   TGTextButton *DesplicedFileCreation_TB;
-
-  ADAQNumberEntryWithLabel *RFQPulseWidth_NEL;
-  ADAQNumberEntryWithLabel *RFQRepRate_NEL;
-  ADAQNumberEntryWithLabel *CountRateWaveforms_NEL;
-  TGTextButton *CalculateCountRate_TB;
-  ADAQNumberEntryFieldWithLabel *InstCountRate_NEFL, *AvgCountRate_NEFL;
 
 
   ///////////////////////////////////////////

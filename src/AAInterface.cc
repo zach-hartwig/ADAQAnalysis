@@ -2122,7 +2122,7 @@ void AAInterface::FillProcessingFrame()
   // Waveform processing options
   
   TGGroupFrame *ProcessingOptions_GF = new TGGroupFrame(ProcessingFrame_VF, "Waveform processing options", kVerticalFrame);
-  ProcessingFrame_VF->AddFrame(ProcessingOptions_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
+  ProcessingFrame_VF->AddFrame(ProcessingOptions_GF, new TGLayoutHints(kLHintsLeft, 5,5,5,5));
 
   TGHorizontalFrame *Architecture_HF = new TGHorizontalFrame(ProcessingOptions_GF);
   ProcessingOptions_GF->AddFrame(Architecture_HF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
@@ -2151,118 +2151,11 @@ void AAInterface::FillProcessingFrame()
   UpdateFreq_NEL->GetEntry()->SetLimitValues(1,100);
   UpdateFreq_NEL->GetEntry()->SetNumber(2);
 
-  
-
-
-  TGGroupFrame *PearsonAnalysis_GF = new TGGroupFrame(ProcessingFrame_VF, "Pearson (RFQ current) integration", kVerticalFrame);
-
-  //////////////////////
-  //
-  // The GUI widgets / methods contained in the PearsonAnalysis_GF are
-  // AIMS-specific analysis widgets and functions that are NOT in
-  // keeping with the generalized direction of the ADAQ tools. I am
-  // hesitant to remove them completely since they may be critical to
-  // future AIMS-specific DAQ. Commenting out the following line
-  // prevents the widgets from showing up, making this functionality
-  // 'invisible' to the normal user. Future of this functionality
-  // TBD. ZSH (25 Jan 15)
-  //
-  //  ProcessingFrame_VF->AddFrame(PearsonAnalysis_GF, new TGLayoutHints(kLHintsCenterX, 15,5,0,0));
-  //
-  //////////////////////
-  
-  PearsonAnalysis_GF->AddFrame(IntegratePearson_CB = new TGCheckButton(PearsonAnalysis_GF, "Integrate signal", IntegratePearson_CB_ID),
-			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  IntegratePearson_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
-  
-  PearsonAnalysis_GF->AddFrame(PearsonChannel_CBL = new ADAQComboBoxWithLabel(PearsonAnalysis_GF, "Contains signal", -1),
-			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  stringstream ss;
-  string entry;
-  for(int ch=0; ch<NumDataChannels; ch++){
-    ss << ch;
-    entry.assign("Channel " + ss.str());
-    PearsonChannel_CBL->GetComboBox()->AddEntry(entry.c_str(),ch);
-    ss.str("");
-  }
-  PearsonChannel_CBL->GetComboBox()->Select(3);
-  PearsonChannel_CBL->GetComboBox()->SetEnabled(false);
-
-  TGHorizontalFrame *PearsonPolarity_HF = new TGHorizontalFrame(PearsonAnalysis_GF);
-  PearsonAnalysis_GF->AddFrame(PearsonPolarity_HF, new TGLayoutHints(kLHintsNormal));
-
-  PearsonPolarity_HF->AddFrame(PearsonPolarityPositive_RB = new TGRadioButton(PearsonPolarity_HF, "Positive", PearsonPolarityPositive_RB_ID),
-			       new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PearsonPolarityPositive_RB->SetState(kButtonDown);
-  PearsonPolarityPositive_RB->SetState(kButtonDisabled);
-  PearsonPolarityPositive_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-
-  PearsonPolarity_HF->AddFrame(PearsonPolarityNegative_RB = new TGRadioButton(PearsonPolarity_HF, "Negative", PearsonPolarityNegative_RB_ID),
-			       new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PearsonPolarityNegative_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-
-  TGHorizontalFrame *PearsonIntegrationType_HF = new TGHorizontalFrame(PearsonAnalysis_GF);
-  PearsonAnalysis_GF->AddFrame(PearsonIntegrationType_HF, new TGLayoutHints(kLHintsNormal));
-
-  PearsonIntegrationType_HF->AddFrame(IntegrateRawPearson_RB = new TGRadioButton(PearsonIntegrationType_HF, "Integrate raw", IntegrateRawPearson_RB_ID),
-				      new TGLayoutHints(kLHintsLeft, 0,5,5,0));
-  IntegrateRawPearson_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-  IntegrateRawPearson_RB->SetState(kButtonDown);
-  IntegrateRawPearson_RB->SetState(kButtonDisabled);
-
-  PearsonIntegrationType_HF->AddFrame(IntegrateFitToPearson_RB = new TGRadioButton(PearsonIntegrationType_HF, "Integrate fit", IntegrateFitToPearson_RB_ID),
-				      new TGLayoutHints(kLHintsLeft, 10,5,5,0));
-  IntegrateFitToPearson_RB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleRadioButtons()");
-  IntegrateFitToPearson_RB->SetState(kButtonDisabled);
-  
-  PearsonAnalysis_GF->AddFrame(PearsonLowerLimit_NEL = new ADAQNumberEntryWithLabel(PearsonAnalysis_GF, "Lower limit (sample)", PearsonLowerLimit_NEL_ID),
-			       new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PearsonLowerLimit_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PearsonLowerLimit_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
-  PearsonLowerLimit_NEL->GetEntry()->SetLimitValues(0,1); // Updated when ADAQ ROOT file loaded
-  PearsonLowerLimit_NEL->GetEntry()->SetNumber(0); // Updated when ADAQ ROOT file loaded
-  PearsonLowerLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
-  PearsonLowerLimit_NEL->GetEntry()->SetState(false);
-  
-  PearsonAnalysis_GF->AddFrame(PearsonMiddleLimit_NEL = new ADAQNumberEntryWithLabel(PearsonAnalysis_GF, "Middle limit (sample)", PearsonMiddleLimit_NEL_ID),
-			       new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PearsonMiddleLimit_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PearsonMiddleLimit_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
-  PearsonMiddleLimit_NEL->GetEntry()->SetLimitValues(0,1); // Updated when ADAQ ROOT file loaded
-  PearsonMiddleLimit_NEL->GetEntry()->SetNumber(0); // Updated when ADAQ ROOT file loaded
-  PearsonMiddleLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
-  PearsonMiddleLimit_NEL->GetEntry()->SetState(false);
-  
-  PearsonAnalysis_GF->AddFrame(PearsonUpperLimit_NEL = new ADAQNumberEntryWithLabel(PearsonAnalysis_GF, "Upper limit (sample))", PearsonUpperLimit_NEL_ID),
-			       new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  PearsonUpperLimit_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PearsonUpperLimit_NEL->GetEntry()->SetNumLimits(TGNumberFormat::kNELLimitMinMax);
-  PearsonUpperLimit_NEL->GetEntry()->SetLimitValues(0,1); // Updated when ADAQ ROOT file loaded
-  PearsonUpperLimit_NEL->GetEntry()->SetNumber(0); // Updated when ADAQ ROOT file loaded
-  PearsonUpperLimit_NEL->GetEntry()->Connect("ValueSet(long)", "AAProcessingSlots", ProcessingSlots, "HandleNumberEntries()");
-  PearsonUpperLimit_NEL->GetEntry()->SetState(false);
-  
-  PearsonAnalysis_GF->AddFrame(PlotPearsonIntegration_CB = new TGCheckButton(PearsonAnalysis_GF, "Plot integration", PlotPearsonIntegration_CB_ID),
-			       new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PlotPearsonIntegration_CB->SetState(kButtonDisabled);
-  PlotPearsonIntegration_CB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleCheckButtons()");
-
-  PearsonAnalysis_GF->AddFrame(DeuteronsInWaveform_NEFL = new ADAQNumberEntryFieldWithLabel(PearsonAnalysis_GF, "D+ in waveform", -1),
-			       new TGLayoutHints(kLHintsNormal, 0,5,0,0));
-  DeuteronsInWaveform_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal, TGNumberFormat::kNEANonNegative);
-  DeuteronsInWaveform_NEFL->GetEntry()->Resize(100,20);
-  DeuteronsInWaveform_NEFL->GetEntry()->SetState(false);
-  
-  PearsonAnalysis_GF->AddFrame(DeuteronsInTotal_NEFL = new ADAQNumberEntryFieldWithLabel(PearsonAnalysis_GF, "D+ in total", -1),
-			       new TGLayoutHints(kLHintsNormal, 0,5,0,5));
-  DeuteronsInTotal_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESReal, TGNumberFormat::kNEANonNegative);
-  DeuteronsInTotal_NEFL->GetEntry()->Resize(100,20);
-  DeuteronsInTotal_NEFL->GetEntry()->SetState(false);
 
   // Despliced file creation options
   
   TGGroupFrame *WaveformDesplicer_GF = new TGGroupFrame(ProcessingFrame_VF, "Despliced file creation", kVerticalFrame);
-  ProcessingFrame_VF->AddFrame(WaveformDesplicer_GF, new TGLayoutHints(kLHintsCenterX, 5,5,5,5));
+  ProcessingFrame_VF->AddFrame(WaveformDesplicer_GF, new TGLayoutHints(kLHintsLeft, 5,5,5,5));
   
   WaveformDesplicer_GF->AddFrame(DesplicedWaveformNumber_NEL = new ADAQNumberEntryWithLabel(WaveformDesplicer_GF, "Number (Waveforms)", -1),
 				 new TGLayoutHints(kLHintsLeft, 0,5,5,0));
@@ -2307,71 +2200,6 @@ void AAInterface::FillProcessingFrame()
   DesplicedFileCreation_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
   DesplicedFileCreation_TB->ChangeOptions(DesplicedFileCreation_TB->GetOptions() | kFixedSize);
   DesplicedFileCreation_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
-
-
-  // Count rate
-
-  TGGroupFrame *CountRate_GF = new TGGroupFrame(ProcessingFrame_VF, "Count rate", kVerticalFrame);
-
-  //////////////////////
-  //
-  // The GUI widgets / methods contained in the CountRate_GF are
-  // AIMS-specific analysis widgets and functions that are NOT in
-  // keeping with the generalized direction of the ADAQ tools. I am
-  // hesitant to remove them completely since they may be critical to
-  // future AIMS-specific DAQ. Commenting out the following line
-  // prevents the widgets from showing up, making this functionality
-  // 'invisible' to the normal user. Future of this functionality
-  // TBD. ZSH (25 Jan 15)
-  //
-  // ProcessingFrame_VF->AddFrame(CountRate_GF, new TGLayoutHints(kLHintsNormal, 15,5,5,5));
-  //
-  //////////////////////
-
-  CountRate_GF->AddFrame(RFQPulseWidth_NEL = new ADAQNumberEntryWithLabel(CountRate_GF, "RFQ pulse width [us]", -1),
-			 new TGLayoutHints(kLHintsNormal, 5,5,5,0));
-  RFQPulseWidth_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
-  RFQPulseWidth_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  RFQPulseWidth_NEL->GetEntry()->SetNumber(50);
-  RFQPulseWidth_NEL->GetEntry()->Resize(70,20);
-
-  CountRate_GF->AddFrame(RFQRepRate_NEL = new ADAQNumberEntryWithLabel(CountRate_GF, "RFQ rep. rate [Hz]", -1),
-			 new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  RFQRepRate_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  RFQRepRate_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  RFQRepRate_NEL->GetEntry()->SetNumber(30);
-  RFQRepRate_NEL->GetEntry()->Resize(70,20);
-
-  CountRate_GF->AddFrame(CountRateWaveforms_NEL = new ADAQNumberEntryWithLabel(CountRate_GF, "Waveforms to use", -1),
-                         new TGLayoutHints(kLHintsNormal, 5,5,0,0));
-  CountRateWaveforms_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  CountRateWaveforms_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  CountRateWaveforms_NEL->GetEntry()->SetNumber(1000);
-  CountRateWaveforms_NEL->GetEntry()->Resize(70,20);
-
-  CountRate_GF->AddFrame(CalculateCountRate_TB = new TGTextButton(CountRate_GF, "Calculate count rate", CountRate_TB_ID),
-                         new TGLayoutHints(kLHintsNormal, 20,5,5,15));
-  CalculateCountRate_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
-  CalculateCountRate_TB->SetForegroundColor(ColorMgr->Number2Pixel(0));
-  CalculateCountRate_TB->Resize(200,30);
-  CalculateCountRate_TB->ChangeOptions(CalculateCountRate_TB->GetOptions() | kFixedSize);
-  CalculateCountRate_TB->Connect("Clicked()", "AAProcessingSlots", ProcessingSlots, "HandleTextButtons()");
-
-  CountRate_GF->AddFrame(InstCountRate_NEFL = new ADAQNumberEntryFieldWithLabel(CountRate_GF, "Inst. count rate [1/s]", -1),
-                         new TGLayoutHints(kLHintsNormal, 5,5,5,0));
-  InstCountRate_NEFL->GetEntry()->Resize(100,20);
-  InstCountRate_NEFL->GetEntry()->SetState(kButtonDisabled);
-  InstCountRate_NEFL->GetEntry()->SetAlignment(kTextCenterX);
-  InstCountRate_NEFL->GetEntry()->SetBackgroundColor(ColorMgr->Number2Pixel(19));
-  InstCountRate_NEFL->GetEntry()->ChangeOptions(InstCountRate_NEFL->GetEntry()->GetOptions() | kFixedSize);
-
-  CountRate_GF->AddFrame(AvgCountRate_NEFL = new ADAQNumberEntryFieldWithLabel(CountRate_GF, "Avg. count rate [1/s]", -1),
-                         new TGLayoutHints(kLHintsNormal, 5,5,0,5));
-  AvgCountRate_NEFL->GetEntry()->Resize(100,20);
-  AvgCountRate_NEFL->GetEntry()->SetState(kButtonDisabled);
-  AvgCountRate_NEFL->GetEntry()->SetAlignment(kTextCenterX);
-  AvgCountRate_NEFL->GetEntry()->SetBackgroundColor(ColorMgr->Number2Pixel(19));
-  AvgCountRate_NEFL->GetEntry()->ChangeOptions(AvgCountRate_NEFL->GetEntry()->GetOptions() | kFixedSize);
 }
 
 
@@ -2728,28 +2556,6 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->NumProcessors = NumProcessors_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->UpdateFreq = UpdateFreq_NEL->GetEntry()->GetIntNumber();
 
-
-  ADAQSettings->IntegratePearson = IntegratePearson_CB->IsDown();
-  ADAQSettings->PearsonChannel = PearsonChannel_CBL->GetComboBox()->GetSelected();  
-
-  if(PearsonPolarityPositive_RB->IsDown())
-    ADAQSettings->PearsonPolarity = 1.0;
-  else
-    ADAQSettings->PearsonPolarity = -1.0;
-  
-  ADAQSettings->IntegrateRawPearson = IntegrateRawPearson_RB->IsDown();
-  ADAQSettings->IntegrateFitToPearson = IntegrateFitToPearson_RB->IsDown();
-
-  ADAQSettings->PearsonLowerLimit = PearsonLowerLimit_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PearsonMiddleLimit = PearsonMiddleLimit_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PearsonUpperLimit = PearsonUpperLimit_NEL->GetEntry()->GetIntNumber();
-
-  ADAQSettings->PlotPearsonIntegration = PlotPearsonIntegration_CB->IsDown();  
-
-  ADAQSettings->RFQPulseWidth = RFQPulseWidth_NEL->GetEntry()->GetNumber();
-  ADAQSettings->RFQRepRate = RFQRepRate_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->RFQCountRateWaveforms = CountRateWaveforms_NEL->GetEntry()->GetIntNumber();
-
   ADAQSettings->WaveformsToDesplice = DesplicedWaveformNumber_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->DesplicedWaveformBuffer = DesplicedWaveformBuffer_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->DesplicedWaveformLength = DesplicedWaveformLength_NEL->GetEntry()->GetIntNumber();
@@ -2935,22 +2741,11 @@ void AAInterface::UpdateForADAQFile()
   BaselineRegionMin_NEL->GetEntry()->SetNumber(BaselineRegionMin);
   BaselineRegionMax_NEL->GetEntry()->SetNumber(BaselineRegionMax);
 
-  PearsonLowerLimit_NEL->GetEntry()->SetLimitValues(0, RecordLength-1);
-  PearsonLowerLimit_NEL->GetEntry()->SetNumber(0);
-
-  PearsonMiddleLimit_NEL->GetEntry()->SetLimitValues(1, RecordLength-1);
-  PearsonMiddleLimit_NEL->GetEntry()->SetNumber(RecordLength/2);
-
-  PearsonUpperLimit_NEL->GetEntry()->SetLimitValues(1, RecordLength);
-  PearsonUpperLimit_NEL->GetEntry()->SetNumber(RecordLength);
-  
   DesplicedWaveformNumber_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
   DesplicedWaveformNumber_NEL->GetEntry()->SetNumber(WaveformsInFile);
   
   PSDWaveforms_NEL->GetEntry()->SetLimitValues(1, WaveformsInFile);
   PSDWaveforms_NEL->GetEntry()->SetNumber(WaveformsInFile);
-
-  IntegratePearson_CB->SetState(kButtonUp);
 
   // Resetting radio buttons must account for enabling/disabling
   
@@ -3089,8 +2884,6 @@ void AAInterface::UpdateForASIMFile()
   ProcessSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(36));
   CreateSpectrum_TB->SetState(kButtonUp);
   
-  SetPearsonWidgetState(false, kButtonDisabled);
-
   // Processing frame
   NumProcessors_NEL->GetEntry()->SetState(false);      
   UpdateFreq_NEL->GetEntry()->SetState(false);
@@ -3139,12 +2932,6 @@ void AAInterface::UpdateForSpectrumCreation()
   // Alert the user that waveforms have been processed by updating
   // the ProcessSpectrum_TB button color
   ProcessSpectrum_TB->SetBackgroundColor(ColorMgr->Number2Pixel(32));
-  
-  // Legacy code and depracated. Should be removed! ZSH (28 Apr 15)
-  if(IntegratePearson_CB->IsDown()){
-    double DeuteronsInTotal = ComputationMgr->GetDeuteronsInTotal();
-    DeuteronsInTotal_NEFL->GetEntry()->SetNumber(DeuteronsInTotal);
-  }
 }
 
 
@@ -3181,21 +2968,6 @@ void AAInterface::SetPSDWidgetState(bool WidgetState, EButtonState ButtonState)
   PSDCreateRegion_TB->SetState(ButtonState);
   PSDClearRegion_TB->SetState(ButtonState);
   */
-}
-
-
-void AAInterface::SetPearsonWidgetState(bool WidgetState, EButtonState ButtonState)
-{
-  PlotPearsonIntegration_CB->SetState(ButtonState);
-  PearsonChannel_CBL->GetComboBox()->SetEnabled(WidgetState);
-  PearsonPolarityPositive_RB->SetState(ButtonState);
-  PearsonPolarityNegative_RB->SetState(ButtonState);
-  IntegrateRawPearson_RB->SetState(ButtonState);
-  IntegrateFitToPearson_RB->SetState(ButtonState);
-  PearsonLowerLimit_NEL->GetEntry()->SetState(WidgetState);
-  if(WidgetState==true and IntegrateFitToPearson_RB->IsDown())
-    PearsonMiddleLimit_NEL->GetEntry()->SetState(WidgetState);
-  PearsonUpperLimit_NEL->GetEntry()->SetState(WidgetState);
 }
 
 
