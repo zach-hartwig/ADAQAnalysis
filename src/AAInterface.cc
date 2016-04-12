@@ -1667,7 +1667,7 @@ void AAInterface::FillPSDFrame()
 		       new TGLayoutHints(kLHintsLeft, 0,0,5,0));
   PSDLowerFOMFitMax_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PSDLowerFOMFitMax_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
-  PSDLowerFOMFitMax_NEL->GetEntry()->SetNumber(0.5);
+  PSDLowerFOMFitMax_NEL->GetEntry()->SetNumber(0.15);
   PSDLowerFOMFitMax_NEL->GetEntry()->Connect("ValueSet(long)", "AAPSDSlots", SpectrumSlots, "HandleNumberEntries()");
   PSDLowerFOMFitMax_NEL->GetEntry()->SetState(false);
 
@@ -1682,7 +1682,7 @@ void AAInterface::FillPSDFrame()
 		       new TGLayoutHints(kLHintsLeft, 0,0,5,0));
   PSDUpperFOMFitMin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PSDUpperFOMFitMin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
-  PSDUpperFOMFitMin_NEL->GetEntry()->SetNumber(0.5);
+  PSDUpperFOMFitMin_NEL->GetEntry()->SetNumber(0.15);
   PSDUpperFOMFitMin_NEL->GetEntry()->Connect("ValueSet(long)", "AAPSDSlots", SpectrumSlots, "HandleNumberEntries()");
   PSDUpperFOMFitMin_NEL->GetEntry()->SetState(false);
   
@@ -1690,10 +1690,9 @@ void AAInterface::FillPSDFrame()
 		       new TGLayoutHints(kLHintsLeft, 0,0,5,0));
   PSDUpperFOMFitMax_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PSDUpperFOMFitMax_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
-  PSDUpperFOMFitMax_NEL->GetEntry()->SetNumber(1.0);
+  PSDUpperFOMFitMax_NEL->GetEntry()->SetNumber(0.35);
   PSDUpperFOMFitMax_NEL->GetEntry()->Connect("ValueSet(long)", "AAPSDSlots", SpectrumSlots, "HandleNumberEntries()");
   PSDUpperFOMFitMax_NEL->GetEntry()->SetState(false);
-
 
   PSDSlicing_GF->AddFrame(new TGLabel(PSDSlicing_GF, "PSD figure of merit"),
 			  new TGLayoutHints(kLHintsLeft, 15,5,5,0));

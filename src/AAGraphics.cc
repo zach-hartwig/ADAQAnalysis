@@ -800,7 +800,7 @@ void AAGraphics::PlotPSDHistogram()
     PaletteTitle = ADAQSettings->PaletteTitle;
   }
   else{
-    Title = "Pulse Shape Discrimination Integrals";
+    Title = "Pulse shape discrimination histogram";
     
     if(ADAQSettings->PSDXAxisEnergy){
       if(ADAQSettings->EnergyUnit == 0)
@@ -814,7 +814,7 @@ void AAGraphics::PlotPSDHistogram()
     if(ADAQSettings->PSDYAxisTail)
       YTitle = "Waveform tail integral [ADC]";
     else
-      YTitle = "Waveform (tail / total) integrals [ADC]";
+      YTitle = "PSD parameter (tail/total)";
     
     ZTitle = "Number of waveforms";
     PaletteTitle ="";
