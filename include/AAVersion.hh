@@ -31,6 +31,6 @@
 #ifndef __AAVersion_hh__
 #define __AAVersion_hh__ 1
 
-const string VersionString = "1.6.3";
+const string VersionString = "1.8.0";
 
 #endif

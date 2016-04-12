@@ -1,9 +1,27 @@
 # ADAQAnalysis Version Change Log
 
 name: Changelog.md  
-date: 03 Mar 16 (last updated)  
+date: 11 Apr 16 (last updated)  
 auth: Zach Hartwig  
 mail: hartwig@psfc.mit.edu  
+
+## Version 1.8 Series
+
+Major new developments in this series include:
+
+ - New standalone 'PSD' tab with complete reorganization of
+   widgets. This localizes all PSD creation and analysis together and
+   should make finding/using them much easier
+
+ - New ability to automatically calculate the PSD figure-of-merit when
+   slicing PSD histograms
+
+ - A lot of bug fixes and minor updates:
+   - Interface/widget-behavior corrections
+   - Enabled user ability to use/not-use an existing PSD region
+   - New PSD color palettes available
+   - PSD slice plot updates
+   - Depracated code removed in various places; code standardization
 
 
 ## Version 1.6 series
