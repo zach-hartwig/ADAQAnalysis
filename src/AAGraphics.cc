@@ -81,8 +81,8 @@ AAGraphics::AAGraphics()
   TheGraphicsManager = this;
 
   // Initialize the color palette
-  gStyle->SetPalette(55);
-
+  gStyle->SetPalette(kBird);
+  
   // All of the graphical objects for waveform and spectral analysis
   // (TLines, TBoxes, etc) are declared once in order to save memory
   // and prevent memory leaks. Attributes are set here and then actual

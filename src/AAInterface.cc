@@ -1525,20 +1525,24 @@ void AAInterface::FillPSDFrame()
   PSDPlotType_CBL->GetComboBox()->AddEntry("SCAT",9);
   PSDPlotType_CBL->GetComboBox()->AddEntry("TEXT",10);
   PSDPlotType_CBL->GetComboBox()->Select(0);
-  PSDPlotType_CBL->GetComboBox()->Resize(75, 20);
+  PSDPlotType_CBL->GetComboBox()->Resize(80, 20);
   PSDPlotType_CBL->GetComboBox()->Connect("Selected(int,int)", "AAPSDSlots", ProcessingSlots, "HandleComboBoxes(int,int)");
 
   PSDPlotOptions_HF->AddFrame(PSDPlotPalette_CBL = new ADAQComboBoxWithLabel(PSDPlotOptions_HF, "Palette", PSDPlotPalette_CBL_ID),
 			      new TGLayoutHints(kLHintsNormal, LOffset0,5,0,5));
-  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Deep sea", 51);
-  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Radiator",53);
-  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Two hue",54);
-  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Rainbow",55);
-  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Bird", 57);
-  PSDPlotPalette_CBL->GetComboBox()->Select(55);
-  PSDPlotPalette_CBL->GetComboBox()->Resize(75, 20);
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Bird", kBird);
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Rainbow", kRainBow);
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Radiator0", kDarkBodyRadiator);
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Radiator1", kInvertedDarkBodyRadiator);
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("BRY", kBlueRedYellow);
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Avocado", kAvocado);
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("BlueRed", kBlackBody);
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Cool", kCool);
+  PSDPlotPalette_CBL->GetComboBox()->AddEntry("Mint", kMint);
+  PSDPlotPalette_CBL->GetComboBox()->Select(kBird);
+  PSDPlotPalette_CBL->GetComboBox()->Resize(80, 20);
   PSDPlotPalette_CBL->GetComboBox()->Connect("Selected(int,int)", "AAPSDSlots", ProcessingSlots, "HandleComboBoxes(int,int)");
-
+  
 
   /////////////////
   // Create/process 
