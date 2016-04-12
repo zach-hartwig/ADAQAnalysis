@@ -801,11 +801,21 @@ void AAGraphics::PlotPSDHistogram()
   }
   else{
     Title = "Pulse Shape Discrimination Integrals";
-    XTitle = "Waveform total integral [ADC]";
+    
+    if(ADAQSettings->PSDXAxisEnergy){
+      if(ADAQSettings->EnergyUnit == 0)
+	XTitle = "Energy deposited [keVee]";
+      else
+	XTitle = "Energy deposited [MeVee]";
+    }
+    else
+      XTitle = "Waveform total integral [ADC]";
+
     if(ADAQSettings->PSDYAxisTail)
       YTitle = "Waveform tail integral [ADC]";
     else
       YTitle = "Waveform (tail / total) integrals [ADC]";
+    
     ZTitle = "Number of waveforms";
     PaletteTitle ="";
   }
@@ -1272,19 +1282,39 @@ void AAGraphics::PlotPSDHistogramSlice(int XPixel, int YPixel)
 
     double XPosInADC = gPad->AbsPixeltoX(XPixel);
 
-    ss << "PSDHistogram X slice at " << XPosInADC << " ADC";
-
+    ss << "PSDHistogram X slice at " << XPosInADC;
+    if(ADAQSettings->PSDXAxisEnergy){
+      if(ADAQSettings->EnergyUnit == 0)
+	ss << " keVee";
+      else
+	ss << " MeVee";
+    }
+    else
+      ss << " ADC";
+    
     Title = ss.str();
-    XTitle = "PSD Tail Integral [ADC]";
+
+    if(ADAQSettings->PSDYAxisTail)
+      XTitle = "PSD tail integral [ADC]";
+    else
+      XTitle = "PSD parameter (tail/total)";
   }
   else if(ADAQSettings->PSDYSlice){
     double YPosInADC = gPad->AbsPixeltoY(YPixel);
-
+    
     ss << "PSDHistogram Y slice at " << YPosInADC << " ADC";
     Title = ss.str();
-    XTitle = "PSD Total Integral [ADC]";
+    
+    if(ADAQSettings->PSDXAxisEnergy){
+      if(ADAQSettings->EnergyUnit == 0)
+	XTitle = "PSD total integral [keVee]";
+      else
+	XTitle = "PSD total integral [MeVee]";
+    }
+    else
+      XTitle = "PSD total integral [ADC]";
   }
-
+  
   /////////////////////////////////
   // Set slice histogram attributes
 
@@ -1293,6 +1323,8 @@ void AAGraphics::PlotPSDHistogramSlice(int XPixel, int YPixel)
     
   PSDHistogramSlice_H->SetName(SliceHistogramName.c_str());
   PSDHistogramSlice_H->SetTitle(Title.c_str());
+
+  PSDHistogramSlice_H->SetStats(false);
 
   PSDHistogramSlice_H->GetXaxis()->SetTitle(XTitle.c_str());
   PSDHistogramSlice_H->GetXaxis()->SetTitleSize(0.06);

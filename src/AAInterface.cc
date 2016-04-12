@@ -1340,9 +1340,9 @@ void AAInterface::FillPSDFrame()
 											"Threshold (ADC)",
 											-1),
 					new TGLayoutHints(kLHintsNormal, 0,5,5,0));
-  PSDThreshold_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDThreshold_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDThreshold_NEL->GetEntry()->SetNumber(100);
+  PSDThreshold_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
+  PSDThreshold_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
+  PSDThreshold_NEL->GetEntry()->SetNumber(0);
 
   ////////////////////////
   // PSD histogram binning
@@ -1439,7 +1439,7 @@ void AAInterface::FillPSDFrame()
 			  new TGLayoutHints(kLHintsNormal, LOffset0,10,0,0));
   PSDTotalStart_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDTotalStart_NEL->GetEntry()->SetNumber(-5);
-  PSDTotalStart_NEL->GetEntry()->Resize(45,20);
+  PSDTotalStart_NEL->GetEntry()->Resize(50,20);
   PSDTotalStart_NEL->GetEntry()->Connect("ValueSet(long)", "AAPSDSlots", ProcessingSlots, "HandleNumberEntries()");
     
   PSDTotal_HF->AddFrame(PSDTotalStop_NEL = new ADAQNumberEntryWithLabel(PSDTotal_HF,
@@ -1448,7 +1448,7 @@ void AAInterface::FillPSDFrame()
 			  new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   PSDTotalStop_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDTotalStop_NEL->GetEntry()->SetNumber(40);
-  PSDTotalStop_NEL->GetEntry()->Resize(45,20);
+  PSDTotalStop_NEL->GetEntry()->Resize(50,20);
   PSDTotalStop_NEL->GetEntry()->Connect("ValueSet(long)", "AAPSDSlots", ProcessingSlots, "HandleNumberEntries()");
 
 
@@ -1462,7 +1462,7 @@ void AAInterface::FillPSDFrame()
 			 new TGLayoutHints(kLHintsNormal, LOffset0,10,0,0));
   PSDTailStart_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDTailStart_NEL->GetEntry()->SetNumber(7);
-  PSDTailStart_NEL->GetEntry()->Resize(45,20);
+  PSDTailStart_NEL->GetEntry()->Resize(50,20);
   PSDTailStart_NEL->GetEntry()->Connect("ValueSet(long)", "AAPSDSlots", ProcessingSlots, "HandleNumberEntries()");
     
   DGPSDTail_HF->AddFrame(PSDTailStop_NEL = new ADAQNumberEntryWithLabel(DGPSDTail_HF,
@@ -1471,7 +1471,7 @@ void AAInterface::FillPSDFrame()
 			 new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   PSDTailStop_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDTailStop_NEL->GetEntry()->SetNumber(40);
-  PSDTailStop_NEL->GetEntry()->Resize(45,20);
+  PSDTailStop_NEL->GetEntry()->Resize(50,20);
   PSDTailStop_NEL->GetEntry()->Connect("ValueSet(long)", "AAPSDSlots", ProcessingSlots, "HandleNumberEntries()");
   
   PSDFrame_VF->AddFrame(PSDPlotIntegrationLimits_CB = new TGCheckButton(PSDFrame_VF, "Plot integration limits", PSDPlotIntegrationLimits_CB_ID),
@@ -2619,13 +2619,16 @@ void AAInterface::SaveSettings(bool SaveToFile)
 
   /////////////////////////////////////
   // Values from the "PSD" tabbed frame
-
+  
   ADAQSettings->PSDWaveformsToDiscriminate = PSDWaveforms_NEL->GetEntry()->GetIntNumber();
-  ADAQSettings->PSDThreshold = PSDThreshold_NEL->GetEntry()->GetIntNumber();
+  ADAQSettings->PSDThreshold = PSDThreshold_NEL->GetEntry()->GetNumber();
 
   ADAQSettings->PSDNumTotalBins = PSDNumTotalBins_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->PSDMinTotalBin = PSDMinTotalBin_NEL->GetEntry()->GetNumber();
   ADAQSettings->PSDMaxTotalBin = PSDMaxTotalBin_NEL->GetEntry()->GetNumber();
+
+  ADAQSettings->PSDXAxisADC = PSDXAxisADC_RB->IsDown();
+  ADAQSettings->PSDXAxisEnergy = PSDXAxisEnergy_RB->IsDown();
 
   ADAQSettings->PSDNumTailBins = PSDNumTailBins_NEL->GetEntry()->GetIntNumber();
   ADAQSettings->PSDMinTailBin = PSDMinTailBin_NEL->GetEntry()->GetNumber();

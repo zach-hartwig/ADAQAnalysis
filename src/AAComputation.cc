@@ -2096,6 +2096,15 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
       // the y-axis of the PSD histogram then modify the TailIntegral:
       if(ADAQSettings->PSDYAxisTailTotal)
 	TailIntegral /= TotalIntegral;
+
+      // If the user wants to plot the X-axis (PSD total integral) in
+      // energy [MeVee] then use the spectra calibrations
+      if(ADAQSettings->PSDXAxisEnergy and UseSpectraCalibrations[PSDChannel]){
+	if(SpectraCalibrationType[PSDChannel] == zCalibrationFit)
+	  TotalIntegral = ADAQSettings->SpectraCalibrations[PSDChannel]->Eval(TotalIntegral);
+	else if(SpectraCalibrationType[PSDChannel] == zCalibrationInterp)
+	  TotalIntegral = ADAQSettings->SpectraCalibrationData[PSDChannel]->Eval(TotalIntegral);
+      }
       
       // Determine if waveform exceeds the PSD threshold
       if(TotalIntegral > ADAQSettings->PSDThreshold){
@@ -2417,9 +2426,16 @@ TH2F *AAComputation::CreatePSDHistogram()
     
     Double_t PSDTotal = PSDHistogramTotalVec[PSDChannel][p];
     Double_t PSDParameter = PSDHistogramTailVec[PSDChannel][p];
-    
+
     if(ADAQSettings->PSDYAxisTailTotal)
       PSDParameter /= PSDTotal;
+
+    if(ADAQSettings->PSDXAxisEnergy and UseSpectraCalibrations[PSDChannel]){
+      if(SpectraCalibrationType[PSDChannel] == zCalibrationFit)
+	PSDTotal = ADAQSettings->SpectraCalibrations[PSDChannel]->Eval(PSDTotal);
+      else if(SpectraCalibrationType[PSDChannel] == zCalibrationInterp)
+	PSDTotal = ADAQSettings->SpectraCalibrationData[PSDChannel]->Eval(PSDTotal);
+    }
 
     // If the PSD total integral exceeds the threshold
     if(PSDTotal > ADAQSettings->PSDThreshold){
@@ -2486,11 +2502,21 @@ void AAComputation::CalculatePSDIntegrals(bool FillPSDHistogram)
     // Store the values in the member data vectors
     PSDHistogramTotalVec[PSDChannel].push_back(TotalIntegral);
     PSDHistogramTailVec[PSDChannel].push_back(TailIntegral);
-    
+
+  
     // If the user wants to plot (Tail integral / Total integral) on
     // the y-axis of the PSD histogram then modify the TailIntegral:
     if(ADAQSettings->PSDYAxisTailTotal)
       TailIntegral /= TotalIntegral;
+    
+    // If the user wants to plot the X-axis (PSD total integral) in
+    // energy [MeVee] then use the spectra calibrations
+    if(ADAQSettings->PSDXAxisEnergy and UseSpectraCalibrations[PSDChannel]){
+      if(SpectraCalibrationType[PSDChannel] == zCalibrationFit)
+	TotalIntegral = ADAQSettings->SpectraCalibrations[PSDChannel]->Eval(TotalIntegral);
+      else if(SpectraCalibrationType[PSDChannel] == zCalibrationInterp)
+	TotalIntegral = ADAQSettings->SpectraCalibrationData[PSDChannel]->Eval(TotalIntegral);
+    }
     
     // If the user has enabled a PSD filter ...
     if(UsePSDRegions[ADAQSettings->WaveformChannel])

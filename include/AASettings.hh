@@ -102,9 +102,11 @@ public:
   // PSD frame //
   ///////////////
   
-  Int_t PSDWaveformsToDiscriminate, PSDThreshold;
+  Int_t PSDWaveformsToDiscriminate;
+  Double_t PSDThreshold;
   Int_t PSDNumTotalBins;
   Double_t PSDMinTotalBin, PSDMaxTotalBin;
+  Bool_t PSDXAxisADC, PSDXAxisEnergy;
   Int_t PSDNumTailBins;
   Double_t PSDMinTailBin, PSDMaxTailBin;
   Bool_t PSDYAxisTail, PSDYAxisTailTotal;
