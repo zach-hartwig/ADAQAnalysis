@@ -418,12 +418,15 @@ void AASpectrumSlots::HandleTextButtons()
 
     ////////////////////////////
     // Spectrum calibration plot
-
-  case SpectrumCalibrationPlot_TB_ID:{
     
-    int Channel = TheInterface->ChannelSelector_CBL->GetComboBox()->GetSelected();
-    GraphicsMgr->PlotCalibration(Channel);
+  case SpectrumCalibrationPlot_TB_ID:{
 
+    Int_t Channel = TheInterface->ChannelSelector_CBL->GetComboBox()->GetSelected();
+    if(ComputationMgr->GetUseSpectraCalibrations()[Channel])
+      GraphicsMgr->PlotCalibration(Channel);
+    else
+      TheInterface->CreateMessageBox("There is not existing channel calibration to plot!","Stop");
+    
     break;
   }
 
