@@ -425,7 +425,7 @@ void AASpectrumSlots::HandleTextButtons()
     if(ComputationMgr->GetUseSpectraCalibrations()[Channel])
       GraphicsMgr->PlotCalibration(Channel);
     else
-      TheInterface->CreateMessageBox("There is not existing channel calibration to plot!","Stop");
+      TheInterface->CreateMessageBox("There is no existing channel calibration to plot!","Stop");
     
     break;
   }
