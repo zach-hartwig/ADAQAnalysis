@@ -955,11 +955,11 @@ void AAComputation::ProcessSpectrumWaveforms()
 
       Bool_t PSDReject = false;
       
-      if(UsePSDRegions[ADAQSettings->WaveformChannel]){
+      if(ADAQSettings->UsePSDRegions[Channel]){
 	
 	// Get the stored PSD total and tail integrals
-	Double_t Total = WaveformData[ADAQSettings->WaveformChannel]->GetPSDTotalIntegral();
-	Double_t Tail = WaveformData[ADAQSettings->WaveformChannel]->GetPSDTailIntegral();
+	Double_t Total = WaveformData[Channel]->GetPSDTotalIntegral();
+	Double_t Tail = WaveformData[Channel]->GetPSDTailIntegral();
 	
 	// Flag the waveform if it is not accepted
 	if(ApplyPSDRegion(Total, Tail))
@@ -1087,12 +1087,12 @@ void AAComputation::ProcessSpectrumWaveforms()
 	// processing loop to prevent adding the waveform height/area to
 	// the pulse spectrum
 
-	if(UsePSDRegions[ADAQSettings->WaveformChannel]){
+	if(ADAQSettings->UsePSDRegions[Channel]){
 	
 	  FindPeaks(Waveform_H[Channel], zWholeWaveform);
 	  CalculatePSDIntegrals(false);
 	
-	  if(PeakInfoVec.at(0).PSDFilterFlag == true)
+	  if(PeakInfoVec[0].PSDFilterFlag == true)
 	    continue;
 	}
 
@@ -2430,8 +2430,11 @@ TH2F *AAComputation::CreatePSDHistogram()
 // required (spectra creation, desplicing, etc), which may or may not
 // require histogramming the result of the PSD integrals. Hence, the
 // function argment boolean to provide flexibility
-void AAComputation::CalculatePSDIntegrals(bool FillPSDHistogram)
+void AAComputation::CalculatePSDIntegrals(Bool_t FillPSDHistogram)
 {
+  // Get the present channel for analysis
+  Int_t Channel = ADAQSettings->WaveformChannel;
+  
   // Iterate over each peak stored in the vector of PeakInfoStructs...
   vector<PeakInfoStruct>::iterator it;
   for(it=PeakInfoVec.begin(); it!=PeakInfoVec.end(); it++){
@@ -2441,29 +2444,28 @@ void AAComputation::CalculatePSDIntegrals(bool FillPSDHistogram)
     if((*it).PeakPosX < ADAQSettings->AnalysisRegionMin or
        (*it).PeakPosX > ADAQSettings->AnalysisRegionMax)
       continue;
-    
+
+    // Get the peak position in time (x axis)
     Double_t Peak = (*it).PeakPosX;
     
+    // Compute the total and tail integral regions
     Double_t TotalStart = Peak + ADAQSettings->PSDTotalStart;
     Double_t TotalStop = Peak + ADAQSettings->PSDTotalStop;
-    
     Double_t TailStart = Peak + ADAQSettings->PSDTailStart;
     Double_t TailStop = Peak + ADAQSettings->PSDTailStop;
-
-    Int_t PSDChannel = ADAQSettings->WaveformChannel;
-
+    
     // Compute the total integral
-    Double_t TotalIntegral = Waveform_H[PSDChannel]->Integral(TotalStart,
-							      TotalStop);
+    Double_t TotalIntegral = Waveform_H[Channel]->Integral(TotalStart,
+							   TotalStop);
     
     // Compute the tail integral
-    Double_t TailIntegral = Waveform_H[PSDChannel]->Integral(TailStart,
-							     TailStop);
-
+    Double_t TailIntegral = Waveform_H[Channel]->Integral(TailStart,
+							  TailStop);
+    
     // Store the values in the member data vectors
-    PSDHistogramTotalVec[PSDChannel].push_back(TotalIntegral);
-    PSDHistogramTailVec[PSDChannel].push_back(TailIntegral);
-
+    PSDHistogramTotalVec[Channel].push_back(TotalIntegral);
+    PSDHistogramTailVec[Channel].push_back(TailIntegral);
+    
   
     // If the user wants to plot (Tail integral / Total integral) on
     // the y-axis of the PSD histogram then modify the TailIntegral:
@@ -2472,15 +2474,16 @@ void AAComputation::CalculatePSDIntegrals(bool FillPSDHistogram)
     
     // If the user wants to plot the X-axis (PSD total integral) in
     // energy [MeVee] then use the spectra calibrations
-    if(ADAQSettings->PSDXAxisEnergy and UseSpectraCalibrations[PSDChannel]){
-      if(SpectraCalibrationType[PSDChannel] == zCalibrationFit)
-	TotalIntegral = ADAQSettings->SpectraCalibrations[PSDChannel]->Eval(TotalIntegral);
-      else if(SpectraCalibrationType[PSDChannel] == zCalibrationInterp)
-	TotalIntegral = ADAQSettings->SpectraCalibrationData[PSDChannel]->Eval(TotalIntegral);
+    
+    if(ADAQSettings->PSDXAxisEnergy and UseSpectraCalibrations[Channel]){
+      if(SpectraCalibrationType[Channel] == zCalibrationFit)
+	TotalIntegral = ADAQSettings->SpectraCalibrations[Channel]->Eval(TotalIntegral);
+      else if(SpectraCalibrationType[Channel] == zCalibrationInterp)
+	TotalIntegral = ADAQSettings->SpectraCalibrationData[Channel]->Eval(TotalIntegral);
     }
     
     // If the user has enabled a PSD filter ...
-    if(UsePSDRegions[ADAQSettings->WaveformChannel])
+    if(ADAQSettings->UsePSDRegions[Channel])
       
       // ... then apply the PSD filter to the waveform. If the
       // waveform does not pass the filter, mark the flag indicating
