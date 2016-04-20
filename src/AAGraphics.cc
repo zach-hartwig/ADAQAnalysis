@@ -933,22 +933,40 @@ void AAGraphics::PlotCalibration(Int_t Channel)
   // Determine if the calibration is using a fit (== 0) or
   // interpolation (== 1)
   Int_t CalibrationType = ComputationMgr->GetSpectraCalibrationType()[Channel];
-  
+
+
+  string Title, XTitle, YTitle;
   stringstream SS;
-  SS << "Spectrum calibration TGraph for channel[" << Channel << "]";
-  string Title = SS.str();
+  
+  // Enable the user to custom-set titles
+  if(ADAQSettings->OverrideGraphicalDefault){
+    Title = ADAQSettings->PlotTitle;
+    XTitle = ADAQSettings->XAxisTitle;
+    YTitle = ADAQSettings->YAxisTitle;
+  }
+  else{
+
+    SS << "Spectrum calibration TGraph for channel[" << Channel << "]";
+    Title = SS.str();
+
+    if(ADAQSettings->ADAQSpectrumTypePAS)
+      XTitle = "Pulse area [ADC]";
+    else if(ADAQSettings->ADAQSpectrumTypePHS)
+      XTitle = "Pulse height [ADC]";
+    
+    YTitle = "Energy deposited [MeV]";
+  }
 
   // Plot the calibration data points
-  
   CalibrationData[Channel]->SetTitle(Title.c_str());
   
-  CalibrationData[Channel]->GetXaxis()->SetTitle("Pulse unit [ADC]");
+  CalibrationData[Channel]->GetXaxis()->SetTitle(XTitle.c_str());
   CalibrationData[Channel]->GetXaxis()->SetTitleSize(0.05);
   CalibrationData[Channel]->GetXaxis()->SetTitleOffset(1.2);
   CalibrationData[Channel]->GetXaxis()->CenterTitle();
   CalibrationData[Channel]->GetXaxis()->SetLabelSize(0.05);
   
-  CalibrationData[Channel]->GetYaxis()->SetTitle("Energy");
+  CalibrationData[Channel]->GetYaxis()->SetTitle(YTitle.c_str());
   CalibrationData[Channel]->GetYaxis()->SetTitleSize(0.05);
   CalibrationData[Channel]->GetYaxis()->SetTitleOffset(1.2);
   CalibrationData[Channel]->GetYaxis()->CenterTitle();
@@ -1195,6 +1213,7 @@ void AAGraphics::PlotPSDHistogramSlice(int XPixel, int YPixel)
     PSDSlice_C->SetGrid(ADAQSettings->CanvasGrid, ADAQSettings->CanvasGrid);
     PSDSlice_C->SetLeftMargin(0.13);
     PSDSlice_C->SetBottomMargin(0.13);
+    PSDSlice_C->Connect("Closed()", "AAGraphics", this, "ClosePSDSliceWindow()");
   }
 
   /////////////////////////
@@ -1411,3 +1430,9 @@ void AAGraphics::PickColor(int EventID, int XPixel, int YPixel, TObject *Selecte
   }
 }
 
+
+void AAGraphics::ClosePSDSliceWindow()
+{
+  if(ADAQSettings->EnableHistogramSlicing)
+    TheInterface->UpdateForPSDHistogramSlicingFinished();
+}

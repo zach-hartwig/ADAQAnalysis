@@ -106,6 +106,7 @@ int main(int argc, char *argv[])
   AAComputation *TheComputation = new AAComputation(CmdLineArg, ParallelArchitecture);
   
   if(!ParallelArchitecture){
+
     // Create the singleton graphics manager
     AAGraphics *TheGraphics = new AAGraphics;
 

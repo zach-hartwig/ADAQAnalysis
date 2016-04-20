@@ -43,9 +43,9 @@
 #include <TLine.h>
 #include <TColorWheel.h>
 
-
 // AA
 #include "AAComputation.hh"
+#include "AAInterface.hh"
 #include "AASettings.hh"
 
 
@@ -62,6 +62,8 @@ public:
   // Set/Get methods
 
   void SetCanvasPointer(TCanvas *C) { TheCanvas = C; }
+
+  void SetInterfacePointer(AAInterface *TI) { TheInterface = TI; }
 
   void SetADAQSettings(AASettings *AAS) { ADAQSettings = AAS; }
 
@@ -100,6 +102,7 @@ public:
   void PlotPSDHistogramSlice(int, int);
   void PlotPSDRegionProgress();
   void PlotPSDRegion();
+  void ClosePSDSliceWindow();
  
   Double_t GetPSDFigureOfMerit() {return PSDFigureOfMerit;}
 
@@ -122,6 +125,7 @@ private:
   AASettings *ADAQSettings;
 
   TCanvas *TheCanvas;
+  AAInterface *TheInterface;
 
   TH1F *Spectrum_H;
 

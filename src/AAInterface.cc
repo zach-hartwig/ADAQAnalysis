@@ -57,6 +57,7 @@ using namespace std;
 #include "AASpectrumSlots.hh"
 #include "AAAnalysisSlots.hh"
 #include "AAPSDSlots.hh"
+#include "AAGraphics.hh"
 #include "AAGraphicsSlots.hh"
 #include "AAProcessingSlots.hh"
 #include "AANontabSlots.hh"
@@ -110,6 +111,7 @@ AAInterface::AAInterface(string CmdLineArg)
   
   GraphicsMgr = AAGraphics::GetInstance();
   GraphicsMgr->SetCanvasPointer(Canvas_EC->GetCanvas());
+  GraphicsMgr->SetInterfacePointer(this);
 
   InterpolationMgr = AAInterpolation::GetInstance();
 
@@ -2943,6 +2945,20 @@ void AAInterface::UpdateForPSDHistogramCreation()
   PSDEnableRegionCreation_CB->SetState(kButtonUp);
 
   PSDEnableHistogramSlicing_CB->SetState(kButtonUp);
+}
+
+
+void AAInterface::UpdateForPSDHistogramSlicingFinished()
+{
+  PSDEnableHistogramSlicing_CB->SetState(kButtonUp);
+  PSDHistogramSliceX_RB->SetState(kButtonDisabled);
+  PSDHistogramSliceY_RB->SetState(kButtonDisabled);
+  PSDCalculateFOM_CB->SetState(kButtonDisabled);
+  PSDLowerFOMFitMin_NEL->GetEntry()->SetState(false);
+  PSDLowerFOMFitMax_NEL->GetEntry()->SetState(false);
+  PSDUpperFOMFitMin_NEL->GetEntry()->SetState(false);
+  PSDUpperFOMFitMax_NEL->GetEntry()->SetState(false);
+  PSDFigureOfMerit_NEFL->GetEntry()->SetState(false);
 }
 
 

@@ -69,13 +69,13 @@ using namespace std;
 #include "AATypes.hh"
 #include "AASettings.hh"
 #include "AAComputation.hh"
-#include "AAGraphics.hh"
 #include "AAInterpolation.hh"
 
 class AAWaveformSlots;
 class AASpectrumSlots;
 class AAAnalysisSlots;
 class AAPSDSlots;
+class AAGraphics;
 class AAGraphicsSlots;
 class AAProcessingSlots;
 class AANontabSlots;
@@ -115,6 +115,7 @@ public:
   void UpdateForASIMFile();
   void UpdateForSpectrumCreation();
   void UpdateForPSDHistogramCreation();
+  void UpdateForPSDHistogramSlicingFinished();
 
   // Method to alert the user via a ROOT message box
   void CreateMessageBox(string, string);
