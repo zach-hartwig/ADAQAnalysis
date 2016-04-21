@@ -1,11 +1,26 @@
 # ADAQAnalysis Version Change Log
 
 name: Changelog.md  
-date: 11 Apr 16 (last updated)  
+date: 20 Apr 16 (last updated)  
 auth: Zach Hartwig  
 mail: hartwig@psfc.mit.edu  
 
 ## Version 1.8 Series
+
+### 1.8.1
+
+ - Several important bugs, mainly related to the recent PSD overhaul:
+
+   - Properly enabled calibrated PSD histograms and region cuts during
+     parallel processing of waveforms
+
+   - Disable PSD slicing buttons after PSD histogram slice standalone
+     window is closed. Results in expected, non-annoying behavior.
+
+   - Preventing seg faults for plotting non-existent channel calibrations
+
+ - All legacy code (AIMS-specific) has been ripped out
+ 
 
 Major new developments in this series include:
 
