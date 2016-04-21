@@ -1988,8 +1988,7 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
 			    ADAQSettings->PSDMinTailBin,
 			    ADAQSettings->PSDMaxTailBin);
   
-  // Get the selected PSD channel
-  Int_t PSDChannel = ADAQSettings->WaveformChannel;
+  Int_t Channel = ADAQSettings->WaveformChannel;
 
   Double_t TotalIntegral = 0.;
   Double_t TailIntegral = 0.;
@@ -2000,8 +1999,8 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
   // preallocation for our purposes and (b) the PF algorithm, which
   // can find multiple values per pulse and therefore does not have a
   // fixed vector length, makes preallocation difficult.
-  PSDHistogramTotalVec[PSDChannel].clear();
-  PSDHistogramTailVec[PSDChannel].clear();
+  PSDHistogramTotalVec[Channel].clear();
+  PSDHistogramTailVec[Channel].clear();
 
 
   ////////////////////////////////////////////////////////
@@ -2030,7 +2029,7 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
     
     // Set the ADAQWaveformData branch name depending on channel number
     stringstream SS;
-    SS << "WaveformDataCh" << PSDChannel;
+    SS << "WaveformDataCh" << Channel;
     string WDName = SS.str();
 
     // Create and set address of ADAQWavefomData object in the waveform tree
@@ -2043,8 +2042,8 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
     CloneTree->SetBranchAddress(WDName.c_str(), &WD);
     
     // Readout appropriate waveform data into the spectrum
-    for(int entry=0; entry<CloneTree->GetEntries(); entry++){
-
+    for(Int_t entry=0; entry<CloneTree->GetEntries(); entry++){
+      
       // Ensure only the specified number of events are processed
       if(entry == ADAQSettings->PSDWaveformsToDiscriminate)
 	break;
@@ -2057,8 +2056,8 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
       TailIntegral = WD->GetPSDTailIntegral();
 
       // ...and also storem them in vectors for later use
-      PSDHistogramTotalVec[PSDChannel].push_back(TotalIntegral);
-      PSDHistogramTailVec[PSDChannel].push_back(TailIntegral);
+      PSDHistogramTotalVec[Channel].push_back(TotalIntegral);
+      PSDHistogramTailVec[Channel].push_back(TailIntegral);
 
       // If the user wants to plot (Tail integral / Total integral) on
       // the y-axis of the PSD histogram then modify the TailIntegral:
@@ -2067,11 +2066,11 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
 
       // If the user wants to plot the X-axis (PSD total integral) in
       // energy [MeVee] then use the spectra calibrations
-      if(ADAQSettings->PSDXAxisEnergy and UseSpectraCalibrations[PSDChannel]){
-	if(SpectraCalibrationType[PSDChannel] == zCalibrationFit)
-	  TotalIntegral = ADAQSettings->SpectraCalibrations[PSDChannel]->Eval(TotalIntegral);
-	else if(SpectraCalibrationType[PSDChannel] == zCalibrationInterp)
-	  TotalIntegral = ADAQSettings->SpectraCalibrationData[PSDChannel]->Eval(TotalIntegral);
+      if(ADAQSettings->PSDXAxisEnergy and UseSpectraCalibrations[Channel]){
+	if(SpectraCalibrationType[Channel] == zCalibrationFit)
+	  TotalIntegral = ADAQSettings->SpectraCalibrations[Channel]->Eval(TotalIntegral);
+	else if(SpectraCalibrationType[Channel] == zCalibrationInterp)
+	  TotalIntegral = ADAQSettings->SpectraCalibrationData[Channel]->Eval(TotalIntegral);
       }
       
       // Determine if waveform exceeds the PSD threshold
@@ -2140,21 +2139,21 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
       cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Handling waveforms " << WaveformStart << " to " << (WaveformEnd-1)
 	   << endl;
 #endif
-
-    bool PeaksFound = false;
-  
-    for(int waveform=WaveformStart; waveform<WaveformEnd; waveform++){
+    
+    Bool_t PeaksFound = false;
+    
+    for(Int_t waveform=WaveformStart; waveform<WaveformEnd; waveform++){
       if(SequentialArchitecture)
 	gSystem->ProcessEvents();
 
       ADAQWaveformTree->GetEntry(waveform);
 
-      RawVoltage = *Waveforms[PSDChannel];
+      RawVoltage = *Waveforms[Channel];
     
       if(ADAQSettings->RawWaveform or ADAQSettings->BSWaveform)
-	CalculateBSWaveform(PSDChannel, waveform);
+	CalculateBSWaveform(Channel, waveform);
       else if(ADAQSettings->ZSWaveform)
-	CalculateZSWaveform(PSDChannel, waveform);
+	CalculateZSWaveform(Channel, waveform);
     
       // Find the peaks and peak limits in the current waveform. The
       // second argument ('true') indicates the find peaks calculation
@@ -2162,9 +2161,9 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
       // for PSD 'peak finder' or 'whole waveform' should be used to
       // decide which peak finding algorithm to use
       if(ADAQSettings->PSDAlgorithmPF)
-	PeaksFound = FindPeaks(Waveform_H[PSDChannel], zPeakFinder);
+	PeaksFound = FindPeaks(Waveform_H[Channel], zPeakFinder);
       else if(ADAQSettings->PSDAlgorithmSMS)
-	PeaksFound = FindPeaks(Waveform_H[PSDChannel], zWholeWaveform);
+	PeaksFound = FindPeaks(Waveform_H[Channel], zWholeWaveform);
 
       // Update the user with progress here because the peak finding
       // algorithm can skip waveform for which it doesn't find a peak,
@@ -2228,35 +2227,34 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
     // are aggregated and assigned to the master object, and the
     // deuterons are integrated as well.
 
-
     // Create a 2-D array to represent the PSDHistogram_H in array form
-    const int ArraySizeX = PSDHistogram_H->GetNbinsX() + 2;
-    const int ArraySizeY = PSDHistogram_H->GetNbinsY() + 2;
-    double DoubleArray[ArraySizeX][ArraySizeY];
+    const Int_t ArraySizeX = PSDHistogram_H->GetNbinsX() + 2;
+    const Int_t ArraySizeY = PSDHistogram_H->GetNbinsY() + 2;
+    Double_t DoubleArray[ArraySizeX][ArraySizeY];
 
     // Iterate over the PSDHistogram_H columns...
-    for(int i=0; i<ArraySizeX; i++){
-   
+    for(Int_t i=0; i<ArraySizeX; i++){
+      
       // A container for the PSDHistogram_H's present column
-      vector<double> ColumnVector(ArraySizeY, 0.);
+      vector<Double_t> ColumnVector(ArraySizeY, 0.);
 
       // Assign the PSDHistogram_H's column to the vector
-      for(int j=0; j<ArraySizeY; j++)
+      for(Int_t j=0; j<ArraySizeY; j++)
 	ColumnVector[j] = PSDHistogram_H->GetBinContent(i,j);
-
+      
       // Reduce the array representing the column
-      double *ReturnArray = AAParallel::GetInstance()->SumDoubleArrayToMaster(&ColumnVector[0], ArraySizeY);
-    
+      Double_t *ReturnArray = AAParallel::GetInstance()->SumDoubleArrayToMaster(&ColumnVector[0], ArraySizeY);
+      
       // Assign the array to the DoubleArray that represents the
       // "master" or total PSDHistogram_H object
-      for(int j=0; j<ArraySizeY; j++)
+      for(Int_t j=0; j<ArraySizeY; j++)
 	DoubleArray[i][j] = ReturnArray[j];
     }
-
+    
     // Aggregated the histogram entries from all nodes to the master
     double Entries = PSDHistogram_H->GetEntries();
     double ReturnDouble = AAParallel::GetInstance()->SumDoublesToMaster(Entries);
-
+    
     ///////////////////////////////////////////
     // Aggregate PSD histogram integral vectors
 
@@ -2270,11 +2268,11 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
     TString FName = SS.str();
     
     TFile *VectorWrite = new TFile(FName, "recreate");
-    TVectorD PT(PSDHistogramTotalVec[PSDChannel].size(),
-		&PSDHistogramTotalVec[PSDChannel][0]);
+    TVectorD PT(PSDHistogramTotalVec[Channel].size(),
+		&PSDHistogramTotalVec[Channel][0]);
     
-    TVectorD PP(PSDHistogramTailVec[PSDChannel].size(),
-		&PSDHistogramTailVec[PSDChannel][0]);
+    TVectorD PP(PSDHistogramTailVec[Channel].size(),
+		&PSDHistogramTailVec[Channel][0]);
     
     PT.Write("PT");
     PP.Write("PP");
@@ -2296,12 +2294,14 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
 				      ADAQSettings->PSDNumTailBins,
 				      ADAQSettings->PSDMinTailBin,
 				      ADAQSettings->PSDMaxTailBin);
-        
-      // Assign the content from the aggregated 2-D array to the new
-      // master histogram
-      for(int i=0; i<ArraySizeX; i++)
-	for(int j=0; j<ArraySizeY; j++)
+
+      // Assign each bin content in the master PSD histogram from the
+      // double array containing the aggregated slave values
+      for(Int_t i=0; i<ArraySizeX; i++)
+	for(Int_t j=0; j<ArraySizeY; j++)
 	  MasterPSDHistogram_H->SetBinContent(i, j, DoubleArray[i][j]);
+      
+      // Assign the total number of entries in the master PSD histogram
       MasterPSDHistogram_H->SetEntries(ReturnDouble);
 
       vector<Double_t> PSDHistogramTotalVec_Master, PSDHistogramTailVec_Master;
@@ -2329,13 +2329,13 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
 	RemoveFilesCommand = "rm " + FName + " -f";
 	system(RemoveFilesCommand.c_str()); 
       }
-
+      
       TVectorD MasterPSDTotalVec(PSDHistogramTotalVec_Master.size(),
 				 &PSDHistogramTotalVec_Master[0]);
-
+      
       TVectorD MasterPSDTailVec(PSDHistogramTailVec_Master.size(),
 				&PSDHistogramTailVec_Master[0]);
-    
+      
       // Open the TFile  and write all the necessary object to it
       ParallelFile = new TFile(AAParallel::GetInstance()->GetParallelFileName().c_str(), "update");
       
@@ -2346,7 +2346,7 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
       ParallelFile->Write();
     }
 #endif
- 
+    
     // Update the bool to alert the code that a valid PSDHistogram_H object exists.
     PSDHistogramExists = true;
   }
@@ -2369,9 +2369,9 @@ TH2F *AAComputation::CreatePSDHistogram()
 			    ADAQSettings->PSDMinTailBin,
 			    ADAQSettings->PSDMaxTailBin);
 
-  Int_t PSDChannel = ADAQSettings->WaveformChannel;
+  Int_t Channel = ADAQSettings->WaveformChannel;
 
-  for(Int_t p=0; p<(Int_t)PSDHistogramTotalVec[PSDChannel].size(); p++){
+  for(Int_t p=0; p<(Int_t)PSDHistogramTotalVec[Channel].size(); p++){
     
     // If using SMS or WD algorithms, discriminate only the number of
     // waveforms specified by user; note that if using PF algorithm,
@@ -2385,17 +2385,17 @@ TH2F *AAComputation::CreatePSDHistogram()
       if(p >= ADAQSettings->PSDWaveformsToDiscriminate)
 	break;
     
-    Double_t PSDTotal = PSDHistogramTotalVec[PSDChannel][p];
-    Double_t PSDParameter = PSDHistogramTailVec[PSDChannel][p];
+    Double_t PSDTotal = PSDHistogramTotalVec[Channel][p];
+    Double_t PSDParameter = PSDHistogramTailVec[Channel][p];
 
     if(ADAQSettings->PSDYAxisTailTotal)
       PSDParameter /= PSDTotal;
 
-    if(ADAQSettings->PSDXAxisEnergy and UseSpectraCalibrations[PSDChannel]){
-      if(SpectraCalibrationType[PSDChannel] == zCalibrationFit)
-	PSDTotal = ADAQSettings->SpectraCalibrations[PSDChannel]->Eval(PSDTotal);
-      else if(SpectraCalibrationType[PSDChannel] == zCalibrationInterp)
-	PSDTotal = ADAQSettings->SpectraCalibrationData[PSDChannel]->Eval(PSDTotal);
+    if(ADAQSettings->PSDXAxisEnergy and UseSpectraCalibrations[Channel]){
+      if(SpectraCalibrationType[Channel] == zCalibrationFit)
+	PSDTotal = ADAQSettings->SpectraCalibrations[Channel]->Eval(PSDTotal);
+      else if(SpectraCalibrationType[Channel] == zCalibrationInterp)
+	PSDTotal = ADAQSettings->SpectraCalibrationData[Channel]->Eval(PSDTotal);
     }
 
     // If the PSD total integral exceeds the threshold
@@ -2466,8 +2466,7 @@ void AAComputation::CalculatePSDIntegrals(Bool_t FillPSDHistogram)
     PSDHistogramTotalVec[Channel].push_back(TotalIntegral);
     PSDHistogramTailVec[Channel].push_back(TailIntegral);
     
-  
-    // If the user wants to plot (Tail integral / Total integral) on
+      // If the user wants to plot (Tail integral / Total integral) on
     // the y-axis of the PSD histogram then modify the TailIntegral:
     if(ADAQSettings->PSDYAxisTailTotal)
       TailIntegral /= TotalIntegral;
@@ -2475,7 +2474,7 @@ void AAComputation::CalculatePSDIntegrals(Bool_t FillPSDHistogram)
     // If the user wants to plot the X-axis (PSD total integral) in
     // energy [MeVee] then use the spectra calibrations
     
-    if(ADAQSettings->PSDXAxisEnergy and UseSpectraCalibrations[Channel]){
+    if(ADAQSettings->PSDXAxisEnergy and ADAQSettings->UseSpectraCalibrations[Channel]){
       if(SpectraCalibrationType[Channel] == zCalibrationFit)
 	TotalIntegral = ADAQSettings->SpectraCalibrations[Channel]->Eval(TotalIntegral);
       else if(SpectraCalibrationType[Channel] == zCalibrationInterp)
@@ -2483,20 +2482,22 @@ void AAComputation::CalculatePSDIntegrals(Bool_t FillPSDHistogram)
     }
     
     // If the user has enabled a PSD filter ...
-    if(ADAQSettings->UsePSDRegions[Channel])
+    if(ADAQSettings->UsePSDRegions[Channel]){
       
       // ... then apply the PSD filter to the waveform. If the
       // waveform does not pass the filter, mark the flag indicating
       // that it should be filtered out due to its pulse shap
       if(ApplyPSDRegion(TotalIntegral, TailIntegral))
 	(*it).PSDFilterFlag = true;
+    }
     
     // The total integral of the waveform must exceed the PSDThreshold
     // in order to be histogrammed. This allows the user flexibility
     // in eliminating the large numbers of small waveform events.
-    if((TotalIntegral > ADAQSettings->PSDThreshold) and FillPSDHistogram)
+    if((TotalIntegral > ADAQSettings->PSDThreshold) and FillPSDHistogram){
       if((*it).PSDFilterFlag == false)
 	PSDHistogram_H->Fill(TotalIntegral, TailIntegral);
+    }
   }
 }
 
@@ -2513,15 +2514,15 @@ void AAComputation::CalculatePSDIntegrals(Bool_t FillPSDHistogram)
 Bool_t AAComputation::ApplyPSDRegion(Double_t PSDTotal,
 				     Double_t PSDParameter)
 {
-  Int_t PSDChannel = ADAQSettings->WaveformChannel;
+  Int_t Channel = ADAQSettings->WaveformChannel;
   
   if(ADAQSettings->PSDInsideRegion and
-     ADAQSettings->PSDRegions[PSDChannel]->IsInside(PSDTotal,
+     ADAQSettings->PSDRegions[Channel]->IsInside(PSDTotal,
 						    PSDParameter))
     return false;
   
   else if(ADAQSettings->PSDOutsideRegion and 
-	  !ADAQSettings->PSDRegions[PSDChannel]->IsInside(PSDTotal,
+	  !ADAQSettings->PSDRegions[Channel]->IsInside(PSDTotal,
 							  PSDParameter))
     return false;
   
@@ -2721,24 +2722,25 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
     // Pulse shape discriminating 
     
     else if(ProcessingType == "discriminating"){
+
       PSDHistogram_H = (TH2F *)ParallelFile->Get("MasterPSDHistogram");
       PSDHistogramExists = true;
 
-      // Retrieve the master TVectorT<double> objects that contain the
-      // PSD values computed by all MPI nodes and use them to fill the
-      // class member vectors for later use
+      // Retrieve the master TVectorD<Double_t> objects that contain
+      // the PSD values computed by all MPI nodes and use them to fill
+      // the class member vectors for later use
 
-      Int_t PSDChannel = ADAQSettings->WaveformChannel;
+      Int_t Channel = ADAQSettings->WaveformChannel;
       
       TVectorD *MasterPSDTotalVec = (TVectorD *)ParallelFile->Get("MasterPSDTotalVec");
-      PSDHistogramTotalVec[PSDChannel].clear();
+      PSDHistogramTotalVec[Channel].clear();
       for(int i=0; i<MasterPSDTotalVec->GetNoElements(); i++)
-	PSDHistogramTotalVec[PSDChannel].push_back( (*MasterPSDTotalVec)[i]);
+	PSDHistogramTotalVec[Channel].push_back( (*MasterPSDTotalVec)[i]);
       
       TVectorD *MasterPSDTailVec = (TVectorD *)ParallelFile->Get("MasterPSDTailVec");
-      PSDHistogramTailVec[PSDChannel].clear();
+      PSDHistogramTailVec[Channel].clear();
       for(int i=0; i<MasterPSDTailVec->GetNoElements(); i++)
-	PSDHistogramTailVec[PSDChannel].push_back( (*MasterPSDTailVec)[i]);
+	PSDHistogramTailVec[Channel].push_back( (*MasterPSDTailVec)[i]);
     }
   }
   else
