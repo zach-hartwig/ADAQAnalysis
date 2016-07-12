@@ -930,7 +930,7 @@ void AAComputation::ProcessSpectrumWaveforms()
       // The following is a temporary hack. As of ADAQ libraries
       // version 1.6.0, all digitizer channel data is stored in a
       // single tree with channel-specific branches. When a
-      // TTree::Fill() is called, all branches are saved. WHen
+      // TTree::Fill() is called, all branches are saved. When
       // operating with multiple detectors, this causes non-triggered
       // branched to write whatever data is present from previously
       // triggered events. The fix below prevents adding this
@@ -969,24 +969,33 @@ void AAComputation::ProcessSpectrumWaveforms()
       if(PSDReject)
 	continue;
 
-      // Add waveform data to the storage vectors
+      // Add uncalibrated waveform data to the storage vectors for
+      // potential later use
       SpectrumPHVec[Channel].push_back(PulseHeight);
       SpectrumPAVec[Channel].push_back(PulseArea);
+
+      // Determine pulse height/area value for analysis
       
-      // Fill the spectrum object depending on pulse spectrm type
-      if(ADAQSettings->ADAQSpectrumTypePAS){
-	if(PulseArea > ADAQSettings->SpectrumMinThresh and
-	   PulseArea < ADAQSettings->SpectrumMaxThresh){
-	  Spectrum_H->Fill(PulseArea);
-	}
+      Double_t Quantity = 0.;
+      if(ADAQSettings->ADAQSpectrumTypePHS)
+	Quantity = PulseHeight;
+      else if(ADAQSettings->ADAQSpectrumTypePAS)
+	Quantity = PulseArea;
+      
+      // Convert the quantity if calibration has been activated
+
+      if(ADAQSettings->UseSpectraCalibrations[Channel]){
+	if(SpectraCalibrationType[Channel] == zCalibrationFit)      	  
+	  Quantity = ADAQSettings->SpectraCalibrations[Channel]->Eval(Quantity);
+	else if(SpectraCalibrationType[Channel] == zCalibrationInterp)
+	  Quantity = ADAQSettings->SpectraCalibrationData[Channel]->Eval(Quantity);
       }
       
-      else if(ADAQSettings->ADAQSpectrumTypePHS){
-	if(PulseHeight > ADAQSettings->SpectrumMinThresh and
-	   PulseHeight < ADAQSettings->SpectrumMaxThresh){
-	  Spectrum_H->Fill(PulseHeight);
-	}
-      }
+      // Fill the spectrum is quantity is within thresholds
+      
+      if(Quantity > ADAQSettings->SpectrumMinThresh and
+	 Quantity < ADAQSettings->SpectrumMaxThresh)
+	Spectrum_H->Fill(Quantity);
     }
     SpectrumExists = true;
   }
@@ -1716,7 +1725,7 @@ void AAComputation::CalculateSpectrumBackground()//TH1F *Spectrum_H)
   // Create an object to hold the sum of the squares of the bin
   // weights is created and calculated (i.e. error will be propogated
   // during the background subtraction into the deconvolved spectrum)
-  SpectrumDeconvolved_H->Sumw2();
+  //  SpectrumDeconvolved_H->Sumw2();
   
   SpectrumDeconvolved_H->SetLineColor(kBlue);
   SpectrumDeconvolved_H->SetLineWidth(2);

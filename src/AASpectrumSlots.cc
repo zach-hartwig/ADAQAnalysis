@@ -296,7 +296,7 @@ void AASpectrumSlots::HandleTextButtons()
       
       if(TheInterface->ADAQFileLoaded)
 	ComputationMgr->ProcessSpectrumWaveforms();
-      
+
       if(ComputationMgr->GetSpectrumExists())
 	GraphicsMgr->PlotSpectrum();
     }
