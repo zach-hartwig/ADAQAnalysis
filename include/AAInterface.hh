@@ -269,10 +269,10 @@ private:
   TGRadioButton *SpectrumWithBackground_RB;
   TGRadioButton *SpectrumLessBackground_RB;
 
-  ADAQNumberEntryFieldWithLabel *SpectrumFitHeight_NEFL;
-  ADAQNumberEntryFieldWithLabel *SpectrumFitMean_NEFL;
-  ADAQNumberEntryFieldWithLabel *SpectrumFitSigma_NEFL;
-  ADAQNumberEntryFieldWithLabel *SpectrumFitRes_NEFL;
+  ADAQNumberEntryFieldWithLabel *SpectrumFitHeight_NEFL, *SpectrumFitHeightErr_NEFL;
+  ADAQNumberEntryFieldWithLabel *SpectrumFitMean_NEFL, *SpectrumFitMeanErr_NEFL;
+  ADAQNumberEntryFieldWithLabel *SpectrumFitSigma_NEFL, *SpectrumFitSigmaErr_NEFL;
+  ADAQNumberEntryFieldWithLabel *SpectrumFitRes_NEFL, *SpectrumFitResErr_NEFL;
 
   ADAQNumberEntryWithLabel *SpectrumAnalysisLowerLimit_NEL;
   ADAQNumberEntryWithLabel *SpectrumAnalysisUpperLimit_NEL;

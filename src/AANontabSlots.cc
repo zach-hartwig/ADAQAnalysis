@@ -200,28 +200,51 @@ void AANontabSlots::HandleDoubleSliders()
     }
     
     if(TheInterface->SpectrumUseGaussianFit_CB->IsDown()){
-      double Const = ComputationMgr->GetSpectrumFit()->GetParameter(0);
-      double Mean = ComputationMgr->GetSpectrumFit()->GetParameter(1);
-      double Sigma = ComputationMgr->GetSpectrumFit()->GetParameter(2);
-      
+      // Gaussian fit constant (height)
+
+      Double_t Const = ComputationMgr->GetSpectrumFit()->GetParameter(0);
+      Double_t ConstErr = ComputationMgr->GetSpectrumFit()->GetParError(0);
+
       TheInterface->SpectrumFitHeight_NEFL->GetEntry()->SetNumber(Const);
+      TheInterface->SpectrumFitHeightErr_NEFL->GetEntry()->SetNumber(ConstErr);
+      
+      // Gaussian fit mean
+
+      Double_t Mean = ComputationMgr->GetSpectrumFit()->GetParameter(1);
+      Double_t MeanErr = ComputationMgr->GetSpectrumFit()->GetParError(1);
+
       TheInterface->SpectrumFitMean_NEFL->GetEntry()->SetNumber(Mean);
+      TheInterface->SpectrumFitMeanErr_NEFL->GetEntry()->SetNumber(MeanErr);
+
+      // Gaussian fit sigma
+
+      Double_t Sigma = ComputationMgr->GetSpectrumFit()->GetParameter(2);
+      Double_t SigmaErr = ComputationMgr->GetSpectrumFit()->GetParError(2);
+
       TheInterface->SpectrumFitSigma_NEFL->GetEntry()->SetNumber(Sigma);
-      TheInterface->SpectrumFitRes_NEFL->GetEntry()->SetNumber(2.35 * Sigma / Mean * 100);
+      TheInterface->SpectrumFitSigmaErr_NEFL->GetEntry()->SetNumber(SigmaErr);
+
+      // Computed Gaussian energy resolution [%]
+      
+      Double_t Res = 2.35 * Sigma / Mean * 100;
+      Double_t ResErr = Res * sqrt(pow(SigmaErr/Sigma,2) + pow(MeanErr/Mean,2));
+      
+      TheInterface->SpectrumFitRes_NEFL->GetEntry()->SetNumber(Res);
+      TheInterface->SpectrumFitResErr_NEFL->GetEntry()->SetNumber(ResErr);
     }
 
     // Update the NEL's that are used for manual entry of the analysis
     // range with the current value of the double slider
 
-    double MinBin = TheInterface->SpectrumMinBin_NEL->GetEntry()->GetNumber();
-    double MaxBin = TheInterface->SpectrumMaxBin_NEL->GetEntry()->GetNumber();
-    double Range = MaxBin - MinBin;
+    Double_t MinBin = TheInterface->SpectrumMinBin_NEL->GetEntry()->GetNumber();
+    Double_t MaxBin = TheInterface->SpectrumMaxBin_NEL->GetEntry()->GetNumber();
+    Double_t Range = MaxBin - MinBin;
 
-    float Min,Max;
+    Float_t Min,Max;
     TheInterface->SpectrumIntegrationLimits_DHS->GetPosition(Min, Max);
 
-    double Lower = MinBin + (Range * Min);
-    double Upper = MinBin + (Range * Max);
+    Double_t Lower = MinBin + (Range * Min);
+    Double_t Upper = MinBin + (Range * Max);
 
     TheInterface->SpectrumAnalysisLowerLimit_NEL->GetEntry()->SetNumber(Lower);
     TheInterface->SpectrumAnalysisUpperLimit_NEL->GetEntry()->SetNumber(Upper);
