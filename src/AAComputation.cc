@@ -1725,7 +1725,7 @@ void AAComputation::CalculateSpectrumBackground()//TH1F *Spectrum_H)
   // Create an object to hold the sum of the squares of the bin
   // weights is created and calculated (i.e. error will be propogated
   // during the background subtraction into the deconvolved spectrum)
-  //  SpectrumDeconvolved_H->Sumw2();
+  SpectrumDeconvolved_H->Sumw2();
   
   SpectrumDeconvolved_H->SetLineColor(kBlue);
   SpectrumDeconvolved_H->SetLineWidth(2);
@@ -1899,6 +1899,27 @@ void AAComputation::FitSpectrum()
 							  SpectrumFit_H->FindBin(UpperIntLimit),
 							  SpectrumIntegralError,
 							  IntegralArg.c_str());
+
+  TF1 *F_u = new TF1("F_u", "gaus", LowerIntLimit, UpperIntLimit);
+  F_u->SetParameter(0, SpectrumFit_F->GetParameter(0) + SpectrumFit_F->GetParError(0));
+  F_u->SetParameter(1, SpectrumFit_F->GetParameter(1) + SpectrumFit_F->GetParError(1));
+  F_u->SetParameter(2, SpectrumFit_F->GetParameter(2) + SpectrumFit_F->GetParError(2));
+  Double_t UpperErrorIntegral = F_u->Integral(LowerIntLimit, UpperIntLimit);
+
+  TF1 *F_l = new TF1("F_l", "gaus", LowerIntLimit, UpperIntLimit);
+  F_l->SetParameter(0, SpectrumFit_F->GetParameter(0) - SpectrumFit_F->GetParError(0));
+  F_l->SetParameter(1, SpectrumFit_F->GetParameter(1) - SpectrumFit_F->GetParError(1));
+  F_l->SetParameter(2, SpectrumFit_F->GetParameter(2) - SpectrumFit_F->GetParError(2));
+  Double_t LowerErrorIntegral = F_l->Integral(LowerIntLimit, UpperIntLimit);
+  
+  // Take the average of the upper and lower errors
+  Double_t AverageError = (UpperErrorIntegral + LowerErrorIntegral) / 2;
+
+  // Get the histogram bin width
+  Double_t BinWidth = Range / ADAQSettings->SpectrumNumBins;
+
+  // Set the new error
+  // SpectrumIntegralError = fabs(SpectrumIntegralValue - AverageError/BinWidth);
   
   // Draw the gaussian peak fit
   SpectrumFit_F->SetLineColor(kGreen+2);

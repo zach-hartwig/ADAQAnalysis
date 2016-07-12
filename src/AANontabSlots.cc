@@ -231,6 +231,11 @@ void AANontabSlots::HandleDoubleSliders()
       
       TheInterface->SpectrumFitRes_NEFL->GetEntry()->SetNumber(Res);
       TheInterface->SpectrumFitResErr_NEFL->GetEntry()->SetNumber(ResErr);
+
+      // Estimate the integral error using gaussian fit parameter error
+
+      if(TheInterface->SpectrumFindIntegral_CB->IsDown()){
+      }
     }
 
     // Update the NEL's that are used for manual entry of the analysis
