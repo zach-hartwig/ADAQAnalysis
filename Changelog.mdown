@@ -1,11 +1,21 @@
 # ADAQAnalysis Version Change Log
 
 name: Changelog.md  
-date: 20 Apr 16 (last updated)  
+date: 12 Jul 16 (last updated)  
 auth: Zach Hartwig  
 mail: hartwig@psfc.mit.edu  
 
 ## Version 1.8 Series
+
+### 1.8.2
+
+ - Added widgets for displaying spectrum gaussian fit parameter and
+   energy resolution error. Enables proper error assessment of peak
+   fits when subtracting continuum.
+
+ - Fixed problem preventing creation of calibrated spectra from
+   waveform data. Also, performed code cleanup and optimization.
+
 
 ### 1.8.1
 
