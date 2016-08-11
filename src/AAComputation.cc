@@ -41,6 +41,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <chrono>
 using namespace std;
 
 // MPI
@@ -1929,9 +1930,40 @@ void AAComputation::FitSpectrum()
 
 Bool_t AAComputation::WriteSpectrumFitResultsFile(string FName)
 {
+  // Get the spectrum fit parameters
+  
+  Double_t Const = SpectrumFit_F->GetParameter(0);
+  Double_t ConstErr = SpectrumFit_F->GetParError(0);
+
+  Double_t Mean = SpectrumFit_F->GetParameter(1);
+  Double_t MeanErr = SpectrumFit_F->GetParError(1);
+  
+  Double_t Sigma = SpectrumFit_F->GetParameter(2);
+  Double_t SigmaErr = SpectrumFit_F->GetParError(2);
+
+  Double_t Res = 2.35 * Sigma / Mean * 100;
+  Double_t ResErr = Res * sqrt(pow(SigmaErr/Sigma,2) + pow(MeanErr/Mean,2));
+
+  // Get the present time/date
+
+  time_t Time = chrono::system_clock::to_time_t(chrono::system_clock::now());
+
+  // Output to file
+    
   ofstream Out(FName.c_str(), ofstream::trunc);
 
-  Out.close();
+  Out << "# File name : " << FName << "\n"
+      << "# File date : " << ctime(&Time)
+      << "# File desc : " << "Gaussian fit parameters with absolute error\n"
+      << "# ADAQ file : " << ADAQFileName << "\n"
+      << "\n"
+      << setw(10) << "Constant:" << setw(10) << Const << setw(10) << ConstErr << "\n"
+      << setw(10) << "Mean:" << setw(10) << Mean << setw(10) << MeanErr << "\n"
+      << setw(10) << "Sigma:" << setw(10) << Sigma << setw(10) << SigmaErr << "\n"
+      << setw(10) << "Res:" << setw(10) << Res << setw(10) << ResErr << "\n"
+      << endl;
+
+  return true;
 }
 
 
