@@ -85,7 +85,8 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     PSDHistogram_H(new TH2F), MasterPSDHistogram_H(new TH2F), PSDHistogramSlice_H(new TH1D),
     PSDRegionPolarity(1.),
    
-    SpectrumExists(false), SpectrumBackgroundExists(false), SpectrumDerivativeExists(false), 
+    SpectrumExists(false), SpectrumBackgroundExists(false), SpectrumDerivativeExists(false),
+    SpectrumFitExists(false),
     PSDHistogramExists(false), PSDHistogramSliceExists(false),
 
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelVerbose(true),
@@ -1880,12 +1881,13 @@ void AAComputation::FitSpectrum()
   if(ADAQSettings->SpectrumIntegralInCounts)
     IntegralArg.assign("");
   
-  if(SpectrumFit_F)
+  if(SpectrumFit_F){
     delete SpectrumFit_F;
+    SpectrumFitExists = false;
+  }
   
   // Create a gaussian fit between the lower/upper limits; fit the
   // gaussian to the histogram representing the integral region
-  // new TH1F object for analysis
   SpectrumFit_F = new TF1("PeakFit", "gaus", LowerIntLimit, UpperIntLimit);
   SpectrumIntegral_H->Fit("PeakFit","R N Q");
   
@@ -1901,40 +1903,54 @@ void AAComputation::FitSpectrum()
 							  SpectrumIntegralError,
 							  IntegralArg.c_str());
 
-  TF1 *F_u = new TF1("F_u", "gaus", LowerIntLimit, UpperIntLimit);
-  F_u->SetParameter(0, SpectrumFit_F->GetParameter(0) + SpectrumFit_F->GetParError(0));
-  F_u->SetParameter(1, SpectrumFit_F->GetParameter(1) + SpectrumFit_F->GetParError(1));
-  F_u->SetParameter(2, SpectrumFit_F->GetParameter(2) + SpectrumFit_F->GetParError(2));
-  Double_t UpperErrorIntegral = F_u->Integral(LowerIntLimit, UpperIntLimit);
+  /*
 
-  TF1 *F_l = new TF1("F_l", "gaus", LowerIntLimit, UpperIntLimit);
-  F_l->SetParameter(0, SpectrumFit_F->GetParameter(0) - SpectrumFit_F->GetParError(0));
-  F_l->SetParameter(1, SpectrumFit_F->GetParameter(1) - SpectrumFit_F->GetParError(1));
-  F_l->SetParameter(2, SpectrumFit_F->GetParameter(2) - SpectrumFit_F->GetParError(2));
-  Double_t LowerErrorIntegral = F_l->Integral(LowerIntLimit, UpperIntLimit);
-  
-  // Take the average of the upper and lower errors
-  Double_t AverageError = (UpperErrorIntegral + LowerErrorIntegral) / 2;
+    The following code is an unfinished attempt to properly account
+    for the error in the gaussian fit in the final result error of the
+    fit integral. To be finished. ZSH 11 Aug 16
 
-  // Get the histogram bin width
-  Double_t BinWidth = Range / ADAQSettings->SpectrumNumBins;
-
-  // Set the new error
-  // SpectrumIntegralError = fabs(SpectrumIntegralValue - AverageError/BinWidth);
+    TF1 *F_u = new TF1("F_u", "gaus", LowerIntLimit, UpperIntLimit);
+    F_u->SetParameter(0, SpectrumFit_F->GetParameter(0) +
+    SpectrumFit_F->GetParError(0)); F_u->SetParameter(1,
+    SpectrumFit_F->GetParameter(1) + SpectrumFit_F->GetParError(1));
+    F_u->SetParameter(2, SpectrumFit_F->GetParameter(2) +
+    SpectrumFit_F->GetParError(2)); Double_t UpperErrorIntegral =
+    F_u->Integral(LowerIntLimit, UpperIntLimit);
+    
+    TF1 *F_l = new TF1("F_l", "gaus", LowerIntLimit, UpperIntLimit);
+    F_l->SetParameter(0, SpectrumFit_F->GetParameter(0) - SpectrumFit_F->GetParError(0));
+    F_l->SetParameter(1, SpectrumFit_F->GetParameter(1) - SpectrumFit_F->GetParError(1));
+    F_l->SetParameter(2, SpectrumFit_F->GetParameter(2) - SpectrumFit_F->GetParError(2));
+    Double_t LowerErrorIntegral = F_l->Integral(LowerIntLimit, UpperIntLimit);
+    
+    // Take the average of the upper and lower errors
+    Double_t AverageError = (UpperErrorIntegral + LowerErrorIntegral) / 2;
+    
+    // Get the histogram bin width
+    Double_t BinWidth = Range / ADAQSettings->SpectrumNumBins;
+    
+    //Set the new error
+    SpectrumIntegralError = fabs(SpectrumIntegralValue - AverageError/BinWidth);
+  */
   
   // Draw the gaussian peak fit
   SpectrumFit_F->SetLineColor(kGreen+2);
   SpectrumFit_F->SetLineWidth(3);
+
+  SpectrumFitExists = true;
 }
 
 
 Bool_t AAComputation::WriteSpectrumFitResultsFile(string FName)
 {
+  if(!SpectrumFitExists)
+    return false;
+  
   // Get the spectrum fit parameters
   
   Double_t Const = SpectrumFit_F->GetParameter(0);
   Double_t ConstErr = SpectrumFit_F->GetParError(0);
-
+  
   Double_t Mean = SpectrumFit_F->GetParameter(1);
   Double_t MeanErr = SpectrumFit_F->GetParError(1);
   

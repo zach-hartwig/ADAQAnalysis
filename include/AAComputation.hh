@@ -335,6 +335,7 @@ private:
   ///////////
   // Bool_Teans
   Bool_t SpectrumExists, SpectrumBackgroundExists, SpectrumDerivativeExists;
+  Bool_t SpectrumFitExists;
   Bool_t PSDHistogramExists, PSDHistogramSliceExists;
 
 
