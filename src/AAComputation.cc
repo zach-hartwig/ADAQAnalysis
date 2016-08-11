@@ -1927,6 +1927,14 @@ void AAComputation::FitSpectrum()
 }
 
 
+Bool_t AAComputation::WriteSpectrumFitResultsFile(string FName)
+{
+  ofstream Out(FName.c_str(), ofstream::trunc);
+
+  Out.close();
+}
+
+
 // Method used to output a generic TH1 object to a data text file in
 // the format column1 == bin center, column2 == bin content. Note that
 // the function accepts class types TH1 such that any derived class

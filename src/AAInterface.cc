@@ -204,34 +204,48 @@ void AAInterface::CreateTheMainFrames()
 
   TGHorizontalFrame *MenuFrame = new TGHorizontalFrame(this); 
   MenuFrame->SetBackgroundColor(ThemeBackgroundColor);
+  
+  TGPopupMenu *MenuFile = new TGPopupMenu(gClient->GetRoot());
+
+  MenuFile->AddEntry("&Open ADAQ file ...", MenuFileOpenADAQ_ID);
+  MenuFile->AddEntry("Ope&n ASIM file ...", MenuFileOpenASIM_ID);
+  
+  MenuFile->AddSeparator();
+
+  MenuFile->AddEntry("Load spectrum ...", MenuFileLoadSpectrum_ID);
+  MenuFile->AddEntry("Load PSD histogram ...", MenuFileLoadPSDHistogram_ID);
+  
+  MenuFile->AddSeparator();
+
+  MenuFile->AddEntry("Save &waveform ...", MenuFileSaveWaveform_ID);
 
   TGPopupMenu *SaveSpectrumSubMenu = new TGPopupMenu(gClient->GetRoot());
   SaveSpectrumSubMenu->AddEntry("&raw", MenuFileSaveSpectrum_ID);
   SaveSpectrumSubMenu->AddEntry("&background", MenuFileSaveSpectrumBackground_ID);
   SaveSpectrumSubMenu->AddEntry("&derivative", MenuFileSaveSpectrumDerivative_ID);
-
-  TGPopupMenu *SaveCalibrationSubMenu = new TGPopupMenu(gClient->GetRoot());
-  SaveCalibrationSubMenu->AddEntry("&values to file", MenuFileSaveSpectrumCalibration_ID);
+  MenuFile->AddPopup("Save &spectrum ...", SaveSpectrumSubMenu);
   
   TGPopupMenu *SavePSDSubMenu = new TGPopupMenu(gClient->GetRoot());
   SavePSDSubMenu->AddEntry("histo&gram", MenuFileSavePSDHistogram_ID);
   SavePSDSubMenu->AddEntry("sli&ce", MenuFileSavePSDHistogramSlice_ID);
-  
-  TGPopupMenu *MenuFile = new TGPopupMenu(gClient->GetRoot());
-  MenuFile->AddEntry("&Open ADAQ file ...", MenuFileOpenADAQ_ID);
-  MenuFile->AddEntry("Ope&n ASIM file ...", MenuFileOpenASIM_ID);
-  MenuFile->AddSeparator();
-  MenuFile->AddEntry("Load spectrum ...", MenuFileLoadSpectrum_ID);
-  MenuFile->AddEntry("Load PSD histogram ...", MenuFileLoadPSDHistogram_ID);
-  MenuFile->AddSeparator();
-  MenuFile->AddEntry("Save &waveform ...", MenuFileSaveWaveform_ID);
-  MenuFile->AddPopup("Save &spectrum ...", SaveSpectrumSubMenu);
-  MenuFile->AddPopup("Save &calibration ...", SaveCalibrationSubMenu);
   MenuFile->AddPopup("Save &PSD ...",SavePSDSubMenu);
+
+  TGPopupMenu *SaveCalibrationSubMenu = new TGPopupMenu(gClient->GetRoot());
+  SaveCalibrationSubMenu->AddEntry("&values to file", MenuFileSaveSpectrumCalibration_ID);
+  MenuFile->AddPopup("Save &calibration ...", SaveCalibrationSubMenu);
+
+  TGPopupMenu *SaveAnalysisSubMenu = new TGPopupMenu(gClient->GetRoot());
+  SaveAnalysisSubMenu->AddEntry("&fit results to file", MenuFileSaveSpectrumFitResults_ID);
+  MenuFile->AddPopup("Save &analysis ...", SaveAnalysisSubMenu);
+
   MenuFile->AddSeparator();
+
   MenuFile->AddEntry("&Print canvas ...", MenuFilePrint_ID);
+
   MenuFile->AddSeparator();
+
   MenuFile->AddEntry("E&xit", MenuFileExit_ID);
+
   MenuFile->Connect("Activated(int)", "AANontabSlots", NontabSlots, "HandleMenu(int)");
 
   TGMenuBar *MenuBar = new TGMenuBar(MenuFrame, 100, 20, kHorizontalFrame);

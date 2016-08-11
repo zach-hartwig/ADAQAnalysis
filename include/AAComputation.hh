@@ -122,6 +122,7 @@ public:
   void IntegrateSpectrum();
   void FitSpectrum();
   TGraph *CalculateSpectrumDerivative();
+  Bool_t WriteSpectrumFitResultsFile(string);
 
   // Spectrum calibration
   Bool_t SetCalibrationPoint(Int_t, Int_t, Double_t, Double_t);

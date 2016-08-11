@@ -575,6 +575,37 @@ void AANontabSlots::HandleMenu(int MenuID)
     }
     break;
   }
+
+  case MenuFileSaveSpectrumFitResults_ID:{
+    
+    const char *FileTypes[] = {"ADAQ spectrum fit results file", "*.dat",
+			       "All files"            , "*.*",
+			       0, 0};
+    
+    TGFileInfo FileInformation;
+    FileInformation.fFileTypes = FileTypes;
+    FileInformation.fIniDir = StrDup(getenv("PWD"));
+
+    new TGFileDialog(gClient->GetRoot(), TheInterface, kFDSave, &FileInformation);
+
+    if(FileInformation.fFilename==NULL)
+      TheInterface->CreateMessageBox("No file was selected and, therefore, nothing will be saved!","Stop");
+    else{
+      
+      string FName = FileInformation.fFilename;
+
+      size_t Found = FName.find_last_of(".dat");
+      if(Found == string::npos)
+	FName += ".dat";
+
+      Bool_t Success = ComputationMgr->WriteSpectrumFitResultsFile(FName);
+      if(Success)
+	TheInterface->CreateMessageBox("The spectrum fit results were successfully written to file.","Asterisk");
+      else
+	TheInterface->CreateMessageBox("There was an unknown error in writing the spectrum fit results file!","Stop");
+    }
+    break;
+  }
     
     // Action that enables the user to print the currently displayed
     // canvas to a file of the user's choice. But really, it's not a
@@ -635,7 +666,7 @@ void AANontabSlots::HandleMenu(int MenuID)
     }
     break;
   }
-    
+
     // Action that enables the Quit_TB and File->Exit selections to
     // quit the ROOT application
   case MenuFileExit_ID:
