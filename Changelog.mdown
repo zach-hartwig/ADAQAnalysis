@@ -1,11 +1,19 @@
 # ADAQAnalysis Version Change Log
 
 name: Changelog.md  
-date: 12 Jul 16 (last updated)  
+date: 11 Aug 16 (last updated)  
 auth: Zach Hartwig  
 mail: hartwig@psfc.mit.edu  
 
 ## Version 1.8 Series
+
+### 1.8.3
+
+ - Added ability to output spectrum fit parameters and results to a
+   data file for easier post-processing
+
+ - Added default names to all output files for user convenience.
+ 
 
 ### 1.8.2
 
