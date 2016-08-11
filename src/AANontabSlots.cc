@@ -428,11 +428,19 @@ void AANontabSlots::HandleMenu(int MenuID)
 			       "CSV file",    "*.csv",
 			       "ROOT file",   "*.root",
 			       0,             0};
-  
+
     TGFileInfo FileInformation;
     FileInformation.fFileTypeIdx = 4;
     FileInformation.fFileTypes = FileTypes;
     FileInformation.fIniDir = StrDup(TheInterface->HistogramDirectory.c_str());
+    if(MenuID == MenuFileSaveWaveform_ID)
+      FileInformation.fFilename = StrDup("DefaultWaveform.root");
+    else if(MenuID == MenuFileSaveSpectrum_ID or MenuID == MenuFileSaveSpectrumBackground_ID or MenuID == MenuFileSaveSpectrumDerivative_ID)
+      FileInformation.fFilename = StrDup("DefaultSpectrum.root");
+    else if(MenuID == MenuFileSavePSDHistogram_ID)
+      FileInformation.fFilename = StrDup("DefaultPSDHistogram.root");
+    else if(MenuID == MenuFileSavePSDHistogramSlice_ID)
+      FileInformation.fFilename = StrDup("DefaultPSDHistogramSlice.root");
     
     new TGFileDialog(gClient->GetRoot(), TheInterface, kFDSave, &FileInformation);
     
@@ -549,11 +557,14 @@ void AANontabSlots::HandleMenu(int MenuID)
     const char *FileTypes[] = {"ADAQ calibration file", "*.acal",
 			       "All files"            , "*.*",
 			       0, 0};
+
+    string Filename = "CalibrationResults.dat";
     
     TGFileInfo FileInformation;
     FileInformation.fFileTypes = FileTypes;
     FileInformation.fIniDir = StrDup(getenv("PWD"));
-
+    FileInformation.fFilename = StrDup(Filename.c_str());
+    
     new TGFileDialog(gClient->GetRoot(), TheInterface, kFDSave, &FileInformation);
 
     if(FileInformation.fFilename==NULL)
@@ -581,10 +592,13 @@ void AANontabSlots::HandleMenu(int MenuID)
     const char *FileTypes[] = {"ADAQ spectrum fit results file", "*.dat",
 			       "All files"            , "*.*",
 			       0, 0};
-    
+
+    string Filename = "SpectrumFitResults.dat";
+
     TGFileInfo FileInformation;
     FileInformation.fFileTypes = FileTypes;
     FileInformation.fIniDir = StrDup(getenv("PWD"));
+    FileInformation.fFilename = StrDup(Filename.c_str());
 
     new TGFileDialog(gClient->GetRoot(), TheInterface, kFDSave, &FileInformation);
 

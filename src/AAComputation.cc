@@ -1954,7 +1954,7 @@ Bool_t AAComputation::WriteSpectrumFitResultsFile(string FName)
 
   Out << "# File name : " << FName << "\n"
       << "# File date : " << ctime(&Time)
-      << "# File desc : " << "Gaussian fit parameters with absolute error\n"
+      << "# File desc : " << "Gaussian fit parameters and energy resolution with absolute error\n"
       << "# ADAQ file : " << ADAQFileName << "\n"
       << "\n"
       << setw(10) << "Constant:" << setw(10) << Const << setw(10) << ConstErr << "\n"
