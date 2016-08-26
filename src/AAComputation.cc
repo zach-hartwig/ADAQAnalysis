@@ -36,6 +36,7 @@
 #include <TChain.h>
 #include <TDirectory.h>
 #include <TKey.h>
+#include <TFitResult.h>
 
 // C++
 #include <iostream>
@@ -1755,14 +1756,14 @@ void AAComputation::CalculateSpectrumBackground()//TH1F *Spectrum_H)
   SpectrumBackgroundExists = true;
 }
 
-
+double Range;
 // Method used to integrate a pulse / energy spectrum
 void AAComputation::IntegrateSpectrum()
 {
   // Get the spectrum binning min/max/total range
   double Min = ADAQSettings->SpectrumMinBin;
   double Max = ADAQSettings->SpectrumMaxBin;
-  double Range = Max-Min;
+  Range = Max-Min;
 
   // Get the spectrum integration slider fractional position 
   double LowerFraction = ADAQSettings->SpectrumIntegrationMin;
@@ -1846,7 +1847,7 @@ void AAComputation::IntegrateSpectrum()
   }
 }
 
-
+TFitResultPtr r;
 void AAComputation::FitSpectrum()
 {
   /*
@@ -1889,7 +1890,7 @@ void AAComputation::FitSpectrum()
   // Create a gaussian fit between the lower/upper limits; fit the
   // gaussian to the histogram representing the integral region
   SpectrumFit_F = new TF1("PeakFit", "gaus", LowerIntLimit, UpperIntLimit);
-  SpectrumIntegral_H->Fit("PeakFit","R N Q");
+  r = SpectrumIntegral_H->Fit("PeakFit","R N Q S");
   
   // Project the gaussian fit into a histogram with identical
   // binning to the original spectrum to make analysis easier
@@ -1947,7 +1948,8 @@ Bool_t AAComputation::WriteSpectrumFitResultsFile(string FName)
     return false;
   
   // Get the spectrum fit parameters
-  
+  TMatrixDSym cov = r->GetCovarianceMatrix();
+    
   Double_t Const = SpectrumFit_F->GetParameter(0);
   Double_t ConstErr = SpectrumFit_F->GetParError(0);
   
@@ -1959,6 +1961,12 @@ Bool_t AAComputation::WriteSpectrumFitResultsFile(string FName)
 
   Double_t Res = 2.35 * Sigma / Mean * 100;
   Double_t ResErr = Res * sqrt(pow(SigmaErr/Sigma,2) + pow(MeanErr/Mean,2));
+
+  Double_t CovConstSigma = cov(2,0);
+
+  Double_t BinWidth = Range / ADAQSettings->SpectrumNumBins;
+  //Double_t rootisstupid=TwoPi();
+  Double_t TotalError = sqrt(TMath::TwoPi())*sqrt(pow(Sigma*ConstErr,2)+pow(Const*SigmaErr,2)+2*Sigma*Const*CovConstSigma)/BinWidth;
 
   // Get the present time/date
 
@@ -1973,10 +1981,12 @@ Bool_t AAComputation::WriteSpectrumFitResultsFile(string FName)
       << "# File desc : " << "Gaussian fit parameters and energy resolution with absolute error\n"
       << "# ADAQ file : " << ADAQFileName << "\n"
       << "\n"
-      << setw(10) << "Constant:" << setw(10) << Const << setw(10) << ConstErr << "\n"
-      << setw(10) << "Mean:" << setw(10) << Mean << setw(10) << MeanErr << "\n"
-      << setw(10) << "Sigma:" << setw(10) << Sigma << setw(10) << SigmaErr << "\n"
-      << setw(10) << "Res:" << setw(10) << Res << setw(10) << ResErr << "\n"
+      << setw(10) << "Integral:" << setw(10) << SpectrumIntegralValue << setw(20) << TotalError << "\n"
+      << setw(10) << "Constant:" << setw(10) << Const << setw(20) << ConstErr << "\n"
+      << setw(10) << "Mean:" << setw(10) << Mean << setw(20) << MeanErr << "\n"
+      << setw(10) << "Sigma:" << setw(10) << Sigma << setw(20) << SigmaErr << "\n"
+      << setw(10) << "Res:" << setw(10) << Res << setw(20) << ResErr << "\n"
+      << setw(10) << "Covariance:" << setw(10) << "Const/Sigma" << setw(20) << CovConstSigma << "\n"
       << endl;
 
   return true;
