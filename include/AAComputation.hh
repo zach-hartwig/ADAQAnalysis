@@ -49,6 +49,7 @@
 #include <TGProgressBar.h>
 #include <TF1.h>
 #include <TCutG.h>
+#include <TFitResult.h>
 
 // C++
 #include <string>
@@ -302,6 +303,7 @@ private:
   TH1F *SpectrumBackground_H, *SpectrumDeconvolved_H;
   TH1F *SpectrumIntegral_H;
   TF1 *SpectrumFit_F;
+  TFitResultPtr SpectrumFit_FR;
   Double_t SpectrumIntegralValue, SpectrumIntegralError;
 
   // Vectors used to store processed waveform values

@@ -36,7 +36,7 @@
 #include <TChain.h>
 #include <TDirectory.h>
 #include <TKey.h>
-#include <TFitResult.h>
+#include <TMath.h>
 
 // C++
 #include <iostream>
@@ -1756,23 +1756,23 @@ void AAComputation::CalculateSpectrumBackground()//TH1F *Spectrum_H)
   SpectrumBackgroundExists = true;
 }
 
-double Range;
+
 // Method used to integrate a pulse / energy spectrum
 void AAComputation::IntegrateSpectrum()
 {
   // Get the spectrum binning min/max/total range
-  double Min = ADAQSettings->SpectrumMinBin;
-  double Max = ADAQSettings->SpectrumMaxBin;
-  Range = Max-Min;
+  Double_t Min = ADAQSettings->SpectrumMinBin;
+  Double_t Max = ADAQSettings->SpectrumMaxBin;
+  Double_t Range = Max - Min;
 
   // Get the spectrum integration slider fractional position 
-  double LowerFraction = ADAQSettings->SpectrumIntegrationMin;
-  double UpperFraction = ADAQSettings->SpectrumIntegrationMax;
+  Double_t LowerFraction = ADAQSettings->SpectrumIntegrationMin;
+  Double_t UpperFraction = ADAQSettings->SpectrumIntegrationMax;
 
   // Compute the integration range, ensuring to account for case where
   // the lowest spectrum bin is non-zero.
-  double LowerIntLimit = LowerFraction * Range + Min;
-  double UpperIntLimit = UpperFraction * Range + Min;
+  Double_t LowerIntLimit = LowerFraction * Range + Min;
+  Double_t UpperIntLimit = UpperFraction * Range + Min;
 
   /*
   double XAxisMin = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
@@ -1890,7 +1890,7 @@ void AAComputation::FitSpectrum()
   // Create a gaussian fit between the lower/upper limits; fit the
   // gaussian to the histogram representing the integral region
   SpectrumFit_F = new TF1("PeakFit", "gaus", LowerIntLimit, UpperIntLimit);
-  r = SpectrumIntegral_H->Fit("PeakFit","R N Q S");
+  SpectrumFit_FR = SpectrumIntegral_H->Fit("PeakFit","R N Q S");
   
   // Project the gaussian fit into a histogram with identical
   // binning to the original spectrum to make analysis easier
@@ -1948,7 +1948,7 @@ Bool_t AAComputation::WriteSpectrumFitResultsFile(string FName)
     return false;
   
   // Get the spectrum fit parameters
-  TMatrixDSym cov = r->GetCovarianceMatrix();
+  TMatrixDSym Cov = SpectrumFit_FR->GetCovarianceMatrix();
     
   Double_t Const = SpectrumFit_F->GetParameter(0);
   Double_t ConstErr = SpectrumFit_F->GetParError(0);
@@ -1962,11 +1962,13 @@ Bool_t AAComputation::WriteSpectrumFitResultsFile(string FName)
   Double_t Res = 2.35 * Sigma / Mean * 100;
   Double_t ResErr = Res * sqrt(pow(SigmaErr/Sigma,2) + pow(MeanErr/Mean,2));
 
-  Double_t CovConstSigma = cov(2,0);
+  Double_t CovConstSigma = Cov(2,0);
+
+  Double_t Range = ADAQSettings->SpectrumMaxBin - ADAQSettings->SpectrumMinBin;
 
   Double_t BinWidth = Range / ADAQSettings->SpectrumNumBins;
-  //Double_t rootisstupid=TwoPi();
-  Double_t TotalError = sqrt(TMath::TwoPi())*sqrt(pow(Sigma*ConstErr,2)+pow(Const*SigmaErr,2)+2*Sigma*Const*CovConstSigma)/BinWidth;
+
+  SpectrumIntegralError = sqrt(TMath::TwoPi())*sqrt(pow(Sigma*ConstErr,2)+pow(Const*SigmaErr,2)+2*Sigma*Const*CovConstSigma)/BinWidth;
 
   // Get the present time/date
 
