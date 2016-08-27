@@ -963,9 +963,15 @@ void AAComputation::ProcessSpectrumWaveforms()
 	// Get the stored PSD total and tail integrals
 	Double_t Total = WaveformData[Channel]->GetPSDTotalIntegral();
 	Double_t Tail = WaveformData[Channel]->GetPSDTailIntegral();
+
+	// Calculate te appropriate PSD parameter
+	
+	Double_t PSDParameter = Tail;
+	if(ADAQSettings->PSDYAxisTailTotal)
+	  PSDParameter /= Total;
 	
 	// Flag the waveform if it is not accepted
-	if(ApplyPSDRegion(Total, Tail))
+	if(ApplyPSDRegion(Total, PSDParameter))
 	  PSDReject = true;
       }
       
@@ -2663,12 +2669,12 @@ Bool_t AAComputation::ApplyPSDRegion(Double_t PSDTotal,
   
   if(ADAQSettings->PSDInsideRegion and
      ADAQSettings->PSDRegions[Channel]->IsInside(PSDTotal,
-						    PSDParameter))
+						 PSDParameter))
     return false;
   
   else if(ADAQSettings->PSDOutsideRegion and 
 	  !ADAQSettings->PSDRegions[Channel]->IsInside(PSDTotal,
-							  PSDParameter))
+						       PSDParameter))
     return false;
   
   else
