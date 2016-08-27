@@ -111,7 +111,7 @@ enum{
   MenuFileSavePSDHistogram_ID,
   MenuFileSavePSDHistogramSlice_ID,
   MenuFileSaveSpectrumCalibration_ID,
-  MenuFileSaveSpectrumFitResults_ID,
+  MenuFileSaveSpectrumAnalysisResults_ID,
   MenuFilePrint_ID,
   MenuFileExit_ID,
   

@@ -235,7 +235,7 @@ void AAInterface::CreateTheMainFrames()
   MenuFile->AddPopup("Save &calibration ...", SaveCalibrationSubMenu);
 
   TGPopupMenu *SaveAnalysisSubMenu = new TGPopupMenu(gClient->GetRoot());
-  SaveAnalysisSubMenu->AddEntry("&fit results to file", MenuFileSaveSpectrumFitResults_ID);
+  SaveAnalysisSubMenu->AddEntry("&Spectrum analysis results to file", MenuFileSaveSpectrumAnalysisResults_ID);
   MenuFile->AddPopup("Save &analysis ...", SaveAnalysisSubMenu);
 
   MenuFile->AddSeparator();

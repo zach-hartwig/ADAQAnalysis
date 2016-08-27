@@ -587,13 +587,13 @@ void AANontabSlots::HandleMenu(int MenuID)
     break;
   }
 
-  case MenuFileSaveSpectrumFitResults_ID:{
+  case MenuFileSaveSpectrumAnalysisResults_ID:{
     
-    const char *FileTypes[] = {"ADAQ spectrum fit results file", "*.dat",
+    const char *FileTypes[] = {"ADAQ spectrum analysis results file", "*.dat",
 			       "All files"            , "*.*",
 			       0, 0};
 
-    string Filename = "SpectrumFitResults.dat";
+    string Filename = "SpectrumAnalysisResults.dat";
 
     TGFileInfo FileInformation;
     FileInformation.fFileTypes = FileTypes;
