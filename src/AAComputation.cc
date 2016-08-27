@@ -1877,16 +1877,34 @@ void AAComputation::FitSpectrum()
     delete SpectrumFit_F;
     SpectrumFitExists = false;
   }
+
+  TString FitArguments = "R N S";
+  if(!ADAQSettings->SpectrumUseVerboseFit)
+    FitArguments += " Q";
   
   // Create a gaussian fit between the lower/upper limits; fit the
   // gaussian to the histogram representing the integral region
+  
   SpectrumFit_F = new TF1("PeakFit", "gaus", LowerIntLimit, UpperIntLimit);
-  SpectrumFit_FR = SpectrumIntegral_H->Fit("PeakFit","R N Q S");
+  SpectrumFit_FR = SpectrumIntegral_H->Fit("PeakFit", FitArguments);
   
   // Project the gaussian fit into a histogram with identical
   // binning to the original spectrum to make analysis easier
   TH1F *SpectrumFit_H = (TH1F *)SpectrumIntegral_H->Clone("SpectrumFit_H");
   SpectrumFit_H->Eval(SpectrumFit_F);
+
+  // Get the covariance and correlation matrices; print if desired
+  
+  TMatrixDSym CorMatrix = SpectrumFit_FR->GetCorrelationMatrix();    
+  TMatrixDSym CovMatrix = SpectrumFit_FR->GetCovarianceMatrix();
+  
+  if(ADAQSettings->SpectrumUseVerboseFit){
+    cout << "\nCORRELATION MATRIX" << flush;
+    CorMatrix.Print();
+    
+    cout << "\nCOVARIANCE MATRIX" << flush;
+    CovMatrix.Print();
+  }
   
   if(ADAQSettings->SpectrumFindIntegral){
     
@@ -1907,9 +1925,8 @@ void AAComputation::FitSpectrum()
     Double_t Sigma = SpectrumFit_F->GetParameter(2);
     Double_t SigmaErr = SpectrumFit_F->GetParError(2);
     
-    // Calculate the covariance of (constant / sigma)
-    
-    TMatrixDSym CovMatrix = SpectrumFit_FR->GetCovarianceMatrix();
+
+    // Calculate the const/sigma covariance
     Double_t CovConstSigma = CovMatrix(2,0);
     
     // Compute the bin width

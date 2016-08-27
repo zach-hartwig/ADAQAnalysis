@@ -215,10 +215,11 @@ enum{
 
   SpectrumFindIntegral_CB_ID,
   SpectrumIntegralInCounts_CB_ID,
-
+  
   SpectrumUseGaussianFit_CB_ID,
+  SpectrumUseVerboseFit_CB_ID,
   SpectrumNormalizePeakToCurrent_CB_ID,
-
+  
   SpectrumAnalysisLowerLimit_NEL_ID,
   SpectrumAnalysisUpperLimit_NEL_ID,
 

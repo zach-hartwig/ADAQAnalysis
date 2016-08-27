@@ -95,7 +95,7 @@ public:
   Bool_t PlotWithBackground, PlotLessBackground;
 
   Bool_t SpectrumFindIntegral, SpectrumIntegralInCounts;
-  Bool_t SpectrumUseGaussianFit, SpectrumNormalizeToCurrent;
+  Bool_t SpectrumUseGaussianFit, SpectrumUseVerboseFit;
 
 
   ///////////////

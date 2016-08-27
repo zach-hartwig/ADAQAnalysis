@@ -103,6 +103,11 @@ void AAAnalysisSlots::HandleCheckButtons()
 	GraphicsMgr->PlotSpectrum();
     }
     break;
+
+  case SpectrumUseVerboseFit_CB_ID:
+    if(TheInterface->SpectrumUseGaussianFit_CB->IsDown())
+      TheInterface->SpectrumIntegrationLimits_DHS->PositionChanged();
+    break;
     
   case EAEnable_CB_ID:{
     

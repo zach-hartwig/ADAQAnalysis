@@ -1165,6 +1165,11 @@ void AAInterface::FillAnalysisFrame()
   Horizontal2_HF->AddFrame(SpectrumUseGaussianFit_CB = new TGCheckButton(Horizontal2_HF, "Use gaussian fit", SpectrumUseGaussianFit_CB_ID),
 			   new TGLayoutHints(kLHintsNormal, 5,5,0,0));
   SpectrumUseGaussianFit_CB->Connect("Clicked()", "AAAnalysisSlots", AnalysisSlots, "HandleCheckButtons()");
+  
+  Horizontal2_HF->AddFrame(SpectrumUseVerboseFit_CB = new TGCheckButton(Horizontal2_HF, "Verbose", SpectrumUseVerboseFit_CB_ID),
+			   new TGLayoutHints(kLHintsNormal, 10,5,0,0));
+  SpectrumUseVerboseFit_CB->Connect("Clicked()", "AAAnalysisSlots", AnalysisSlots, "HandleCheckButtons()");
+
 
   // Fit height
 
@@ -2503,6 +2508,7 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->SpectrumFindIntegral = SpectrumFindIntegral_CB->IsDown();
   ADAQSettings->SpectrumIntegralInCounts = SpectrumIntegralInCounts_CB->IsDown();
   ADAQSettings->SpectrumUseGaussianFit = SpectrumUseGaussianFit_CB->IsDown();
+  ADAQSettings->SpectrumUseVerboseFit = SpectrumUseVerboseFit_CB->IsDown();
 
 
   /////////////////////////////////////

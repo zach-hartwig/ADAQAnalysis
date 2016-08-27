@@ -280,6 +280,7 @@ private:
   TGCheckButton *SpectrumFindIntegral_CB;
   TGCheckButton *SpectrumIntegralInCounts_CB;
   TGCheckButton *SpectrumUseGaussianFit_CB;
+  TGCheckButton *SpectrumUseVerboseFit_CB;
   TGCheckButton *SpectrumNormalizePeakToCurrent_CB;
   ADAQNumberEntryFieldWithLabel *SpectrumIntegral_NEFL;
   ADAQNumberEntryFieldWithLabel *SpectrumIntegralError_NEFL;
