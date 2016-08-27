@@ -1947,9 +1947,13 @@ Bool_t AAComputation::WriteSpectrumFitResultsFile(string FName)
   if(!SpectrumFitExists)
     return false;
   
-  // Get the spectrum fit parameters
-  TMatrixDSym Cov = SpectrumFit_FR->GetCovarianceMatrix();
-    
+  // Get the fit correlation and covariance matrix
+
+  TMatrixDSym CovMatrix = SpectrumFit_FR->GetCovarianceMatrix();
+  TMatrixDSym CorMatrix = SpectrumFit_FR->GetCorrelationMatrix();
+
+  // Get the gaussian fit parameters
+
   Double_t Const = SpectrumFit_F->GetParameter(0);
   Double_t ConstErr = SpectrumFit_F->GetParError(0);
   
@@ -1962,11 +1966,19 @@ Bool_t AAComputation::WriteSpectrumFitResultsFile(string FName)
   Double_t Res = 2.35 * Sigma / Mean * 100;
   Double_t ResErr = Res * sqrt(pow(SigmaErr/Sigma,2) + pow(MeanErr/Mean,2));
 
-  Double_t CovConstSigma = Cov(2,0);
+  // Compute the covariance of constant / sigma
+  
+  Double_t CovConstSigma = CovMatrix(2,0);
 
-  Double_t Range = ADAQSettings->SpectrumMaxBin - ADAQSettings->SpectrumMinBin;
-
+  // Compute the spectrum bin width
+  
+  Double_t Min = ADAQSettings->SpectrumMinBin;
+  Double_t Max = ADAQSettings->SpectrumMaxBin;
+  Double_t Range = Max - Min;
   Double_t BinWidth = Range / ADAQSettings->SpectrumNumBins;
+
+  // Properly compute the error. Thanks to Leigh Ann Kesler (MIT) for
+  // the proper error formula
 
   SpectrumIntegralError = sqrt(TMath::TwoPi())*sqrt(pow(Sigma*ConstErr,2)+pow(Const*SigmaErr,2)+2*Sigma*Const*CovConstSigma)/BinWidth;
 
@@ -1978,17 +1990,48 @@ Bool_t AAComputation::WriteSpectrumFitResultsFile(string FName)
     
   ofstream Out(FName.c_str(), ofstream::trunc);
 
+  Out << setprecision(8);
+
   Out << "# File name : " << FName << "\n"
       << "# File date : " << ctime(&Time)
-      << "# File desc : " << "Gaussian fit parameters and energy resolution with absolute error\n"
+      << "# File desc : " << "Spectral analysis output from ADAQAnalysis\n"
       << "# ADAQ file : " << ADAQFileName << "\n"
       << "\n"
-      << setw(10) << "Integral:" << setw(10) << SpectrumIntegralValue << setw(20) << TotalError << "\n"
-      << setw(10) << "Constant:" << setw(10) << Const << setw(20) << ConstErr << "\n"
-      << setw(10) << "Mean:" << setw(10) << Mean << setw(20) << MeanErr << "\n"
-      << setw(10) << "Sigma:" << setw(10) << Sigma << setw(20) << SigmaErr << "\n"
-      << setw(10) << "Res:" << setw(10) << Res << setw(20) << ResErr << "\n"
-      << setw(10) << "Covariance:" << setw(10) << "Const/Sigma" << setw(20) << CovConstSigma << "\n"
+      << "# Spectrum information\n"
+      << "  Min : " << Min << "\n"
+      << "  Max : " << Max << "\n"
+      << " Bins : " << ADAQSettings->SpectrumNumBins << "\n"
+      << "Width : " << BinWidth << "\n"
+      << "\n"
+      << "# Gaussian fit parameters\n"
+      << "     Constant : " << Const << setw(15) << ConstErr << "\n"
+      << "         Mean : " << Mean << setw(15) << MeanErr << "\n"
+      << "        Sigma : " << Sigma << setw(15) << SigmaErr << "\n"
+      << "   Resolution : " << Res << setw(15) << ResErr << "\n"
+      << "CovConstSigma : " << CovConstSigma << "\n"
+      << "\n"
+      << "# Gaussian fit correlation matrix\n";
+  
+  for(Int_t i=0; i<3; i++){
+    for(Int_t j=0; j<3; j++){
+      Out << setw(15) << CorMatrix(i,j);
+    }
+    Out << endl;
+  }
+  
+  Out << "\n"
+      << "# Gaussian fit covariance matrix\n";
+  
+  for(Int_t i=0; i<3; i++){
+    for(Int_t j=0; j<3; j++){
+      Out << setw(15) << CovMatrix(i,j);
+    }
+    Out << endl;
+  }
+   
+  Out << "\n"
+      << "# Gaussian fit integral\n"
+      << "Integral : " << SpectrumIntegralValue << setw(15) << SpectrumIntegralError << "\n"
       << endl;
 
   return true;
