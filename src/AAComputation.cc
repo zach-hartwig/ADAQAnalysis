@@ -1847,17 +1847,9 @@ void AAComputation::IntegrateSpectrum()
   }
 }
 
-TFitResultPtr r;
+
 void AAComputation::FitSpectrum()
 {
-  /*
-  double XAxisMin = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
-  double XAxisMax = Spectrum_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
-
-  double LowerIntLimit = (ADAQSettings->SpectrumIntegrationMin * XAxisMax) + XAxisMin;
-  double UpperIntLimit = ADAQSettings->SpectrumIntegrationMax * XAxisMax;
-  */
-
   // Get the spectrum binning min/max/total range
   double Min = ADAQSettings->SpectrumMinBin;
   double Max = ADAQSettings->SpectrumMaxBin;
@@ -1873,8 +1865,7 @@ void AAComputation::FitSpectrum()
   double UpperIntLimit = UpperFraction * Range + Min;
 
   
-  // Check to ensure that the lower limit line is always LESS than the
-  // upper limit line
+  // Eensure the lower limit line is always LESS than the upper limit
   if(UpperIntLimit < LowerIntLimit)
     UpperIntLimit = LowerIntLimit+1;
 
@@ -1897,44 +1888,45 @@ void AAComputation::FitSpectrum()
   TH1F *SpectrumFit_H = (TH1F *)SpectrumIntegral_H->Clone("SpectrumFit_H");
   SpectrumFit_H->Eval(SpectrumFit_F);
   
-  // Compute the integral and error between the lower/upper limits
-  // of the histogram that resulted from the gaussian fit
-  SpectrumIntegralValue = SpectrumFit_H->IntegralAndError(SpectrumFit_H->FindBin(LowerIntLimit),
-							  SpectrumFit_H->FindBin(UpperIntLimit),
-							  SpectrumIntegralError,
-							  IntegralArg.c_str());
-
-  /*
-
-    The following code is an unfinished attempt to properly account
-    for the error in the gaussian fit in the final result error of the
-    fit integral. To be finished. ZSH 11 Aug 16
-
-    TF1 *F_u = new TF1("F_u", "gaus", LowerIntLimit, UpperIntLimit);
-    F_u->SetParameter(0, SpectrumFit_F->GetParameter(0) +
-    SpectrumFit_F->GetParError(0)); F_u->SetParameter(1,
-    SpectrumFit_F->GetParameter(1) + SpectrumFit_F->GetParError(1));
-    F_u->SetParameter(2, SpectrumFit_F->GetParameter(2) +
-    SpectrumFit_F->GetParError(2)); Double_t UpperErrorIntegral =
-    F_u->Integral(LowerIntLimit, UpperIntLimit);
+  if(ADAQSettings->SpectrumFindIntegral){
     
-    TF1 *F_l = new TF1("F_l", "gaus", LowerIntLimit, UpperIntLimit);
-    F_l->SetParameter(0, SpectrumFit_F->GetParameter(0) - SpectrumFit_F->GetParError(0));
-    F_l->SetParameter(1, SpectrumFit_F->GetParameter(1) - SpectrumFit_F->GetParError(1));
-    F_l->SetParameter(2, SpectrumFit_F->GetParameter(2) - SpectrumFit_F->GetParError(2));
-    Double_t LowerErrorIntegral = F_l->Integral(LowerIntLimit, UpperIntLimit);
+    // Compute the integral of the gaussian fit
     
-    // Take the average of the upper and lower errors
-    Double_t AverageError = (UpperErrorIntegral + LowerErrorIntegral) / 2;
+    SpectrumIntegralValue = SpectrumFit_H->Integral(SpectrumFit_H->FindBin(LowerIntLimit),
+						    SpectrumFit_H->FindBin(UpperIntLimit),
+						    IntegralArg.c_str());
     
-    // Get the histogram bin width
+    // Properly calculate the error in the integral of the gaussian
+    // fit. Thanks to Ann Kesler (MIT PSFC) for this contrbution
+    
+    // Get the necessary gaussian fit parameters
+    
+    Double_t Const = SpectrumFit_F->GetParameter(0);
+    Double_t ConstErr = SpectrumFit_F->GetParError(0);
+    
+    Double_t Sigma = SpectrumFit_F->GetParameter(2);
+    Double_t SigmaErr = SpectrumFit_F->GetParError(2);
+    
+    // Calculate the covariance of (constant / sigma)
+    
+    TMatrixDSym CovMatrix = SpectrumFit_FR->GetCovarianceMatrix();
+    Double_t CovConstSigma = CovMatrix(2,0);
+    
+    // Compute the bin width
+    
     Double_t BinWidth = Range / ADAQSettings->SpectrumNumBins;
     
-    //Set the new error
-    SpectrumIntegralError = fabs(SpectrumIntegralValue - AverageError/BinWidth);
-  */
-  
-  // Draw the gaussian peak fit
+    // Calculate the proper error
+    
+    SpectrumIntegralError = sqrt(TMath::TwoPi()) * sqrt(pow(Sigma*ConstErr,2)+pow(Const*SigmaErr,2)+2*Sigma*Const*CovConstSigma) / BinWidth;
+  }
+  else{
+    SpectrumIntegralValue = 0.;
+    SpectrumIntegralError = 0.;
+  }
+    
+    // Draw the gaussian peak fit
+
   SpectrumFit_F->SetLineColor(kGreen+2);
   SpectrumFit_F->SetLineWidth(3);
 
@@ -1976,11 +1968,6 @@ Bool_t AAComputation::WriteSpectrumFitResultsFile(string FName)
   Double_t Max = ADAQSettings->SpectrumMaxBin;
   Double_t Range = Max - Min;
   Double_t BinWidth = Range / ADAQSettings->SpectrumNumBins;
-
-  // Properly compute the error. Thanks to Leigh Ann Kesler (MIT) for
-  // the proper error formula
-
-  SpectrumIntegralError = sqrt(TMath::TwoPi())*sqrt(pow(Sigma*ConstErr,2)+pow(Const*SigmaErr,2)+2*Sigma*Const*CovConstSigma)/BinWidth;
 
   // Get the present time/date
 
