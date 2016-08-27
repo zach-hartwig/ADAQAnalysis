@@ -1,11 +1,23 @@
 # ADAQAnalysis Version Change Log
 
 name: Changelog.md  
-date: 11 Aug 16 (last updated)  
+date: 26 Aug 16 (last updated)  
 auth: Zach Hartwig  
 mail: hartwig@psfc.mit.edu  
 
 ## Version 1.8 Series
+
+### 1.8.4
+
+ - Corrected calculation of error in the integral of the spectrum
+   gaussian fit. Thanks to Leigh Ann Kesler (MIT) for the code.
+
+ - Major update to the spectrum analysis output file. A large amount
+   of nicely formated fit/integral data is now output.
+
+ - Fixed spectra creation with waveform data when using PSD regions
+   when the PSD parameter was (tail/total).
+
 
 ### 1.8.3
 
