@@ -1,11 +1,17 @@
 # ADAQAnalysis Version Change Log
 
 name: Changelog.md  
-date: 26 Aug 16 (last updated)  
+date: 22 Nov 16 (last updated)  
 auth: Zach Hartwig  
 mail: hartwig@psfc.mit.edu  
 
 ## Version 1.8 Series
+
+### 1.8.5
+
+ - Removed issue preventing spectra creation from raw waveforms. Issue
+   appears to be located upstream in ADAQAcquisition and ADAQ file.
+   
 
 ### 1.8.4
 
