@@ -1016,10 +1016,19 @@ void AAComputation::ProcessSpectrumWaveforms()
   
   else{
 
+    // At present, ADAQAcquisition seems to incorrectly set the flag
+    // for whether or not waveforms are actually stored in the ADAQ
+    // file. Disabling this error-check to ensure processing of all
+    // ADAQ files can be handled properly. The only consequence is
+    // that the user may be left in slight confusion ...
+    // ZSH (22 Nov 16)
+
+    /*
     if(!ARI->GetStoreRawWaveforms()){
       SpectrumExists = false;
       return;
     }
+    */
     
     // Reboot the PeakFinder with up-to-date max peaks
     if(PeakFinder) delete PeakFinder;
