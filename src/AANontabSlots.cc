@@ -558,7 +558,7 @@ void AANontabSlots::HandleMenu(int MenuID)
 			       "All files"            , "*.*",
 			       0, 0};
 
-    string Filename = "CalibrationResults.dat";
+    string Filename = "CalibrationResults.acal";
     
     TGFileInfo FileInformation;
     FileInformation.fFileTypes = FileTypes;
