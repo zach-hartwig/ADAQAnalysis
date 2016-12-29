@@ -960,17 +960,29 @@ void AAComputation::ProcessSpectrumWaveforms()
       
       if(ADAQSettings->UsePSDRegions[Channel]){
 	
-	// Get the stored PSD total and tail integrals
+	// Get the stored PSD total and tail integral values
+
 	Double_t Total = WaveformData[Channel]->GetPSDTotalIntegral();
 	Double_t Tail = WaveformData[Channel]->GetPSDTailIntegral();
 
-	// Calculate te appropriate PSD parameter
+	// Calculate the appropriate PSD parameter
 	
 	Double_t PSDParameter = Tail;
 	if(ADAQSettings->PSDYAxisTailTotal)
 	  PSDParameter /= Total;
 	
+	// Convert the total integral [ADC] into energy [MeVee] if the
+	// PSD histogram X-axis is set to use energy units
+
+	if(ADAQSettings->PSDXAxisEnergy and ADAQSettings->UseSpectraCalibrations[Channel]){
+	  if(SpectraCalibrationType[Channel] == zCalibrationFit)
+	    Total = ADAQSettings->SpectraCalibrations[Channel]->Eval(Total);
+	  else if(SpectraCalibrationType[Channel] == zCalibrationInterp)
+	    Total = ADAQSettings->SpectraCalibrationData[Channel]->Eval(Total);
+	}
+	
 	// Flag the waveform if it is not accepted
+
 	if(ApplyPSDRegion(Total, PSDParameter))
 	  PSDReject = true;
       }

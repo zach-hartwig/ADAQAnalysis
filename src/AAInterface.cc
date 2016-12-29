@@ -830,7 +830,7 @@ void AAInterface::FillSpectrumFrame()
   SpectrumCalibration_GF->AddFrame(SpectrumCalibration_HF0, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
 
   // Energy calibration 
-  SpectrumCalibration_HF0->AddFrame(SpectrumCalibration_CB = new TGCheckButton(SpectrumCalibration_HF0, "Make it so", SpectrumCalibration_CB_ID),
+  SpectrumCalibration_HF0->AddFrame(SpectrumCalibration_CB = new TGCheckButton(SpectrumCalibration_HF0, "Make it so!", SpectrumCalibration_CB_ID),
 				    new TGLayoutHints(kLHintsLeft, 0,0,10,0));
   SpectrumCalibration_CB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleCheckButtons()");
   SpectrumCalibration_CB->SetState(kButtonUp);
