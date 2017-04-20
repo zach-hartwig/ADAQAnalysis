@@ -902,11 +902,18 @@ void AAComputation::ProcessSpectrumWaveforms()
       SpectrumExists = false;
       return;
     }
+
+    // Plans are in place to insure that flags are set in the ADAQ
+    // file the tell what data exists within the file. These appear
+    // buggy as of ADAQAcquisition v1.6.12. Will attempt to get this
+    // issued resolved at some point. ZSH 20 Apr 17
     
+    /*
     if(!ARI->GetStoreEnergyData()){
       SpectrumExists = false;
       return;
     }
+    */
     
     //////////////////////////////////////////////
     // Readout the waveform data into the spectrum
@@ -1028,12 +1035,10 @@ void AAComputation::ProcessSpectrumWaveforms()
   
   else{
 
-    // At present, ADAQAcquisition seems to incorrectly set the flag
-    // for whether or not waveforms are actually stored in the ADAQ
-    // file. Disabling this error-check to ensure processing of all
-    // ADAQ files can be handled properly. The only consequence is
-    // that the user may be left in slight confusion ...
-    // ZSH (22 Nov 16)
+    // Plans are in place to insure that flags are set in the ADAQ
+    // file the tell what data exists within the file. These appear
+    // buggy as of ADAQAcquisition v1.6.12. Will attempt to get this
+    // issued resolved at some point. ZSH 20 Apr 17
 
     /*
     if(!ARI->GetStoreRawWaveforms()){
@@ -2189,12 +2194,18 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
       PSDHistogramExists = false;
       return PSDHistogram_H;
     }
-    
-    // Ensure the user chose to save PSD waveform data
+
+    // Plans are in place to insure that flags are set in the ADAQ
+    // file the tell what data exists within the file. These appear
+    // buggy as of ADAQAcquisition v1.6.12. Will attempt to get this
+    // issued resolved at some point. ZSH 20 Apr 17
+
+    /*
     if(!ARI->GetStorePSDData()){
       PSDHistogramExists = false;
       return PSDHistogram_H;
     }
+    */
 
     ///////////////////////////////////////////////////
     // Readout the waveform data into the PSD histogram
