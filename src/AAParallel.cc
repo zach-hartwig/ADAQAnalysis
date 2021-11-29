@@ -21,7 +21,10 @@
 //       functionality. This includes initializing and finalizing MPI
 //       sessions, set/get methods for important MPI variables like
 //       processing number and node rank, and assignment of the MPI
-//       binary name for execution from the sequential GUI.
+//       binary name for execution from the sequential GUI. All C++
+//       bindings have been replaced with C binding for compliance
+//       with Open MPI v4.x.x (C++ binding depracated back in version
+//       2.x.x)
 //
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -80,14 +83,17 @@ AAParallel::~AAParallel()
 {;}
 
 
-void AAParallel::Initialize(int argc, char *argv[])
+// Create and initialize the MPI environment
+void AAParallel::Initialize(int argc, char **argv)
 {
 #ifdef MPI_ENABLED
-  MPI::Init_thread(argc, argv, MPI::THREAD_SERIALIZED);
 
+  int threadSupport = 0;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &threadSupport);
+  
+  MPI_Comm_rank(MPI_COMM_WORLD, &MPI_Rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &MPI_Size);
 
-  MPI_Rank = MPI::COMM_WORLD.Get_rank();
-  MPI_Size = MPI::COMM_WORLD.Get_size();
 
   IsMaster = (MPI_Rank == 0);
   IsSlave = (MPI_Rank != 0);
@@ -95,10 +101,19 @@ void AAParallel::Initialize(int argc, char *argv[])
 }
 
 
+void AAParallel::Barrier()
+{
+#ifdef MPI_ENABLED
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
+}
+
+
+// Close the MPI environment
 void AAParallel::Finalize()
 {
 #ifdef MPI_ENABLED
-  MPI::Finalize();
+  MPI_Finalize();
 #endif
 }
 
@@ -110,8 +125,10 @@ void AAParallel::Finalize()
 double *AAParallel::SumDoubleArrayToMaster(double *SlaveArray, size_t ArraySize)
 {
   double *MasterSum = new double[ArraySize];
+  for(size_t i=0; i<ArraySize; i++)
+    MasterSum[i] = 0.;
 #ifdef MPI_ENABLED
-  MPI::COMM_WORLD.Reduce(SlaveArray, MasterSum, ArraySize, MPI::DOUBLE, MPI::SUM, 0);
+  MPI_Reduce(SlaveArray, MasterSum, ArraySize, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 #endif
   return MasterSum;
 }
@@ -123,7 +140,7 @@ double AAParallel::SumDoublesToMaster(double SlaveDouble)
 {
   double MasterSum = 0;
 #ifdef MPI_ENABLED
-  MPI::COMM_WORLD.Reduce(&SlaveDouble, &MasterSum, 1, MPI::DOUBLE, MPI::SUM, 0);
+  MPI_Reduce(&SlaveDouble, &MasterSum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 #endif
   return MasterSum;
 }

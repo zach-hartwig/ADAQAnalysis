@@ -21,7 +21,10 @@
 //       functionality. This includes initializing and finalizing MPI
 //       sessions, set/get methods for important MPI variables like
 //       processing number and node rank, and assignment of the MPI
-//       binary name for execution from the sequential GUI.
+//       binary name for execution from the sequential GUI. All C++
+//       bindings have been replaced with C binding for compliance
+//       with Open MPI v4.x.x (C++ binding depracated back in version
+//       2.x.x)
 //
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -43,6 +46,7 @@ public:
 
   void Initialize(int, char **);
   void Finalize();
+  void Barrier();
 
   double *SumDoubleArrayToMaster(double *, size_t);
   double SumDoublesToMaster(double);
