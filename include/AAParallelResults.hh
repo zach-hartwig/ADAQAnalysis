@@ -1,12 +1,12 @@
 /////////////////////////////////////////////////////////////////////////////////
 //                                                                             //
-//                           Copyright (C) 2012-2016                           //
+//                           Copyright (C) 2012-2021                           //
 //                 Zachary Seth Hartwig : All rights reserved                  //
 //                                                                             //
 //      The ADAQAnalysis source code is licensed under the GNU GPL v3.0.       //
 //      You have the right to modify and/or redistribute this source code      //      
 //      under the terms specified in the license, which may be found online    //
-//      at http://www.gnu.org/licenses or at $ADAQANALYSIS/License.txt.        //
+//      at http://www.gnu.org/licenses or at $ADAQANALYSIS/License.txt.       //
 //                                                                             //
 /////////////////////////////////////////////////////////////////////////////////
 
