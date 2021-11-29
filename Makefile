@@ -1,7 +1,7 @@
 #********************************************************************
 #
 #  name: Makefile                  
-#  date: 19 Nov 15
+#  date: 29 Nov 21
 #  auth: Zach Hartwig              
 #  mail: hartwig@psfc.mit.edu
 #
@@ -13,10 +13,10 @@
 #        based on the presence of source files for convenience.
 #
 # 	 dpnd: The build system depends on the following:
-#        -- ROOT (mandatory)
+#        -- ROOT (mandatory) : v6.24.06 (most recent)
 #        -- The ADAQ libraries: ADAQReadout, ASIMStorage (mandatory)
 #        -- The Boost libraries: boost_thread, boost_system (mandatory)
-#        -- Open MPI (optional)
+#        -- Open MPI (optional) : v4.1.2 (most recent)
 # 
 #  To build the sequential binary
 #  $ make 
@@ -36,12 +36,13 @@
 #**** MACRO DEFINITIONS ****#
 #***************************#
 
-# Include the ROOT makefile and tack on the TSpectrum library to
-# ROOTGLIBS (general usage libraries plus graphics)
+# Include the ROOT makefile from a system-wide installation. 
 RC:=root-config
-ROOTSYS:=$(shell $(RC) --prefix)
-ROOTMAKE:=$(ROOTSYS)/etc/Makefile.arch
+ROOTSYS:=$(shell $(RC) --etcdir)
+ROOTMAKE:=$(ROOTSYS)/Makefile.arch
 include $(ROOTMAKE)
+
+# Include the ROOT extended library required for spectra processing
 ROOTGLIBS+=-lSpectrum
 
 # Specify the the binary, build, and source directories

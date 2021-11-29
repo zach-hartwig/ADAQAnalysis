@@ -37,6 +37,7 @@
 #include <TDirectory.h>
 #include <TKey.h>
 #include <TMath.h>
+#include <TVirtualX.h>
 
 // C++
 #include <iostream>
@@ -1297,9 +1298,8 @@ void AAComputation::ProcessSpectrumWaveforms()
     if(ParallelVerbose)
       cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Reached the end-of-processing MPI barrier!"
 	   << endl;
-
-    MPI::COMM_WORLD.Barrier();
-
+    
+    AAParallel::GetInstance()->Barrier();
     
     /////////////////////////////////
     // Aggregate TH1F spectra objects
@@ -2378,7 +2378,7 @@ TH2F *AAComputation::ProcessPSDHistogramWaveforms()
       cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Reached the end-of-processing MPI barrier!"
 	   << endl;
 
-    MPI::COMM_WORLD.Barrier();
+    AAParallel::GetInstance()->Barrier();
 
     // The PSDHistogram_H is a 2-dimensional array containing the total
     // (on the "X-axis") and the tail (on the "Y-axis") integrals of
@@ -3478,7 +3478,7 @@ void AAComputation::CreateDesplicedFile()
     cout << "\nADAQAnalysis_MPI Node[" << MPI_Rank << "] : Reached the end-of-processing MPI barrier!"
 	 << endl;
 
-  MPI::COMM_WORLD.Barrier();
+  AAParallel::GetInstance()->Barrier();
   
   if(IsMaster)
     cout << "\nADAQAnalysis_MPI Node[0] : Waveform processing complete!\n"
@@ -3518,9 +3518,9 @@ void AAComputation::CreateDesplicedFile()
 
   /////////////////////////////////////////////////
   // Aggregrate parallel TFiles into a single TFile
-
+  
   // Ensure all nodes are at the same point before aggregating files
-  MPI::COMM_WORLD.Barrier();
+  AAParallel:::GetInstance()->Barrier();
 
   // If the present node is the master then use a TChain object to
   // merge the despliced waveform TTrees contained in each of the
@@ -3652,7 +3652,6 @@ void AAComputation::CreatePSDHistogramSlice(int XPixel, int YPixel)
     int YPixelOld = gPad->GetUniqueID();
   
     gVirtualX->DrawLine(PixelXMin, YPixelOld, PixelXMax, YPixelOld);
-
     gVirtualX->DrawLine(PixelXMin, YPixel, PixelXMax, YPixel);
     
     gPad->SetUniqueID(YPixel);
