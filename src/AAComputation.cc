@@ -2951,25 +2951,35 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
 void AAComputation::RejectPileup(TH1F *Histogram_H)
 {
   vector<PeakInfoStruct>::iterator it1, it2;
-
+  
   for(it1=PeakInfoVec.begin(); it1!=PeakInfoVec.end(); it1++){
-    
+
+    // Counter to store the number of pileup events
     int PileupCounter = 0;
-    vector<bool> PileupRejection(false, PeakLimits.size());
+
+    // Bool vector to reject (true) or accept (false) peaks ID'ed by
+    // the peak finding algorithm and stored in the PeakInfoVec.
+    vector<Bool_t> PileupRejection(PeakInfoVec.size(), false);
+
+    // Iterate through each identified peak. If two peaks have the
+    // same lower limit (where the signal crosses the floor of the
+    // peak finding algorithm) then count this as pileup
     
     for(it2=PeakInfoVec.begin(); it2!=PeakInfoVec.end(); it2++){
-      
+
+      // Reject peaks (pileup present)
       if((*it1).PeakLimit_Lower == (*it2).PeakLimit_Lower){
 	PileupRejection[it2 - PeakInfoVec.begin()] = true;
 	PileupCounter++;
       }
+      // Accept peaks (pileup absent)
       else
 	PileupRejection[it2 - PeakInfoVec.begin()] = false;
     }
-    
+
+    // Set the flag in the peak info struct as piled-up
     if(PileupCounter != 1)
       (*it1).PileupFlag = true;
-
   }
 }
 
