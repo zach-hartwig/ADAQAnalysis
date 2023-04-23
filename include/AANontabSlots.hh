@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 //                                                                             //
-//                           Copyright (C) 2012-2021                           //
+//                           Copyright (C) 2012-2023                           //
 //                 Zachary Seth Hartwig : All rights reserved                  //
 //                                                                             //
 //      The ADAQAnalysis source code is licensed under the GNU GPL v3.0.       //
