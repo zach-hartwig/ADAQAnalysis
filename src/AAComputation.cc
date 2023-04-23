@@ -92,8 +92,10 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     PSDHistogramExists(false), PSDHistogramSliceExists(false),
 
     MPI_Size(1), MPI_Rank(0), IsMaster(true), IsSlave(false), ParallelVerbose(true),
-    Verbose(false), NumDataChannels(16), TotalPeaks(0), 
-    HalfHeight(0.), EdgePosition(0.), EdgePositionFound(false)
+    Verbose(false), NumDataChannels(16), TotalPeaks(0),
+
+    CalibrationRegionSet(false), CalibrationBoundaryPoints(0),
+    EdgeHalfHeight(0.), EdgePosition(0.), EdgePositionFound(false)
 {
   if(TheComputationManager){
     cout << "\nADAQAnalysis error! TheComputationManager was constructed twice!\n" << endl;
@@ -3111,63 +3113,75 @@ Bool_t AAComputation::WriteCalibrationFile(Int_t Channel,
 }
 
 
-void AAComputation::SetEdgeBound(double X, double Y)
+void AAComputation::SetCalibrationBoundaryPoint(Double_t X, Double_t Y)
 {
   if(gPad->GetLogy())
     Y = pow(10,Y);
-
-  if(EdgeHBound.size() == 0){
-    EdgePositionFound = false;
-
-    EdgeHBound.push_back(Y);
-    EdgeVBound.push_back(X);
-  }
-  else if (EdgeHBound.size() == 1){
-    EdgeHBound.push_back(Y);
-    EdgeVBound.push_back(X);
-    
-    HalfHeight = (EdgeHBound[0]+EdgeHBound[1])/2;
-    
-    FindEdge();
-    
-    EdgeHBound.clear();
-    EdgeVBound.clear();
-  }
+  
+  CalibrationXBounds.push_back(X);
+  CalibrationYBounds.push_back(Y);
+  
+  if(CalibrationXBounds.size() == 2)
+    CalibrationRegionSet = true;
+  else
+    CalibrationRegionSet = false;
 }
 
 
-void AAComputation::FindEdge()
+Bool_t AAComputation::FindCalibrationPeak()
 {
+  CalibrationRegionSet = false;
+  CalibrationXBounds.clear();
+  CalibrationYBounds.clear();
+
+  return false;
+}
+
+Bool_t AAComputation::FindCalibrationEdge()
+{
+  // Compute the half-height based on user boundary points
+  EdgeHalfHeight = (CalibrationYBounds.at(0)+CalibrationYBounds.at(1))/2;
+
+  // Set the min and max ADC values; accommodating user creating
+  // boundary box left-right or right-left
+  
   double MinADC = 0.;
-  double MaxADC = 0.;
-  if(EdgeVBound[0] < EdgeVBound[1]){
-    MinADC = EdgeVBound[0];
-    MaxADC = EdgeVBound[1];
+  Double_t MaxADC = 0.;
+  if(CalibrationXBounds.at(0) < CalibrationXBounds.at(1)){
+    MinADC = CalibrationXBounds.at(0);
+    MaxADC = CalibrationXBounds.at(1);
   }
   else{
-    MinADC = EdgeVBound[1];
-    MaxADC = EdgeVBound[0];
+    MinADC = CalibrationXBounds.at(1);
+    MaxADC = CalibrationYBounds.at(0);
   }
 
-  double increment = 1;
-  for(double value=MinADC; value<=MaxADC; value+=increment){
-    double X0 = value;
-    double X1 = value + increment;
-
-    double Y0 = Spectrum_H->Interpolate(X0);
-    double Y1 = Spectrum_H->Interpolate(X1);
+  EdgePositionFound = false;
+  
+  Double_t increment = 1;
+  for(Double_t value=MinADC; value<=MaxADC; value+=increment){
+    Double_t X0 = value;
+    Double_t X1 = value + increment;
     
-    if((Y0 > HalfHeight) and (Y1 < HalfHeight)){
-      double m = (Y1 - Y0) / (X1 - X0);
-      double Y = abs(Y0+Y1)/2;
-
+    Double_t Y0 = Spectrum_H->Interpolate(X0);
+    Double_t Y1 = Spectrum_H->Interpolate(X1);
+    
+    if((Y0 > EdgeHalfHeight) and (Y1 < EdgeHalfHeight)){
+      Double_t m = (Y1 - Y0) / (X1 - X0);
+      Double_t Y = abs(Y0+Y1)/2;
+      
       EdgePosition = (1./m)*(Y-Y0)+X0;
       
       EdgePositionFound = true;
-
       break;
     }
   }
+
+  CalibrationRegionSet = false;
+  CalibrationXBounds.clear();
+  CalibrationYBounds.clear();
+
+  return EdgePositionFound;
 }
 
 

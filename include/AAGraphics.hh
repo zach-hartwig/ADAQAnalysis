@@ -114,7 +114,7 @@ public:
   void PlotHCalibrationLine(double, bool Refresh = true);
   void PlotVCalibrationLine(double, bool Refresh = true);
   void PlotCalibrationCross(double, double);
-  void PlotEdgeBoundingBox(double, double, double, double);
+  void PlotCalibrationBoundingBox(double, double, double, double);
   
   void PlotEALine(double, double, bool ErrorBox = false, bool EscapePeaks = false);
   
@@ -141,7 +141,7 @@ private:
   // Objects for spectral analysis
 
   TLine *HCalibration_L, *VCalibration_L;
-  TBox *EdgeBoundingBox_B;
+  TBox *CalibrationBoundingBox_B;
   TLine *EALine_L;
   TBox *EABox_B;
   TLine *DerivativeReference_L;

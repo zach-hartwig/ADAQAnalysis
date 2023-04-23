@@ -179,7 +179,8 @@ enum{
   ASIMEventTree_CB_ID,
 
   SpectrumCalibration_CB_ID,
-  SpectrumCalibrationStandard_RB_ID,
+  SpectrumCalibrationManualSlider_RB_ID,
+  SpectrumCalibrationPeakFinder_RB_ID,
   SpectrumCalibrationEdgeFinder_RB_ID,
   SpectrumCalibrationType_CBL_ID,
   SpectrumCalibrationMin_NEL_ID,

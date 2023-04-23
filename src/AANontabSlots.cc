@@ -59,6 +59,10 @@ void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *S
   // to add two pixels for a given XPixel cursor selection.
   XPixel += 2;
 
+  
+  ///////////////////////////////////
+  // Pulse shape discrimination (PSD)
+
   // If the user has enabled the creation of a PSD filter and the
   // canvas event is equal to "1" (which represents a down-click
   // somewhere on the canvas pad) then send the pixel coordinates of
@@ -99,55 +103,68 @@ void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *S
     }
   }
 
+
+  //////////////////////////////////////////
+  // Algorithmic spectra calibration methods
+  
   // The user has the option of using an automated edge location
   // finder for setting the calibration of EJ301/9 liq. organic
   // scintillators. The user set two points that must "bound" the
   // spectral edge:
   // point 0 : top height of edge; leftmost pulse unit
   // point 1 : bottom height of edge; rightmost pulse unit
-  if(TheInterface->SpectrumCalibrationEdgeFinder_RB->IsDown()){
+
+  if(TheInterface->SpectrumCalibrationPeakFinder_RB->IsDown() or
+     TheInterface->SpectrumCalibrationEdgeFinder_RB->IsDown()){
 
     if(ComputationMgr->GetSpectrumExists() and
        GraphicsMgr->GetCanvasContentType() == zSpectrum){
-
+      
       double X = gPad->AbsPixeltoX(XPixel);
       double Y = gPad->AbsPixeltoY(YPixel);
 
-      // Enables the a semi-transparent box to be drawn over the edge
-      // to be calibrated once the user has clicked for the first point
-      if(TheInterface->NumEdgeBoundingPoints == 1)
-	GraphicsMgr->PlotEdgeBoundingBox(TheInterface->EdgeBoundX0, 
-					 TheInterface->EdgeBoundY0, 
-					 X, 
-					 Y);
+      // Enables a dynamic semi-transparent box to be drawn over the
+      // calibration region once the first boundary point is defined
+      
+      if(ComputationMgr->GetCalibrationXBounds().size() == 1)
+	GraphicsMgr->PlotCalibrationBoundingBox(ComputationMgr->GetCalibrationXBounds().at(0),
+						ComputationMgr->GetCalibrationYBounds().at(0),
+						X, 
+						Y);
+      
+      // Event that defines a user "click" on the canvas
 
-      // The bound point is set once the user clicks the canvas at the
-      // desired (X,Y) == (Pulse unit, Counts) location. Note that
-      // AAComputation class automatically keep track of which point
-      // is set and when to calculate the edge
       if(EventID == 1){
-	ComputationMgr->SetEdgeBound(X, Y);
+	ComputationMgr->SetCalibrationBoundaryPoint(X, Y);
 
-	// Keep track of the number of times the user has clicked
-	if(TheInterface->NumEdgeBoundingPoints == 0){
-	  TheInterface->EdgeBoundX0 = X;
-	  TheInterface->EdgeBoundY0 = Y;
-	}
-	
-	TheInterface->NumEdgeBoundingPoints++;
-	
-	// Once the edge position is found (after two points are set)
-	// then update the number entry so the user may set a
-	// calibration points and draw the point on screen for
-	// verification. Reset number of edge bounding points.
-	if(ComputationMgr->GetEdgePositionFound()){
-	  double HalfHeight = ComputationMgr->GetHalfHeight();
-	  double EdgePos = ComputationMgr->GetEdgePosition();
-	  TheInterface->SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(EdgePos);
+	// Determine if the user has completed setting the bounding
+	// box for calibration (e.g. clicked twice on the canvas to
+	// set the two points required to define the bounding box). If
+	// yes then automatically run the desired calibration
+	// algorithm with the defined calibration region
+
+	if(ComputationMgr->GetCalibrationRegionSet()){
+
+	  // Spectrum peak finding algorithm
 	  
-	  GraphicsMgr->PlotCalibrationCross(EdgePos, HalfHeight);
+	  if(TheInterface->SpectrumCalibrationPeakFinder_RB->IsDown()){
+	    if(ComputationMgr->FindCalibrationPeak()){
+	    }
+	  }
+
+	  // Spectrum edge finding algorithm
 	  
-	  TheInterface->NumEdgeBoundingPoints = 0;
+	  if(TheInterface->SpectrumCalibrationEdgeFinder_RB->IsDown()){
+	    
+	    if(ComputationMgr->FindCalibrationEdge()){
+	      Double_t EdgeX = ComputationMgr->GetEdgePosition();
+	      Double_t EdgeY = ComputationMgr->GetEdgeHalfHeight();
+	      
+	      TheInterface->SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(EdgeX);
+	      
+	      GraphicsMgr->PlotCalibrationCross(EdgeX, EdgeY);
+	    }
+	  }
 	}
       }
     }
@@ -747,7 +764,7 @@ void AANontabSlots::HandleTripleSliderPointer()
     // If the pulse spectrum object (Spectrum_H) exists and the user has
     // selected calibration mode via the appropriate buttons ...
     if(TheInterface->SpectrumCalibration_CB->IsDown() and 
-       TheInterface->SpectrumCalibrationStandard_RB->IsDown()){
+       TheInterface->SpectrumCalibrationManualSlider_RB->IsDown()){
       
       // Plot the calibration line
       GraphicsMgr->PlotVCalibrationLine(XPos);

@@ -253,18 +253,29 @@ void AASpectrumSlots::HandleRadioButtons()
     }
     break;
     
-  case SpectrumCalibrationStandard_RB_ID:{
-    if(TheInterface->SpectrumCalibrationStandard_RB->IsDown()){
+  case SpectrumCalibrationManualSlider_RB_ID:{
+    if(TheInterface->SpectrumCalibrationManualSlider_RB->IsDown()){
       TheInterface->SpectrumCalibrationEdgeFinder_RB->SetState(kButtonUp);
+      TheInterface->SpectrumCalibrationPeakFinder_RB->SetState(kButtonUp);
       TheInterface->NontabSlots->HandleTripleSliderPointer();
     }
     break;
-  }    
+  }
+
+  case SpectrumCalibrationPeakFinder_RB_ID:{
+    if(TheInterface->SpectrumCalibrationPeakFinder_RB->IsDown()){
+      GraphicsMgr->PlotSpectrum();
+      TheInterface->SpectrumCalibrationManualSlider_RB->SetState(kButtonUp);
+      TheInterface->SpectrumCalibrationEdgeFinder_RB->SetState(kButtonUp);
+    }
+    break;
+  }
     
   case SpectrumCalibrationEdgeFinder_RB_ID:{
     if(TheInterface->SpectrumCalibrationEdgeFinder_RB->IsDown()){
       GraphicsMgr->PlotSpectrum();
-      TheInterface->SpectrumCalibrationStandard_RB->SetState(kButtonUp);
+      TheInterface->SpectrumCalibrationManualSlider_RB->SetState(kButtonUp);
+      TheInterface->SpectrumCalibrationPeakFinder_RB->SetState(kButtonUp);
     }
     break;
   }

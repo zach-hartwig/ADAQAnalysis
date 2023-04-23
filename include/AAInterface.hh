@@ -231,7 +231,9 @@ private:
   TGComboBox *ASIMEventTree_CB;
   
   TGCheckButton *SpectrumCalibration_CB;
-  TGRadioButton *SpectrumCalibrationStandard_RB, *SpectrumCalibrationEdgeFinder_RB;
+  TGRadioButton *SpectrumCalibrationManualSlider_RB;
+  TGRadioButton *SpectrumCalibrationPeakFinder_RB;
+  TGRadioButton *SpectrumCalibrationEdgeFinder_RB;
   ADAQComboBoxWithLabel *SpectrumCalibrationType_CBL;
   ADAQNumberEntryWithLabel *SpectrumCalibrationMin_NEL, *SpectrumCalibrationMax_NEL;
 
@@ -436,8 +438,6 @@ private:
   int CanvasX, CanvasY, CanvasFrameWidth, SliderBuffer;
   int TotalX, TotalY;
   int TabFrameWidth, TabFrameLength;
-  int NumEdgeBoundingPoints;
-  double EdgeBoundX0, EdgeBoundY0;
   
   // Variables for interface colors
   long ThemeForegroundColor, ThemeBackgroundColor;

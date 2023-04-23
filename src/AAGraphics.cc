@@ -67,7 +67,7 @@ AAGraphics::AAGraphics()
     Analysis_B(new TBox), Baseline_B(new TBox), 
     LPeakDelimiter_L(new TLine), RPeakDelimiter_L(new TLine), IntegrationRegion_B(new TBox),
     PSDTotal_B(new TBox), PSDPeak_L(new TLine), PSDTail_L0(new TLine), PSDTail_L1(new TLine),
-    HCalibration_L(new TLine), VCalibration_L(new TLine), EdgeBoundingBox_B(new TBox),
+    HCalibration_L(new TLine), VCalibration_L(new TLine), CalibrationBoundingBox_B(new TBox),
     EALine_L(new TLine), EABox_B(new TBox), DerivativeReference_L(new TLine),
     PSDRegionProgress_G(new TGraph),
     CanvasContentType(zEmpty), 
@@ -137,16 +137,16 @@ AAGraphics::AAGraphics()
   // Graphical objects for spectral analysis
   
   HCalibration_L->SetLineStyle(7);
-  HCalibration_L->SetLineColor(kRed);
+  HCalibration_L->SetLineColor(kGreen+2);
   HCalibration_L->SetLineWidth(2);
-
+  
   VCalibration_L->SetLineStyle(7);
-  VCalibration_L->SetLineColor(kRed);
+  VCalibration_L->SetLineColor(kGreen+2);
   VCalibration_L->SetLineWidth(2);
 
-  EdgeBoundingBox_B->SetFillColor(kRed);
-  EdgeBoundingBox_B->SetFillStyle(3002);
-
+  CalibrationBoundingBox_B->SetFillColor(kGreen+2);
+  CalibrationBoundingBox_B->SetFillStyle(3002);
+  
   EALine_L->SetLineStyle(7);
   EALine_L->SetLineColor(kOrange+7);
   EALine_L->SetLineWidth(2);
@@ -1082,17 +1082,18 @@ void AAGraphics::PlotCalibrationCross(double EdgePos, double HalfHeight)
 }
 
 
-// A transparent box that encompasses the calibration edge
-void AAGraphics::PlotEdgeBoundingBox(double X0, double Y0, double X1, double Y1)
+// A transparent box that encompasses the user-selected spectrum
+// calibration region over the spectrum itself
+void AAGraphics::PlotCalibrationBoundingBox(double X0, double Y0, double X1, double Y1)
 {
   PlotSpectrum();
-
+  
   if(gPad->GetLogy()){
     Y0 = pow(10, Y0);
     Y1 = pow(10, Y1);
   }
 
-  EdgeBoundingBox_B->DrawBox(X0, Y0, X1, Y1);
+  CalibrationBoundingBox_B->DrawBox(X0, Y0, X1, Y1);
   TheCanvas->Update();
 }
 

@@ -131,8 +131,10 @@ public:
   Bool_t ClearCalibration(Int_t);
   Bool_t WriteCalibrationFile(Int_t, string);
 
-  void SetEdgeBound(Double_t,Double_t);
-  void FindEdge();
+  void SetCalibrationBoundaryPoint(Double_t,Double_t);
+
+  Bool_t FindCalibrationPeak();
+  Bool_t FindCalibrationEdge();
 
   // Pulse shape discrimination processing
   TH2F *ProcessPSDHistogramWaveforms();
@@ -178,8 +180,11 @@ public:
   vector<Int_t> GetSpectraCalibrationType() {return SpectraCalibrationType; }
   vector<Bool_t> GetUseSpectraCalibrations() { return UseSpectraCalibrations; }
 
+  Bool_t GetCalibrationRegionSet() {return CalibrationRegionSet;}
+  vector<Double_t> GetCalibrationXBounds() {return CalibrationXBounds;}
+  vector<Double_t> GetCalibrationYBounds() {return CalibrationYBounds;}
   Double_t GetEdgePosition() {return EdgePosition;}
-  Double_t GetHalfHeight() {return HalfHeight;}
+  Double_t GetEdgeHalfHeight() {return EdgeHalfHeight;}
   Bool_t GetEdgePositionFound() {return EdgePositionFound;}
   
   // Spectra analysis
@@ -368,8 +373,11 @@ private:
   // A ROOT random number generator (RNG)
   TRandom *RNG;
 
-  vector<Double_t> EdgeHBound, EdgeVBound;
-  Double_t HalfHeight, EdgePosition;
+  Bool_t CalibrationRegionSet;
+  Int_t CalibrationBoundaryPoints;
+  vector<Double_t> CalibrationXBounds, CalibrationYBounds;
+  
+  Double_t EdgeHalfHeight, EdgePosition;
   Bool_t EdgePositionFound;
 
   // Define the class to ROOT

@@ -70,7 +70,6 @@ AAInterface::AAInterface(string CmdLineArg)
     CanvasX(700), CanvasY(500), CanvasFrameWidth(700), 
     SliderBuffer(30), TotalX(1170), TotalY(800),
     TabFrameWidth(365), TabFrameLength(720),
-    NumEdgeBoundingPoints(0), EdgeBoundX0(0.), EdgeBoundY0(0.),
     DataDirectory(getenv("PWD")), PrintDirectory(getenv("HOME")),
     DesplicedDirectory(getenv("HOME")), HistogramDirectory(getenv("HOME")),
     ADAQFileLoaded(false), ASIMFileLoaded(false), EnableInterface(false),
@@ -845,18 +844,23 @@ void AAInterface::FillSpectrumFrame()
 
   TGHorizontalFrame *SpectrumCalibration_HF5 = new TGHorizontalFrame(SpectrumCalibration_GF);
   SpectrumCalibration_GF->AddFrame(SpectrumCalibration_HF5, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
-
-  SpectrumCalibration_HF5->AddFrame(SpectrumCalibrationStandard_RB = new TGRadioButton(SpectrumCalibration_HF5, "Standard", SpectrumCalibrationStandard_RB_ID),
+  
+  SpectrumCalibration_HF5->AddFrame(SpectrumCalibrationManualSlider_RB = new TGRadioButton(SpectrumCalibration_HF5, "Slider", SpectrumCalibrationManualSlider_RB_ID),
 				    new TGLayoutHints(kLHintsNormal, 10,5,5,5));
-  SpectrumCalibrationStandard_RB->SetState(kButtonDown);
-  SpectrumCalibrationStandard_RB->SetState(kButtonDisabled);
-  SpectrumCalibrationStandard_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
+  SpectrumCalibrationManualSlider_RB->SetState(kButtonDown);
+  SpectrumCalibrationManualSlider_RB->SetState(kButtonDisabled);
+  SpectrumCalibrationManualSlider_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
+  
+  SpectrumCalibration_HF5->AddFrame(SpectrumCalibrationPeakFinder_RB = new TGRadioButton(SpectrumCalibration_HF5, "Peak finder", SpectrumCalibrationPeakFinder_RB_ID),
+				    new TGLayoutHints(kLHintsNormal, 15,5,5,5));
+  SpectrumCalibrationPeakFinder_RB->SetState(kButtonDisabled);
+  SpectrumCalibrationPeakFinder_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
   
   SpectrumCalibration_HF5->AddFrame(SpectrumCalibrationEdgeFinder_RB = new TGRadioButton(SpectrumCalibration_HF5, "Edge finder", SpectrumCalibrationEdgeFinder_RB_ID),
-				       new TGLayoutHints(kLHintsNormal, 30,5,5,5));
+				    new TGLayoutHints(kLHintsNormal, 15,5,5,5));
   SpectrumCalibrationEdgeFinder_RB->SetState(kButtonDisabled);
   SpectrumCalibrationEdgeFinder_RB->Connect("Clicked()", "AASpectrumSlots", SpectrumSlots, "HandleRadioButtons()");
-  
+
   
   SpectrumCalibration_GF->AddFrame(SpectrumCalibrationType_CBL = new ADAQComboBoxWithLabel(SpectrumCalibration_GF, "", SpectrumCalibrationType_CBL_ID),
 				   new TGLayoutHints(kLHintsNormal, 0,0,10,0));
@@ -3051,7 +3055,8 @@ void AAInterface::SetPSDWidgetState(bool WidgetState, EButtonState ButtonState)
 void AAInterface::SetCalibrationWidgetState(bool WidgetState, EButtonState ButtonState)
 {
   SpectrumCalibrationLoad_TB->SetState(ButtonState);
-  SpectrumCalibrationStandard_RB->SetState(ButtonState);
+  SpectrumCalibrationManualSlider_RB->SetState(ButtonState);
+  SpectrumCalibrationPeakFinder_RB->SetState(ButtonState);
   SpectrumCalibrationEdgeFinder_RB->SetState(ButtonState);
   SpectrumCalibrationType_CBL->GetComboBox()->SetEnabled(WidgetState);
   SpectrumCalibrationMin_NEL->GetEntry()->SetState(WidgetState);
