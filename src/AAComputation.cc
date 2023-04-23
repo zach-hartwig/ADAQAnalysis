@@ -95,7 +95,7 @@ AAComputation::AAComputation(string CmdLineArg, bool PA)
     Verbose(false), NumDataChannels(16), TotalPeaks(0),
 
     CalibrationRegionSet(false), CalibrationBoundaryPoints(0),
-    EdgeHalfHeight(0.), EdgePosition(0.), EdgePositionFound(false)
+    CalibrationFound(false), CalibrationX(0.), CalibrationY(0.)
 {
   if(TheComputationManager){
     cout << "\nADAQAnalysis error! TheComputationManager was constructed twice!\n" << endl;
@@ -3113,6 +3113,17 @@ Bool_t AAComputation::WriteCalibrationFile(Int_t Channel,
 }
 
 
+void AAComputation::ClearCalibrationBoundary()
+{
+  CalibrationRegionSet = false;
+  CalibrationXBounds.clear();
+  CalibrationYBounds.clear();
+  CalibrationFound = false;
+  CalibrationX = 0.;
+  CalibrationY = 0.;
+}
+
+
 void AAComputation::SetCalibrationBoundaryPoint(Double_t X, Double_t Y)
 {
   if(gPad->GetLogy())
@@ -3130,22 +3141,66 @@ void AAComputation::SetCalibrationBoundaryPoint(Double_t X, Double_t Y)
 
 Bool_t AAComputation::FindCalibrationPeak()
 {
+  CalibrationFound = false;
+
+  // Use the active spectrum for the calibration: this is either the
+  // raw spectrum (Spectrum_H) or the deconvolved spectrum that has
+  // the computed continuum subtracted out (DeconvolvedSpectrum_H)
+  
+  TH1F *CalibrationSpectrum_H;
+  if(ADAQSettings->PlotLessBackground)
+    CalibrationSpectrum_H = (TH1F*)SpectrumDeconvolved_H->Clone("CalibrationSpectrum_H");
+  else
+    CalibrationSpectrum_H = (TH1F*)Spectrum_H->Clone("CalibrationSpectrum_H");
+  
+  CalibrationSpectrum_H->GetXaxis()->SetRangeUser(CalibrationXBounds.at(0),
+						  CalibrationXBounds.at(1));
+  
+  // Default parameters for the peak searching algorithm. If these
+  // prove insufficient, will implement user-selection 
+
+  Int_t NumPeaks = 1;
+  Double_t Sigma = 2;
+  Double_t Resolution = 0.05;
+
+  // Create the TSpectrum object and search for the calibration peak
+
+  TSpectrum *PeakFinder = new TSpectrum(NumPeaks);
+  Int_t PeaksFound = PeakFinder->Search(CalibrationSpectrum_H, Sigma, "", Resolution);
+
+  if(PeaksFound==1){
+    Double_t *PeakPosX = PeakFinder->GetPositionX();
+    Double_t *PeakPosY = PeakFinder->GetPositionY();
+    
+    CalibrationX = PeakPosX[0];
+    CalibrationY = PeakPosY[0];
+    CalibrationFound = true;
+  }
+
+  delete PeakFinder;
+
+  // Reset variables in preparation for searching for the next edge
+
   CalibrationRegionSet = false;
   CalibrationXBounds.clear();
   CalibrationYBounds.clear();
 
-  return false;
+  return CalibrationFound;
 }
 
 Bool_t AAComputation::FindCalibrationEdge()
 {
-  // Compute the half-height based on user boundary points
-  EdgeHalfHeight = (CalibrationYBounds.at(0)+CalibrationYBounds.at(1))/2;
+  CalibrationFound = false;
+  
+  // Compute the half-height of the spectrum edge using the min and
+  // max y-values of the user's calibration boundary box
 
-  // Set the min and max ADC values; accommodating user creating
+  Double_t EdgeHalfHeight = (CalibrationYBounds.at(0)+CalibrationYBounds.at(1))/2;
+  
+  // Set the min and max ADC values accommodating user creating
   // boundary box left-right or right-left
   
-  double MinADC = 0.;
+  Double_t MinADC = 0.;
   Double_t MaxADC = 0.;
   if(CalibrationXBounds.at(0) < CalibrationXBounds.at(1)){
     MinADC = CalibrationXBounds.at(0);
@@ -3156,7 +3211,8 @@ Bool_t AAComputation::FindCalibrationEdge()
     MaxADC = CalibrationYBounds.at(0);
   }
 
-  EdgePositionFound = false;
+  // Determine the x-value (ADC) corresponding to the half-height of
+  // the spectrum edge as the calibration method
   
   Double_t increment = 1;
   for(Double_t value=MinADC; value<=MaxADC; value+=increment){
@@ -3170,18 +3226,20 @@ Bool_t AAComputation::FindCalibrationEdge()
       Double_t m = (Y1 - Y0) / (X1 - X0);
       Double_t Y = abs(Y0+Y1)/2;
       
-      EdgePosition = (1./m)*(Y-Y0)+X0;
-      
-      EdgePositionFound = true;
+      CalibrationX = (1./m)*(Y-Y0)+X0;
+      CalibrationY = EdgeHalfHeight;
+      CalibrationFound = true;
       break;
     }
   }
+
+  // Reset variables in preparation for searching for the next edge
 
   CalibrationRegionSet = false;
   CalibrationXBounds.clear();
   CalibrationYBounds.clear();
 
-  return EdgePositionFound;
+  return CalibrationFound;
 }
 
 

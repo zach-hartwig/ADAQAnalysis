@@ -264,6 +264,7 @@ void AASpectrumSlots::HandleRadioButtons()
 
   case SpectrumCalibrationPeakFinder_RB_ID:{
     if(TheInterface->SpectrumCalibrationPeakFinder_RB->IsDown()){
+      ComputationMgr->ClearCalibrationBoundary();
       GraphicsMgr->PlotSpectrum();
       TheInterface->SpectrumCalibrationManualSlider_RB->SetState(kButtonUp);
       TheInterface->SpectrumCalibrationEdgeFinder_RB->SetState(kButtonUp);
@@ -273,6 +274,7 @@ void AASpectrumSlots::HandleRadioButtons()
     
   case SpectrumCalibrationEdgeFinder_RB_ID:{
     if(TheInterface->SpectrumCalibrationEdgeFinder_RB->IsDown()){
+      ComputationMgr->ClearCalibrationBoundary();
       GraphicsMgr->PlotSpectrum();
       TheInterface->SpectrumCalibrationManualSlider_RB->SetState(kButtonUp);
       TheInterface->SpectrumCalibrationPeakFinder_RB->SetState(kButtonUp);

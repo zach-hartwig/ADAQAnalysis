@@ -122,15 +122,26 @@ void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *S
       
       double X = gPad->AbsPixeltoX(XPixel);
       double Y = gPad->AbsPixeltoY(YPixel);
-
+      
       // Enables a dynamic semi-transparent box to be drawn over the
       // calibration region once the first boundary point is defined
       
-      if(ComputationMgr->GetCalibrationXBounds().size() == 1)
-	GraphicsMgr->PlotCalibrationBoundingBox(ComputationMgr->GetCalibrationXBounds().at(0),
-						ComputationMgr->GetCalibrationYBounds().at(0),
-						X, 
-						Y);
+      if(ComputationMgr->GetCalibrationXBounds().size() == 1){
+
+	// For some unknown reason, the (X,Y) coordinates selected can
+	// occasionally fall outside of the gPad's coordinate system,
+	// which results in a seg fault crash when trying to plot the
+	// bounding box. This check prevents such crashes.
+	
+	Double_t XMin, XMax, YMin, YMax;
+	gPad->GetRange(XMin, XMax, YMin, YMax);
+
+	if(X>XMin and X<XMax and Y>YMin and Y<YMax)
+	  GraphicsMgr->PlotCalibrationBoundingBox(ComputationMgr->GetCalibrationXBounds().at(0),
+						  ComputationMgr->GetCalibrationYBounds().at(0),
+						  X, 
+						  Y);
+      }
       
       // Event that defines a user "click" on the canvas
 
@@ -149,16 +160,22 @@ void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *S
 	  
 	  if(TheInterface->SpectrumCalibrationPeakFinder_RB->IsDown()){
 	    if(ComputationMgr->FindCalibrationPeak()){
+	      Double_t PeakX = ComputationMgr->GetCalibrationX();
+	      Double_t PeakY = ComputationMgr->GetCalibrationY();
+	      
+	      TheInterface->SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(PeakX);
+	      
+	      GraphicsMgr->PlotCalibrationCross(PeakX, PeakY);
 	    }
 	  }
-
+	  
 	  // Spectrum edge finding algorithm
 	  
 	  if(TheInterface->SpectrumCalibrationEdgeFinder_RB->IsDown()){
 	    
 	    if(ComputationMgr->FindCalibrationEdge()){
-	      Double_t EdgeX = ComputationMgr->GetEdgePosition();
-	      Double_t EdgeY = ComputationMgr->GetEdgeHalfHeight();
+	      Double_t EdgeX = ComputationMgr->GetCalibrationX();
+	      Double_t EdgeY = ComputationMgr->GetCalibrationY();
 	      
 	      TheInterface->SpectrumCalibrationPulseUnit_NEL->GetEntry()->SetNumber(EdgeX);
 	      

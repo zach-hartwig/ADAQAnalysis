@@ -194,15 +194,15 @@ void AAGraphics::PlotWaveform(int Color)
   // Determine the X-axis size and min/max values
   int XAxisSize = Waveform_H->GetNbinsX();
 
-  double XMin = ADAQSettings->XAxisMin * XAxisSize;
-  double XMax = ADAQSettings->XAxisMax * XAxisSize;
+  Double_t XMin = ADAQSettings->XAxisMin * XAxisSize;
+  Double_t XMax = ADAQSettings->XAxisMax * XAxisSize;
 
   // Determine the Y-axis size (dependent on whether or not the user
   // has opted to allow the Y-axis range to be automatically
   // determined by the size of the waveform or fix the Y-Axis range
-  // with the vertical double slider positions) and min/max values
+  // with the vertical Double_t slider positions) and min/max values
 
-  double YMin, YMax, YAxisSize;
+  Double_t YMin, YMax, YAxisSize;
 
   // In order to correctly size the maximum y-axis value for waveform
   // plotting, we need to know the maximum ADC value (set by the
@@ -342,9 +342,9 @@ void AAGraphics::PlotWaveform(int Color)
   }
   
   if(ADAQSettings->PlotBaselineRegion and !ADAQSettings->ZSWaveform){
-    double Baseline = ComputationMgr->CalculateBaseline(Waveform_H);
-    double BaselinePlotMinValue = Baseline - (0.04 * YAxisSize);
-    double BaselinePlotMaxValue = Baseline + (0.04 * YAxisSize);
+    Double_t Baseline = ComputationMgr->CalculateBaseline(Waveform_H);
+    Double_t BaselinePlotMinValue = Baseline - (0.04 * YAxisSize);
+    Double_t BaselinePlotMaxValue = Baseline + (0.04 * YAxisSize);
 
     if(ADAQSettings->BSWaveform){
       BaselinePlotMinValue = -0.04 * YAxisSize;
@@ -472,7 +472,7 @@ void AAGraphics::PlotWaveform(int Color)
     
     // Set the class member int that tells the code what is currently
     // plotted on the embedded canvas. This is important for influencing
-    // the behavior of the vertical and horizontal double sliders used
+    // the behavior of the vertical and horizontal Double_t sliders used
     // to "zoom" on the canvas contents
     CanvasContentType = zWaveform;
     
@@ -508,7 +508,7 @@ void AAGraphics::PlotSpectrum()
 
   // Set the spectrum y-axis range
 
-  double YMin, YMax;
+  Double_t YMin, YMax;
   if(ADAQSettings->CanvasYAxisLog and ADAQSettings->YAxisMax==1)
     YMin = 1.0;
   else if(ADAQSettings->FindBackground and ADAQSettings->PlotLessBackground)
@@ -680,7 +680,7 @@ void AAGraphics::PlotSpectrum()
   
   // Set the class member int that tells the code what is currently
   // plotted on the embedded canvas. This is important for influencing
-  // the behavior of the vertical and horizontal double sliders used
+  // the behavior of the vertical and horizontal Double_t sliders used
   // to "zoom" on the canvas contents
   CanvasContentType = zSpectrum;
 }
@@ -711,12 +711,12 @@ void AAGraphics::PlotPSDHistogram()
   //////////////////////
   // X and Y axis ranges
   
-  double XMin = PSDHistogram_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
-  double XMax = PSDHistogram_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
+  Double_t XMin = PSDHistogram_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
+  Double_t XMax = PSDHistogram_H->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
   PSDHistogram_H->GetXaxis()->SetRangeUser(XMin, XMax);
   
-  double YMin = PSDHistogram_H->GetYaxis()->GetXmax() * (1-ADAQSettings->YAxisMax);
-  double YMax = PSDHistogram_H->GetYaxis()->GetXmax() * (1-ADAQSettings->YAxisMin);
+  Double_t YMin = PSDHistogram_H->GetYaxis()->GetXmax() * (1-ADAQSettings->YAxisMax);
+  Double_t YMax = PSDHistogram_H->GetYaxis()->GetXmax() * (1-ADAQSettings->YAxisMin);
   PSDHistogram_H->GetYaxis()->SetRangeUser(YMin, YMax);
   
   string Title, XTitle, YTitle, ZTitle, PaletteTitle;
@@ -886,19 +886,19 @@ void AAGraphics::PlotSpectrumDerivative()
   //////////////////////
   // X and Y axis limits
   
-  double XMin = SpectrumDerivative_G->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
-  double XMax = SpectrumDerivative_G->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
+  Double_t XMin = SpectrumDerivative_G->GetXaxis()->GetXmax() * ADAQSettings->XAxisMin;
+  Double_t XMax = SpectrumDerivative_G->GetXaxis()->GetXmax() * ADAQSettings->XAxisMax;
   SpectrumDerivative_G->GetXaxis()->SetRangeUser(XMin,XMax);
   
   // Calculates values that will allow the sliders to span the full
   // range of the derivative that, unlike all the other plotted
   // objects, typically has a substantial negative range
-  double MinValue = SpectrumDerivative_G->GetHistogram()->GetMinimum();
-  double MaxValue = SpectrumDerivative_G->GetHistogram()->GetMaximum();
-  double AbsValue = abs(MinValue) + abs(MaxValue);
+  Double_t MinValue = SpectrumDerivative_G->GetHistogram()->GetMinimum();
+  Double_t MaxValue = SpectrumDerivative_G->GetHistogram()->GetMaximum();
+  Double_t AbsValue = abs(MinValue) + abs(MaxValue);
   
-  double YMin = MinValue + (AbsValue * (1-ADAQSettings->YAxisMax));
-  double YMax = MaxValue - (AbsValue * ADAQSettings->YAxisMin);
+  Double_t YMin = MinValue + (AbsValue * (1-ADAQSettings->YAxisMax));
+  Double_t YMax = MaxValue - (AbsValue * ADAQSettings->YAxisMin);
   
   SpectrumDerivative_G->GetYaxis()->SetRangeUser(YMin, YMax);
   
@@ -1034,13 +1034,13 @@ void AAGraphics::PlotCalibration(Int_t Channel)
 }
 
 // Horizontal calibration line
-void AAGraphics::PlotHCalibrationLine(double Y, bool Refresh)
+void AAGraphics::PlotHCalibrationLine(Double_t Y, Bool_t Refresh)
 { 
   if(Refresh)
     PlotSpectrum();
 
-  double XMin = gPad->GetFrame()->GetX1();
-  double XMax = gPad->GetFrame()->GetX2();
+  Double_t XMin = gPad->GetFrame()->GetX1();
+  Double_t XMax = gPad->GetFrame()->GetX2();
   
   HCalibration_L->DrawLine(XMin, Y, XMax, Y);
   
@@ -1050,13 +1050,13 @@ void AAGraphics::PlotHCalibrationLine(double Y, bool Refresh)
 
 
 // Vertical calibration line
-void AAGraphics::PlotVCalibrationLine(double X, bool refresh)
+void AAGraphics::PlotVCalibrationLine(Double_t X, Bool_t refresh)
 {
   if(refresh)
     PlotSpectrum();
   
-  double YMin = gPad->GetFrame()->GetY1();
-  double YMax = gPad->GetFrame()->GetY2();
+  Double_t YMin = gPad->GetFrame()->GetY1();
+  Double_t YMax = gPad->GetFrame()->GetY2();
   
   // If the YAxis is in log then {Y1,Y2} must be converted to linear
   // scale in order to correctly draw the line
@@ -1073,18 +1073,18 @@ void AAGraphics::PlotVCalibrationLine(double X, bool refresh)
 
 
 // A "cross" of horiz. and vert. calibration lines
-void AAGraphics::PlotCalibrationCross(double EdgePos, double HalfHeight)
+void AAGraphics::PlotCalibrationCross(Double_t X, Double_t Y)
 {
   PlotSpectrum();
-  PlotVCalibrationLine(EdgePos, false);
-  PlotHCalibrationLine(HalfHeight, false);
+  PlotVCalibrationLine(X, false);
+  PlotHCalibrationLine(Y, false);
   TheCanvas->Update();
 }
 
 
 // A transparent box that encompasses the user-selected spectrum
 // calibration region over the spectrum itself
-void AAGraphics::PlotCalibrationBoundingBox(double X0, double Y0, double X1, double Y1)
+void AAGraphics::PlotCalibrationBoundingBox(Double_t X0, Double_t Y0, Double_t X1, Double_t Y1)
 {
   PlotSpectrum();
   
@@ -1092,18 +1092,18 @@ void AAGraphics::PlotCalibrationBoundingBox(double X0, double Y0, double X1, dou
     Y0 = pow(10, Y0);
     Y1 = pow(10, Y1);
   }
-
+  
   CalibrationBoundingBox_B->DrawBox(X0, Y0, X1, Y1);
   TheCanvas->Update();
 }
 
 
-void AAGraphics::PlotEALine(double X, double Error, bool ErrorBox, bool EscapePeaks)
+void AAGraphics::PlotEALine(Double_t X, Double_t Error, Bool_t ErrorBox, Bool_t EscapePeaks)
 {
   PlotSpectrum();
   
-  double YMin = gPad->GetFrame()->GetY1();
-  double YMax = gPad->GetFrame()->GetY2();
+  Double_t YMin = gPad->GetFrame()->GetY1();
+  Double_t YMax = gPad->GetFrame()->GetY2();
   
   // If the YAxis is in log then {Y1,Y2} must be converted to linear
   // scale in order to correctly draw the line
@@ -1120,12 +1120,12 @@ void AAGraphics::PlotEALine(double X, double Error, bool ErrorBox, bool EscapePe
   if(ErrorBox)
     EABox_B->DrawBox(X*(1-Error), YMin, X*(1+Error), YMax);
   
-  // The first and double escape peak energy differences below the
+  // The first and Double_t escape peak energy differences below the
   // full energy gamma energy deposition peak. Be sure to account for
   // the user's calibration units, keV or MeV.
 
-  double Peak0 = 0.511; // [MeV]
-  double Peak1 = 1.022; // [MeV]
+  Double_t Peak0 = 0.511; // [MeV]
+  Double_t Peak1 = 1.022; // [MeV]
   if(ADAQSettings->EnergyUnit == 0){
     Peak0 *= 1000;
     Peak1 *= 1000;
@@ -1229,7 +1229,7 @@ void AAGraphics::PlotPSDHistogramSlice(int XPixel, int YPixel)
     
   if(ADAQSettings->PSDXSlice){
 
-    double XPosInADC = gPad->AbsPixeltoX(XPixel);
+    Double_t XPosInADC = gPad->AbsPixeltoX(XPixel);
 
     ss << "PSDHistogram X slice at " << XPosInADC;
     if(ADAQSettings->PSDXAxisEnergy){
@@ -1249,7 +1249,7 @@ void AAGraphics::PlotPSDHistogramSlice(int XPixel, int YPixel)
       XTitle = "PSD parameter (tail/total)";
   }
   else if(ADAQSettings->PSDYSlice){
-    double YPosInADC = gPad->AbsPixeltoY(YPixel);
+    Double_t YPosInADC = gPad->AbsPixeltoY(YPixel);
     
     ss << "PSDHistogram Y slice at " << YPosInADC << " ADC";
     Title = ss.str();

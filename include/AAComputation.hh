@@ -131,8 +131,8 @@ public:
   Bool_t ClearCalibration(Int_t);
   Bool_t WriteCalibrationFile(Int_t, string);
 
+  void ClearCalibrationBoundary();
   void SetCalibrationBoundaryPoint(Double_t,Double_t);
-
   Bool_t FindCalibrationPeak();
   Bool_t FindCalibrationEdge();
 
@@ -183,9 +183,9 @@ public:
   Bool_t GetCalibrationRegionSet() {return CalibrationRegionSet;}
   vector<Double_t> GetCalibrationXBounds() {return CalibrationXBounds;}
   vector<Double_t> GetCalibrationYBounds() {return CalibrationYBounds;}
-  Double_t GetEdgePosition() {return EdgePosition;}
-  Double_t GetEdgeHalfHeight() {return EdgeHalfHeight;}
-  Bool_t GetEdgePositionFound() {return EdgePositionFound;}
+  Double_t GetCalibrationX() {return CalibrationX;}
+  Double_t GetCalibrationY() {return CalibrationY;}
+  Bool_t GetCalibrationFound() {return CalibrationFound;}
   
   // Spectra analysis
   TH1F *GetSpectrumIntegral() { return SpectrumIntegral_H; }
@@ -376,9 +376,8 @@ private:
   Bool_t CalibrationRegionSet;
   Int_t CalibrationBoundaryPoints;
   vector<Double_t> CalibrationXBounds, CalibrationYBounds;
-  
-  Double_t EdgeHalfHeight, EdgePosition;
-  Bool_t EdgePositionFound;
+  Bool_t CalibrationFound;
+  Double_t CalibrationX, CalibrationY;
 
   // Define the class to ROOT
   ClassDef(AAComputation, 1)
