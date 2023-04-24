@@ -1,9 +1,26 @@
 # ADAQAnalysis Version Change Log
 
-name: Changelog.md  
-date: 20 Apr 16 (last updated)  
-auth: Zach Hartwig  
-mail: hartwig@psfc.mit.edu  
+name: Changelog.md
+date: 23 Apr 23 (last updated)
+auth: Zach Hartwig
+mail: hartwig@psfc.mit.edu
+
+## Version 1.9 Series
+
+### 1.9.0
+
+Major developments in this release include:
+
+ - New automatic peak finding calibration feature for spectral calibration
+
+ - Eliminated bug causing seg faults when doing anything with pile-up
+   rejection algoriths
+
+ - Eliminated bug causing seg faults when using calibration features
+   and interacting with the canvas
+
+ - Updating the license headers in all files. It's 2023!
+  
 
 ## Version 1.8 Series
 
@@ -26,7 +43,7 @@ mail: hartwig@psfc.mit.edu
 
  - Removed issue preventing spectra creation from raw waveforms. Issue
    appears to be located upstream in ADAQAcquisition and ADAQ file.
-   
+
 
 ### 1.8.4
 
@@ -46,7 +63,7 @@ mail: hartwig@psfc.mit.edu
    data file for easier post-processing
 
  - Added default names to all output files for user convenience.
- 
+
 
 ### 1.8.2
 
@@ -71,7 +88,7 @@ mail: hartwig@psfc.mit.edu
    - Preventing seg faults for plotting non-existent channel calibrations
 
  - All legacy code (AIMS-specific) has been ripped out
- 
+
 
 Major new developments in this series include:
 
@@ -104,13 +121,13 @@ Major new developments in this series include:
 
  - Enabling calibration for data channels higher than 8 for
    compatibility with 16 channel V1725 boards
-   
+
 
 ### 1.6.2
 
  - Fixed bug preventing creation of calibrated spectra when using
    processed waveform data.
-   
+
 
 ### 1.6.1
 
@@ -200,7 +217,7 @@ Major new developments in this series include:
 
  - Automatic replotting of waveforms when the user clicks to autorange
    the y axis during waveform plotting
-   	 
+
 ### 1.2.0
 
  - Correctly set spectrum TH1F X-axis limits when mininmum bin is
