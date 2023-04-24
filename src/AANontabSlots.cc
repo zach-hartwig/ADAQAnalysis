@@ -106,13 +106,22 @@ void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *S
 
   //////////////////////////////////////////
   // Algorithmic spectra calibration methods
-  
-  // The user has the option of using an automated edge location
-  // finder for setting the calibration of EJ301/9 liq. organic
-  // scintillators. The user set two points that must "bound" the
-  // spectral edge:
-  // point 0 : top height of edge; leftmost pulse unit
-  // point 1 : bottom height of edge; rightmost pulse unit
+
+  // Two algorithms for automatic detection of calibration points are
+  // provided to the user: peak finding and edge finding
+  //
+  // Peak finding is most useful for detectors with peak-like
+  // structures (e.g. inorganic scintillators, semiconductor
+  // detectors, etc). An peak-finding algorithm using TSpectrum is
+  // implemented to find a single peak within the region selected by
+  // the user.
+  //
+  // Edge finding is most useful for detectors with recoil-based
+  // spectra (e.g. organic scintillators). The algorithm enables the
+  // user to find the edge position (x coordinate) corresponding to
+  // the half-height of the edge region. It is important that the
+  // user's bounding box manually defines the top and bottom (y
+  // coordinates) of the edge region.
 
   if(TheInterface->SpectrumCalibrationPeakFinder_RB->IsDown() or
      TheInterface->SpectrumCalibrationEdgeFinder_RB->IsDown()){
@@ -145,7 +154,7 @@ void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *S
 	// algorithm with the defined calibration region
 
 	if(ComputationMgr->GetCalibrationRegionSet()){
-
+	  
 	  // Spectrum peak finding algorithm
 	  
 	  if(TheInterface->SpectrumCalibrationPeakFinder_RB->IsDown()){
