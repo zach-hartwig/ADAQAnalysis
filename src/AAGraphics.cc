@@ -493,7 +493,7 @@ void AAGraphics::PlotSpectrum()
 
   if(!Spectrum_H)
     return;
-
+  
   // Set the spectrum x-axis range
   
   Double_t XMinBin = ADAQSettings->SpectrumMinBin;
@@ -1086,13 +1086,22 @@ void AAGraphics::PlotCalibrationCross(Double_t X, Double_t Y)
 // calibration region over the spectrum itself
 void AAGraphics::PlotCalibrationBoundingBox(Double_t X0, Double_t Y0, Double_t X1, Double_t Y1)
 {
-  PlotSpectrum();
+  // For some reason, replotting the spectrum at this point and then
+  // the calibratoin bounding box can cause seg faults at random
+  // times. I'm not sure why this is the case. The solution is to
+  // avoid replotting, which solves the problem and makes the drawing
+  // action smoother but does result in a minor graphical glitch (the
+  // box can never be smaller then it's maximum size even if the
+  // actual coordinates used for the analysis are unaffected.
+  // ZSH 23 Apr 23
+  
+  // PlotSpectrum();
   
   if(gPad->GetLogy()){
     Y0 = pow(10, Y0);
     Y1 = pow(10, Y1);
   }
-  
+
   CalibrationBoundingBox_B->DrawBox(X0, Y0, X1, Y1);
   TheCanvas->Update();
 }

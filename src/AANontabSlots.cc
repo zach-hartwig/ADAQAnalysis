@@ -127,20 +127,10 @@ void AANontabSlots::HandleCanvas(int EventID, int XPixel, int YPixel, TObject *S
       // calibration region once the first boundary point is defined
       
       if(ComputationMgr->GetCalibrationXBounds().size() == 1){
-
-	// For some unknown reason, the (X,Y) coordinates selected can
-	// occasionally fall outside of the gPad's coordinate system,
-	// which results in a seg fault crash when trying to plot the
-	// bounding box. This check prevents such crashes.
-	
-	Double_t XMin, XMax, YMin, YMax;
-	gPad->GetRange(XMin, XMax, YMin, YMax);
-
-	if(X>XMin and X<XMax and Y>YMin and Y<YMax)
-	  GraphicsMgr->PlotCalibrationBoundingBox(ComputationMgr->GetCalibrationXBounds().at(0),
-						  ComputationMgr->GetCalibrationYBounds().at(0),
-						  X, 
-						  Y);
+	GraphicsMgr->PlotCalibrationBoundingBox(ComputationMgr->GetCalibrationXBounds().at(0),
+						ComputationMgr->GetCalibrationYBounds().at(0),
+						X, 
+						Y);
       }
       
       // Event that defines a user "click" on the canvas
