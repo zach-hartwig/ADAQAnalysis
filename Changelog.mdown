@@ -1,11 +1,16 @@
 # ADAQAnalysis Version Change Log
 
 name: Changelog.md
-date: 23 Apr 23 (last updated)
+date: 23 Jun 23 (last updated)
 auth: Zach Hartwig
 mail: hartwig@psfc.mit.edu
 
 ## Version 1.9 Series
+
+### 1.9.1
+
+ - New ability to only only plot waveforms that are contained within
+   the user-selected PSD region
 
 ### 1.9.0
 
