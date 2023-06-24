@@ -686,7 +686,7 @@ void AAInterface::FillSpectrumFrame()
   
   // Number of spectrum bins number entry
   WaveformAndBins_HF->AddFrame(SpectrumNumBins_NEL = new ADAQNumberEntryWithLabel(WaveformAndBins_HF, "Bins", SpectrumNumBins_NEL_ID),
-			       new TGLayoutHints(kLHintsLeft, 15,15,8,5));
+			       new TGLayoutHints(kLHintsLeft, 8,15,8,5));
   SpectrumNumBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   SpectrumNumBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
   SpectrumNumBins_NEL->GetEntry()->SetNumber(200);

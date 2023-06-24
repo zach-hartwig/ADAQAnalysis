@@ -2832,12 +2832,14 @@ void AAComputation::ProcessWaveformsInParallel(string ProcessingType)
 	 << "/////////////////////////////////////////////////////\n"
 	 << endl;
   
-  string Binary = AAParallel::GetInstance()->GetParallelBinaryName();
+  string BinaryName = AAParallel::GetInstance()->GetParallelBinaryName();
   
   // Create a shell command to launch the parallel binary of
   // ADAQAnalysisGUI with the desired number of nodes
   stringstream ss;
-  ss << "mpirun -np " << ADAQSettings->NumProcessors << " " << Binary << " " << ProcessingType;
+  ss << "mpirun --use-hwthread-cpus -np " << ADAQSettings->NumProcessors
+     << " " << BinaryName
+     << " " << ProcessingType;
   string ParallelCommand = ss.str();
   
   if(Verbose)
