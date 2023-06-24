@@ -589,7 +589,7 @@ TGGroupFrame *PeakFindingOptions_GF = new TGGroupFrame(WaveformFrame_VF, "Peak f
   
   TGHorizontalFrame *Trigger_HF = new TGHorizontalFrame(WaveformFrame_VF);
   WaveformFrame_VF->AddFrame(Trigger_HF, new TGLayoutHints(kLHintsLeft, 15,5,5,0));
-
+  
   Trigger_HF->AddFrame(TriggerLevel_NEFL = new ADAQNumberEntryFieldWithLabel(Trigger_HF, "Trigger (ADC)  ", -1),
 		       new TGLayoutHints(kLHintsNormal, 0,5,0,5));
   TriggerLevel_NEFL->GetEntry()->SetFormat(TGNumberFormat::kNESInteger, TGNumberFormat::kNEAAnyNumber);
@@ -601,15 +601,24 @@ TGGroupFrame *PeakFindingOptions_GF = new TGGroupFrame(WaveformFrame_VF, "Peak f
   PlotTrigger_CB->Connect("Clicked()", "AAWaveformSlots", WaveformSlots, "HandleCheckButtons()");
   
 
-  ////////////////////
-  // Pileup options //
-  ////////////////////
-  
-  WaveformFrame_VF->AddFrame(UsePileupRejection_CB = new TGCheckButton(WaveformFrame_VF, "Use pileup rejection", UsePileupRejection_CB_ID),
-			       new TGLayoutHints(kLHintsNormal, 15,5,5,5));
-  UsePileupRejection_CB->Connect("Clicked()", "AAWaveformSlots", WaveformSlots, "HandleCheckButtons()");
-  UsePileupRejection_CB->SetState(kButtonDown);
+  ///////////////////////
+  // Selection options //
+  ///////////////////////
 
+  TGHorizontalFrame *Selection_HF = new TGHorizontalFrame(WaveformFrame_VF);
+  WaveformFrame_VF->AddFrame(Selection_HF, new TGLayoutHints(kLHintsLeft, 15,5,5,0));
+  
+  Selection_HF->AddFrame(UsePileupRejection_CB = new TGCheckButton(Selection_HF, "Use pileup rejection", UsePileupRejection_CB_ID),
+			 new TGLayoutHints(kLHintsNormal, 0,5,0,5));
+  UsePileupRejection_CB->Connect("Clicked()", "AAWaveformSlots", WaveformSlots, "HandleCheckButtons()");
+  UsePileupRejection_CB->SetState(kButtonUp);
+  
+  Selection_HF->AddFrame(UsePSDRejection_CB = new TGCheckButton(Selection_HF, "Use PSD rejection", UsePSDRejection_CB_ID),
+			 new TGLayoutHints(kLHintsNormal, 0,5,0,5));
+  UsePSDRejection_CB->Connect("Clicked()", "AAWaveformSlots", WaveformSlots, "HandleCheckButtons()");
+  UsePSDRejection_CB->SetState(kButtonUp);
+  
+  
   ///////////////////////
   // Graphical options //
   ///////////////////////
@@ -1423,7 +1432,7 @@ void AAInterface::FillPSDFrame()
 			new TGLayoutHints(kLHintsNormal, LOffset0,5,5,0));
   PSDNumTotalBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDNumTotalBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDNumTotalBins_NEL->GetEntry()->SetNumber(150);
+  PSDNumTotalBins_NEL->GetEntry()->SetNumber(100);
   
   PSDXAxis_HF->AddFrame(PSDXAxisADC_RB = new TGRadioButton(PSDXAxis_HF, "ADC", PSDXAxisADC_RB_ID),
 			new TGLayoutHints(kLHintsNormal,25,0,10,0));
@@ -1448,7 +1457,7 @@ void AAInterface::FillPSDFrame()
 			 new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMaxTotalBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PSDMaxTotalBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDMaxTotalBin_NEL->GetEntry()->SetNumber(10000);
+  PSDMaxTotalBin_NEL->GetEntry()->SetNumber(20000);
 
 
   PSDFrame_VF->AddFrame(new TGLabel(PSDFrame_VF, "Y-axis binning"),
@@ -1461,7 +1470,7 @@ void AAInterface::FillPSDFrame()
 			new TGLayoutHints(kLHintsNormal, LOffset0,5,5,0));
   PSDNumTailBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   PSDNumTailBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDNumTailBins_NEL->GetEntry()->SetNumber(150);
+  PSDNumTailBins_NEL->GetEntry()->SetNumber(100);
   
   PSDYAxis_HF->AddFrame(PSDYAxisTail_RB = new TGRadioButton(PSDYAxis_HF, "Tail", PSDYAxisTail_RB_ID),
 			new TGLayoutHints(kLHintsNormal,25,0,10,0));
@@ -1479,14 +1488,14 @@ void AAInterface::FillPSDFrame()
 			new TGLayoutHints(kLHintsNormal, LOffset0,5,0,0));
   PSDMinTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PSDMinTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
-  PSDMinTailBin_NEL->GetEntry()->SetNumber(0);
+  PSDMinTailBin_NEL->GetEntry()->SetNumber(0.);
   PSDMinTailBin_NEL->Connect("Clicked()", "AAPSDSlots", ProcessingSlots, "HandleNumberEntries()");
   
   TailBins_HF->AddFrame(PSDMaxTailBin_NEL = new ADAQNumberEntryWithLabel(TailBins_HF, "Maximum", PSDMaxTailBin_NEL_ID),
 			new TGLayoutHints(kLHintsNormal, 0,5,0,0));
   PSDMaxTailBin_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESReal);
   PSDMaxTailBin_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEAPositive);
-  PSDMaxTailBin_NEL->GetEntry()->SetNumber(1);
+  PSDMaxTailBin_NEL->GetEntry()->SetNumber(0.4);
   PSDMaxTailBin_NEL->Connect("Clicked()", "AAPSDSlots", ProcessingSlots, "HandleNumberEntries()");
   
   
@@ -1500,7 +1509,7 @@ void AAInterface::FillPSDFrame()
   PSDFrame_VF->AddFrame(PSDTotal_HF, new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   
   PSDTotal_HF->AddFrame(PSDTotalStart_NEL = new ADAQNumberEntryWithLabel(PSDTotal_HF,
-									 "Total start   ",
+									 "Total start  ",
 									 PSDTotalStart_NEL_ID),
 			  new TGLayoutHints(kLHintsNormal, LOffset0,10,0,0));
   PSDTotalStart_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
@@ -1513,7 +1522,7 @@ void AAInterface::FillPSDFrame()
 									PSDTotalStop_NEL_ID),
 			  new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   PSDTotalStop_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDTotalStop_NEL->GetEntry()->SetNumber(40);
+  PSDTotalStop_NEL->GetEntry()->SetNumber(150);
   PSDTotalStop_NEL->GetEntry()->Resize(50,20);
   PSDTotalStop_NEL->GetEntry()->Connect("ValueSet(long)", "AAPSDSlots", ProcessingSlots, "HandleNumberEntries()");
 
@@ -1536,7 +1545,7 @@ void AAInterface::FillPSDFrame()
 									PSDTailStop_NEL_ID),
 			 new TGLayoutHints(kLHintsNormal, 0,0,0,0));
   PSDTailStop_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
-  PSDTailStop_NEL->GetEntry()->SetNumber(40);
+  PSDTailStop_NEL->GetEntry()->SetNumber(150);
   PSDTailStop_NEL->GetEntry()->Resize(50,20);
   PSDTailStop_NEL->GetEntry()->Connect("ValueSet(long)", "AAPSDSlots", ProcessingSlots, "HandleNumberEntries()");
   
@@ -2452,6 +2461,7 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->PlotPeakIntegrationRegion = PlotPeakIntegratingRegion_CB->IsDown();
 
   ADAQSettings->UsePileupRejection = UsePileupRejection_CB->IsDown();
+  ADAQSettings->UsePSDRejection = UsePSDRejection_CB->IsDown();
 
   ADAQSettings->PlotAnalysisRegion = PlotAnalysisRegion_CB->IsDown();
   ADAQSettings->AnalysisRegionMin = AnalysisRegionMin_NEL->GetEntry()->GetIntNumber();

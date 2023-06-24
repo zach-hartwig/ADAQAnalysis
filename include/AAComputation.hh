@@ -110,6 +110,7 @@ public:
   void IntegratePeaks();
   void FindPeakHeights();
   void RejectPileup(TH1F *);
+  Bool_t RejectPSD(Int_t, Int_t);
   void AnalyzeWaveform(TH1F *);
   
   // Spectrum creation

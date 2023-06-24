@@ -80,6 +80,7 @@ void AAWaveformSlots::HandleCheckButtons()
     GraphicsMgr->PlotWaveform();
     break;
   }
+  TheInterface->SaveSettings();
 }
 
 
@@ -116,8 +117,22 @@ void AAWaveformSlots::HandleNumberEntries()
   switch(NumberEntryID){
 
   case WaveformSelector_NEL_ID:{
-    int Num = TheInterface->WaveformSelector_NEL->GetEntry()->GetIntNumber();
-    TheInterface->WaveformSelector_HS->SetPosition(Num);
+    Int_t Channel = TheInterface->ChannelSelector_CBL->GetComboBox()->GetSelected();
+    Int_t Waveform = TheInterface->WaveformSelector_NEL->GetEntry()->GetIntNumber();
+    
+    if(TheInterface->UsePSDRejection_CB->IsDown()){
+      while(ComputationMgr->RejectPSD(Channel, Waveform)){
+	Waveform++;
+	TheInterface->WaveformSelector_NEL->GetEntry()->SetIntNumber(Waveform);
+	TheInterface->WaveformSelector_HS->SetPosition(Waveform);
+	if(Waveform == TheInterface->Waveforms_NEL->GetNumber()-1){
+	  TheInterface->WaveformSelector_NEL->GetEntry()->SetIntNumber(0);
+	  TheInterface->WaveformSelector_HS->SetPosition(0);
+	  break;
+	}
+      }
+      TheInterface->SaveSettings();
+    }
     
     GraphicsMgr->PlotWaveform();
 

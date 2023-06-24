@@ -194,8 +194,9 @@ private:
   TGCheckButton *PlotCrossings_CB;
   TGCheckButton *PlotPeakIntegratingRegion_CB;
 
-  // Widget to enable/disable pileup rejection algorithm
+  // Widgets for waveform selection
   TGCheckButton *UsePileupRejection_CB;
+  TGCheckButton *UsePSDRejection_CB;
   
   TGCheckButton *AutoYAxisRange_CB;
 

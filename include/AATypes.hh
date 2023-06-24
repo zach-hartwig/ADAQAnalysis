@@ -153,6 +153,7 @@ enum{
 
   PlotTrigger_CB_ID,
   UsePileupRejection_CB_ID,
+  UsePSDRejection_CB_ID,
   AutoYAxisRange_CB_ID,
   WaveformAnalysis_CB_ID,
 

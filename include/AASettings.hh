@@ -44,7 +44,7 @@ public:
   
   Bool_t PlotFloor, PlotCrossings, PlotPeakIntegrationRegion;
   
-  Bool_t UsePileupRejection;
+  Bool_t UsePileupRejection, UsePSDRejection;
   
   Bool_t PlotBaselineRegion;
   Int_t BaselineRegionMin, BaselineRegionMax;

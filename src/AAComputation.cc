@@ -3867,3 +3867,12 @@ void AAComputation::AnalyzeWaveform(TH1F *Histogram_H)
     WaveformAnalysisArea += PulseHeight;
   }
 }
+
+
+Bool_t AAComputation::RejectPSD(Int_t Channel, Int_t Waveform)
+{
+  CalculateBSWaveform(Channel, Waveform);
+  FindPeaks(Waveform_H[Channel], zWholeWaveform);
+  CalculatePSDIntegrals(false);
+  return PeakInfoVec[0].PSDFilterFlag;
+}
