@@ -2500,8 +2500,8 @@ void AAInterface::SaveSettings(bool SaveToFile)
   ADAQSettings->CalibrationMin = SpectrumCalibrationMin_NEL->GetEntry()->GetNumber();
   ADAQSettings->CalibrationMax = SpectrumCalibrationMax_NEL->GetEntry()->GetNumber();
   ADAQSettings->CalibrationType = SpectrumCalibrationType_CBL->GetComboBox()->GetSelectedEntry()->GetTitle();
-  ADAQSettings->EnergyUnit = SpectrumCalibrationUnit_CBL->GetComboBox()->GetSelected();
-
+  ADAQSettings->CalibrationUnit = SpectrumCalibrationUnit_CBL->GetComboBox()->GetSelectedEntry()->GetTitle();;
+  
   
   //////////////////////////////////////////
   // Values from the "Analysis" tabbed frame 

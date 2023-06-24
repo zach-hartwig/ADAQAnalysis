@@ -548,10 +548,7 @@ void AAGraphics::PlotSpectrum()
     Title = "ADAQ Spectrum";
     
     if(ComputationMgr->GetUseSpectraCalibrations()[ADAQSettings->WaveformChannel]){
-      if(ADAQSettings->EnergyUnit == 0)
-	XTitle = "Energy deposited [keV]";
-      else
-	XTitle = "Energy deposited [MeV]";
+      XTitle = "Energy deposited [" + ADAQSettings->CalibrationUnit + "]";
     }
     else{
       if(ADAQSettings->ADAQSpectrumTypePAS)
@@ -732,10 +729,7 @@ void AAGraphics::PlotPSDHistogram()
     Title = "Pulse shape discrimination histogram";
     
     if(ADAQSettings->PSDXAxisEnergy){
-      if(ADAQSettings->EnergyUnit == 0)
-	XTitle = "Energy deposited [keVee]";
-      else
-	XTitle = "Energy deposited [MeVee]";
+      XTitle = "Energy deposited [" + ADAQSettings->CalibrationUnit + "ee]";
     }
     else
       XTitle = "Waveform total integral [ADC]";
@@ -953,10 +947,10 @@ void AAGraphics::PlotCalibration(Int_t Channel)
       XTitle = "Pulse area [ADC]";
     else if(ADAQSettings->ADAQSpectrumTypePHS)
       XTitle = "Pulse height [ADC]";
-    
-    YTitle = "Energy deposited [MeV]";
-  }
 
+    YTitle = "Energy deposited [" + ADAQSettings->CalibrationUnit + "]";
+  }
+  
   // Plot the calibration data points
   CalibrationData[Channel]->SetTitle(Title.c_str());
   
@@ -1135,11 +1129,11 @@ void AAGraphics::PlotEALine(Double_t X, Double_t Error, Bool_t ErrorBox, Bool_t 
 
   Double_t Peak0 = 0.511; // [MeV]
   Double_t Peak1 = 1.022; // [MeV]
-  if(ADAQSettings->EnergyUnit == 0){
+  if(ADAQSettings->CalibrationUnit == "keV"){
     Peak0 *= 1000;
     Peak1 *= 1000;
   }
-
+  
   if(EscapePeaks){
     EALine_L->DrawLine(X-Peak0, YMin, X-Peak0, YMax);
     EALine_L->DrawLine(X-Peak1, YMin, X-Peak1, YMax);
@@ -1242,10 +1236,7 @@ void AAGraphics::PlotPSDHistogramSlice(int XPixel, int YPixel)
 
     ss << "PSDHistogram X slice at " << XPosInADC;
     if(ADAQSettings->PSDXAxisEnergy){
-      if(ADAQSettings->EnergyUnit == 0)
-	ss << " keVee";
-      else
-	ss << " MeVee";
+      ss << " " << ADAQSettings->CalibrationUnit << "ee";
     }
     else
       ss << " ADC";
@@ -1263,12 +1254,8 @@ void AAGraphics::PlotPSDHistogramSlice(int XPixel, int YPixel)
     ss << "PSDHistogram Y slice at " << YPosInADC << " ADC";
     Title = ss.str();
     
-    if(ADAQSettings->PSDXAxisEnergy){
-      if(ADAQSettings->EnergyUnit == 0)
-	XTitle = "PSD total integral [keVee]";
-      else
-	XTitle = "PSD total integral [MeVee]";
-    }
+    if(ADAQSettings->PSDXAxisEnergy)
+      XTitle = "PSD total integral [" + ADAQSettings->CalibrationUnit + "ee]";
     else
       XTitle = "PSD total integral [ADC]";
   }

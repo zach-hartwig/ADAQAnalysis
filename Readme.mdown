@@ -1,8 +1,6 @@
-![AIMS Logo](doc/figures/AIMSLogo_BoldPastelColors.png "Accelerator-based In-situ Materials Surveillance")  
-**A**ccelerator-based **I**n-situ **M**aterials **S**urveillance
+# ADAQAnalysis #
 
-
-## ADAQAnalysis ##
+## Overview ##
 
 ADAQAnalysis is a program that provides comprehensive offline analysis
 of DAQ hardware settings and digitized detector data that are stored
@@ -23,17 +21,17 @@ raster (JPG, PNG) formats. Methods are provided to save all objects
 (waveforms, spectra, pulse shape discrimination histograms, etc) to
 either ROOT files, ASCII files, or CSV files for further analysis
 outside of ADAQAnalysis. The ability to analyze simulated detector
-data - using a Monte Carlo code like [Geant4](http://geant4.cern.ch/) -
-with the identical algorithms used on experimental data is provided by
-the ASIMReadout library, which is also part of the [ADAQ
+data using the [Geant4 Monte Carlo code](http://geant4.cern.ch/) with
+the identical algorithms used on experimental data is provided by the
+ASIMReadout library, which is also part of the [ADAQ
 libraries](https://github.com/zach-hartwig/ADAQ). This library manages
 readout and storage of simulated data into ASIM file format
 (\*.asim.root). Finally, processing of waveforms can be performed in
 parallel using MPI to significantly reduce computation time on systems
-where multiple cores are available.
+where multiple cores/thread are available.
 
 
-### License and disclaimer ###
+## License and disclaimer ##
 
 The **ADAQAnalysis** source code is licensed under the GNU General
 Public License v3.0.  You have the right to modify and/or redistribute
@@ -55,7 +53,7 @@ repository at $ADAQACQUISITION/License.md or is available online at
 http://www.gnu.org/licenses.
 
 
-### Obtaining and building the code  ###
+## Obtaining and building the code  ##
 
 First, a word on versioning of ADAQAnalysis. Git tags of the form
 X.Y.Z are used to indicate stable, production versions of the code
@@ -78,15 +76,15 @@ building the code.
 
   # Switch to a tagged production branch. For example:
   cd ADAQAnalysis
-  git checkout -b 1.0.0-beta
+  git checkout -b 1.9.0
   
-  # To build the sequential binary locally
-  make  
+  # To build the sequential binary locally (required)
+  make 
 
-  # To build the parallel binary locally
+  # To build the parallel binary locally (optional)
   make par
 
-  # To build both sequential and parallel binaries locally
+  # To build both sequential and parallel binaries locally (optional)
   make both
 ```
 
@@ -105,7 +103,7 @@ your environment correctly before running ADAQAnalysis:
 Don't forget to open a new terminal for the settings to take effect!
 
 
-### Code dependencies ###
+## Code dependencies ##
 
 ADAQAnalysis depends on the following external codes and
 libraries. Note that all *mandatory* dependencies mustbe properly
@@ -125,35 +123,33 @@ with or without parallelization.
 5. [Open MPI](http://www.open-mpi.org/) : Optional
 
 
-### Directory structure ###
+## Directory structure ##
 
 The ADAQAnalysis directory structure and build system are pretty
 straightforward and easy to understand:
 
-  - **bin/**       : Contains final binary
+  - **bin/** : final binary
 
-  - **build/**     : Contains transient build files
+  - **build/** : transient build files
 
-  - **doc/**       : LaTeX code for the ADAQAnalysis User's Guide
+  - **include/** : C++ header files, ROOT dictionary header file
 
-  - **include/**   : C++ header files, ROOT dictionary header file
+  - **scripts/** : Collection of Bash utility scripts
 
-  - **scripts/**   : Collection of Bash utility scripts
-
-  - **src/**       : C++ source code 
+  - **src/** : C++ source code 
   
-  - **test/**      : ADAQ and ASIM files to used in development and testing (see below)
+  - **test/** : ADAQ and ASIM files to used in development and testing (see below)
 
   - **Changelog.md** : List of major content updates and fixes for each Formulary release
   
-  - **License.md**   : Markdown version of the GNU GPL v3.0 
+  - **License.md** : Markdown version of the GNU GPL v3.0 
   
-  - **Makefile**     : GNU makefile for building ADAQAnalysis
+  - **Makefile** : GNU makefile for building ADAQAnalysis
 
-  - **Readme.md**  : You're reading it
+  - **Readme.md** : You're reading it
 
 
-### Test files ###
+## Test files ##
 
 ADAQAnalysis includes (at present) three ADAQ-formatted files in the
 test/ directory that can be used with the program. The files are
@@ -167,25 +163,34 @@ debugging of the code.
     was placed nearby. Intended for general program testing with a
     common, representative inorganic scintillator.
 
-- **EJ309Waveforms_Na22.adaq.root** : ~31 000 waveforms acquired with
-    a 2"x2" EJ309 liquid organic scintillator coupled to a 2" PMT. A
-    sodium-22 check source (0.511, 1.274 MeV gammas) was placed
-    nearby. Intended for general code testing with a common,
-    representative liquid organic scintillator.
+- **EJ309Waveforms_{Cs137,Na22}_1300V.adaq.root** : Waveforms acquired
+    with a 2"x2" EJ309 liquid organic scintillator coupled to a 2"
+    PMT. Voltage was -1300V. A cesium-137 (0.662 MeV gammas) and a
+    sodium-22 (0.511, 1.274 MeV gammas) were placed nearby for each
+    file. Intended for general code testing with a common,
+    representative liquid organic scintillator, and, in particular,
+    electron (gamma) calibration.
 
-- **EJ309Waveforms_AmBe.adaq.root** : ~23 000 waveforms acquired with
-    a 2"x2" EJ309 liquid organic scintillator coupled to a 2" PMT. An
-    Americium-241/Beryllium-9 source (4.44 MeV gammas; 2-12 MeV
-    neutrons) was placed nearby. Intended to be used for development
-    of detector pulse-shape discrimination algorithms and features
-    with liquid organic scintillators. Note that energy calibration
-    for these waveforms may be obtained using the
-    EJ309Waveforms_22Na.adaq.root data.
+- **EJ309Waveforms_AmBe_1300V.adaq.root** : Waveforms acquired with a
+    2"x2" EJ309 liquid organic scintillator coupled to a 2"
+    PMT. Voltage was -1300V. An Americium-241/Beryllium-9 source (4.44
+    MeV gammas; 2-12 MeV neutrons) was placed nearby. Intended to be
+    used for development of detector pulse-shape discrimination
+    algorithms and features with liquid organic scintillators. Note
+    that energy calibration for these waveforms may be obtained using
+    the EJ309Waveforms_{Cs137,Na22}_1300V.adaq.root files.
 
+- **NaIPMT_Cs137.asim.root** : Simulated data using Geant4 and ADAQ's
+    ASIM library. Data stored in the file at present is the energy
+    deposited per event, the number of scintillation photons produced
+    in each event, and the number of scintillation photons detected in
+    each event. Intended primarily for development of the ASIM
+    plotting and analysis features of ADAQAnalysis and comparison to
+    experimental data.
 
-### Contact ###
+## Contact ##
 
-Zach Hartwig
+Zach Hartwig  
 
 [Dept. of Nuclear Science and
 Engineering](http://web.mit.edu/nse/http://web.mit.edu/nse/) &  
@@ -194,4 +199,5 @@ Engineering](http://web.mit.edu/nse/http://web.mit.edu/nse/) &
 
 phone: +1 617 253 5471  
 email: [hartwig@psfc.mit.edu](mailto:hartwig@psfc.mit.edu)  
-smail: 77 Massachusetts Ave, NW17-115, Cambridge MA 02139, USA
+smail: 77 Massachusetts Ave, NW17-213, Cambridge MA 02139, USA  
+web  : [https://www.psfc.mit.edu/people/faculty/zachary-hartwig](https://www.psfc.mit.edu/people/faculty/zachary-hartwig)  
