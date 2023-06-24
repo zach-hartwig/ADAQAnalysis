@@ -3144,7 +3144,7 @@ void AAComputation::SetCalibrationBoundaryPoint(Double_t X, Double_t Y)
 Bool_t AAComputation::FindCalibrationPeak()
 {
   CalibrationFound = false;
-
+  
   // Use the active spectrum for the calibration: this is either the
   // raw spectrum (Spectrum_H) or the deconvolved spectrum that has
   // the computed continuum subtracted out (DeconvolvedSpectrum_H)
@@ -3160,9 +3160,9 @@ Bool_t AAComputation::FindCalibrationPeak()
   
   // Default parameters for the peak searching algorithm. If these
   // prove insufficient, will implement user-selection 
-
+  
   Int_t NumPeaks = 1;
-  Double_t Sigma = 2;
+  Double_t Sigma = 3;
   Double_t Resolution = 0.05;
 
   // Create the TSpectrum object and search for the calibration peak
@@ -3190,15 +3190,16 @@ Bool_t AAComputation::FindCalibrationPeak()
   return CalibrationFound;
 }
 
+
 Bool_t AAComputation::FindCalibrationEdge()
 {
   CalibrationFound = false;
   
   // Compute the half-height of the spectrum edge using the min and
   // max y-values of the user's calibration boundary box
-
-  Double_t EdgeHalfHeight = (CalibrationYBounds.at(0)+CalibrationYBounds.at(1))/2;
   
+  Double_t EdgeHalfHeight = (CalibrationYBounds.at(0)+CalibrationYBounds.at(1))/2;
+
   // Set the min and max ADC values accommodating user creating
   // boundary box left-right or right-left
   
@@ -3210,9 +3211,9 @@ Bool_t AAComputation::FindCalibrationEdge()
   }
   else{
     MinADC = CalibrationXBounds.at(1);
-    MaxADC = CalibrationYBounds.at(0);
+    MaxADC = CalibrationXBounds.at(0);
   }
-
+  
   // Determine the x-value (ADC) corresponding to the half-height of
   // the spectrum edge as the calibration method
   
