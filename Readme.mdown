@@ -181,12 +181,23 @@ debugging of the code.
     the EJ309Waveforms_{Cs137,Na22}_1300V.adaq.root files.
 
 - **NaIPMT_Cs137.asim.root** : Simulated data using Geant4 and ADAQ's
-    ASIM library. Data stored in the file at present is the energy
-    deposited per event, the number of scintillation photons produced
-    in each event, and the number of scintillation photons detected in
-    each event. Intended primarily for development of the ASIM
-    plotting and analysis features of ADAQAnalysis and comparison to
-    experimental data.
+    ASIM library for a 2"(diam)x2" NaI cylinder. Data stored in the
+    file at present is the energy deposited per event, the number of
+    scintillation photons produced in each event, and the number of
+    scintillation photons detected in each event. Intended primarily
+    for development of the ASIM plotting and analysis features of
+    ADAQAnalysis and comparison to experimental data.
+
+- **EJ301_{Cs137,Na22}.asim.root** : Simulated data using Geant4 and
+    ADAQ's ASIM library for a 2"(diam)x2" EJ301 cylinder. Intended for
+    ASIM feature development and simulating calibration of EJ301
+    detectors.
+
+- **EJ301_Neutrons_{2.45,14.1}MeV.asim.root** : Simulated data using
+    Geant4 and ADAQ's ASIM library for a 2"(diam)x2" EJ301
+    cylinder. High precision (HP) neutron transport physics
+    (e.g. cross section data driven) was used for maximum
+    fidelity. Intended for ASIM feature development.
 
 ## Contact ##
 

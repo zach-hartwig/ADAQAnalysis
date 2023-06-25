@@ -669,7 +669,7 @@ void AAGraphics::PlotSpectrum()
     
   if(ADAQSettings->SpectrumUseGaussianFit){
     TF1 *SpectrumFit_F = ComputationMgr->GetSpectrumFit();
-    SpectrumFit_F->Draw("HIST SAME");
+    SpectrumFit_F->Draw("HIST C SAME");
   }
   
   // Update the canvas

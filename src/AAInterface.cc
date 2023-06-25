@@ -689,7 +689,7 @@ void AAInterface::FillSpectrumFrame()
 			       new TGLayoutHints(kLHintsLeft, 8,15,8,5));
   SpectrumNumBins_NEL->GetEntry()->SetNumStyle(TGNumberFormat::kNESInteger);
   SpectrumNumBins_NEL->GetEntry()->SetNumAttr(TGNumberFormat::kNEANonNegative);
-  SpectrumNumBins_NEL->GetEntry()->SetNumber(200);
+  SpectrumNumBins_NEL->GetEntry()->SetNumber(100);
 
   SpectrumFrame_VF->AddFrame(new TGLabel(SpectrumFrame_VF, "Limits"),
 			     new TGLayoutHints(kLHintsNormal, LOffset,0,0,0));
@@ -2898,8 +2898,9 @@ void AAInterface::UpdateForASIMFile()
   WaveformsToHistogram_NEL->GetEntry()->SetNumber(0);
   RecordLength_NEL->SetNumber(0);
  
-  // Disable the waveform frame since we have no need of it (at present)
+  // Disable tabs that are not required for ASIM files
   WaveformOptionsTab_CF->HideFrame(WaveformOptions_CF);
+  ProcessingOptionsTab_CF->HideFrame(ProcessingOptions_CF);
 
   // Disable all ADAQ-specific analysis widgets
   ADAQSpectrumTypePAS_RB->SetState(kButtonDisabled);
@@ -2952,6 +2953,7 @@ void AAInterface::UpdateForASIMFile()
 
   ASIMEventTree_CB->Select(0,false);
 
+  Waveforms_NEL->SetNumber(EventTreeEntries);
   WaveformsToHistogram_NEL->GetEntry()->SetNumber(EventTreeEntries);
   WaveformsToHistogram_NEL->GetEntry()->SetLimitValues(0, EventTreeEntries);
 
