@@ -103,11 +103,11 @@ AAInterface::AAInterface(string CmdLineArg)
 
   // Create the graphical user interface
   CreateTheMainFrames();
- 
+
   // Get pointers to singleton managers
   ComputationMgr = AAComputation::GetInstance();
   ComputationMgr->SetProgressBarPointer(ProcessingProgress_PB);
-  
+
   GraphicsMgr = AAGraphics::GetInstance();
   GraphicsMgr->SetCanvasPointer(Canvas_EC->GetCanvas());
   GraphicsMgr->SetInterfacePointer(this);
@@ -178,6 +178,9 @@ AAInterface::AAInterface(string CmdLineArg)
   // GUI widget values for parallel processing
   string USER = getenv("USER");
   ADAQSettingsFileName = "/tmp/ADAQSettings_" + USER + ".root";
+
+  // Ensure the interface window closes properly when the "x" is clicked
+  Connect("CloseWindow()", "AANontabSlots", NontabSlots, "HandleTerminate()");
 }
 
 
@@ -322,7 +325,6 @@ void AAInterface::CreateTheMainFrames()
   FillGraphicsFrame();
   FillProcessingFrame();
   FillCanvasFrame();
-
 
   //////////////////////////////////////
   // Finalize options and map windows //
@@ -2401,16 +2403,20 @@ void AAInterface::FillCanvasFrame()
   SpectrumIntegrationLimits_DHS->SetRange(0,1);
   SpectrumIntegrationLimits_DHS->SetPosition(0,1);
   SpectrumIntegrationLimits_DHS->Connect("PositionChanged()", "AANontabSlots", NontabSlots, "HandleDoubleSliders()");
-		      
+
+
+  
   TGHorizontalFrame *SubCanvas_HF = new TGHorizontalFrame(Canvas_VF);
   SubCanvas_HF->SetBackgroundColor(ThemeBackgroundColor);
   Canvas_VF->AddFrame(SubCanvas_HF, new TGLayoutHints(kLHintsRight | kLHintsBottom, 5,30,20,5));
+
   
   SubCanvas_HF->AddFrame(ProcessingProgress_PB = new TGHProgressBar(SubCanvas_HF, TGProgressBar::kFancy, CanvasX-300),
 			 new TGLayoutHints(kLHintsLeft, 5,55,7,5));
   ProcessingProgress_PB->SetBarColor(ColorMgr->Number2Pixel(29));
-  ProcessingProgress_PB->ShowPosition(kTRUE, kFALSE, "%0.f% waveforms processed");
-  
+  ProcessingProgress_PB->ShowPosition(kTRUE, kFALSE, "%0.1f percent waveforms processed");
+
+
   SubCanvas_HF->AddFrame(Quit_TB = new TGTextButton(SubCanvas_HF, "Access standby", Quit_TB_ID),
 			 new TGLayoutHints(kLHintsRight, 5,5,0,5));
   Quit_TB->Resize(200, 40);
